@@ -1,12 +1,19 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { Navigation } from "@/components/Navigation";
+import { PostCreator } from "@/components/PostCreator";
+import { Feed } from "@/components/Feed";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen flex bg-muted/30">
+      <Navigation />
+      <main className="flex-1 max-w-2xl mx-auto px-4 py-6 md:py-8 pb-20 md:pb-8">
+        <h1 className="text-2xl font-semibold mb-6">Feed</h1>
+        <div className="space-y-6">
+          <PostCreator />
+          <Feed />
+        </div>
+      </main>
     </div>
   );
 };
