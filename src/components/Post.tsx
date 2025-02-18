@@ -172,34 +172,12 @@ export function Post({ post }: PostProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[200px]">
-            {isPostOwner && (
-              <>
-                <DropdownMenuItem onClick={() => handleVisibilityChange('public')}>
-                  <Globe className="h-4 w-4 mr-2" />
-                  Público
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleVisibilityChange('friends')}>
-                  <Users className="h-4 w-4 mr-2" />
-                  Amigos
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleVisibilityChange('private')}>
-                  <Lock className="h-4 w-4 mr-2" />
-                  Privado
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  onClick={() => handleDeletePost()}
-                  className="text-red-600 hover:text-red-600 hover:bg-red-50"
-                >
-                  Eliminar publicación
-                </DropdownMenuItem>
-              </>
-            )}
-            {!isPostOwner && (
-              <DropdownMenuItem>
-                Reportar publicación
-              </DropdownMenuItem>
-            )}
+            <DropdownMenuItem 
+              onClick={() => handleDeletePost()}
+              className="text-red-600 hover:text-red-600 hover:bg-red-50"
+            >
+              Eliminar publicación
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
