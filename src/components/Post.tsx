@@ -141,7 +141,7 @@ export function Post({ post }: PostProps) {
     </div>
   );
 
-  const isPostOwner = session?.user?.id && post.user_id && session.user.id === post.user_id;
+  const isPostOwner = session?.user?.id === post.user_id;
   console.log('Session user ID:', session?.user?.id);
   console.log('Post user ID:', post.user_id);
   console.log('Is post owner:', isPostOwner);
@@ -172,7 +172,7 @@ export function Post({ post }: PostProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[200px]">
-            {isPostOwner ? (
+            {isPostOwner && (
               <>
                 <DropdownMenuItem onClick={() => handleVisibilityChange('public')}>
                   <Globe className="h-4 w-4 mr-2" />
@@ -189,12 +189,17 @@ export function Post({ post }: PostProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   onClick={() => handleDeletePost()}
-                  className="text-red-600 focus:text-red-600 focus:bg-red-100"
+                  className="text-red-600 hover:text-red-600 hover:bg-red-50"
                 >
                   Eliminar publicación
                 </DropdownMenuItem>
               </>
-            ) : null}
+            )}
+            {!isPostOwner && (
+              <DropdownMenuItem>
+                Reportar publicación
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
