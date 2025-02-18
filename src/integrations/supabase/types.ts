@@ -116,6 +116,7 @@ export type Database = {
           media_url: string | null
           updated_at: string
           user_id: string
+          visibility: Database["public"]["Enums"]["post_visibility"]
         }
         Insert: {
           content?: string | null
@@ -125,6 +126,7 @@ export type Database = {
           media_url?: string | null
           updated_at?: string
           user_id: string
+          visibility?: Database["public"]["Enums"]["post_visibility"]
         }
         Update: {
           content?: string | null
@@ -134,6 +136,7 @@ export type Database = {
           media_url?: string | null
           updated_at?: string
           user_id?: string
+          visibility?: Database["public"]["Enums"]["post_visibility"]
         }
         Relationships: [
           {
@@ -180,7 +183,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      post_visibility: "public" | "friends" | "private"
     }
     CompositeTypes: {
       [_ in never]: never

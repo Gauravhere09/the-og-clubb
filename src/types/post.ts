@@ -1,10 +1,10 @@
-
 export interface Post {
   id: string;
   user_id: string;
   content: string | null;
   media_url: string | null;
   media_type: 'image' | 'video' | 'audio' | null;
+  visibility: 'public' | 'friends' | 'private';
   created_at: string;
   updated_at: string;
   profiles?: {
