@@ -136,47 +136,49 @@ export function Post({ post }: PostProps) {
 
   return (
     <Card className="p-4">
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-start gap-3 mb-4 relative">
         <Avatar>
           <AvatarImage src={post.profiles?.avatar_url} />
           <AvatarFallback>{post.profiles?.username?.[0]}</AvatarFallback>
         </Avatar>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h3 className="font-medium">{post.profiles?.username}</h3>
           <p className="text-sm text-muted-foreground">
             {format(new Date(post.created_at), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
           </p>
         </div>
-        {session?.user?.id === post.user_id && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleVisibilityChange('public')}>
-                <Globe className="h-4 w-4 mr-2" />
-                Público
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleVisibilityChange('friends')}>
-                <Users className="h-4 w-4 mr-2" />
-                Amigos
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleVisibilityChange('private')}>
-                <Lock className="h-4 w-4 mr-2" />
-                Privado
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                className="text-destructive"
-                onClick={() => handleDelete()}
-              >
-                Eliminar publicación
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+        <div className="absolute right-0 top-0">
+          {session?.user?.id === post.user_id && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[200px]">
+                <DropdownMenuItem onClick={() => handleVisibilityChange('public')}>
+                  <Globe className="h-4 w-4 mr-2" />
+                  Público
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleVisibilityChange('friends')}>
+                  <Users className="h-4 w-4 mr-2" />
+                  Amigos
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleVisibilityChange('private')}>
+                  <Lock className="h-4 w-4 mr-2" />
+                  Privado
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  className="text-destructive"
+                  onClick={() => handleDelete()}
+                >
+                  Eliminar publicación
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </div>
 
       {post.content && (
