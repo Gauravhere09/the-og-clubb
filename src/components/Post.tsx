@@ -17,7 +17,7 @@ import { createComment, getComments, toggleLike, deletePost, updatePostVisibilit
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { useAuth } from "@supabase/auth-helpers-react";
+import { useSession } from "@supabase/auth-helpers-react";
 
 interface PostProps {
   post: PostType;
@@ -29,7 +29,7 @@ export function Post({ post }: PostProps) {
   const [replyTo, setReplyTo] = useState<{ id: string; username: string } | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const user = useAuth();
+  const session = useSession();
 
   const { data: comments = [] } = useQuery({
     queryKey: ["comments", post.id],
@@ -147,7 +147,7 @@ export function Post({ post }: PostProps) {
             {format(new Date(post.created_at), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
           </p>
         </div>
-        {user?.id === post.user_id && (
+        {session?.user?.id === post.user_id && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
