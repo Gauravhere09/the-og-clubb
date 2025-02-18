@@ -67,13 +67,20 @@ export function Post({ post }: PostProps) {
     },
   });
 
-  const { mutate: handleDelete } = useMutation({
+  const { mutate: handleDeletePost } = useMutation({
     mutationFn: () => deletePost(post.id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
       toast({
         title: "Publicación eliminada",
         description: "La publicación se ha eliminado correctamente",
+      });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo eliminar la publicación",
       });
     },
   });
@@ -136,23 +143,6 @@ export function Post({ post }: PostProps) {
 
   const isPostOwner = session?.user?.id && post.user_id && session.user.id === post.user_id;
 
-  const handleDelete = async () => {
-    try {
-      await deletePost(post.id);
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-      toast({
-        title: "Publicación eliminada",
-        description: "La publicación se ha eliminado correctamente",
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se pudo eliminar la publicación",
-      });
-    }
-  };
-
   return (
     <Card className="p-4">
       <div className="flex items-start gap-3 mb-4">
@@ -195,7 +185,7 @@ export function Post({ post }: PostProps) {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
-                  onClick={handleDelete}
+                  onClick={() => handleDeletePost()}
                   className="text-red-600 focus:text-red-600 focus:bg-red-100"
                 >
                   Eliminar publicación
