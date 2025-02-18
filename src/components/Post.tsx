@@ -136,28 +136,51 @@ export function Post({ post }: PostProps) {
 
   const isPostOwner = session?.user?.id && post.user_id && session.user.id === post.user_id;
 
+  const handleDelete = async () => {
+    try {
+      await deletePost(post.id);
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      toast({
+        title: "Publicación eliminada",
+        description: "La publicación se ha eliminado correctamente",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo eliminar la publicación",
+      });
+    }
+  };
+
   return (
     <Card className="p-4">
-      <div className="flex items-start gap-3 mb-4 relative">
-        <Avatar>
-          <AvatarImage src={post.profiles?.avatar_url} />
-          <AvatarFallback>{post.profiles?.username?.[0]}</AvatarFallback>
-        </Avatar>
-        <div className="flex-1 min-w-0">
-          <h3 className="font-medium">{post.profiles?.username}</h3>
-          <p className="text-sm text-muted-foreground">
-            {format(new Date(post.created_at), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
-          </p>
+      <div className="flex items-start gap-3 mb-4">
+        <div className="flex-1 flex items-start gap-3">
+          <Avatar>
+            <AvatarImage src={post.profiles?.avatar_url} />
+            <AvatarFallback>{post.profiles?.username?.[0]}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-medium">{post.profiles?.username}</h3>
+            <p className="text-sm text-muted-foreground">
+              {format(new Date(post.created_at), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
+            </p>
+          </div>
         </div>
-        {isPostOwner && (
-          <div className="absolute right-2 top-0">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[200px]">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 rounded-full hover:bg-accent"
+            >
+              <MoreVertical className="h-5 w-5 text-muted-foreground" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-[200px]">
+            {isPostOwner ? (
+              <>
                 <DropdownMenuItem onClick={() => handleVisibilityChange('public')}>
                   <Globe className="h-4 w-4 mr-2" />
                   Público
@@ -172,15 +195,19 @@ export function Post({ post }: PostProps) {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
-                  className="text-destructive"
-                  onClick={() => handleDelete()}
+                  onClick={handleDelete}
+                  className="text-red-600 focus:text-red-600 focus:bg-red-100"
                 >
                   Eliminar publicación
                 </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
+              </>
+            ) : (
+              <DropdownMenuItem>
+                Reportar publicación
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {post.content && (
