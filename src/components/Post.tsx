@@ -134,6 +134,8 @@ export function Post({ post }: PostProps) {
     </div>
   );
 
+  const isPostOwner = session?.user?.id && post.user_id && session.user.id === post.user_id;
+
   return (
     <Card className="p-4">
       <div className="flex items-start gap-3 mb-4 relative">
@@ -147,8 +149,8 @@ export function Post({ post }: PostProps) {
             {format(new Date(post.created_at), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
           </p>
         </div>
-        <div className="absolute right-0 top-0">
-          {session?.user?.id === post.user_id && (
+        {isPostOwner && (
+          <div className="absolute right-2 top-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -177,8 +179,8 @@ export function Post({ post }: PostProps) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {post.content && (
