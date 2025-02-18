@@ -53,27 +53,35 @@ export async function getPosts() {
     .select(`
       *,
       profiles(username, avatar_url),
-      comments(count),
-      likes(count),
-      likes!inner(id).count(id)
-    `)
-    .order('created_at', { ascending: false });
-
-  if (user?.user) {
-    query = query.select(`
-      *,
-      profiles(username, avatar_url),
-      comments(count),
-      likes(count),
-      likes!inner(id).count(id),
-      likes!inner(user_id).eq(user_id, ${user.user.id})
+      comments:comments(count),
+      likes:likes(count)
     `);
+
+  // Si hay un usuario autenticado, verificar si le dio like a cada post
+  if (user?.user) {
+    const { data: userLikes } = await supabase
+      .from('likes')
+      .select('post_id')
+      .eq('user_id', user.user.id);
+
+    const likedPostIds = new Set(userLikes?.map(like => like.post_id) || []);
+
+    const { data, error } = await query
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    return (data as Post[]).map(post => ({
+      ...post,
+      user_has_liked: likedPostIds.has(post.id)
+    }));
+  } else {
+    const { data, error } = await query
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data as Post[];
   }
-
-  const { data, error } = await query;
-
-  if (error) throw error;
-  return data as Post[];
 }
 
 export async function createComment(postId: string, content: string, parentId?: string) {
@@ -100,45 +108,76 @@ export async function getComments(postId: string) {
     .select(`
       *,
       profiles(username, avatar_url),
-      likes(count)
+      likes:likes(count)
     `)
     .eq('post_id', postId)
     .order('created_at', { ascending: true });
 
+  // Si hay un usuario autenticado, verificar si le dio like a cada comentario
   if (user?.user) {
-    query = query.select(`
-      *,
-      profiles(username, avatar_url),
-      likes(count),
-      likes!inner(user_id).eq(user_id, ${user.user.id})
-    `);
-  }
+    const { data: userLikes } = await supabase
+      .from('likes')
+      .select('comment_id')
+      .eq('user_id', user.user.id);
 
-  const { data, error } = await query;
+    const likedCommentIds = new Set(userLikes?.map(like => like.comment_id) || []);
 
-  if (error) throw error;
+    const { data, error } = await query;
 
-  // Organizar comentarios en estructura jerárquica
-  const comments = data as Comment[];
-  const commentMap = new Map<string, Comment>();
-  const rootComments: Comment[] = [];
+    if (error) throw error;
 
-  comments.forEach(comment => {
-    commentMap.set(comment.id, { ...comment, replies: [] });
-  });
+    const comments = (data as Comment[]).map(comment => ({
+      ...comment,
+      user_has_liked: likedCommentIds.has(comment.id)
+    }));
 
-  comments.forEach(comment => {
-    if (comment.parent_id) {
-      const parent = commentMap.get(comment.parent_id);
-      if (parent) {
-        parent.replies?.push(commentMap.get(comment.id)!);
+    // Organizar comentarios en estructura jerárquica
+    const commentMap = new Map<string, Comment>();
+    const rootComments: Comment[] = [];
+
+    comments.forEach(comment => {
+      commentMap.set(comment.id, { ...comment, replies: [] });
+    });
+
+    comments.forEach(comment => {
+      if (comment.parent_id) {
+        const parent = commentMap.get(comment.parent_id);
+        if (parent) {
+          parent.replies?.push(commentMap.get(comment.id)!);
+        }
+      } else {
+        rootComments.push(commentMap.get(comment.id)!);
       }
-    } else {
-      rootComments.push(commentMap.get(comment.id)!);
-    }
-  });
+    });
 
-  return rootComments;
+    return rootComments;
+  } else {
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    // Organizar comentarios en estructura jerárquica sin likes
+    const comments = data as Comment[];
+    const commentMap = new Map<string, Comment>();
+    const rootComments: Comment[] = [];
+
+    comments.forEach(comment => {
+      commentMap.set(comment.id, { ...comment, replies: [] });
+    });
+
+    comments.forEach(comment => {
+      if (comment.parent_id) {
+        const parent = commentMap.get(comment.parent_id);
+        if (parent) {
+          parent.replies?.push(commentMap.get(comment.id)!);
+        }
+      } else {
+        rootComments.push(commentMap.get(comment.id)!);
+      }
+    });
+
+    return rootComments;
+  }
 }
 
 export async function toggleLike(postId?: string, commentId?: string) {
@@ -151,7 +190,7 @@ export async function toggleLike(postId?: string, commentId?: string) {
       user_id: userId,
       ...(postId ? { post_id: postId } : { comment_id: commentId })
     })
-    .single();
+    .maybeSingle();
 
   if (existingLike) {
     const { error } = await supabase
