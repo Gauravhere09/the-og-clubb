@@ -142,6 +142,9 @@ export function Post({ post }: PostProps) {
   );
 
   const isPostOwner = session?.user?.id && post.user_id && session.user.id === post.user_id;
+  console.log('Session user ID:', session?.user?.id);
+  console.log('Post user ID:', post.user_id);
+  console.log('Is post owner:', isPostOwner);
 
   return (
     <Card className="p-4">
@@ -191,11 +194,7 @@ export function Post({ post }: PostProps) {
                   Eliminar publicación
                 </DropdownMenuItem>
               </>
-            ) : (
-              <DropdownMenuItem>
-                Reportar publicación
-              </DropdownMenuItem>
-            )}
+            ) : null}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
