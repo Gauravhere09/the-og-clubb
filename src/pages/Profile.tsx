@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { FriendRequestButton } from "@/components/FriendRequestButton";
+import { FriendsList } from "@/components/FriendsList";
 
 interface Profile {
   username: string;
@@ -23,6 +24,7 @@ const Profile = () => {
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const { toast } = useToast();
+  const session = supabase.auth.session();
 
   useEffect(() => {
     getProfile();
@@ -155,23 +157,24 @@ const Profile = () => {
                       <h1 className="text-2xl font-bold mb-1">{profile?.username}</h1>
                       <p className="text-muted-foreground">@{profile?.username?.toLowerCase()}</p>
                     </div>
-                    <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
+                    <div className="flex gap-2">
+                      {session?.user?.id !== profile?.id && (
+                        <FriendRequestButton targetUserId={profile?.id || ''} />
+                      )}
+                      <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                   
                   {profile?.bio && (
                     <p className="text-muted-foreground mb-6">{profile.bio}</p>
                   )}
 
-                  <div className="flex gap-4">
+                  <div className="space-y-6">
                     <div>
-                      <div className="font-semibold">2.5k</div>
-                      <div className="text-sm text-muted-foreground">Seguidores</div>
-                    </div>
-                    <div>
-                      <div className="font-semibold">1.2k</div>
-                      <div className="text-sm text-muted-foreground">Siguiendo</div>
+                      <h2 className="text-lg font-semibold mb-4">Amigos</h2>
+                      <FriendsList />
                     </div>
                   </div>
                 </>

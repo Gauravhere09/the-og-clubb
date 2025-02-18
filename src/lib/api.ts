@@ -227,3 +227,130 @@ export async function updatePostVisibility(postId: string, visibility: 'public' 
 
   if (error) throw error;
 }
+
+export async function sendFriendRequest(targetUserId: string) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Usuario no autenticado");
+
+    const { data, error } = await supabase
+      .from('friendships')
+      .insert({
+        sender_id: user.id,
+        receiver_id: targetUserId,
+        status: 'pending'
+      });
+
+    if (error) throw error;
+    return data;
+  } catch (error: any) {
+    throw error;
+  }
+}
+
+export async function acceptFriendRequest(senderId: string) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Usuario no autenticado");
+
+    const { error } = await supabase
+      .from('friendships')
+      .update({ status: 'accepted' })
+      .match({ sender_id: senderId, receiver_id: user.id, status: 'pending' });
+
+    if (error) throw error;
+  } catch (error: any) {
+    throw error;
+  }
+}
+
+export async function rejectFriendRequest(senderId: string) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Usuario no autenticado");
+
+    const { error } = await supabase
+      .from('friendships')
+      .delete()
+      .match({ sender_id: senderId, receiver_id: user.id, status: 'pending' });
+
+    if (error) throw error;
+  } catch (error: any) {
+    throw error;
+  }
+}
+
+export async function getFriendRequests() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Usuario no autenticado");
+
+    const { data, error } = await supabase
+      .from('friendships')
+      .select(`
+        *,
+        sender:profiles!friendships_sender_id_fkey(
+          id,
+          username,
+          avatar_url
+        )
+      `)
+      .eq('receiver_id', user.id)
+      .eq('status', 'pending');
+
+    if (error) throw error;
+    return data;
+  } catch (error: any) {
+    throw error;
+  }
+}
+
+export async function getFriends() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Usuario no autenticado");
+
+    const { data, error } = await supabase
+      .from('friendships')
+      .select(`
+        *,
+        friend:profiles!friendships_sender_id_fkey(
+          id,
+          username,
+          avatar_url
+        )
+      `)
+      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+      .eq('status', 'accepted');
+
+    if (error) throw error;
+
+    // Procesar los resultados para obtener la lista de amigos
+    return data.map(friendship => ({
+      ...friendship.friend,
+      friendId: friendship.friend.id === user.id ? 
+        (friendship.receiver_id === user.id ? friendship.sender_id : friendship.receiver_id) :
+        friendship.friend.id
+    }));
+  } catch (error: any) {
+    throw error;
+  }
+}
+
+export async function checkFriendship(targetUserId: string) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Usuario no autenticado");
+
+    const { data, error } = await supabase
+      .from('friendships')
+      .select('status')
+      .or(`and(sender_id.eq.${user.id},receiver_id.eq.${targetUserId}),and(sender_id.eq.${targetUserId},receiver_id.eq.${user.id})`)
+      .single();
+
+    if (error && error.code !== 'PGRST116') return null;
+    return data?.status || null;
+  } catch (error: any) {
+    return null;
+  }
+}
