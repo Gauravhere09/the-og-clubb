@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Tables } from "@/types/database.types";
 
 export interface GroupMessage {
   id: string;
@@ -28,13 +29,8 @@ export function useGroupMessages(currentUserId: string | null, showGroupChat: bo
         const { data, error } = await supabase
           .from('group_messages')
           .select(`
-            id,
-            content,
-            sender_id,
-            type,
-            media_url,
-            created_at,
-            profiles!group_messages_sender_id_fkey (
+            *,
+            sender:profiles!group_messages_sender_id_fkey (
               username,
               avatar_url
             )
@@ -44,7 +40,7 @@ export function useGroupMessages(currentUserId: string | null, showGroupChat: bo
         if (error) throw error;
 
         if (data) {
-          const messages = data.map(message => ({
+          const messages: GroupMessage[] = data.map(message => ({
             id: message.id,
             content: message.content,
             sender_id: message.sender_id,
@@ -52,8 +48,8 @@ export function useGroupMessages(currentUserId: string | null, showGroupChat: bo
             media_url: message.media_url,
             created_at: message.created_at,
             sender: {
-              username: message.profiles.username || '',
-              avatar_url: message.profiles.avatar_url
+              username: message.sender.username || '',
+              avatar_url: message.sender.avatar_url
             }
           }));
           setGroupMessages(messages);
@@ -119,12 +115,12 @@ export async function sendGroupMessage(
 
     const { error } = await supabase
       .from('group_messages')
-      .insert([{
+      .insert({
         content: content || '',
         sender_id: currentUserId,
         type,
         media_url
-      }]);
+      });
 
     if (error) throw error;
   } catch (error) {

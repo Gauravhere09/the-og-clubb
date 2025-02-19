@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Friend } from './use-friends';
+import { Tables } from "@/types/database.types";
 
 export interface Message {
   id: string;
@@ -22,13 +23,7 @@ export function usePrivateMessages() {
     try {
       const { data, error } = await supabase
         .from('messages')
-        .select(`
-          id,
-          content,
-          sender_id,
-          receiver_id,
-          created_at
-        `)
+        .select('*')
         .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${selectedFriend.friend_id}),and(sender_id.eq.${selectedFriend.friend_id},receiver_id.eq.${currentUserId})`)
         .order('created_at', { ascending: true });
 
@@ -50,11 +45,11 @@ export function usePrivateMessages() {
     try {
       const { error } = await supabase
         .from('messages')
-        .insert([{
+        .insert({
           content,
           sender_id: currentUserId,
           receiver_id: selectedFriend.friend_id
-        }]);
+        });
       
       if (error) throw error;
       await loadMessages(currentUserId, selectedFriend);
