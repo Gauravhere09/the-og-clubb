@@ -320,21 +320,46 @@ export async function getFriends() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Usuario no autenticado");
 
-    const { data, error } = await supabase
+    // Primero obtenemos las amistades donde el usuario es el sender
+    const { data: senderFriends, error: senderError } = await supabase
       .from('friendships')
       .select(`
-        *,
-        profiles!friendships_sender_id_fkey (
-          id,
-          username,
-          avatar_url
+        receiver_id as friend_id,
+        profiles!profiles_id_fkey (
+          username as friend_username,
+          avatar_url as friend_avatar_url
         )
       `)
-      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+      .eq('sender_id', user.id)
+      .eq('status', 'accepted')
+      .select('profiles(username, avatar_url)');
+
+    if (senderError) throw senderError;
+
+    // Luego obtenemos las amistades donde el usuario es el receiver
+    const { data: receiverFriends, error: receiverError } = await supabase
+      .from('friendships')
+      .select(`
+        sender_id as friend_id,
+        profiles!profiles_id_fkey (
+          username as friend_username,
+          avatar_url as friend_avatar_url
+        )
+      `)
+      .eq('receiver_id', user.id)
       .eq('status', 'accepted');
 
-    if (error) throw error;
-    return data;
+    if (receiverError) throw receiverError;
+
+    // Combinamos ambos resultados
+    const allFriends = [...(senderFriends || []), ...(receiverFriends || [])];
+
+    // Transformamos los datos para que tengan el formato correcto
+    return allFriends.map(friend => ({
+      friend_id: friend.friend_id,
+      friend_username: friend.profiles?.username || '',
+      friend_avatar_url: friend.profiles?.avatar_url
+    }));
   } catch (error: any) {
     throw error;
   }

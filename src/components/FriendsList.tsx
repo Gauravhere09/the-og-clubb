@@ -24,8 +24,14 @@ export function FriendsList() {
 
   const loadFriends = async () => {
     try {
-      const data = await getFriends();
-      setFriends(data);
+      const friendsData = await getFriends();
+      // Transformar los datos para que coincidan con la interfaz Friend
+      const transformedFriends = friendsData.map((friendship: any) => ({
+        id: friendship.friend_id,
+        username: friendship.friend_username,
+        avatar_url: friendship.friend_avatar_url
+      }));
+      setFriends(transformedFriends);
     } catch (error: any) {
       toast({
         variant: "destructive",
