@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { FriendSearch } from "@/components/FriendSearch";
 import { useToast } from "@/hooks/use-toast";
+import { SupabaseClient } from '@supabase/supabase-js';
 
 interface Message {
   id: string;
@@ -28,6 +30,10 @@ interface Friendship {
   user_id: string;
   friend_id: string;
 }
+
+// Define tipos específicos para las funciones RPC
+type GetUserFriendshipsResponse = Friendship[];
+type GetConversationMessagesResponse = Message[];
 
 const Messages = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -54,10 +60,10 @@ const Messages = () => {
       try {
         console.log('Loading friends for user:', currentUserId);
         
-        const { data: friendships, error: friendshipsError } = await supabase
+        const { data: friendships, error: friendshipsError } = await (supabase
           .rpc('get_user_friendships', { 
             user_id: currentUserId 
-          });
+          }) as ReturnType<SupabaseClient['rpc']> & Promise<{ data: GetUserFriendshipsResponse }>);
 
         if (friendshipsError) {
           console.error('Error loading friendships:', friendshipsError);
@@ -124,11 +130,11 @@ const Messages = () => {
 
     const loadMessages = async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await (supabase
           .rpc('get_conversation_messages', { 
             user1_id: currentUserId,
             user2_id: selectedFriend.friend_id
-          });
+          }) as ReturnType<SupabaseClient['rpc']> & Promise<{ data: GetConversationMessagesResponse }>);
 
         if (error) throw error;
         setMessages(data || []);
@@ -165,12 +171,12 @@ const Messages = () => {
     if (!newMessage.trim() || !selectedFriend || !currentUserId) return;
 
     try {
-      const { error } = await supabase
+      const { error } = await (supabase
         .rpc('send_message', {
           content_text: newMessage,
           sender_user_id: currentUserId,
           receiver_user_id: selectedFriend.friend_id
-        });
+        }) as ReturnType<SupabaseClient['rpc']> & Promise<{ data: null }>);
 
       if (error) throw error;
       setNewMessage("");
