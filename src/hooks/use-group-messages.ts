@@ -44,7 +44,7 @@ export function useGroupMessages(currentUserId: string | null, showGroupChat: bo
             id: message.id,
             content: message.content,
             sender_id: message.sender_id,
-            type: message.type,
+            type: message.type as 'text' | 'audio',
             media_url: message.media_url,
             created_at: message.created_at,
             sender: {

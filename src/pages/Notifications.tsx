@@ -58,7 +58,19 @@ const Notifications = () => {
         return;
       }
 
-      setNotifications(data || []);
+      if (data) {
+        const typedNotifications: Notification[] = data.map(item => ({
+          id: item.id,
+          type: item.type as 'friend_request' | 'message' | 'like',
+          created_at: item.created_at,
+          sender: {
+            id: item.sender.id,
+            username: item.sender.username || '',
+            avatar_url: item.sender.avatar_url
+          }
+        }));
+        setNotifications(typedNotifications);
+      }
     };
 
     loadNotifications();

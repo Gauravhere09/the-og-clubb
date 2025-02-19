@@ -77,13 +77,16 @@ export function useFriends(currentUserId: string | null) {
         }
 
         if (pendingRequests) {
-          const requestsList = pendingRequests.map(request => ({
+          const requestsList: FriendRequest[] = pendingRequests.map(request => ({
             id: request.id,
             user_id: request.user_id,
             friend_id: request.friend_id,
-            status: request.status,
+            status: request.status as 'pending' | 'accepted' | 'rejected',
             created_at: request.created_at,
-            user: request.profiles
+            user: {
+              username: request.profiles?.username || '',
+              avatar_url: request.profiles?.avatar_url
+            }
           }));
           setFriendRequests(requestsList);
         }
