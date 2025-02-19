@@ -20,7 +20,7 @@ interface Notification {
   created_at: string;
 }
 
-const NotificationIcon = ({ type }: { type: string }) => {
+const NotificationIcon = ({ type }: { type: 'friend_request' | 'message' | 'like' }) => {
   switch (type) {
     case "friend_request":
       return <UserPlus className="h-4 w-4 text-green-500" />;
@@ -97,30 +97,33 @@ const Notifications = () => {
 
   const handleFriendRequest = async (notificationId: string, senderId: string, accept: boolean) => {
     try {
-      if (accept) {
-        await supabase.rpc('accept_friend_request', { sender_user_id: senderId });
-        toast({
-          title: "Solicitud aceptada",
-          description: "Ahora son amigos",
-        });
-      } else {
-        await supabase.rpc('reject_friend_request', { sender_user_id: senderId });
-        toast({
-          title: "Solicitud rechazada",
-          description: "La solicitud ha sido rechazada",
-        });
-      }
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Actualizar el estado de la amistad
+      const { error: friendshipError } = await supabase
+        .from('friendships')
+        .update({ status: accept ? 'accepted' : 'rejected' })
+        .eq('user_id', senderId)
+        .eq('friend_id', user.id);
+
+      if (friendshipError) throw friendshipError;
 
       // Eliminar la notificación
-      await supabase
+      const { error: notificationError } = await supabase
         .from('notifications')
         .delete()
         .eq('id', notificationId);
 
+      if (notificationError) throw notificationError;
+
+      toast({
+        title: accept ? "Solicitud aceptada" : "Solicitud rechazada",
+        description: accept ? "Ahora son amigos" : "Has rechazado la solicitud de amistad",
+      });
+
       // Actualizar la lista de notificaciones
-      setNotifications(prev => 
-        prev.filter(notification => notification.id !== notificationId)
-      );
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
     } catch (error) {
       console.error('Error handling friend request:', error);
       toast({
@@ -167,8 +170,6 @@ const Notifications = () => {
             <span className="font-medium">{notification.sender.username}</span> le dio me gusta a tu publicación
           </span>
         );
-      default:
-        return null;
     }
   };
 
