@@ -17,10 +17,6 @@ interface Message {
   sender_id: string;
   receiver_id: string;
   created_at: string;
-  profiles?: {
-    username: string;
-    avatar_url: string | null;
-  };
 }
 
 interface Friend {
@@ -52,9 +48,11 @@ const Messages = () => {
     
     const loadFriends = async () => {
       try {
+        console.log('Loading friends for user:', currentUserId);
+        
         const { data: friendships, error: friendshipsError } = await supabase
           .from('friendships')
-          .select('sender_id, receiver_id, status')
+          .select('sender_id, receiver_id')
           .eq('status', 'accepted')
           .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`);
 
@@ -64,16 +62,17 @@ const Messages = () => {
         }
 
         if (!friendships || friendships.length === 0) {
+          console.log('No friendships found');
           setFriends([]);
           return;
         }
 
-        // Obtener los IDs de los amigos
+        console.log('Friendships found:', friendships);
+
         const friendIds = friendships.map(friendship => 
           friendship.sender_id === currentUserId ? friendship.receiver_id : friendship.sender_id
         );
 
-        // Obtener los perfiles de los amigos
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
           .select('id, username, avatar_url')
@@ -90,9 +89,12 @@ const Messages = () => {
         }
 
         if (!profiles) {
+          console.log('No profiles found');
           setFriends([]);
           return;
         }
+
+        console.log('Profiles found:', profiles);
 
         const friendsList = profiles.map(profile => ({
           friend_id: profile.id,
