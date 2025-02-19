@@ -52,24 +52,26 @@ const Messages = () => {
     
     const loadFriends = async () => {
       try {
-        // Primero obtener las amistades aceptadas
         const { data: friendships, error: friendshipsError } = await supabase
           .from('friendships')
           .select('sender_id, receiver_id, status')
           .eq('status', 'accepted')
           .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`);
 
-        if (friendshipsError) throw friendshipsError;
+        if (friendshipsError) {
+          console.error('Error loading friendships:', friendshipsError);
+          return;
+        }
+
+        if (!friendships || friendships.length === 0) {
+          setFriends([]);
+          return;
+        }
 
         // Obtener los IDs de los amigos
         const friendIds = friendships.map(friendship => 
           friendship.sender_id === currentUserId ? friendship.receiver_id : friendship.sender_id
         );
-
-        if (friendIds.length === 0) {
-          setFriends([]);
-          return;
-        }
 
         // Obtener los perfiles de los amigos
         const { data: profiles, error: profilesError } = await supabase
@@ -77,7 +79,20 @@ const Messages = () => {
           .select('id, username, avatar_url')
           .in('id', friendIds);
 
-        if (profilesError) throw profilesError;
+        if (profilesError) {
+          console.error('Error loading profiles:', profilesError);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "No se pudieron cargar los amigos",
+          });
+          return;
+        }
+
+        if (!profiles) {
+          setFriends([]);
+          return;
+        }
 
         const friendsList = profiles.map(profile => ({
           friend_id: profile.id,
