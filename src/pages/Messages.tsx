@@ -19,7 +19,7 @@ const Messages = () => {
   const [newMessage, setNewMessage] = useState("");
   const [showGroupChat, setShowGroupChat] = useState(false);
 
-  const friends = useFriends(currentUserId);
+  const { friends } = useFriends(currentUserId);
   const { messages, loadMessages, sendMessage } = usePrivateMessages();
   const { groupMessages } = useGroupMessages(currentUserId, showGroupChat);
 
