@@ -11,16 +11,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { FriendRequestButton } from "@/components/FriendRequestButton";
 import { FriendsList } from "@/components/FriendsList";
+import { Tables } from "@/types/database.types";
 
-interface Profile {
-  id: string;
-  username: string | null;
-  bio: string | null;
-  avatar_url: string | null;
-  cover_url: string | null;
-  created_at: string;
-  updated_at: string;
-}
+type Profile = Tables['profiles']['Row'];
 
 const Profile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -72,27 +65,48 @@ const Profile = () => {
   const uploadImage = async (file: File, type: 'avatar' | 'cover') => {
     try {
       setUploading(true);
+      
+      // Validar tamaño del archivo
+      if (file.size > 2 * 1024 * 1024) {
+        throw new Error("El archivo no puede ser mayor a 2MB");
+      }
+
+      // Validar tipo de archivo
+      if (!file.type.startsWith('image/')) {
+        throw new Error("Solo se permiten archivos de imagen");
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
+      // Crear nombre único para el archivo
       const fileExt = file.name.split('.').pop();
-      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const fileName = `${user.id}_${type}.${fileExt}`;
       const filePath = `${type}s/${fileName}`;
 
+      // Subir el archivo
       const { error: uploadError } = await supabase.storage
         .from('profiles')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
+      // Obtener URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('profiles')
         .getPublicUrl(filePath);
 
+      // Actualizar perfil
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
           [`${type}_url`]: publicUrl,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', profile?.id);
+        .eq('id', user.id);
 
       if (updateError) throw updateError;
 
@@ -116,14 +130,6 @@ const Profile = () => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
     if (!event.target.files || event.target.files.length === 0) return;
     const file = event.target.files[0];
-    if (file.size > 2 * 1024 * 1024) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "La imagen no puede ser mayor a 2MB",
-      });
-      return;
-    }
     uploadImage(file, type);
   };
 
