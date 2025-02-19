@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
@@ -51,10 +50,7 @@ const Messages = () => {
         console.log('Loading friends for user:', currentUserId);
         
         const { data: friendships, error: friendshipsError } = await supabase
-          .from('friendships')
-          .select('sender_id, receiver_id')
-          .eq('status', 'accepted')
-          .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`);
+          .rpc('get_user_friendships', { user_id: currentUserId });
 
         if (friendshipsError) {
           console.error('Error loading friendships:', friendshipsError);
@@ -70,7 +66,7 @@ const Messages = () => {
         console.log('Friendships found:', friendships);
 
         const friendIds = friendships.map(friendship => 
-          friendship.sender_id === currentUserId ? friendship.receiver_id : friendship.sender_id
+          friendship.user_id === currentUserId ? friendship.friend_id : friendship.user_id
         );
 
         const { data: profiles, error: profilesError } = await supabase
@@ -122,10 +118,10 @@ const Messages = () => {
     const loadMessages = async () => {
       try {
         const { data, error } = await supabase
-          .from('messages')
-          .select('*')
-          .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${selectedFriend.friend_id}),and(sender_id.eq.${selectedFriend.friend_id},receiver_id.eq.${currentUserId})`)
-          .order('created_at', { ascending: true });
+          .rpc('get_conversation_messages', { 
+            user1_id: currentUserId,
+            user2_id: selectedFriend.friend_id
+          });
 
         if (error) throw error;
         setMessages(data || []);
@@ -163,11 +159,10 @@ const Messages = () => {
 
     try {
       const { error } = await supabase
-        .from('messages')
-        .insert({
-          content: newMessage,
-          sender_id: currentUserId,
-          receiver_id: selectedFriend.friend_id
+        .rpc('send_message', {
+          content_text: newMessage,
+          sender_user_id: currentUserId,
+          receiver_user_id: selectedFriend.friend_id
         });
 
       if (error) throw error;
@@ -188,7 +183,6 @@ const Messages = () => {
       <main className="flex-1 max-w-6xl mx-auto p-4 md:p-6 pb-20 md:pb-6">
         <div className="grid gap-6 md:grid-cols-[1fr,320px]">
           <Card className="grid md:grid-cols-[320px,1fr] h-[calc(100vh-120px)]">
-            {/* Friends List */}
             <div className="border-r">
               <div className="p-4 border-b">
                 <div className="relative">
@@ -222,11 +216,9 @@ const Messages = () => {
               </ScrollArea>
             </div>
 
-            {/* Chat Area */}
             <div className="flex flex-col">
               {selectedFriend ? (
                 <>
-                  {/* Chat Header */}
                   <div className="p-4 border-b flex items-center gap-3">
                     <Avatar>
                       <AvatarImage src={selectedFriend.friend_avatar_url || undefined} />
@@ -238,7 +230,6 @@ const Messages = () => {
                     </div>
                   </div>
 
-                  {/* Messages */}
                   <ScrollArea className="flex-1 p-4">
                     <div className="space-y-4">
                       {messages.map((message) => (
@@ -269,7 +260,6 @@ const Messages = () => {
                     </div>
                   </ScrollArea>
 
-                  {/* Message Input */}
                   <div className="p-4 border-t">
                     <form 
                       className="flex gap-2"
@@ -298,7 +288,6 @@ const Messages = () => {
             </div>
           </Card>
 
-          {/* Friend Search Panel */}
           <div className="space-y-4">
             <FriendSearch />
           </div>
