@@ -30,6 +30,11 @@ interface Friendship {
   friend_id: string;
 }
 
+type RPCResponse<T> = {
+  data: T;
+  error: Error | null;
+}
+
 const Messages = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
@@ -55,10 +60,12 @@ const Messages = () => {
       try {
         console.log('Loading friends for user:', currentUserId);
         
-        const { data: friendships, error: friendshipsError } = await supabase
+        const result = await (supabase
           .rpc('get_user_friendships', { 
             user_id: currentUserId 
-          }) as { data: Friendship[] | null; error: any };
+          }) as Promise<RPCResponse<Friendship[]>>);
+
+        const { data: friendships, error: friendshipsError } = result;
 
         if (friendshipsError) {
           console.error('Error loading friendships:', friendshipsError);
@@ -125,11 +132,13 @@ const Messages = () => {
 
     const loadMessages = async () => {
       try {
-        const { data, error } = await supabase
+        const result = await (supabase
           .rpc('get_conversation_messages', { 
             user1_id: currentUserId,
             user2_id: selectedFriend.friend_id
-          }) as { data: Message[] | null; error: any };
+          }) as Promise<RPCResponse<Message[]>>);
+
+        const { data, error } = result;
 
         if (error) throw error;
         setMessages(data || []);
@@ -166,12 +175,14 @@ const Messages = () => {
     if (!newMessage.trim() || !selectedFriend || !currentUserId) return;
 
     try {
-      const { error } = await supabase
+      const result = await (supabase
         .rpc('send_message', {
           content_text: newMessage,
           sender_user_id: currentUserId,
           receiver_user_id: selectedFriend.friend_id
-        }) as { data: null; error: any };
+        }) as Promise<RPCResponse<null>>);
+
+      const { error } = result;
 
       if (error) throw error;
       setNewMessage("");
