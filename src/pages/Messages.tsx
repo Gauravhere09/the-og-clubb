@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { FriendList } from "@/components/messages/FriendList";
 import { ChatHeader } from "@/components/messages/ChatHeader";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageInput } from "@/components/messages/MessageInput";
+import { GroupChat } from "@/components/messages/GroupChat";
 
 interface Message {
   id: string;
@@ -24,37 +24,24 @@ interface Friend {
   friend_avatar_url: string | null;
 }
 
-interface Friendship {
-  user_id: string;
-  friend_id: string;
-}
-
-interface GetUserFriendshipsFunction {
-  Args: { user_id: string };
-  Returns: Friendship[];
-}
-
-interface GetConversationMessagesFunction {
-  Args: { user1_id: string; user2_id: string };
-  Returns: Message[];
-}
-
-interface SendMessageFunction {
-  Args: { content_text: string; sender_user_id: string; receiver_user_id: string };
-  Returns: null;
-}
-
-type DatabaseFunctions = {
-  get_user_friendships: GetUserFriendshipsFunction;
-  get_conversation_messages: GetConversationMessagesFunction;
-  send_message: SendMessageFunction;
+interface GroupMessage {
+  id: string;
+  content: string;
+  sender_id: string;
+  sender_username: string;
+  sender_avatar_url: string | null;
+  created_at: string;
+  type: 'text' | 'audio';
+  media_url?: string;
 }
 
 const Messages = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [groupMessages, setGroupMessages] = useState<GroupMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [showGroupChat, setShowGroupChat] = useState(false);
   const { toast } = useToast();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -142,49 +129,85 @@ const Messages = () => {
   }, [currentUserId]);
 
   useEffect(() => {
-    if (!selectedFriend || !currentUserId) return;
+    if (!currentUserId || !showGroupChat) return;
 
-    const loadMessages = async () => {
+    const loadGroupMessages = async () => {
       try {
         const { data, error } = await supabase
-          .rpc<GetConversationMessagesFunction['Args'], GetConversationMessagesFunction['Returns']>(
-            'get_conversation_messages',
-            { 
-              user1_id: currentUserId,
-              user2_id: selectedFriend.friend_id
-            }
-          );
+          .from('group_messages')
+          .select(`
+            *,
+            profiles:sender_id(username, avatar_url)
+          `)
+          .order('created_at', { ascending: true });
 
         if (error) throw error;
-        setMessages(data || []);
+
+        if (data) {
+          const formattedMessages = data.map(message => ({
+            id: message.id,
+            content: message.content,
+            sender_id: message.sender_id,
+            sender_username: message.profiles.username,
+            sender_avatar_url: message.profiles.avatar_url,
+            created_at: message.created_at,
+            type: message.type,
+            media_url: message.media_url
+          }));
+          setGroupMessages(formattedMessages);
+        }
       } catch (error) {
-        console.error('Error loading messages:', error);
+        console.error('Error loading group messages:', error);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "No se pudieron cargar los mensajes",
+          description: "No se pudieron cargar los mensajes del grupo",
         });
       }
     };
 
+    loadGroupMessages();
+
     const subscription = supabase
-      .channel('messages')
+      .channel('group_messages')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'messages',
-        filter: `sender_id=eq.${currentUserId},receiver_id=eq.${selectedFriend.friend_id}`,
+        table: 'group_messages',
       }, () => {
-        loadMessages();
+        loadGroupMessages();
       })
       .subscribe();
-
-    loadMessages();
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [selectedFriend, currentUserId]);
+  }, [currentUserId, showGroupChat]);
+
+  const loadMessages = async () => {
+    if (!selectedFriend || !currentUserId) return;
+
+    try {
+      const { data, error } = await supabase
+        .rpc<GetConversationMessagesFunction['Args'], GetConversationMessagesFunction['Returns']>(
+          'get_conversation_messages',
+          { 
+            user1_id: currentUserId,
+            user2_id: selectedFriend.friend_id
+          }
+        );
+
+      if (error) throw error;
+      setMessages(data || []);
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudieron cargar los mensajes",
+      });
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !selectedFriend || !currentUserId) return;
@@ -212,20 +235,83 @@ const Messages = () => {
     }
   };
 
+  const handleSendGroupMessage = async (content: string, type: 'text' | 'audio', audioBlob?: Blob) => {
+    if (!currentUserId) return;
+
+    try {
+      let media_url = undefined;
+
+      if (type === 'audio' && audioBlob) {
+        const fileName = `${crypto.randomUUID()}.webm`;
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('audio-messages')
+          .upload(fileName, audioBlob);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('audio-messages')
+          .getPublicUrl(fileName);
+
+        media_url = publicUrl;
+      }
+
+      const { error } = await supabase
+        .from('group_messages')
+        .insert({
+          content: content,
+          sender_id: currentUserId,
+          type: type,
+          media_url: media_url
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error sending group message:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo enviar el mensaje",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex bg-muted/30">
       <Navigation />
       <main className="flex-1 max-w-6xl mx-auto p-4 md:p-6 pb-20 md:pb-6">
         <div className="grid gap-6 md:grid-cols-[1fr,320px]">
           <Card className="grid md:grid-cols-[320px,1fr] h-[calc(100vh-120px)]">
-            <FriendList 
-              friends={friends}
-              selectedFriend={selectedFriend}
-              onSelectFriend={setSelectedFriend}
-            />
+            <div className="border-r">
+              <button
+                onClick={() => {
+                  setShowGroupChat(true);
+                  setSelectedFriend(null);
+                }}
+                className="w-full p-4 flex items-center gap-3 hover:bg-muted/50 transition-colors border-b"
+              >
+                <div className="font-medium">Chat grupal "h"</div>
+              </button>
+              <FriendList 
+                friends={friends}
+                selectedFriend={selectedFriend}
+                onSelectFriend={(friend) => {
+                  setSelectedFriend(friend);
+                  setShowGroupChat(false);
+                }}
+              />
+            </div>
 
             <div className="flex flex-col">
-              {selectedFriend ? (
+              {showGroupChat ? (
+                currentUserId && (
+                  <GroupChat
+                    messages={groupMessages}
+                    currentUserId={currentUserId}
+                    onSendMessage={handleSendGroupMessage}
+                  />
+                )
+              ) : selectedFriend ? (
                 <>
                   <ChatHeader friend={selectedFriend} />
                   {currentUserId && (
@@ -244,7 +330,7 @@ const Messages = () => {
                 </>
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
-                  Selecciona un amigo para comenzar a chatear
+                  Selecciona un chat para comenzar
                 </div>
               )}
             </div>
