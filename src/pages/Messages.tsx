@@ -76,16 +76,17 @@ const Messages = () => {
         console.log('Loading friends for user:', currentUserId);
         
         const { data: friendships, error: friendshipsError } = await supabase
-          .rpc<GetUserFriendshipsFunction['Returns']>('get_user_friendships', { 
-            user_id: currentUserId 
-          });
+          .rpc<GetUserFriendshipsFunction['Args'], GetUserFriendshipsFunction['Returns']>(
+            'get_user_friendships', 
+            { user_id: currentUserId }
+          );
 
         if (friendshipsError) {
           console.error('Error loading friendships:', friendshipsError);
           return;
         }
 
-        if (!friendships || !Array.isArray(friendships) || friendships.length === 0) {
+        if (!friendships || friendships.length === 0) {
           console.log('No friendships found');
           setFriends([]);
           return;
@@ -146,10 +147,13 @@ const Messages = () => {
     const loadMessages = async () => {
       try {
         const { data, error } = await supabase
-          .rpc<GetConversationMessagesFunction['Returns']>('get_conversation_messages', { 
-            user1_id: currentUserId,
-            user2_id: selectedFriend.friend_id
-          });
+          .rpc<GetConversationMessagesFunction['Args'], GetConversationMessagesFunction['Returns']>(
+            'get_conversation_messages',
+            { 
+              user1_id: currentUserId,
+              user2_id: selectedFriend.friend_id
+            }
+          );
 
         if (error) throw error;
         setMessages(data || []);
@@ -187,11 +191,14 @@ const Messages = () => {
 
     try {
       const { error } = await supabase
-        .rpc<SendMessageFunction['Returns']>('send_message', {
-          content_text: newMessage,
-          sender_user_id: currentUserId,
-          receiver_user_id: selectedFriend.friend_id
-        });
+        .rpc<SendMessageFunction['Args'], SendMessageFunction['Returns']>(
+          'send_message',
+          {
+            content_text: newMessage,
+            sender_user_id: currentUserId,
+            receiver_user_id: selectedFriend.friend_id
+          }
+        );
       
       if (error) throw error;
       setNewMessage("");
