@@ -320,42 +320,17 @@ export async function getFriends() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Usuario no autenticado");
 
-    // Get friendships where user is sender
-    const { data: sentFriendships, error: sentError } = await supabase
-      .from('friendships')
-      .select('receiver_id')
-      .eq('sender_id', user.id)
-      .eq('status', 'accepted');
-
-    if (sentError) throw sentError;
-
-    // Get friendships where user is receiver
-    const { data: receivedFriendships, error: receivedError } = await supabase
-      .from('friendships')
-      .select('sender_id')
-      .eq('receiver_id', user.id)
-      .eq('status', 'accepted');
-
-    if (receivedError) throw receivedError;
-
-    // Get all friend IDs
-    const friendIds = [
-      ...(sentFriendships?.map(f => f.receiver_id) || []),
-      ...(receivedFriendships?.map(f => f.sender_id) || [])
-    ];
-
-    if (friendIds.length === 0) return [];
-
-    // Get friend profiles
-    const { data: friendProfiles, error: profilesError } = await supabase
+    // For now, return all profiles except the current user
+    // This is a temporary solution until we implement proper friendships
+    const { data: profiles, error } = await supabase
       .from('profiles')
       .select('id, username, avatar_url')
-      .in('id', friendIds);
+      .neq('id', user.id);
 
-    if (profilesError) throw profilesError;
+    if (error) throw error;
 
     // Transform the data to match the expected format
-    return friendProfiles.map(profile => ({
+    return profiles.map(profile => ({
       friend_id: profile.id,
       friend_username: profile.username || '',
       friend_avatar_url: profile.avatar_url
