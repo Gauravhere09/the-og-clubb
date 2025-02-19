@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
@@ -22,6 +23,11 @@ interface Friend {
   friend_id: string;
   friend_username: string;
   friend_avatar_url: string | null;
+}
+
+interface Friendship {
+  user_id: string;
+  friend_id: string;
 }
 
 const Messages = () => {
@@ -50,7 +56,9 @@ const Messages = () => {
         console.log('Loading friends for user:', currentUserId);
         
         const { data: friendships, error: friendshipsError } = await supabase
-          .rpc('get_user_friendships', { user_id: currentUserId });
+          .rpc('get_user_friendships', { 
+            user_id: currentUserId 
+          }) as { data: Friendship[] | null; error: any };
 
         if (friendshipsError) {
           console.error('Error loading friendships:', friendshipsError);
@@ -121,7 +129,7 @@ const Messages = () => {
           .rpc('get_conversation_messages', { 
             user1_id: currentUserId,
             user2_id: selectedFriend.friend_id
-          });
+          }) as { data: Message[] | null; error: any };
 
         if (error) throw error;
         setMessages(data || []);
@@ -163,7 +171,7 @@ const Messages = () => {
           content_text: newMessage,
           sender_user_id: currentUserId,
           receiver_user_id: selectedFriend.friend_id
-        });
+        }) as { data: null; error: any };
 
       if (error) throw error;
       setNewMessage("");
@@ -205,11 +213,6 @@ const Messages = () => {
                     </Avatar>
                     <div className="flex-1 text-left">
                       <div className="font-medium">{friend.friend_username}</div>
-                      {friend.last_message && (
-                        <div className="text-sm text-muted-foreground truncate">
-                          {friend.last_message.content}
-                        </div>
-                      )}
                     </div>
                   </button>
                 ))}
