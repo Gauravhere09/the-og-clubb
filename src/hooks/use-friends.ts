@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/types/database.types";
 import { useToast } from "@/hooks/use-toast";
 
 export interface Friend {
@@ -22,10 +21,6 @@ export interface FriendRequest {
   };
 }
 
-type Tables = Database['public']['Tables'];
-type Friendship = Tables['friendships']['Row'];
-type Profile = Tables['profiles']['Row'];
-
 export function useFriends(currentUserId: string | null) {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
@@ -36,22 +31,38 @@ export function useFriends(currentUserId: string | null) {
     
     const loadFriends = async () => {
       try {
+        // Cargar amistades aceptadas
         const { data: friendships, error: friendshipsError } = await supabase
           .from('friendships')
           .select(`
-            *,
-            user:user_id(username, avatar_url)
+            id,
+            user_id,
+            friend_id,
+            status,
+            created_at,
+            profiles!friendships_user_id_fkey (
+              username,
+              avatar_url
+            )
           `)
-          .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`)
-          .eq('status', 'accepted');
+          .eq('status', 'accepted')
+          .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`);
 
         if (friendshipsError) throw friendshipsError;
 
+        // Cargar solicitudes pendientes
         const { data: pendingRequests, error: requestsError } = await supabase
           .from('friendships')
           .select(`
-            *,
-            user:user_id(username, avatar_url)
+            id,
+            user_id,
+            friend_id,
+            status,
+            created_at,
+            profiles!friendships_user_id_fkey (
+              username,
+              avatar_url
+            )
           `)
           .eq('friend_id', currentUserId)
           .eq('status', 'pending');
@@ -59,29 +70,31 @@ export function useFriends(currentUserId: string | null) {
         if (requestsError) throw requestsError;
 
         if (friendships) {
-          const friendIds = friendships.map(friendship => 
-            friendship.user_id === currentUserId ? friendship.friend_id : friendship.user_id
-          );
-
-          const { data: profiles, error: profilesError } = await supabase
-            .from('profiles')
-            .select('id, username, avatar_url')
-            .in('id', friendIds);
-
-          if (profilesError) throw profilesError;
-
-          if (profiles) {
-            const friendsList = profiles.map(profile => ({
-              friend_id: profile.id,
-              friend_username: profile.username || '',
-              friend_avatar_url: profile.avatar_url
-            }));
-            setFriends(friendsList);
-          }
+          const friendsList = friendships.map(friendship => {
+            const otherId = friendship.user_id === currentUserId ? friendship.friend_id : friendship.user_id;
+            const otherProfile = friendship.profiles;
+            return {
+              friend_id: otherId,
+              friend_username: otherProfile.username || '',
+              friend_avatar_url: otherProfile.avatar_url
+            };
+          });
+          setFriends(friendsList);
         }
 
         if (pendingRequests) {
-          setFriendRequests(pendingRequests as FriendRequest[]);
+          const requestsList = pendingRequests.map(request => ({
+            id: request.id,
+            user_id: request.user_id,
+            friend_id: request.friend_id,
+            status: request.status,
+            created_at: request.created_at,
+            user: {
+              username: request.profiles.username || '',
+              avatar_url: request.profiles.avatar_url
+            }
+          }));
+          setFriendRequests(requestsList);
         }
       } catch (error) {
         console.error('Error loading friends:', error);
@@ -117,11 +130,11 @@ export function useFriends(currentUserId: string | null) {
     try {
       const { error } = await supabase
         .from('friendships')
-        .insert({
+        .insert([{
           user_id: currentUserId,
           friend_id: friendId,
           status: 'pending'
-        });
+        }]);
 
       if (error) throw error;
 

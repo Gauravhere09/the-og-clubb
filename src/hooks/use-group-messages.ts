@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/types/database.types";
 import { useToast } from "@/hooks/use-toast";
 
 export interface GroupMessage {
@@ -29,8 +28,13 @@ export function useGroupMessages(currentUserId: string | null, showGroupChat: bo
         const { data, error } = await supabase
           .from('group_messages')
           .select(`
-            *,
-            sender:profiles!group_messages_sender_id_fkey (
+            id,
+            content,
+            sender_id,
+            type,
+            media_url,
+            created_at,
+            profiles!group_messages_sender_id_fkey (
               username,
               avatar_url
             )
@@ -40,7 +44,7 @@ export function useGroupMessages(currentUserId: string | null, showGroupChat: bo
         if (error) throw error;
 
         if (data) {
-          const formattedMessages: GroupMessage[] = data.map(message => ({
+          const messages = data.map(message => ({
             id: message.id,
             content: message.content,
             sender_id: message.sender_id,
@@ -48,11 +52,11 @@ export function useGroupMessages(currentUserId: string | null, showGroupChat: bo
             media_url: message.media_url,
             created_at: message.created_at,
             sender: {
-              username: message.sender.username || '',
-              avatar_url: message.sender.avatar_url
+              username: message.profiles.username || '',
+              avatar_url: message.profiles.avatar_url
             }
           }));
-          setGroupMessages(formattedMessages);
+          setGroupMessages(messages);
         }
       } catch (error) {
         console.error('Error loading group messages:', error);
@@ -115,12 +119,12 @@ export async function sendGroupMessage(
 
     const { error } = await supabase
       .from('group_messages')
-      .insert({
+      .insert([{
         content: content || '',
         sender_id: currentUserId,
-        type: type,
-        media_url: media_url
-      });
+        type,
+        media_url
+      }]);
 
     if (error) throw error;
   } catch (error) {
