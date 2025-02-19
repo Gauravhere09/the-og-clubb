@@ -32,15 +32,9 @@ export function useFriends(currentUserId: string | null) {
     
     const loadFriends = async () => {
       try {
-        const { data: acceptedFriendships, error: friendshipsError } = await supabase
+        const { data: friendships, error: friendshipsError } = await supabase
           .from('friendships')
-          .select(`
-            id,
-            user_id,
-            friend_id,
-            status,
-            created_at
-          `)
+          .select('*')
           .eq('status', 'accepted')
           .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`);
 
@@ -49,12 +43,8 @@ export function useFriends(currentUserId: string | null) {
         const { data: pendingRequests, error: requestsError } = await supabase
           .from('friendships')
           .select(`
-            id,
-            user_id,
-            friend_id,
-            status,
-            created_at,
-            user:profiles!friendships_user_id_fkey (
+            *,
+            profiles!friendships_user_id_fkey (
               username,
               avatar_url
             )
@@ -64,8 +54,8 @@ export function useFriends(currentUserId: string | null) {
 
         if (requestsError) throw requestsError;
 
-        if (acceptedFriendships) {
-          const friendIds = acceptedFriendships.map(friendship => 
+        if (friendships) {
+          const friendIds = friendships.map(friendship => 
             friendship.user_id === currentUserId ? friendship.friend_id : friendship.user_id
           );
 
@@ -93,10 +83,7 @@ export function useFriends(currentUserId: string | null) {
             friend_id: request.friend_id,
             status: request.status,
             created_at: request.created_at,
-            user: {
-              username: request.user.username || '',
-              avatar_url: request.user.avatar_url
-            }
+            user: request.profiles
           }));
           setFriendRequests(requestsList);
         }
