@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { FriendRequestButton } from "@/components/FriendRequestButton";
 import { FriendsList } from "@/components/FriendsList";
+import { useNavigate, useParams } from "react-router-dom";
 import { Tables } from "@/types/database.types";
 
 type Profile = Tables['profiles']['Row'];
@@ -24,11 +25,13 @@ const Profile = () => {
   const { toast } = useToast();
   const [session, setSession] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
+  const navigate = useNavigate();
+  const { id } = useParams();
 
   useEffect(() => {
     getSession();
     getProfile();
-  }, []);
+  }, [id]);
 
   const getSession = async () => {
     const { data } = await supabase.auth.getSession();
@@ -38,12 +41,17 @@ const Profile = () => {
   const getProfile = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
+      const profileId = id || user?.id;
+      
+      if (!profileId) {
+        navigate('/');
+        return;
+      }
 
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
+        .eq("id", profileId)
         .single();
 
       if (error) throw error;
@@ -57,6 +65,7 @@ const Profile = () => {
         title: "Error",
         description: error.message,
       });
+      navigate('/');
     } finally {
       setLoading(false);
     }
@@ -81,7 +90,7 @@ const Profile = () => {
 
       // Crear nombre único para el archivo
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}_${type}.${fileExt}`;
+      const fileName = `${user.id}_${type}_${Date.now()}.${fileExt}`;
       const filePath = `${type}s/${fileName}`;
 
       // Subir el archivo
@@ -177,6 +186,11 @@ const Profile = () => {
         </main>
       </div>
     );
+  }
+
+  if (!profile) {
+    navigate('/');
+    return null;
   }
 
   return (
