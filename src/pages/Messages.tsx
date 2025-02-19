@@ -29,9 +29,25 @@ interface Friendship {
   friend_id: string;
 }
 
-type DatabaseResponseType<T> = {
-  data: T;
-  error: Error | null;
+interface GetUserFriendshipsFunction {
+  Args: { user_id: string };
+  Returns: Friendship[];
+}
+
+interface GetConversationMessagesFunction {
+  Args: { user1_id: string; user2_id: string };
+  Returns: Message[];
+}
+
+interface SendMessageFunction {
+  Args: { content_text: string; sender_user_id: string; receiver_user_id: string };
+  Returns: null;
+}
+
+type DatabaseFunctions = {
+  get_user_friendships: GetUserFriendshipsFunction;
+  get_conversation_messages: GetConversationMessagesFunction;
+  send_message: SendMessageFunction;
 }
 
 const Messages = () => {
@@ -59,11 +75,10 @@ const Messages = () => {
       try {
         console.log('Loading friends for user:', currentUserId);
         
-        const result = await supabase.rpc('get_user_friendships', { 
-          user_id: currentUserId 
-        }) as unknown as DatabaseResponseType<Friendship[]>;
-
-        const { data: friendships, error: friendshipsError } = result;
+        const { data: friendships, error: friendshipsError } = await supabase
+          .rpc<GetUserFriendshipsFunction['Returns']>('get_user_friendships', { 
+            user_id: currentUserId 
+          });
 
         if (friendshipsError) {
           console.error('Error loading friendships:', friendshipsError);
@@ -130,12 +145,11 @@ const Messages = () => {
 
     const loadMessages = async () => {
       try {
-        const result = await supabase.rpc('get_conversation_messages', { 
-          user1_id: currentUserId,
-          user2_id: selectedFriend.friend_id
-        }) as unknown as DatabaseResponseType<Message[]>;
-
-        const { data, error } = result;
+        const { data, error } = await supabase
+          .rpc<GetConversationMessagesFunction['Returns']>('get_conversation_messages', { 
+            user1_id: currentUserId,
+            user2_id: selectedFriend.friend_id
+          });
 
         if (error) throw error;
         setMessages(data || []);
@@ -172,13 +186,12 @@ const Messages = () => {
     if (!newMessage.trim() || !selectedFriend || !currentUserId) return;
 
     try {
-      const result = await supabase.rpc('send_message', {
-        content_text: newMessage,
-        sender_user_id: currentUserId,
-        receiver_user_id: selectedFriend.friend_id
-      }) as unknown as DatabaseResponseType<null>;
-
-      const { error } = result;
+      const { error } = await supabase
+        .rpc<SendMessageFunction['Returns']>('send_message', {
+          content_text: newMessage,
+          sender_user_id: currentUserId,
+          receiver_user_id: selectedFriend.friend_id
+        });
       
       if (error) throw error;
       setNewMessage("");
