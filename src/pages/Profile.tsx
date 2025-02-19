@@ -17,6 +17,7 @@ interface Profile {
   username: string | null;
   bio: string | null;
   avatar_url: string | null;
+  cover_url: string | null;
 }
 
 const Profile = () => {
@@ -27,6 +28,7 @@ const Profile = () => {
   const [bio, setBio] = useState("");
   const { toast } = useToast();
   const [session, setSession] = useState<any>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     getSession();
@@ -63,6 +65,64 @@ const Profile = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const uploadImage = async (file: File, type: 'avatar' | 'cover') => {
+    try {
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${crypto.randomUUID()}.${fileExt}`;
+      const filePath = `${type}s/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profiles')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          [`${type}_url`]: publicUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', profile?.id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "¡Imagen actualizada!",
+        description: "La imagen se ha actualizado correctamente.",
+      });
+
+      getProfile();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'cover') => {
+    if (!event.target.files || event.target.files.length === 0) return;
+    const file = event.target.files[0];
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "La imagen no puede ser mayor a 2MB",
+      });
+      return;
+    }
+    uploadImage(file, type);
   };
 
   const updateProfile = async () => {
@@ -115,15 +175,47 @@ const Profile = () => {
     <div className="min-h-screen flex bg-muted/30">
       <Navigation />
       <main className="flex-1 max-w-4xl mx-auto px-4 py-6 md:py-8 pb-20 md:pb-8">
-        <div className="relative w-full h-48 rounded-lg bg-gradient-to-r from-primary/20 to-primary/40 mb-16">
+        <div className="relative w-full h-48 rounded-lg bg-gradient-to-r from-primary/20 to-primary/40 mb-16 overflow-hidden">
+          {profile?.cover_url && (
+            <img 
+              src={profile.cover_url} 
+              alt="Cover" 
+              className="w-full h-full object-cover"
+            />
+          )}
           <Avatar className="absolute -bottom-12 left-6 w-32 h-32 border-4 border-background">
-            <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} />
+            <AvatarImage src={profile?.avatar_url || undefined} />
             <AvatarFallback>{profile?.username?.[0]?.toUpperCase()}</AvatarFallback>
           </Avatar>
           {session?.user?.id === profile?.id && (
-            <Button size="icon" variant="secondary" className="absolute bottom-4 right-4">
-              <Camera className="h-4 w-4" />
-            </Button>
+            <div className="absolute bottom-4 right-4 flex gap-2">
+              <Input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                id="cover-upload"
+                onChange={(e) => handleFileUpload(e, 'cover')}
+                disabled={uploading}
+              />
+              <label htmlFor="cover-upload">
+                <Button size="icon" variant="secondary" className="cursor-pointer" disabled={uploading}>
+                  <Camera className="h-4 w-4" />
+                </Button>
+              </label>
+              <Input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                id="avatar-upload"
+                onChange={(e) => handleFileUpload(e, 'avatar')}
+                disabled={uploading}
+              />
+              <label htmlFor="avatar-upload">
+                <Button size="icon" variant="secondary" className="cursor-pointer" disabled={uploading}>
+                  <Camera className="h-4 w-4" />
+                </Button>
+              </label>
+            </div>
           )}
         </div>
 
