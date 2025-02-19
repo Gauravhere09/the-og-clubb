@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import { ChatHeader } from "@/components/messages/ChatHeader";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageInput } from "@/components/messages/MessageInput";
 import { GroupChat } from "@/components/messages/GroupChat";
-import { GroupMessage } from "@/types/notifications";
+import { GroupMessage, Database } from "@/types/notifications";
 
 interface Message {
   id: string;
@@ -53,7 +54,7 @@ const Messages = () => {
         console.log('Loading friends for user:', currentUserId);
         
         const { data: friendships, error: friendshipsError } = await supabase
-          .from('friendships')
+          .from<Database['public']['Tables']['friendships']>('friendships')
           .select('*')
           .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`);
 
@@ -123,7 +124,7 @@ const Messages = () => {
     const loadGroupMessages = async () => {
       try {
         const { data, error } = await supabase
-          .from('group_messages')
+          .from<Database['public']['Tables']['group_messages']>('group_messages')
           .select(`
             id,
             content,
@@ -145,11 +146,13 @@ const Messages = () => {
             id: message.id,
             content: message.content,
             sender_id: message.sender_id,
-            sender_username: message.profiles.username,
-            sender_avatar_url: message.profiles.avatar_url,
-            created_at: message.created_at,
             type: message.type,
-            media_url: message.media_url
+            media_url: message.media_url,
+            created_at: message.created_at,
+            sender: {
+              username: message.profiles.username,
+              avatar_url: message.profiles.avatar_url
+            }
           }));
           setGroupMessages(formattedMessages);
         }
@@ -186,7 +189,7 @@ const Messages = () => {
 
     try {
       const { data, error } = await supabase
-        .from('messages')
+        .from<Database['public']['Tables']['messages']>('messages')
         .select('*')
         .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${selectedFriend.friend_id}),and(sender_id.eq.${selectedFriend.friend_id},receiver_id.eq.${currentUserId})`)
         .order('created_at', { ascending: true });
@@ -208,7 +211,7 @@ const Messages = () => {
 
     try {
       const { error } = await supabase
-        .from('messages')
+        .from<Database['public']['Tables']['messages']>('messages')
         .insert({
           content: newMessage,
           sender_id: currentUserId,
@@ -249,7 +252,7 @@ const Messages = () => {
       }
 
       const { error } = await supabase
-        .from('group_messages')
+        .from<Database['public']['Tables']['group_messages']>('group_messages')
         .insert({
           content: content || '',
           sender_id: currentUserId,
