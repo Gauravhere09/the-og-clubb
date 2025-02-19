@@ -10,8 +10,25 @@ export interface Friend {
   friend_avatar_url: string | null;
 }
 
+export interface FriendRequest {
+  id: string;
+  user_id: string;
+  friend_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  user: {
+    username: string;
+    avatar_url: string | null;
+  };
+}
+
+type Tables = Database['public']['Tables'];
+type Friendship = Tables['friendships']['Row'];
+type Profile = Tables['profiles']['Row'];
+
 export function useFriends(currentUserId: string | null) {
   const [friends, setFriends] = useState<Friend[]>([]);
+  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -19,56 +36,53 @@ export function useFriends(currentUserId: string | null) {
     
     const loadFriends = async () => {
       try {
-        console.log('Loading friends for user:', currentUserId);
-        
         const { data: friendships, error: friendshipsError } = await supabase
           .from('friendships')
-          .select()
-          .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`);
+          .select(`
+            *,
+            user:user_id(username, avatar_url)
+          `)
+          .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`)
+          .eq('status', 'accepted');
 
-        if (friendshipsError) {
-          console.error('Error loading friendships:', friendshipsError);
-          return;
+        if (friendshipsError) throw friendshipsError;
+
+        const { data: pendingRequests, error: requestsError } = await supabase
+          .from('friendships')
+          .select(`
+            *,
+            user:user_id(username, avatar_url)
+          `)
+          .eq('friend_id', currentUserId)
+          .eq('status', 'pending');
+
+        if (requestsError) throw requestsError;
+
+        if (friendships) {
+          const friendIds = friendships.map(friendship => 
+            friendship.user_id === currentUserId ? friendship.friend_id : friendship.user_id
+          );
+
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url')
+            .in('id', friendIds);
+
+          if (profilesError) throw profilesError;
+
+          if (profiles) {
+            const friendsList = profiles.map(profile => ({
+              friend_id: profile.id,
+              friend_username: profile.username || '',
+              friend_avatar_url: profile.avatar_url
+            }));
+            setFriends(friendsList);
+          }
         }
 
-        if (!friendships || friendships.length === 0) {
-          console.log('No friendships found');
-          setFriends([]);
-          return;
+        if (pendingRequests) {
+          setFriendRequests(pendingRequests as FriendRequest[]);
         }
-
-        const friendIds = friendships.map(friendship => 
-          friendship.user_id === currentUserId ? friendship.friend_id : friendship.user_id
-        );
-
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url')
-          .in('id', friendIds);
-
-        if (profilesError) {
-          console.error('Error loading profiles:', profilesError);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "No se pudieron cargar los amigos",
-          });
-          return;
-        }
-
-        if (!profiles) {
-          console.log('No profiles found');
-          setFriends([]);
-          return;
-        }
-
-        const friendsList = profiles.map(profile => ({
-          friend_id: profile.id,
-          friend_username: profile.username || '',
-          friend_avatar_url: profile.avatar_url
-        }));
-
-        setFriends(friendsList);
       } catch (error) {
         console.error('Error loading friends:', error);
         toast({
@@ -80,7 +94,80 @@ export function useFriends(currentUserId: string | null) {
     };
 
     loadFriends();
+
+    const subscription = supabase
+      .channel('friendships')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'friendships'
+      }, () => {
+        loadFriends();
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [currentUserId]);
 
-  return friends;
+  const sendFriendRequest = async (friendId: string) => {
+    if (!currentUserId) return;
+
+    try {
+      const { error } = await supabase
+        .from('friendships')
+        .insert({
+          user_id: currentUserId,
+          friend_id: friendId,
+          status: 'pending'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Solicitud enviada",
+        description: "La solicitud de amistad ha sido enviada",
+      });
+    } catch (error) {
+      console.error('Error sending friend request:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo enviar la solicitud de amistad",
+      });
+    }
+  };
+
+  const respondToFriendRequest = async (requestId: string, accept: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('friendships')
+        .update({
+          status: accept ? 'accepted' : 'rejected'
+        })
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      toast({
+        title: accept ? "Solicitud aceptada" : "Solicitud rechazada",
+        description: accept ? "Ahora son amigos" : "Has rechazado la solicitud de amistad",
+      });
+    } catch (error) {
+      console.error('Error responding to friend request:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo procesar la solicitud",
+      });
+    }
+  };
+
+  return {
+    friends,
+    friendRequests,
+    sendFriendRequest,
+    respondToFriendRequest
+  };
 }

@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
+import { Database } from "@/types/database.types";
 import { useToast } from "@/hooks/use-toast";
 
 export interface GroupMessage {
@@ -29,7 +30,7 @@ export function useGroupMessages(currentUserId: string | null, showGroupChat: bo
           .from('group_messages')
           .select(`
             *,
-            profiles!group_messages_sender_id_fkey (
+            sender:profiles!group_messages_sender_id_fkey (
               username,
               avatar_url
             )
@@ -47,8 +48,8 @@ export function useGroupMessages(currentUserId: string | null, showGroupChat: bo
             media_url: message.media_url,
             created_at: message.created_at,
             sender: {
-              username: message.profiles.username || '',
-              avatar_url: message.profiles.avatar_url
+              username: message.sender.username || '',
+              avatar_url: message.sender.avatar_url
             }
           }));
           setGroupMessages(formattedMessages);

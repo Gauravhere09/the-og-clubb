@@ -1,5 +1,5 @@
 
-import { Bell, Home, Mail, User } from "lucide-react";
+import { Bell, Home, Mail, User, Users } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const Logo = () => (
@@ -17,6 +17,7 @@ export function Navigation() {
   const links = [
     { to: "/", icon: Home, label: "Inicio" },
     { to: "/messages", icon: Mail, label: "Mensajes" },
+    { to: "/friends", icon: Users, label: "Amigos" },
     { to: "/notifications", icon: Bell, label: "Notificaciones" },
     { to: "/profile", icon: User, label: "Perfil" },
   ];
