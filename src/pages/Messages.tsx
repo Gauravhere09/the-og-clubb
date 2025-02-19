@@ -4,37 +4,24 @@ import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { FriendSearch } from "@/components/FriendSearch";
-import { useToast } from "@/hooks/use-toast";
 import { FriendList } from "@/components/messages/FriendList";
 import { ChatHeader } from "@/components/messages/ChatHeader";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageInput } from "@/components/messages/MessageInput";
 import { GroupChat } from "@/components/messages/GroupChat";
-import { GroupMessage, Database } from "@/types/notifications";
-
-interface Message {
-  id: string;
-  content: string;
-  sender_id: string;
-  receiver_id: string;
-  created_at: string;
-}
-
-interface Friend {
-  friend_id: string;
-  friend_username: string;
-  friend_avatar_url: string | null;
-}
+import { useFriends, Friend } from "@/hooks/use-friends";
+import { useGroupMessages, sendGroupMessage } from "@/hooks/use-group-messages";
+import { usePrivateMessages } from "@/hooks/use-private-messages";
 
 const Messages = () => {
-  const [friends, setFriends] = useState<Friend[]>([]);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [groupMessages, setGroupMessages] = useState<GroupMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [showGroupChat, setShowGroupChat] = useState(false);
-  const { toast } = useToast();
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const friends = useFriends(currentUserId);
+  const { messages, loadMessages, sendMessage } = usePrivateMessages();
+  const { groupMessages } = useGroupMessages(currentUserId, showGroupChat);
 
   useEffect(() => {
     const loadCurrentUser = async () => {
@@ -47,228 +34,22 @@ const Messages = () => {
   }, []);
 
   useEffect(() => {
-    if (!currentUserId) return;
-    
-    const loadFriends = async () => {
-      try {
-        console.log('Loading friends for user:', currentUserId);
-        
-        const { data: friendships, error: friendshipsError } = await supabase
-          .from<Database['public']['Tables']['friendships']>('friendships')
-          .select('*')
-          .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`);
-
-        if (friendshipsError) {
-          console.error('Error loading friendships:', friendshipsError);
-          return;
-        }
-
-        if (!friendships || friendships.length === 0) {
-          console.log('No friendships found');
-          setFriends([]);
-          return;
-        }
-
-        console.log('Friendships found:', friendships);
-
-        const friendIds = friendships.map(friendship => 
-          friendship.user_id === currentUserId ? friendship.friend_id : friendship.user_id
-        );
-
-        const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url')
-          .in('id', friendIds);
-
-        if (profilesError) {
-          console.error('Error loading profiles:', profilesError);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "No se pudieron cargar los amigos",
-          });
-          return;
-        }
-
-        if (!profiles) {
-          console.log('No profiles found');
-          setFriends([]);
-          return;
-        }
-
-        console.log('Profiles found:', profiles);
-
-        const friendsList = profiles.map(profile => ({
-          friend_id: profile.id,
-          friend_username: profile.username || '',
-          friend_avatar_url: profile.avatar_url
-        }));
-
-        setFriends(friendsList);
-      } catch (error) {
-        console.error('Error loading friends:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "No se pudieron cargar los amigos",
-        });
-      }
-    };
-
-    loadFriends();
-  }, [currentUserId]);
-
-  useEffect(() => {
-    if (!currentUserId || !showGroupChat) return;
-
-    const loadGroupMessages = async () => {
-      try {
-        const { data, error } = await supabase
-          .from<Database['public']['Tables']['group_messages']>('group_messages')
-          .select(`
-            id,
-            content,
-            sender_id,
-            type,
-            media_url,
-            created_at,
-            profiles:sender_id (
-              username,
-              avatar_url
-            )
-          `)
-          .order('created_at', { ascending: true });
-
-        if (error) throw error;
-
-        if (data) {
-          const formattedMessages: GroupMessage[] = data.map(message => ({
-            id: message.id,
-            content: message.content,
-            sender_id: message.sender_id,
-            type: message.type,
-            media_url: message.media_url,
-            created_at: message.created_at,
-            sender: {
-              username: message.profiles.username,
-              avatar_url: message.profiles.avatar_url
-            }
-          }));
-          setGroupMessages(formattedMessages);
-        }
-      } catch (error) {
-        console.error('Error loading group messages:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "No se pudieron cargar los mensajes del grupo",
-        });
-      }
-    };
-
-    loadGroupMessages();
-
-    const subscription = supabase
-      .channel('group_messages')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'group_messages',
-      }, () => {
-        loadGroupMessages();
-      })
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [currentUserId, showGroupChat]);
-
-  const loadMessages = async () => {
-    if (!selectedFriend || !currentUserId) return;
-
-    try {
-      const { data, error } = await supabase
-        .from<Database['public']['Tables']['messages']>('messages')
-        .select('*')
-        .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${selectedFriend.friend_id}),and(sender_id.eq.${selectedFriend.friend_id},receiver_id.eq.${currentUserId})`)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      setMessages(data || []);
-    } catch (error) {
-      console.error('Error loading messages:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se pudieron cargar los mensajes",
-      });
+    if (currentUserId && selectedFriend) {
+      loadMessages(currentUserId, selectedFriend);
     }
-  };
+  }, [currentUserId, selectedFriend]);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedFriend || !currentUserId) return;
-
-    try {
-      const { error } = await supabase
-        .from<Database['public']['Tables']['messages']>('messages')
-        .insert({
-          content: newMessage,
-          sender_id: currentUserId,
-          receiver_id: selectedFriend.friend_id
-        });
-      
-      if (error) throw error;
-      setNewMessage("");
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se pudo enviar el mensaje",
-      });
+    if (currentUserId && selectedFriend) {
+      const success = await sendMessage(newMessage, currentUserId, selectedFriend);
+      if (success) {
+        setNewMessage("");
+      }
     }
   };
 
   const handleSendGroupMessage = async (content: string, type: 'text' | 'audio', audioBlob?: Blob) => {
-    if (!currentUserId) return;
-
-    try {
-      let media_url = undefined;
-
-      if (type === 'audio' && audioBlob) {
-        const fileName = `${crypto.randomUUID()}.webm`;
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('audio-messages')
-          .upload(fileName, audioBlob);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('audio-messages')
-          .getPublicUrl(fileName);
-
-        media_url = publicUrl;
-      }
-
-      const { error } = await supabase
-        .from<Database['public']['Tables']['group_messages']>('group_messages')
-        .insert({
-          content: content || '',
-          sender_id: currentUserId,
-          type: type,
-          media_url: media_url
-        });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error sending group message:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se pudo enviar el mensaje",
-      });
-    }
+    await sendGroupMessage(currentUserId, content, type, audioBlob);
   };
 
   return (
