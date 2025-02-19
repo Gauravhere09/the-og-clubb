@@ -324,20 +324,3 @@ export async function getFriendRequests() {
     throw error;
   }
 }
-export async function checkFriendship(targetUserId: string) {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Usuario no autenticado");
-
-    const { data, error } = await supabase
-      .from('friendships')
-      .select('status')
-      .or(`and(sender_id.eq.${user.id},receiver_id.eq.${targetUserId}),and(sender_id.eq.${targetUserId},receiver_id.eq.${user.id})`)
-      .single();
-
-    if (error && error.code !== 'PGRST116') return null;
-    return data?.status || null;
-  } catch (error: any) {
-    return null;
-  }
-}
