@@ -1,8 +1,15 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { GroupMessage, Database } from "@/types/notifications";
+import { Database } from "@/types/database.types";
 import { useToast } from "@/hooks/use-toast";
+
+export type GroupMessage = Database['public']['Tables']['group_messages']['Row'] & {
+  sender: {
+    username: string;
+    avatar_url: string | null;
+  };
+};
 
 export function useGroupMessages(currentUserId: string | null, showGroupChat: boolean) {
   const [groupMessages, setGroupMessages] = useState<GroupMessage[]>([]);
@@ -14,33 +21,25 @@ export function useGroupMessages(currentUserId: string | null, showGroupChat: bo
     const loadGroupMessages = async () => {
       try {
         const { data, error } = await supabase
-          .from('group_messages')
+          .from<'group_messages'>('group_messages')
           .select(`
-            id,
-            content,
-            sender_id,
-            type,
-            media_url,
-            created_at,
+            *,
             profiles:sender_id (
               username,
               avatar_url
             )
           `)
-          .order('created_at', { ascending: true });
+          .returns<(Database['public']['Tables']['group_messages']['Row'] & {
+            profiles: Pick<Database['public']['Tables']['profiles']['Row'], 'username' | 'avatar_url'>;
+          })[]>();
 
         if (error) throw error;
 
         if (data) {
           const formattedMessages: GroupMessage[] = data.map(message => ({
-            id: message.id,
-            content: message.content,
-            sender_id: message.sender_id,
-            type: message.type,
-            media_url: message.media_url,
-            created_at: message.created_at,
+            ...message,
             sender: {
-              username: message.profiles.username,
+              username: message.profiles.username || '',
               avatar_url: message.profiles.avatar_url
             }
           }));
@@ -106,7 +105,7 @@ export async function sendGroupMessage(
     }
 
     const { error } = await supabase
-      .from('group_messages')
+      .from<'group_messages'>('group_messages')
       .insert({
         content: content || '',
         sender_id: currentUserId,

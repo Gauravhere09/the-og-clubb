@@ -1,17 +1,11 @@
 
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/types/notifications";
+import { Database } from "@/types/database.types";
 import { useToast } from "@/hooks/use-toast";
 import { Friend } from './use-friends';
 
-export interface Message {
-  id: string;
-  content: string;
-  sender_id: string;
-  receiver_id: string;
-  created_at: string;
-}
+export type Message = Database['public']['Tables']['messages']['Row'];
 
 export function usePrivateMessages() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -22,10 +16,10 @@ export function usePrivateMessages() {
 
     try {
       const { data, error } = await supabase
-        .from('messages')
+        .from<'messages'>('messages')
         .select('*')
         .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${selectedFriend.friend_id}),and(sender_id.eq.${selectedFriend.friend_id},receiver_id.eq.${currentUserId})`)
-        .order('created_at', { ascending: true });
+        .returns<Message[]>();
 
       if (error) throw error;
       setMessages(data || []);
@@ -44,7 +38,7 @@ export function usePrivateMessages() {
 
     try {
       const { error } = await supabase
-        .from('messages')
+        .from<'messages'>('messages')
         .insert({
           content,
           sender_id: currentUserId,

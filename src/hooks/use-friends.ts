@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/types/notifications";
+import { Database } from "@/types/database.types";
 import { useToast } from "@/hooks/use-toast";
 
 export interface Friend {
@@ -9,6 +9,9 @@ export interface Friend {
   friend_username: string;
   friend_avatar_url: string | null;
 }
+
+type FriendshipsResponse = Database['public']['Tables']['friendships']['Row'];
+type ProfilesResponse = Database['public']['Tables']['profiles']['Row'];
 
 export function useFriends(currentUserId: string | null) {
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -22,9 +25,10 @@ export function useFriends(currentUserId: string | null) {
         console.log('Loading friends for user:', currentUserId);
         
         const { data: friendships, error: friendshipsError } = await supabase
-          .from('friendships')
+          .from<'friendships'>('friendships')
           .select('*')
-          .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`);
+          .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`)
+          .returns<FriendshipsResponse[]>();
 
         if (friendshipsError) {
           console.error('Error loading friendships:', friendshipsError);
@@ -42,9 +46,10 @@ export function useFriends(currentUserId: string | null) {
         );
 
         const { data: profiles, error: profilesError } = await supabase
-          .from('profiles')
+          .from<'profiles'>('profiles')
           .select('id, username, avatar_url')
-          .in('id', friendIds);
+          .in('id', friendIds)
+          .returns<ProfilesResponse[]>();
 
         if (profilesError) {
           console.error('Error loading profiles:', profilesError);
