@@ -27,7 +27,6 @@ interface Friend {
   friend_id: string;
   friend_username: string;
   friend_avatar_url: string | null;
-  last_message?: Message;
 }
 
 const Messages = () => {
@@ -53,29 +52,40 @@ const Messages = () => {
     
     const loadFriends = async () => {
       try {
+        // Primero obtener las amistades aceptadas
         const { data: friendships, error: friendshipsError } = await supabase
           .from('friendships')
-          .select(`
-            sender_id, receiver_id,
-            sender:profiles!friendships_sender_id_fkey(username, avatar_url),
-            receiver:profiles!friendships_receiver_id_fkey(username, avatar_url)
-          `)
+          .select('sender_id, receiver_id, status')
           .eq('status', 'accepted')
           .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`);
 
         if (friendshipsError) throw friendshipsError;
 
-        const friends = friendships.map(friendship => {
-          const isSender = friendship.sender_id === currentUserId;
-          const friend = isSender ? friendship.receiver : friendship.sender;
-          return {
-            friend_id: isSender ? friendship.receiver_id : friendship.sender_id,
-            friend_username: friend.username || '',
-            friend_avatar_url: friend.avatar_url
-          };
-        });
+        // Obtener los IDs de los amigos
+        const friendIds = friendships.map(friendship => 
+          friendship.sender_id === currentUserId ? friendship.receiver_id : friendship.sender_id
+        );
 
-        setFriends(friends);
+        if (friendIds.length === 0) {
+          setFriends([]);
+          return;
+        }
+
+        // Obtener los perfiles de los amigos
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', friendIds);
+
+        if (profilesError) throw profilesError;
+
+        const friendsList = profiles.map(profile => ({
+          friend_id: profile.id,
+          friend_username: profile.username || '',
+          friend_avatar_url: profile.avatar_url
+        }));
+
+        setFriends(friendsList);
       } catch (error) {
         console.error('Error loading friends:', error);
         toast({
@@ -96,16 +106,12 @@ const Messages = () => {
       try {
         const { data, error } = await supabase
           .from('messages')
-          .select(`
-            *,
-            profiles(username, avatar_url)
-          `)
-          .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${selectedFriend.friend_id}),
-              and(sender_id.eq.${selectedFriend.friend_id},receiver_id.eq.${currentUserId})`)
+          .select('*')
+          .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${selectedFriend.friend_id}),and(sender_id.eq.${selectedFriend.friend_id},receiver_id.eq.${currentUserId})`)
           .order('created_at', { ascending: true });
 
         if (error) throw error;
-        setMessages(data);
+        setMessages(data || []);
       } catch (error) {
         console.error('Error loading messages:', error);
         toast({
