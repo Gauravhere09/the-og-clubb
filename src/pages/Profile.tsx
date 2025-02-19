@@ -1,18 +1,20 @@
+
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Image as ImageIcon, Mail, MapPin, Pencil } from "lucide-react";
+import { Camera, Pencil } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { FriendRequestButton } from "@/components/FriendRequestButton";
 import { FriendsList } from "@/components/FriendsList";
 
 interface Profile {
-  username: string;
+  id: string;
+  username: string | null;
   bio: string | null;
   avatar_url: string | null;
 }
@@ -24,11 +26,17 @@ const Profile = () => {
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
   const { toast } = useToast();
-  const session = supabase.auth.session();
+  const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
+    getSession();
     getProfile();
   }, []);
+
+  const getSession = async () => {
+    const { data } = await supabase.auth.getSession();
+    setSession(data.session);
+  };
 
   const getProfile = async () => {
     try {
@@ -112,9 +120,11 @@ const Profile = () => {
             <AvatarImage src={profile?.avatar_url || "/placeholder.svg"} />
             <AvatarFallback>{profile?.username?.[0]?.toUpperCase()}</AvatarFallback>
           </Avatar>
-          <Button size="icon" variant="secondary" className="absolute bottom-4 right-4">
-            <Camera className="h-4 w-4" />
-          </Button>
+          {session?.user?.id === profile?.id && (
+            <Button size="icon" variant="secondary" className="absolute bottom-4 right-4">
+              <Camera className="h-4 w-4" />
+            </Button>
+          )}
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -158,12 +168,14 @@ const Profile = () => {
                       <p className="text-muted-foreground">@{profile?.username?.toLowerCase()}</p>
                     </div>
                     <div className="flex gap-2">
-                      {session?.user?.id !== profile?.id && (
-                        <FriendRequestButton targetUserId={profile?.id || ''} />
+                      {session?.user?.id !== profile?.id && profile?.id && (
+                        <FriendRequestButton targetUserId={profile.id} />
                       )}
-                      <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+                      {session?.user?.id === profile?.id && (
+                        <Button size="icon" variant="ghost" onClick={() => setIsEditing(true)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                   
@@ -186,10 +198,12 @@ const Profile = () => {
             <Card className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold">Fotos destacadas</h2>
-                <Button variant="ghost" size="sm">
-                  <ImageIcon className="h-4 w-4 mr-2" />
-                  Añadir foto
-                </Button>
+                {session?.user?.id === profile?.id && (
+                  <Button variant="ghost" size="sm">
+                    <Camera className="h-4 w-4 mr-2" />
+                    Añadir foto
+                  </Button>
+                )}
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
