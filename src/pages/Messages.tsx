@@ -9,6 +9,7 @@ import { ChatHeader } from "@/components/messages/ChatHeader";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageInput } from "@/components/messages/MessageInput";
 import { GroupChat } from "@/components/messages/GroupChat";
+import { GroupMessage } from "@/types/notifications";
 
 interface Message {
   id: string;
@@ -22,17 +23,6 @@ interface Friend {
   friend_id: string;
   friend_username: string;
   friend_avatar_url: string | null;
-}
-
-interface GroupMessage {
-  id: string;
-  content: string;
-  sender_id: string;
-  sender_username: string;
-  sender_avatar_url: string | null;
-  created_at: string;
-  type: 'text' | 'audio';
-  media_url?: string;
 }
 
 const Messages = () => {
@@ -63,10 +53,9 @@ const Messages = () => {
         console.log('Loading friends for user:', currentUserId);
         
         const { data: friendships, error: friendshipsError } = await supabase
-          .rpc<GetUserFriendshipsFunction['Args'], GetUserFriendshipsFunction['Returns']>(
-            'get_user_friendships', 
-            { user_id: currentUserId }
-          );
+          .from('friendships')
+          .select('*')
+          .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`);
 
         if (friendshipsError) {
           console.error('Error loading friendships:', friendshipsError);
@@ -136,15 +125,23 @@ const Messages = () => {
         const { data, error } = await supabase
           .from('group_messages')
           .select(`
-            *,
-            profiles:sender_id(username, avatar_url)
+            id,
+            content,
+            sender_id,
+            type,
+            media_url,
+            created_at,
+            profiles:sender_id (
+              username,
+              avatar_url
+            )
           `)
           .order('created_at', { ascending: true });
 
         if (error) throw error;
 
         if (data) {
-          const formattedMessages = data.map(message => ({
+          const formattedMessages: GroupMessage[] = data.map(message => ({
             id: message.id,
             content: message.content,
             sender_id: message.sender_id,
@@ -189,13 +186,10 @@ const Messages = () => {
 
     try {
       const { data, error } = await supabase
-        .rpc<GetConversationMessagesFunction['Args'], GetConversationMessagesFunction['Returns']>(
-          'get_conversation_messages',
-          { 
-            user1_id: currentUserId,
-            user2_id: selectedFriend.friend_id
-          }
-        );
+        .from('messages')
+        .select('*')
+        .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${selectedFriend.friend_id}),and(sender_id.eq.${selectedFriend.friend_id},receiver_id.eq.${currentUserId})`)
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
       setMessages(data || []);
@@ -214,14 +208,12 @@ const Messages = () => {
 
     try {
       const { error } = await supabase
-        .rpc<SendMessageFunction['Args'], SendMessageFunction['Returns']>(
-          'send_message',
-          {
-            content_text: newMessage,
-            sender_user_id: currentUserId,
-            receiver_user_id: selectedFriend.friend_id
-          }
-        );
+        .from('messages')
+        .insert({
+          content: newMessage,
+          sender_id: currentUserId,
+          receiver_id: selectedFriend.friend_id
+        });
       
       if (error) throw error;
       setNewMessage("");
@@ -259,7 +251,7 @@ const Messages = () => {
       const { error } = await supabase
         .from('group_messages')
         .insert({
-          content: content,
+          content: content || '',
           sender_id: currentUserId,
           type: type,
           media_url: media_url
