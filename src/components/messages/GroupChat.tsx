@@ -5,20 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send, Mic, Square } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-
-interface Message {
-  id: string;
-  content: string;
-  sender_id: string;
-  sender_username: string;
-  sender_avatar_url: string | null;
-  created_at: string;
-  type: 'text' | 'audio';
-  media_url?: string;
-}
+import { GroupMessage } from "@/hooks/use-group-messages";
 
 interface GroupChatProps {
-  messages: Message[];
+  messages: GroupMessage[];
   currentUserId: string;
   onSendMessage: (content: string, type: 'text' | 'audio', audioBlob?: Blob) => Promise<void>;
 }
@@ -83,8 +73,8 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage }: GroupChatP
               <div className="flex gap-2">
                 {message.sender_id !== currentUserId && (
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={message.sender_avatar_url || undefined} />
-                    <AvatarFallback>{message.sender_username[0]}</AvatarFallback>
+                    <AvatarImage src={message.sender.avatar_url || undefined} />
+                    <AvatarFallback>{message.sender.username[0]}</AvatarFallback>
                   </Avatar>
                 )}
                 <div
@@ -95,7 +85,7 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage }: GroupChatP
                   }`}
                 >
                   {message.type === 'audio' ? (
-                    <audio src={message.media_url} controls className="max-w-[200px]" />
+                    <audio src={message.media_url || undefined} controls className="max-w-[200px]" />
                   ) : (
                     <p>{message.content}</p>
                   )}
@@ -106,7 +96,7 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage }: GroupChatP
                         : "text-muted-foreground"
                     }`}
                   >
-                    {message.sender_username} • {new Date(message.created_at).toLocaleTimeString()}
+                    {message.sender.username} • {new Date(message.created_at).toLocaleTimeString()}
                   </div>
                 </div>
               </div>

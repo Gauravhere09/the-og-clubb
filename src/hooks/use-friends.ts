@@ -10,9 +10,6 @@ export interface Friend {
   friend_avatar_url: string | null;
 }
 
-type FriendshipsResponse = Database['public']['Tables']['friendships']['Row'];
-type ProfilesResponse = Database['public']['Tables']['profiles']['Row'];
-
 export function useFriends(currentUserId: string | null) {
   const [friends, setFriends] = useState<Friend[]>([]);
   const { toast } = useToast();
@@ -25,10 +22,9 @@ export function useFriends(currentUserId: string | null) {
         console.log('Loading friends for user:', currentUserId);
         
         const { data: friendships, error: friendshipsError } = await supabase
-          .from<'friendships'>('friendships')
-          .select('*')
-          .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`)
-          .returns<FriendshipsResponse[]>();
+          .from('friendships')
+          .select()
+          .or(`user_id.eq.${currentUserId},friend_id.eq.${currentUserId}`);
 
         if (friendshipsError) {
           console.error('Error loading friendships:', friendshipsError);
@@ -46,10 +42,9 @@ export function useFriends(currentUserId: string | null) {
         );
 
         const { data: profiles, error: profilesError } = await supabase
-          .from<'profiles'>('profiles')
+          .from('profiles')
           .select('id, username, avatar_url')
-          .in('id', friendIds)
-          .returns<ProfilesResponse[]>();
+          .in('id', friendIds);
 
         if (profilesError) {
           console.error('Error loading profiles:', profilesError);
