@@ -320,30 +320,29 @@ export async function getFriends() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Usuario no autenticado");
 
-    // Primero obtenemos las amistades donde el usuario es el sender
+    // Obtener amistades donde el usuario es el remitente
     const { data: senderFriends, error: senderError } = await supabase
       .from('friendships')
       .select(`
-        receiver_id as friend_id,
-        profiles!profiles_id_fkey (
-          username as friend_username,
-          avatar_url as friend_avatar_url
+        receiver_id,
+        receiver:profiles!receiver_id(
+          username,
+          avatar_url
         )
       `)
       .eq('sender_id', user.id)
-      .eq('status', 'accepted')
-      .select('profiles(username, avatar_url)');
+      .eq('status', 'accepted');
 
     if (senderError) throw senderError;
 
-    // Luego obtenemos las amistades donde el usuario es el receiver
+    // Obtener amistades donde el usuario es el receptor
     const { data: receiverFriends, error: receiverError } = await supabase
       .from('friendships')
       .select(`
-        sender_id as friend_id,
-        profiles!profiles_id_fkey (
-          username as friend_username,
-          avatar_url as friend_avatar_url
+        sender_id,
+        sender:profiles!sender_id(
+          username,
+          avatar_url
         )
       `)
       .eq('receiver_id', user.id)
@@ -351,15 +350,20 @@ export async function getFriends() {
 
     if (receiverError) throw receiverError;
 
-    // Combinamos ambos resultados
-    const allFriends = [...(senderFriends || []), ...(receiverFriends || [])];
-
-    // Transformamos los datos para que tengan el formato correcto
-    return allFriends.map(friend => ({
-      friend_id: friend.friend_id,
-      friend_username: friend.profiles?.username || '',
-      friend_avatar_url: friend.profiles?.avatar_url
+    // Transformar y combinar los resultados
+    const senderMapped = (senderFriends || []).map(friend => ({
+      friend_id: friend.receiver_id,
+      friend_username: friend.receiver?.username || '',
+      friend_avatar_url: friend.receiver?.avatar_url
     }));
+
+    const receiverMapped = (receiverFriends || []).map(friend => ({
+      friend_id: friend.sender_id,
+      friend_username: friend.sender?.username || '',
+      friend_avatar_url: friend.sender?.avatar_url
+    }));
+
+    return [...senderMapped, ...receiverMapped];
   } catch (error: any) {
     throw error;
   }
