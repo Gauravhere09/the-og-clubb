@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -30,8 +29,13 @@ const Profile = () => {
 
   useEffect(() => {
     getSession();
-    getProfile();
-  }, [id]);
+  }, []);
+
+  useEffect(() => {
+    if (session) {
+      getProfile();
+    }
+  }, [id, session]);
 
   const getSession = async () => {
     const { data } = await supabase.auth.getSession();
@@ -40,26 +44,36 @@ const Profile = () => {
 
   const getProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const profileId = id || user?.id;
-      
-      if (!profileId) {
-        navigate('/');
+      if (!session?.user) {
+        navigate('/auth');
         return;
       }
+
+      const profileId = id || session.user.id;
 
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", profileId)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
+
+      if (!data) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Perfil no encontrado",
+        });
+        navigate('/');
+        return;
+      }
 
       setProfile(data);
       setUsername(data.username || "");
       setBio(data.bio || "");
     } catch (error: any) {
+      console.error('Error loading profile:', error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -75,12 +89,10 @@ const Profile = () => {
     try {
       setUploading(true);
       
-      // Validar tamaño del archivo
       if (file.size > 2 * 1024 * 1024) {
         throw new Error("El archivo no puede ser mayor a 2MB");
       }
 
-      // Validar tipo de archivo
       if (!file.type.startsWith('image/')) {
         throw new Error("Solo se permiten archivos de imagen");
       }
@@ -88,12 +100,10 @@ const Profile = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
-      // Crear nombre único para el archivo
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}_${type}_${Date.now()}.${fileExt}`;
       const filePath = `${type}s/${fileName}`;
 
-      // Subir el archivo
       const { error: uploadError } = await supabase.storage
         .from('profiles')
         .upload(filePath, file, {
@@ -103,12 +113,10 @@ const Profile = () => {
 
       if (uploadError) throw uploadError;
 
-      // Obtener URL pública
       const { data: { publicUrl } } = supabase.storage
         .from('profiles')
         .getPublicUrl(filePath);
 
-      // Actualizar perfil
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
@@ -144,8 +152,9 @@ const Profile = () => {
 
   const updateProfile = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No user found");
+      if (!session?.user) {
+        throw new Error("No user found");
+      }
 
       const { error } = await supabase
         .from("profiles")
@@ -154,7 +163,7 @@ const Profile = () => {
           bio,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", user.id);
+        .eq("id", session.user.id);
 
       if (error) throw error;
 
@@ -189,8 +198,18 @@ const Profile = () => {
   }
 
   if (!profile) {
-    navigate('/');
-    return null;
+    return (
+      <div className="min-h-screen flex bg-muted/30">
+        <Navigation />
+        <main className="flex-1 max-w-4xl mx-auto px-4 py-6 md:py-8">
+          <Card className="p-6 text-center">
+            <h1 className="text-2xl font-semibold mb-2">Perfil no encontrado</h1>
+            <p className="text-muted-foreground mb-4">El perfil que buscas no existe o no tienes acceso a él.</p>
+            <Button onClick={() => navigate('/')}>Volver al inicio</Button>
+          </Card>
+        </main>
+      </div>
+    );
   }
 
   return (
