@@ -14,6 +14,8 @@ import { PostActions } from "./post/PostActions";
 import { Comments } from "./post/Comments";
 import type { Tables } from "@/types/database.types";
 
+type ReactionType = Tables["likes"]["Row"]["reaction_type"];
+
 interface PostProps {
   post: PostType;
 }
@@ -75,7 +77,7 @@ export function Post({ post }: PostProps) {
   });
 
   const { mutate: toggleCommentReaction } = useMutation({
-    mutationFn: async ({ commentId, type }: { commentId: string; type: 'like' | 'love' | 'haha' | 'sad' | 'angry' }) => {
+    mutationFn: async ({ commentId, type }: { commentId: string; type: ReactionType }) => {
       if (!session?.user?.id) {
         throw new Error("Debes iniciar sesión para reaccionar");
       }
@@ -104,12 +106,12 @@ export function Post({ post }: PostProps) {
       } else {
         const { error } = await supabase
           .from('likes')
-          .insert({ 
+          .insert({
             user_id: session.user.id,
             comment_id: commentId,
             post_id: null,
             reaction_type: type
-          } as Tables['likes']['Insert']);
+          } satisfies Tables['likes']['Insert']);
         if (error) throw error;
       }
     },

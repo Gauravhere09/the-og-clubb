@@ -25,7 +25,7 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
       const { error } = await supabase
         .from('likes')
         .delete()
-        .match({ id: existingReaction.id });
+        .eq('id', existingReaction.id);
       if (error) throw error;
       return null;
     } else {
@@ -36,7 +36,7 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
           user_id: user.id,
           post_id: postId 
         })
-        .match({ id: existingReaction.id });
+        .eq('id', existingReaction.id);
       if (error) throw error;
       return reactionType;
     }
@@ -48,7 +48,7 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
         post_id: postId,
         reaction_type: reactionType,
         comment_id: null
-      });
+      } satisfies Tables['likes']['Insert']);
     if (error) throw error;
     return reactionType;
   }
