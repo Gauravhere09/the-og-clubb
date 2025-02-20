@@ -30,7 +30,11 @@ export function FriendRequestButton({ targetUserId, onRequestSent }: FriendReque
         .or(`user_id.eq.${user.id}.and.friend_id.eq.${targetUserId},user_id.eq.${targetUserId}.and.friend_id.eq.${user.id}`)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error checking friendship:', error);
+        return;
+      }
+      
       setStatus(data?.status || null);
     } catch (error) {
       console.error('Error checking friendship:', error);
@@ -41,9 +45,9 @@ export function FriendRequestButton({ targetUserId, onRequestSent }: FriendReque
     try {
       setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No se encontró usuario");
+      if (!user) throw new Error("Usuario no autenticado");
 
-      const { error } = await supabase
+      const { error: friendshipError } = await supabase
         .from('friendships')
         .insert({
           user_id: user.id,
@@ -51,16 +55,18 @@ export function FriendRequestButton({ targetUserId, onRequestSent }: FriendReque
           status: 'pending'
         });
 
-      if (error) throw error;
+      if (friendshipError) throw friendshipError;
 
       // Crear notificación
-      await supabase
+      const { error: notificationError } = await supabase
         .from('notifications')
         .insert({
           type: 'friend_request',
           sender_id: user.id,
           receiver_id: targetUserId
         });
+
+      if (notificationError) throw notificationError;
 
       setStatus('pending');
       toast({
@@ -83,19 +89,34 @@ export function FriendRequestButton({ targetUserId, onRequestSent }: FriendReque
     try {
       setIsLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("No se encontró usuario");
+      if (!user) throw new Error("Usuario no autenticado");
 
-      const { error } = await supabase
+      // Eliminar la amistad o solicitud pendiente
+      const { error: friendshipError } = await supabase
         .from('friendships')
         .delete()
         .or(`user_id.eq.${user.id}.and.friend_id.eq.${targetUserId},user_id.eq.${targetUserId}.and.friend_id.eq.${user.id}`);
 
-      if (error) throw error;
+      if (friendshipError) throw friendshipError;
+
+      // Eliminar la notificación si existe
+      if (status === 'pending') {
+        await supabase
+          .from('notifications')
+          .delete()
+          .match({
+            type: 'friend_request',
+            sender_id: user.id,
+            receiver_id: targetUserId
+          });
+      }
 
       setStatus(null);
       toast({
-        title: "Solicitud cancelada",
-        description: "La solicitud de amistad ha sido cancelada.",
+        title: status === 'accepted' ? "Amistad eliminada" : "Solicitud cancelada",
+        description: status === 'accepted' 
+          ? "Has eliminado la amistad con este usuario."
+          : "La solicitud de amistad ha sido cancelada.",
       });
     } catch (error: any) {
       toast({
