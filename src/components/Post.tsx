@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import type { Post as PostType } from "@/types/post";
@@ -73,7 +74,7 @@ export function Post({ post }: PostProps) {
   });
 
   const { mutate: toggleCommentReaction } = useMutation({
-    mutationFn: async ({ commentId, type }: { commentId: string; type: string }) => {
+    mutationFn: async ({ commentId, type }: { commentId: string; type: 'like' | 'love' | 'haha' | 'sad' | 'angry' }) => {
       if (!session?.user?.id) {
         throw new Error("Debes iniciar sesión para reaccionar");
       }
