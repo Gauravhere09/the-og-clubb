@@ -1,23 +1,24 @@
 
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/types/database.types";
 
 type ReactionType = 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
 
 export async function toggleReaction(postId: string | undefined, reactionType: ReactionType) {
-  const userId = (await supabase.auth.getUser()).data.user?.id;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.id || !postId) return null;
   
   const { data: existingReaction } = await supabase
     .from('likes')
     .select()
     .match({ 
-      user_id: userId,
+      user_id: user.id,
       post_id: postId
     })
     .maybeSingle();
 
   if (existingReaction) {
     if (existingReaction.reaction_type === reactionType) {
-      // Si la reacción es la misma, la eliminamos
       const { error } = await supabase
         .from('likes')
         .delete()
@@ -25,7 +26,6 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
       if (error) throw error;
       return null;
     } else {
-      // Si es una reacción diferente, actualizamos el tipo
       const { error } = await supabase
         .from('likes')
         .update({ reaction_type: reactionType })
@@ -34,14 +34,13 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
       return reactionType;
     }
   } else {
-    // Si no existe reacción previa, creamos una nueva
     const { error } = await supabase
       .from('likes')
       .insert({
-        user_id: userId,
+        user_id: user.id,
         post_id: postId,
         reaction_type: reactionType
-      });
+      } as Tables['likes']['Insert']);
     if (error) throw error;
     return reactionType;
   }

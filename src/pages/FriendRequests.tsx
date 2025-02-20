@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
@@ -8,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { Tables } from "@/types/database.types";
+import type { Tables } from "@/types/database.types";
 
 interface FriendRequest {
   id: string;
@@ -52,7 +51,6 @@ export default function FriendRequests() {
         .from('friend_requests')
         .select(`
           id,
-          sender_id,
           sender:profiles!friend_requests_sender_id_fkey (
             id,
             username,
@@ -64,12 +62,7 @@ export default function FriendRequests() {
 
       if (error) throw error;
 
-      const formattedRequests: FriendRequest[] = (data || []).map(request => ({
-        id: request.id,
-        sender: request.sender
-      }));
-
-      setRequests(formattedRequests);
+      setRequests(data as FriendRequest[]);
     } catch (error) {
       console.error('Error loading friend requests:', error);
       toast({
@@ -96,8 +89,8 @@ export default function FriendRequests() {
 
       if (requestError) throw requestError;
 
-      if (accept && requestData?.sender_id) {
-        const friendInserts: Tables["friends"]["Insert"][] = [
+      if (accept && requestData) {
+        const friendInserts: Tables['friends']['Insert'][] = [
           { user_id: user.id, friend_id: requestData.sender_id },
           { user_id: requestData.sender_id, friend_id: user.id }
         ];

@@ -13,7 +13,10 @@ export interface Post {
   };
   comments_count?: number;
   reactions_count?: number;
-  user_reaction?: 'like' | 'love' | 'haha' | 'sad' | 'angry' | null;
+  user_reaction?: 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry' | null;
+  reactions?: {
+    count: number;
+  };
 }
 
 export interface Comment {
