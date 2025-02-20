@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import type { Post as PostType } from "@/types/post";
@@ -54,17 +53,63 @@ export function Post({ post }: PostProps) {
     },
   });
 
+  const { mutate: handleReaction } = useMutation({
+    mutationFn: (type: 'like' | 'love' | 'haha' | 'sad' | 'angry') => 
+      toggleReaction(post.id, type),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+  });
+
+  const { mutate: handleDeletePost } = useMutation({
+    mutationFn: () => deletePost(post.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      toast({
+        title: "Post eliminado",
+        description: "El post se ha eliminado correctamente",
+      });
+    }
+  });
+
   const { mutate: toggleCommentReaction } = useMutation({
     mutationFn: async ({ commentId, type }: { commentId: string; type: string }) => {
-      const { error } = await supabase
+      if (!session?.user?.id) {
+        throw new Error("Debes iniciar sesión para reaccionar");
+      }
+      
+      const { data: existingReaction } = await supabase
         .from('likes')
-        .upsert({ 
-          user_id: session?.user?.id,
-          comment_id: commentId,
-          post_id: null,
-          reaction_type: type
-        });
-      if (error) throw error;
+        .select('*')
+        .eq('user_id', session.user.id)
+        .eq('comment_id', commentId)
+        .single();
+
+      if (existingReaction) {
+        if (existingReaction.reaction_type === type) {
+          const { error } = await supabase
+            .from('likes')
+            .delete()
+            .eq('id', existingReaction.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('likes')
+            .update({ reaction_type: type })
+            .eq('id', existingReaction.id);
+          if (error) throw error;
+        }
+      } else {
+        const { error } = await supabase
+          .from('likes')
+          .insert({ 
+            user_id: session.user.id,
+            comment_id: commentId,
+            post_id: null,
+            reaction_type: type
+          });
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", post.id] });
@@ -73,11 +118,11 @@ export function Post({ post }: PostProps) {
         description: "Tu reacción se ha actualizado correctamente",
       });
     },
-    onError: () => {
+    onError: (error) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo actualizar la reacción",
+        description: error instanceof Error ? error.message : "No se pudo actualizar la reacción",
       });
     },
   });
@@ -103,14 +148,6 @@ export function Post({ post }: PostProps) {
         title: "Error",
         description: "No se pudo eliminar el comentario",
       });
-    },
-  });
-
-  const { mutate: handleReaction } = useMutation({
-    mutationFn: (type: 'like' | 'love' | 'haha' | 'sad' | 'angry') => 
-      toggleReaction(post.id, type),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
   });
 
