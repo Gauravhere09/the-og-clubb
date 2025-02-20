@@ -31,7 +31,7 @@ export default function FriendRequests() {
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'friendships'
+        table: 'friend_requests'
       }, () => {
         loadRequests();
       })
@@ -48,16 +48,16 @@ export default function FriendRequests() {
       if (!user) return;
 
       const { data, error } = await supabase
-        .from('friendships')
+        .from('friend_requests')
         .select(`
           id,
-          sender:profiles!friendships_user_id_fkey (
+          sender:profiles!friend_requests_sender_id_fkey (
             id,
             username,
             avatar_url
           )
         `)
-        .eq('friend_id', user.id)
+        .eq('receiver_id', user.id)
         .eq('status', 'pending');
 
       if (error) throw error;
@@ -77,12 +77,30 @@ export default function FriendRequests() {
 
   const handleRequest = async (requestId: string, accept: boolean) => {
     try {
-      const { error } = await supabase
-        .from('friendships')
-        .update({ status: accept ? 'accepted' : 'rejected' })
-        .eq('id', requestId);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-      if (error) throw error;
+      // Primero actualizar el estado de la solicitud
+      const { data: requestData, error: requestError } = await supabase
+        .from('friend_requests')
+        .update({ status: accept ? 'accepted' : 'rejected' })
+        .eq('id', requestId)
+        .select('sender_id')
+        .single();
+
+      if (requestError) throw requestError;
+
+      if (accept && requestData) {
+        // Si se acepta, crear la amistad en ambas direcciones
+        const { error: friendshipError } = await supabase
+          .from('friends')
+          .insert([
+            { user_id: user.id, friend_id: requestData.sender_id },
+            { user_id: requestData.sender_id, friend_id: user.id }
+          ]);
+
+        if (friendshipError) throw friendshipError;
+      }
 
       toast({
         title: accept ? "Solicitud aceptada" : "Solicitud rechazada",
