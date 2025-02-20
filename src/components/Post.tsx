@@ -14,7 +14,7 @@ import { PostActions } from "./post/PostActions";
 import { Comments } from "./post/Comments";
 import type { Tables } from "@/types/database.types";
 
-type ReactionType = Tables["likes"]["Row"]["reaction_type"];
+type ReactionType = 'like' | 'love' | 'haha' | 'sad' | 'angry';
 
 interface PostProps {
   post: PostType;
@@ -84,7 +84,7 @@ export function Post({ post }: PostProps) {
       
       const { data: existingReaction } = await supabase
         .from('likes')
-        .select('id, user_id, post_id, comment_id, reaction_type, created_at')
+        .select('*')
         .eq('user_id', session.user.id)
         .eq('comment_id', commentId)
         .single();
@@ -104,7 +104,7 @@ export function Post({ post }: PostProps) {
           if (error) throw error;
         }
       } else {
-        const newLike: Tables['likes']['Insert'] = {
+        const newLike = {
           user_id: session.user.id,
           comment_id: commentId,
           post_id: null,
