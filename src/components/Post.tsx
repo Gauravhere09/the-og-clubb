@@ -12,6 +12,7 @@ import { PostHeader } from "./post/PostHeader";
 import { PostContent } from "./post/PostContent";
 import { PostActions } from "./post/PostActions";
 import { Comments } from "./post/Comments";
+import type { Tables } from "@/types/database.types";
 
 interface PostProps {
   post: PostType;
@@ -81,10 +82,10 @@ export function Post({ post }: PostProps) {
       
       const { data: existingReaction } = await supabase
         .from('likes')
-        .select('*')
+        .select('id, user_id, post_id, comment_id, reaction_type, created_at')
         .eq('user_id', session.user.id)
         .eq('comment_id', commentId)
-        .single();
+        .single() as { data: Tables['likes']['Row'] | null };
 
       if (existingReaction) {
         if (existingReaction.reaction_type === type) {
@@ -108,7 +109,7 @@ export function Post({ post }: PostProps) {
             comment_id: commentId,
             post_id: null,
             reaction_type: type
-          });
+          } as Tables['likes']['Insert']);
         if (error) throw error;
       }
     },
