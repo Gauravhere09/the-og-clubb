@@ -1,6 +1,6 @@
 
-import { Globe, Users, Lock } from "lucide-react";
-import { Play } from "lucide-react";
+import { Globe, Users, Lock, Play } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { Post } from "@/types/post";
 
 interface PostContentProps {
