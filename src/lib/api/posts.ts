@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "@/types/post";
 import type { Tables } from "@/types/database.types";

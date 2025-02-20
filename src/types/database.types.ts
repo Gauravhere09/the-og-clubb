@@ -1,3 +1,4 @@
+
 export interface Database {
   public: {
     Tables: {
@@ -30,46 +31,26 @@ export interface Database {
           updated_at?: string;
         };
       };
-      friend_requests: {
-        Row: {
-          id: string;
-          sender_id: string;
-          receiver_id: string;
-          status: 'pending' | 'accepted' | 'rejected';
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          sender_id: string;
-          receiver_id: string;
-          status?: 'pending' | 'accepted' | 'rejected';
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          sender_id?: string;
-          receiver_id?: string;
-          status?: 'pending' | 'accepted' | 'rejected';
-          created_at?: string;
-        };
-      };
-      friends: {
+      friendships: {
         Row: {
           id: string;
           user_id: string;
           friend_id: string;
+          status: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
           friend_id: string;
+          status?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
           friend_id?: string;
+          status?: string | null;
           created_at?: string;
         };
       };
@@ -160,47 +141,76 @@ export interface Database {
           updated_at?: string;
         };
       };
-      friendships: {
+      messages: {
         Row: {
           id: string;
-          user_id: string;
-          friend_id: string;
-          status: 'pending' | 'accepted' | 'rejected';
+          content: string;
+          sender_id: string;
+          receiver_id: string;
+          created_at: string;
+          read_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          content: string;
+          sender_id: string;
+          receiver_id: string;
+          created_at?: string;
+          read_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          content?: string;
+          sender_id?: string;
+          receiver_id?: string;
+          created_at?: string;
+          read_at?: string | null;
+        };
+      };
+      group_messages: {
+        Row: {
+          id: string;
+          content: string;
+          sender_id: string;
+          type: string | null;
+          media_url: string | null;
           created_at: string;
         };
         Insert: {
           id?: string;
-          user_id: string;
-          friend_id: string;
-          status?: 'pending' | 'accepted' | 'rejected';
+          content: string;
+          sender_id: string;
+          type?: string | null;
+          media_url?: string | null;
           created_at?: string;
         };
         Update: {
           id?: string;
-          user_id?: string;
-          friend_id?: string;
-          status?: 'pending' | 'accepted' | 'rejected';
+          content?: string;
+          sender_id?: string;
+          type?: string | null;
+          media_url?: string | null;
           created_at?: string;
         };
       };
       notifications: {
         Row: {
           id: string;
-          type: 'friend_request' | 'message' | 'like';
+          type: string;
           sender_id: string;
           receiver_id: string;
           created_at: string;
         };
         Insert: {
           id?: string;
-          type: 'friend_request' | 'message' | 'like';
+          type: string;
           sender_id: string;
           receiver_id: string;
           created_at?: string;
         };
         Update: {
           id?: string;
-          type?: 'friend_request' | 'message' | 'like';
+          type?: string;
           sender_id?: string;
           receiver_id?: string;
           created_at?: string;
