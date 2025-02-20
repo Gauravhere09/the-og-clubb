@@ -10,7 +10,8 @@ import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import Messages from "./pages/Messages";
 import Notifications from "./pages/Notifications";
-import Profile from "./pages/Profile";
+import UserProfile from "./pages/UserProfile";
+import FriendRequests from "./pages/FriendRequests";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 
@@ -55,8 +56,12 @@ const App = () => {
               element={session ? <Notifications /> : <Auth />}
             />
             <Route
-              path="/profile"
-              element={session ? <Profile /> : <Auth />}
+              path="/profile/:id"
+              element={session ? <UserProfile /> : <Auth />}
+            />
+            <Route
+              path="/friend-requests"
+              element={session ? <FriendRequests /> : <Auth />}
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
