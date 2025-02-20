@@ -14,7 +14,7 @@ import { PostActions } from "./post/PostActions";
 import { Comments } from "./post/Comments";
 import type { Tables } from "@/types/database.types";
 
-type ReactionType = 'like' | 'love' | 'haha' | 'sad' | 'angry';
+type ReactionType = Tables["likes"]["Row"]["reaction_type"];
 
 interface PostProps {
   post: PostType;
@@ -104,7 +104,7 @@ export function Post({ post }: PostProps) {
           if (error) throw error;
         }
       } else {
-        const newLike = {
+        const newLike: Tables['likes']['Insert'] = {
           user_id: session.user.id,
           comment_id: commentId,
           post_id: null,
