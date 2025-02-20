@@ -4,7 +4,7 @@ export interface Post {
   content: string;
   user_id: string;
   media_url: string | null;
-  media_type: 'image' | 'video' | null;
+  media_type: 'image' | 'video' | 'audio' | null;
   visibility: 'public' | 'friends' | 'private';
   created_at: string;
   updated_at: string;
@@ -31,6 +31,7 @@ export interface Comment {
     username: string;
     avatar_url: string;
   };
+  likes?: { count: number }[];
   likes_count?: number;
   user_has_liked?: boolean;
   replies?: Comment[];

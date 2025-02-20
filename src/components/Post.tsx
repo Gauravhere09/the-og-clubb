@@ -26,6 +26,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { AudioRecorder } from "./AudioRecorder";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PostProps {
   post: PostType;
@@ -83,7 +84,8 @@ export function Post({ post }: PostProps) {
         .upsert({ 
           user_id: session?.user?.id,
           comment_id: commentId,
-          post_id: null
+          post_id: null,
+          reaction_type: 'like'
         });
       if (error) throw error;
     },

@@ -32,7 +32,7 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
           reaction_type: reactionType,
           user_id: user.id,
           post_id: postId 
-        } as Tables['likes']['Update'])
+        })
         .match({ id: existingReaction.id });
       if (error) throw error;
       return reactionType;
@@ -45,7 +45,7 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
         post_id: postId,
         reaction_type: reactionType,
         comment_id: null
-      } as Tables['likes']['Insert']);
+      });
     if (error) throw error;
     return reactionType;
   }
