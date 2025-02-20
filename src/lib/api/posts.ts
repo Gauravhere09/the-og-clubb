@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "@/types/post";
 import type { Tables } from "@/types/database.types";
@@ -32,13 +31,14 @@ export async function createPost(content: string, file: File | null = null) {
         content,
         media_url,
         media_type,
-        user_id: (await supabase.auth.getUser()).data.user?.id
-      })
+        user_id: (await supabase.auth.getUser()).data.user?.id,
+        visibility: 'public'
+      } as Tables['posts']['Insert'])
       .select('*, profiles(username, avatar_url)')
       .single();
 
     if (error) throw error;
-    return data as Post;
+    return data as unknown as Post;
   } catch (error) {
     console.error('Error creating post:', error);
     throw error;
@@ -61,10 +61,10 @@ export async function getPosts() {
     const { data: userReactions } = await supabase
       .from('likes')
       .select('post_id, reaction_type')
-      .eq('user_id', user.user.id);
+      .eq('user_id', user.user.id) as { data: Pick<Tables['likes']['Row'], 'post_id' | 'reaction_type'>[] };
 
     const userReactionMap = new Map(
-      (userReactions as Tables['likes']['Row'][])?.map(reaction => [reaction.post_id, reaction.reaction_type]) || []
+      userReactions?.map(reaction => [reaction.post_id, reaction.reaction_type]) || []
     );
 
     const { data, error } = await query
@@ -72,23 +72,23 @@ export async function getPosts() {
 
     if (error) throw error;
 
-    return (data as any[]).map(post => ({
+    return (data as unknown as Post[]).map(post => ({
       ...post,
       user_reaction: userReactionMap.get(post.id) || null,
       reactions_count: post.reactions?.[0]?.count || 0,
       reactions: { count: post.reactions?.[0]?.count || 0 }
-    })) as Post[];
+    }));
   } else {
     const { data, error } = await query
       .order('created_at', { ascending: false });
 
     if (error) throw error;
     
-    return (data as any[]).map(post => ({
+    return (data as unknown as Post[]).map(post => ({
       ...post,
       reactions_count: post.reactions?.[0]?.count || 0,
       reactions: { count: post.reactions?.[0]?.count || 0 }
-    })) as Post[];
+    }));
   }
 }
 

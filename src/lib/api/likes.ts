@@ -15,7 +15,7 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
       user_id: user.id,
       post_id: postId
     })
-    .maybeSingle() as { data: Tables['likes']['Row'] | null };
+    .maybeSingle();
 
   if (existingReaction) {
     if (existingReaction.reaction_type === reactionType) {
@@ -28,7 +28,11 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
     } else {
       const { error } = await supabase
         .from('likes')
-        .update({ reaction_type: reactionType })
+        .update({ 
+          reaction_type: reactionType,
+          user_id: user.id,
+          post_id: postId 
+        } as Tables['likes']['Update'])
         .match({ id: existingReaction.id });
       if (error) throw error;
       return reactionType;
@@ -39,8 +43,9 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
       .insert({
         user_id: user.id,
         post_id: postId,
-        reaction_type: reactionType
-      });
+        reaction_type: reactionType,
+        comment_id: null
+      } as Tables['likes']['Insert']);
     if (error) throw error;
     return reactionType;
   }
