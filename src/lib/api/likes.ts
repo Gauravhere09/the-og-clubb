@@ -8,14 +8,16 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.id || !postId) return null;
   
-  const { data: existingReaction } = await supabase
+  const { data: existingReaction, error: selectError } = await supabase
     .from('likes')
-    .select('id, user_id, post_id, comment_id, reaction_type')
+    .select('*')
     .match({ 
       user_id: user.id,
       post_id: postId
     })
     .maybeSingle();
+
+  if (selectError) throw selectError;
 
   if (existingReaction) {
     if (existingReaction.reaction_type === reactionType) {
