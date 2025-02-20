@@ -25,6 +25,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { AudioRecorder } from "./AudioRecorder";
 
 interface PostProps {
   post: PostType;
@@ -75,17 +76,50 @@ export function Post({ post }: PostProps) {
     },
   });
 
-  const { mutate: handleVisibilityChange } = useMutation({
-    mutationFn: (visibility: 'public' | 'friends' | 'private') => 
-      updatePostVisibility(post.id, visibility),
+  const { mutate: toggleCommentLike } = useMutation({
+    mutationFn: async (commentId: string) => {
+      const { error } = await supabase
+        .from('likes')
+        .upsert({ 
+          user_id: session?.user?.id,
+          comment_id: commentId,
+          post_id: null
+        });
+      if (error) throw error;
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-      toast({
-        title: "Visibilidad actualizada",
-        description: "La visibilidad de la publicación se ha actualizado correctamente",
-      });
+      queryClient.invalidateQueries({ queryKey: ["comments", post.id] });
     },
   });
+
+  const handleAudioRecording = async (blob: Blob) => {
+    try {
+      const fileName = `${crypto.randomUUID()}.webm`;
+      const { error: uploadError } = await supabase.storage
+        .from('audio-messages')
+        .upload(fileName, blob);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('audio-messages')
+        .getPublicUrl(fileName);
+
+      await createComment(post.id, `[Audio] ${publicUrl}`, replyTo?.id);
+      
+      queryClient.invalidateQueries({ queryKey: ["comments", post.id] });
+      toast({
+        title: "Audio enviado",
+        description: "Tu mensaje de audio se ha publicado correctamente",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo enviar el mensaje de audio",
+      });
+    }
+  };
 
   const getVisibilityIcon = (visibility: string) => {
     switch (visibility) {
@@ -110,9 +144,26 @@ export function Post({ post }: PostProps) {
         <div className="flex-1">
           <div className="bg-muted p-3 rounded-lg">
             <p className="font-medium text-sm">{comment.profiles?.username}</p>
-            <p className="text-sm">{comment.content}</p>
+            {comment.content.startsWith('[Audio]') ? (
+              <audio 
+                src={comment.content.replace('[Audio] ', '')} 
+                controls 
+                className="mt-2 max-w-[200px]"
+              />
+            ) : (
+              <p className="text-sm">{comment.content}</p>
+            )}
           </div>
           <div className="flex items-center gap-4 mt-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-auto p-0 text-xs ${comment.user_has_liked ? 'text-primary' : ''}`}
+              onClick={() => toggleCommentLike(comment.id)}
+            >
+              <ThumbsUp className="h-3 w-3 mr-1" />
+              {comment.likes?.[0]?.count || 0}
+            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -135,6 +186,18 @@ export function Post({ post }: PostProps) {
   console.log('Session user ID:', session?.user?.id);
   console.log('Post user ID:', post.user_id);
   console.log('Is post owner:', isPostOwner);
+
+  const { mutate: handleVisibilityChange } = useMutation({
+    mutationFn: (visibility: 'public' | 'friends' | 'private') => 
+      updatePostVisibility(post.id, visibility),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      toast({
+        title: "Visibilidad actualizada",
+        description: "La visibilidad de la publicación se ha actualizado correctamente",
+      });
+    },
+  });
 
   const { mutate: handleDeletePost } = useMutation({
     mutationFn: () => deletePost(post.id),
@@ -311,15 +374,18 @@ export function Post({ post }: PostProps) {
               </div>
             )}
             <div className="flex gap-2">
-              <Textarea
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                placeholder="Escribe un comentario..."
-                className="resize-none"
-              />
-              <Button onClick={() => submitComment()}>
-                Comentar
-              </Button>
+              <div className="flex-1 flex gap-2">
+                <Textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Escribe un comentario..."
+                  className="resize-none"
+                />
+                <Button onClick={() => submitComment()}>
+                  Comentar
+                </Button>
+              </div>
+              <AudioRecorder onRecordingComplete={handleAudioRecording} />
             </div>
           </div>
         </div>
