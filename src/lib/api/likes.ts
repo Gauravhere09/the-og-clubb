@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/types/database.types";
 
-type ReactionType = 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
+type ReactionType = Tables["likes"]["Row"]["reaction_type"];
 
 export async function toggleReaction(postId: string | undefined, reactionType: ReactionType) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -10,7 +10,7 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
   
   const { data: existingReaction } = await supabase
     .from('likes')
-    .select('*')
+    .select()
     .match({ 
       user_id: user.id,
       post_id: postId
