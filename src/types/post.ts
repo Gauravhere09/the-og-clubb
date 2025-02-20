@@ -34,5 +34,6 @@ export interface Comment {
   likes?: { count: number }[];
   likes_count?: number;
   user_has_liked?: boolean;
+  user_reaction?: 'like' | 'love' | 'haha' | 'sad' | 'angry' | null;
   replies?: Comment[];
 }

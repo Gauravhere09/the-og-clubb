@@ -5,9 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { ThumbsUp } from "lucide-react";
+import { ThumbsUp, Heart, SmilePlus, Frown, Angry } from "lucide-react";
 import type { Comment } from "@/types/post";
 import { AudioRecorder } from "../AudioRecorder";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
+const reactionIcons = {
+  'like': <ThumbsUp className="h-3 w-3" />,
+  'love': <Heart className="h-3 w-3 text-red-500" />,
+  'haha': <SmilePlus className="h-3 w-3 text-yellow-500" />,
+  'sad': <Frown className="h-3 w-3 text-blue-500" />,
+  'angry': <Angry className="h-3 w-3 text-orange-500" />
+};
 
 interface CommentsProps {
   comments: Comment[];
@@ -53,15 +62,33 @@ export function Comments({
             )}
           </div>
           <div className="flex items-center gap-4 mt-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`h-auto p-0 text-xs ${comment.user_has_liked ? 'text-primary' : ''}`}
-              onClick={() => onLike(comment.id)}
-            >
-              <ThumbsUp className="h-3 w-3 mr-1" />
-              {comment.likes?.[0]?.count || 0}
-            </Button>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`h-auto p-0 text-xs ${comment.user_has_liked ? 'text-primary' : ''}`}
+                >
+                  {reactionIcons[comment.user_reaction || 'like']}
+                  <span className="ml-1">{comment.likes?.[0]?.count || 0}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-fit p-2" align="start">
+                <div className="flex gap-1">
+                  {Object.entries(reactionIcons).map(([type, icon]) => (
+                    <Button
+                      key={type}
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => onLike(comment.id)}
+                    >
+                      {icon}
+                    </Button>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
             <Button
               variant="ghost"
               size="sm"
