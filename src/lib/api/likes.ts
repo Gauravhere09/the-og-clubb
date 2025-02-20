@@ -11,7 +11,7 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
   
   const { data: existingReaction, error: selectError } = await supabase
     .from('likes')
-    .select('*')
+    .select('id, user_id, post_id, comment_id, reaction_type, created_at')
     .match({ 
       user_id: user.id,
       post_id: postId
