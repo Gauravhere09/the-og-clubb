@@ -8,10 +8,11 @@ import { useFriends } from "@/hooks/use-friends";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { FriendSearch } from "@/components/FriendSearch";
 
 export default function Friends() {
   const [userId, setUserId] = useState<string | null>(null);
-  const { friendRequests, respondToFriendRequest } = useFriends(userId);
+  const { friends, friendRequests, respondToFriendRequest } = useFriends(userId);
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
 
@@ -59,51 +60,89 @@ export default function Friends() {
     <div className="min-h-screen flex bg-muted/30">
       <Navigation />
       <main className="flex-1 max-w-4xl mx-auto p-6">
-        <h1 className="text-2xl font-bold mb-6">Solicitudes de amistad</h1>
-        <div className="space-y-4">
-          {friendRequests.length === 0 ? (
-            <Card className="p-6">
-              <p className="text-muted-foreground text-center">
-                No tienes solicitudes de amistad pendientes
-              </p>
-            </Card>
-          ) : (
-            friendRequests.map((request) => (
-              <Card key={request.id} className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarImage src={request.user.avatar_url || undefined} />
-                      <AvatarFallback>
-                        {request.user.username?.[0]?.toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-medium">{request.user.username}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Quiere ser tu amigo
-                      </p>
+        <div className="space-y-6">
+          <section>
+            <h2 className="text-2xl font-bold mb-4">Buscar amigos</h2>
+            <FriendSearch />
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold mb-4">Solicitudes de amistad</h2>
+            <div className="space-y-4">
+              {friendRequests.length === 0 ? (
+                <Card className="p-6">
+                  <p className="text-muted-foreground text-center">
+                    No tienes solicitudes de amistad pendientes
+                  </p>
+                </Card>
+              ) : (
+                friendRequests.map((request) => (
+                  <Card key={request.id} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={request.user.avatar_url || undefined} />
+                          <AvatarFallback>
+                            {request.user.username?.[0]?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">{request.user.username}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Quiere ser tu amigo
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleRespondToRequest(request.id, true)}
+                          size="sm"
+                        >
+                          Aceptar
+                        </Button>
+                        <Button
+                          onClick={() => handleRespondToRequest(request.id, false)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          Rechazar
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => handleRespondToRequest(request.id, true)}
-                      size="sm"
-                    >
-                      Aceptar
-                    </Button>
-                    <Button
-                      onClick={() => handleRespondToRequest(request.id, false)}
-                      variant="outline"
-                      size="sm"
-                    >
-                      Rechazar
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            ))
-          )}
+                  </Card>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold mb-4">Mis amigos</h2>
+            <div className="space-y-4">
+              {friends.length === 0 ? (
+                <Card className="p-6">
+                  <p className="text-muted-foreground text-center">
+                    Aún no tienes amigos agregados
+                  </p>
+                </Card>
+              ) : (
+                friends.map((friend) => (
+                  <Card key={friend.friend_id} className="p-4">
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarImage src={friend.friend_avatar_url || undefined} />
+                        <AvatarFallback>
+                          {friend.friend_username[0]?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="font-medium">
+                        {friend.friend_username}
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
+            </div>
+          </section>
         </div>
       </main>
     </div>

@@ -6,20 +6,29 @@ export async function getFriends() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Usuario no autenticado");
 
-    const { data: profiles, error } = await supabase
-      .from('profiles')
-      .select('id, username, avatar_url')
-      .neq('id', user.id);
+    const { data: friendships, error: friendshipsError } = await supabase
+      .from('friendships')
+      .select(`
+        *,
+        friend:profiles!friendships_friend_id_fkey(
+          id,
+          username,
+          avatar_url
+        )
+      `)
+      .eq('user_id', user.id)
+      .eq('status', 'accepted');
 
-    if (error) throw error;
+    if (friendshipsError) throw friendshipsError;
 
-    return profiles.map(profile => ({
-      friend_id: profile.id,
-      friend_username: profile.username || '',
-      friend_avatar_url: profile.avatar_url
+    return (friendships || []).map(friendship => ({
+      friend_id: friendship.friend.id,
+      friend_username: friendship.friend.username || '',
+      friend_avatar_url: friendship.friend.avatar_url
     }));
 
   } catch (error: any) {
+    console.error('Error getting friends:', error);
     throw error;
   }
 }
@@ -29,9 +38,16 @@ export async function checkFriendship(targetUserId: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Usuario no autenticado");
 
-    // For now, return null to indicate no friendship status
-    return null;
+    const { data, error } = await supabase
+      .from('friendships')
+      .select('status')
+      .or(`and(user_id.eq.${user.id},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${user.id})`)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data?.status || null;
   } catch (error: any) {
+    console.error('Error checking friendship:', error);
     return null;
   }
 }
@@ -41,44 +57,20 @@ export async function sendFriendRequest(targetUserId: string) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Usuario no autenticado");
 
-    const { data: profile } = await supabase
-      .from('profiles')
+    const { data, error } = await supabase
+      .from('friendships')
+      .insert({
+        user_id: user.id,
+        friend_id: targetUserId,
+        status: 'pending'
+      })
       .select()
-      .eq('id', targetUserId)
       .single();
 
-    if (!profile) throw new Error("Usuario no encontrado");
-
-    return {
-      sender_id: user.id,
-      receiver_id: targetUserId,
-      status: 'pending'
-    };
+    if (error) throw error;
+    return data;
   } catch (error: any) {
-    throw error;
-  }
-}
-
-export async function acceptFriendRequest(senderId: string) {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Usuario no autenticado");
-
-    // For now, do nothing since we don't have the friendships table
-    return;
-  } catch (error: any) {
-    throw error;
-  }
-}
-
-export async function rejectFriendRequest(senderId: string) {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Usuario no autenticado");
-
-    // For now, do nothing since we don't have the friendships table
-    return;
-  } catch (error: any) {
+    console.error('Error sending friend request:', error);
     throw error;
   }
 }
@@ -88,9 +80,50 @@ export async function getFriendRequests() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Usuario no autenticado");
 
-    // For now, return an empty array since we don't have the friendships table
-    return [];
+    const { data, error } = await supabase
+      .from('friendships')
+      .select(`
+        *,
+        sender:profiles!friendships_user_id_fkey(
+          id,
+          username,
+          avatar_url
+        )
+      `)
+      .eq('friend_id', user.id)
+      .eq('status', 'pending');
+
+    if (error) throw error;
+
+    return (data || []).map(request => ({
+      id: request.id,
+      user_id: request.user_id,
+      friend_id: request.friend_id,
+      status: request.status,
+      created_at: request.created_at,
+      user: {
+        username: request.sender.username || '',
+        avatar_url: request.sender.avatar_url
+      }
+    }));
   } catch (error: any) {
+    console.error('Error getting friend requests:', error);
+    throw error;
+  }
+}
+
+export async function respondToFriendRequest(requestId: string, accept: boolean) {
+  try {
+    const { error } = await supabase
+      .from('friendships')
+      .update({
+        status: accept ? 'accepted' : 'rejected'
+      })
+      .eq('id', requestId);
+
+    if (error) throw error;
+  } catch (error: any) {
+    console.error('Error responding to friend request:', error);
     throw error;
   }
 }
