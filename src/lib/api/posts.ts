@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "@/types/post";
 import type { Tables } from "@/types/database.types";
@@ -76,7 +77,8 @@ export async function getPosts() {
       ...post,
       user_reaction: userReactionMap.get(post.id) || null,
       reactions_count: post.reactions?.[0]?.count || 0,
-      reactions: { count: post.reactions?.[0]?.count || 0 }
+      reactions: { count: post.reactions?.[0]?.count || 0 },
+      comments_count: post.comments?.[0]?.count || 0
     }));
   } else {
     const { data, error } = await query
@@ -87,7 +89,8 @@ export async function getPosts() {
     return (data as unknown as Post[]).map(post => ({
       ...post,
       reactions_count: post.reactions?.[0]?.count || 0,
-      reactions: { count: post.reactions?.[0]?.count || 0 }
+      reactions: { count: post.reactions?.[0]?.count || 0 },
+      comments_count: post.comments?.[0]?.count || 0
     }));
   }
 }

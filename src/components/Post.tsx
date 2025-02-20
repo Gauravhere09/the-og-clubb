@@ -281,7 +281,7 @@ export function Post({ post }: PostProps) {
           size="sm"
           onClick={() => setShowComments(!showComments)}
         >
-          <MessageCircle className="h-4 w-4 mr-2" />
+          <MessagesSquare className="h-4 w-4 mr-2" />
           {post.comments_count || 0}
         </Button>
         <Button variant="ghost" size="sm">
