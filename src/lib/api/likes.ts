@@ -10,12 +10,12 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
   
   const { data: existingReaction } = await supabase
     .from('likes')
-    .select()
+    .select('*')
     .match({ 
       user_id: user.id,
       post_id: postId
     })
-    .maybeSingle();
+    .maybeSingle() as { data: Tables['likes']['Row'] | null };
 
   if (existingReaction) {
     if (existingReaction.reaction_type === reactionType) {
@@ -40,7 +40,7 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
         user_id: user.id,
         post_id: postId,
         reaction_type: reactionType
-      } as Tables['likes']['Insert']);
+      });
     if (error) throw error;
     return reactionType;
   }

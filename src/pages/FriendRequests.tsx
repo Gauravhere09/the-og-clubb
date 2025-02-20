@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
@@ -27,11 +28,11 @@ export default function FriendRequests() {
     loadRequests();
 
     const subscription = supabase
-      .channel('friend_requests')
+      .channel('friendships')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'friend_requests'
+        table: 'friendships'
       }, () => {
         loadRequests();
       })
@@ -48,21 +49,24 @@ export default function FriendRequests() {
       if (!user) return;
 
       const { data, error } = await supabase
-        .from('friend_requests')
+        .from('friendships')
         .select(`
           id,
-          sender:profiles!friend_requests_sender_id_fkey (
+          user:profiles!friendships_user_id_fkey (
             id,
             username,
             avatar_url
           )
         `)
-        .eq('receiver_id', user.id)
+        .eq('friend_id', user.id)
         .eq('status', 'pending');
 
       if (error) throw error;
 
-      setRequests(data as FriendRequest[]);
+      setRequests(data?.map(request => ({
+        id: request.id,
+        sender: request.user
+      })) || []);
     } catch (error) {
       console.error('Error loading friend requests:', error);
       toast({
@@ -81,25 +85,24 @@ export default function FriendRequests() {
       if (!user) return;
 
       const { data: requestData, error: requestError } = await supabase
-        .from('friend_requests')
+        .from('friendships')
         .update({ status: accept ? 'accepted' : 'rejected' })
         .eq('id', requestId)
-        .select('sender_id')
+        .select('user_id')
         .single();
 
       if (requestError) throw requestError;
 
       if (accept && requestData) {
-        const friendInserts: Tables['friends']['Insert'][] = [
-          { user_id: user.id, friend_id: requestData.sender_id },
-          { user_id: requestData.sender_id, friend_id: user.id }
-        ];
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert({
+            type: 'friend_accepted',
+            sender_id: user.id,
+            receiver_id: requestData.user_id
+          });
 
-        const { error: friendshipError } = await supabase
-          .from('friends')
-          .insert(friendInserts);
-
-        if (friendshipError) throw friendshipError;
+        if (notificationError) throw notificationError;
       }
 
       toast({

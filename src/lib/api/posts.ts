@@ -23,8 +23,7 @@ export async function createPost(content: string, file: File | null = null) {
 
       media_url = publicUrl;
       media_type = file.type.startsWith('image/') ? 'image' :
-                   file.type.startsWith('video/') ? 'video' :
-                   file.type.startsWith('audio/') ? 'audio' : null;
+                   file.type.startsWith('video/') ? 'video' : null;
     }
 
     const { data, error } = await supabase
@@ -39,7 +38,7 @@ export async function createPost(content: string, file: File | null = null) {
       .single();
 
     if (error) throw error;
-    return data;
+    return data as Post;
   } catch (error) {
     console.error('Error creating post:', error);
     throw error;
@@ -73,17 +72,23 @@ export async function getPosts() {
 
     if (error) throw error;
 
-    return (data as Post[]).map(post => ({
+    return (data as any[]).map(post => ({
       ...post,
       user_reaction: userReactionMap.get(post.id) || null,
-      reactions_count: post.reactions?.count || 0
-    }));
+      reactions_count: post.reactions?.[0]?.count || 0,
+      reactions: { count: post.reactions?.[0]?.count || 0 }
+    })) as Post[];
   } else {
     const { data, error } = await query
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return data as Post[];
+    
+    return (data as any[]).map(post => ({
+      ...post,
+      reactions_count: post.reactions?.[0]?.count || 0,
+      reactions: { count: post.reactions?.[0]?.count || 0 }
+    })) as Post[];
   }
 }
 
