@@ -140,6 +140,7 @@ export interface Database {
           user_id: string;
           post_id: string | null;
           comment_id: string | null;
+          reaction_type: 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
           created_at: string;
         };
         Insert: {
@@ -147,6 +148,7 @@ export interface Database {
           user_id: string;
           post_id?: string | null;
           comment_id?: string | null;
+          reaction_type: 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
           created_at?: string;
         };
         Update: {
@@ -154,6 +156,7 @@ export interface Database {
           user_id?: string;
           post_id?: string | null;
           comment_id?: string | null;
+          reaction_type?: 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
           created_at?: string;
         };
       };

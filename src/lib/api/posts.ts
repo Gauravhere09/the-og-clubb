@@ -54,16 +54,18 @@ export async function getPosts() {
       *,
       profiles(username, avatar_url),
       comments:comments(count),
-      likes:likes(count)
+      reactions:likes(count)
     `);
 
   if (user?.user) {
-    const { data: userLikes } = await supabase
+    const { data: userReactions } = await supabase
       .from('likes')
-      .select('post_id')
+      .select('post_id, reaction_type')
       .eq('user_id', user.user.id);
 
-    const likedPostIds = new Set(userLikes?.map(like => like.post_id) || []);
+    const userReactionMap = new Map(
+      userReactions?.map(reaction => [reaction.post_id, reaction.reaction_type]) || []
+    );
 
     const { data, error } = await query
       .order('created_at', { ascending: false });
@@ -72,7 +74,8 @@ export async function getPosts() {
 
     return (data as Post[]).map(post => ({
       ...post,
-      user_has_liked: likedPostIds.has(post.id)
+      user_reaction: userReactionMap.get(post.id) || null,
+      reactions_count: post.reactions.count
     }));
   } else {
     const { data, error } = await query

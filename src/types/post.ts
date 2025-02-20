@@ -12,8 +12,8 @@ export interface Post {
     avatar_url: string;
   };
   comments_count?: number;
-  likes_count?: number;
-  user_has_liked?: boolean;
+  reactions_count?: number;
+  user_reaction?: 'like' | 'love' | 'haha' | 'sad' | 'angry' | null;
 }
 
 export interface Comment {

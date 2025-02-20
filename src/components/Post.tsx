@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, Share, Play, MoreVertical, Globe, Users, Lock } from "lucide-react";
+import { Heart, MessageCircle, Share, Play, MoreVertical, Globe, Users, Lock, ThumbsUp, Laugh, Frown, Angry, MessagesSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -13,15 +13,30 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { Post as PostType, Comment } from "@/types/post";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createComment, getComments, toggleLike, deletePost, updatePostVisibility } from "@/lib/api";
+import { createComment, getComments, deletePost, updatePostVisibility } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useSession } from "@supabase/auth-helpers-react";
+import { toggleReaction } from "@/lib/api/likes";
+import React from "react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface PostProps {
   post: PostType;
 }
+
+const reactionIcons = {
+  like: { icon: ThumbsUp, color: "text-blue-500" },
+  love: { icon: Heart, color: "text-red-500" },
+  haha: { icon: Laugh, color: "text-yellow-500" },
+  sad: { icon: Frown, color: "text-yellow-500" },
+  angry: { icon: Angry, color: "text-orange-500" }
+};
 
 export function Post({ post }: PostProps) {
   const [showComments, setShowComments] = useState(false);
@@ -56,31 +71,6 @@ export function Post({ post }: PostProps) {
         variant: "destructive",
         title: "Error",
         description: error instanceof Error ? error.message : "Error al publicar el comentario",
-      });
-    },
-  });
-
-  const { mutate: handleLike } = useMutation({
-    mutationFn: () => toggleLike(post.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-    },
-  });
-
-  const { mutate: handleDeletePost } = useMutation({
-    mutationFn: () => deletePost(post.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
-      toast({
-        title: "Publicación eliminada",
-        description: "La publicación se ha eliminado correctamente",
-      });
-    },
-    onError: () => {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se pudo eliminar la publicación",
       });
     },
   });
@@ -145,6 +135,32 @@ export function Post({ post }: PostProps) {
   console.log('Session user ID:', session?.user?.id);
   console.log('Post user ID:', post.user_id);
   console.log('Is post owner:', isPostOwner);
+
+  const { mutate: handleDeletePost } = useMutation({
+    mutationFn: () => deletePost(post.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      toast({
+        title: "Publicación eliminada",
+        description: "La publicación se ha eliminado correctamente",
+      });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo eliminar la publicación",
+      });
+    },
+  });
+
+  const { mutate: handleReaction } = useMutation({
+    mutationFn: (type: 'like' | 'love' | 'haha' | 'sad' | 'angry') => 
+      toggleReaction(post.id, type),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+  });
 
   return (
     <Card className="p-4">
@@ -222,15 +238,44 @@ export function Post({ post }: PostProps) {
       )}
 
       <div className="flex gap-4">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => handleLike()}
-          className={post.user_has_liked ? "text-red-500" : ""}
-        >
-          <Heart className="h-4 w-4 mr-2" />
-          {post.likes_count || 0}
-        </Button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={post.user_reaction ? reactionIcons[post.user_reaction].color : ""}
+            >
+              {post.user_reaction ? (
+                <div className="flex items-center">
+                  {React.createElement(reactionIcons[post.user_reaction].icon, {
+                    className: "h-4 w-4 mr-2"
+                  })}
+                  {post.reactions_count || 0}
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <ThumbsUp className="h-4 w-4 mr-2" />
+                  {post.reactions_count || 0}
+                </div>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-fit p-2">
+            <div className="flex gap-1">
+              {Object.entries(reactionIcons).map(([type, { icon: Icon, color }]) => (
+                <Button
+                  key={type}
+                  variant="ghost"
+                  size="sm"
+                  className={`hover:${color} ${post.user_reaction === type ? color : ''}`}
+                  onClick={() => handleReaction(type as 'like' | 'love' | 'haha' | 'sad' | 'angry')}
+                >
+                  <Icon className="h-4 w-4" />
+                </Button>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
         <Button
           variant="ghost"
           size="sm"
