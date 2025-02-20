@@ -54,37 +54,54 @@ export function Post({ post }: PostProps) {
     },
   });
 
-  const { mutate: toggleCommentLike } = useMutation({
-    mutationFn: async (commentId: string) => {
+  const { mutate: toggleCommentReaction } = useMutation({
+    mutationFn: async ({ commentId, type }: { commentId: string; type: string }) => {
       const { error } = await supabase
         .from('likes')
         .upsert({ 
           user_id: session?.user?.id,
           comment_id: commentId,
           post_id: null,
-          reaction_type: 'like'
+          reaction_type: type
         });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", post.id] });
-    },
-  });
-
-  const { mutate: handleDeletePost } = useMutation({
-    mutationFn: () => deletePost(post.id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
       toast({
-        title: "Publicación eliminada",
-        description: "La publicación se ha eliminado correctamente",
+        title: "Reacción actualizada",
+        description: "Tu reacción se ha actualizado correctamente",
       });
     },
     onError: () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo eliminar la publicación",
+        description: "No se pudo actualizar la reacción",
+      });
+    },
+  });
+
+  const { mutate: deleteComment } = useMutation({
+    mutationFn: async (commentId: string) => {
+      const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('id', commentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", post.id] });
+      toast({
+        title: "Comentario eliminado",
+        description: "El comentario se ha eliminado correctamente",
+      });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo eliminar el comentario",
       });
     },
   });
@@ -138,10 +155,11 @@ export function Post({ post }: PostProps) {
       {showComments && (
         <Comments
           comments={comments}
-          onLike={toggleCommentLike}
+          onReaction={(commentId, type) => toggleCommentReaction({ commentId, type })}
           onReply={(id, username) => setReplyTo({ id, username })}
           onSubmitComment={() => submitComment()}
           onAudioRecording={handleAudioRecording}
+          onDeleteComment={(commentId) => deleteComment(commentId)}
           newComment={newComment}
           onNewCommentChange={(value) => setNewComment(value)}
           replyTo={replyTo}

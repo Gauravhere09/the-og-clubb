@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { ThumbsUp, Heart, SmilePlus, Frown, Angry } from "lucide-react";
+import { ThumbsUp, Heart, SmilePlus, Frown, Angry, Trash } from "lucide-react";
 import type { Comment } from "@/types/post";
 import { AudioRecorder } from "../AudioRecorder";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useSession } from "@supabase/auth-helpers-react";
 
 const reactionIcons = {
   'like': <ThumbsUp className="h-3 w-3" />,
@@ -20,10 +21,11 @@ const reactionIcons = {
 
 interface CommentsProps {
   comments: Comment[];
-  onLike: (commentId: string) => void;
+  onReaction: (commentId: string, type: keyof typeof reactionIcons) => void;
   onReply: (id: string, username: string) => void;
   onSubmitComment: () => void;
   onAudioRecording: (blob: Blob) => void;
+  onDeleteComment: (commentId: string) => void;
   newComment: string;
   onNewCommentChange: (value: string) => void;
   replyTo: { id: string; username: string } | null;
@@ -32,15 +34,18 @@ interface CommentsProps {
 
 export function Comments({
   comments,
-  onLike,
+  onReaction,
   onReply,
   onSubmitComment,
   onAudioRecording,
+  onDeleteComment,
   newComment,
   onNewCommentChange,
   replyTo,
   onCancelReply
 }: CommentsProps) {
+  const session = useSession();
+
   const renderComment = (comment: Comment, isReply = false) => (
     <div key={comment.id} className={`${isReply ? "ml-12" : ""} space-y-2`}>
       <div className="flex items-start gap-3">
@@ -67,7 +72,7 @@ export function Comments({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`h-auto p-0 text-xs ${comment.user_has_liked ? 'text-primary' : ''}`}
+                  className={`h-auto p-0 text-xs ${comment.user_reaction ? 'text-primary' : ''}`}
                 >
                   {reactionIcons[comment.user_reaction || 'like']}
                   <span className="ml-1">{comment.likes?.[0]?.count || 0}</span>
@@ -81,7 +86,7 @@ export function Comments({
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0"
-                      onClick={() => onLike(comment.id)}
+                      onClick={() => onReaction(comment.id, type as keyof typeof reactionIcons)}
                     >
                       {icon}
                     </Button>
@@ -97,6 +102,16 @@ export function Comments({
             >
               Responder
             </Button>
+            {session?.user?.id === comment.user_id && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto p-0 text-xs text-destructive hover:text-destructive"
+                onClick={() => onDeleteComment(comment.id)}
+              >
+                <Trash className="h-3 w-3" />
+              </Button>
+            )}
             <span className="text-xs text-muted-foreground">
               {format(new Date(comment.created_at), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
             </span>
