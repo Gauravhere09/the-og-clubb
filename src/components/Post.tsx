@@ -58,7 +58,7 @@ export function Post({ post }: PostProps) {
   });
 
   const { mutate: handleReaction } = useMutation({
-    mutationFn: (type: 'like' | 'love' | 'haha' | 'sad' | 'angry') => 
+    mutationFn: (type: ReactionType) => 
       toggleReaction(post.id, type),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
@@ -87,7 +87,7 @@ export function Post({ post }: PostProps) {
         .select('id, user_id, post_id, comment_id, reaction_type, created_at')
         .eq('user_id', session.user.id)
         .eq('comment_id', commentId)
-        .single() as { data: Tables['likes']['Row'] | null };
+        .single();
 
       if (existingReaction) {
         if (existingReaction.reaction_type === type) {
@@ -104,14 +104,16 @@ export function Post({ post }: PostProps) {
           if (error) throw error;
         }
       } else {
+        const newLike: Tables['likes']['Insert'] = {
+          user_id: session.user.id,
+          comment_id: commentId,
+          post_id: null,
+          reaction_type: type
+        };
+        
         const { error } = await supabase
           .from('likes')
-          .insert({
-            user_id: session.user.id,
-            comment_id: commentId,
-            post_id: null,
-            reaction_type: type
-          } satisfies Tables['likes']['Insert']);
+          .insert(newLike);
         if (error) throw error;
       }
     },
