@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import { Tables } from "@/types/database.types";
 
 interface FriendRequest {
   id: string;
@@ -51,6 +52,7 @@ export default function FriendRequests() {
         .from('friend_requests')
         .select(`
           id,
+          sender_id,
           sender:profiles!friend_requests_sender_id_fkey (
             id,
             username,
@@ -62,7 +64,12 @@ export default function FriendRequests() {
 
       if (error) throw error;
 
-      setRequests(data || []);
+      const formattedRequests: FriendRequest[] = (data || []).map(request => ({
+        id: request.id,
+        sender: request.sender
+      }));
+
+      setRequests(formattedRequests);
     } catch (error) {
       console.error('Error loading friend requests:', error);
       toast({
@@ -80,7 +87,6 @@ export default function FriendRequests() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Primero actualizar el estado de la solicitud
       const { data: requestData, error: requestError } = await supabase
         .from('friend_requests')
         .update({ status: accept ? 'accepted' : 'rejected' })
@@ -90,14 +96,15 @@ export default function FriendRequests() {
 
       if (requestError) throw requestError;
 
-      if (accept && requestData) {
-        // Si se acepta, crear la amistad en ambas direcciones
+      if (accept && requestData?.sender_id) {
+        const friendInserts: Tables["friends"]["Insert"][] = [
+          { user_id: user.id, friend_id: requestData.sender_id },
+          { user_id: requestData.sender_id, friend_id: user.id }
+        ];
+
         const { error: friendshipError } = await supabase
           .from('friends')
-          .insert([
-            { user_id: user.id, friend_id: requestData.sender_id },
-            { user_id: requestData.sender_id, friend_id: user.id }
-          ]);
+          .insert(friendInserts);
 
         if (friendshipError) throw friendshipError;
       }

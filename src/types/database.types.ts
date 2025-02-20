@@ -1,4 +1,3 @@
-
 export interface Database {
   public: {
     Tables: {
@@ -61,6 +60,49 @@ export interface Database {
           visibility?: 'public' | 'friends' | 'private';
           created_at?: string;
           updated_at?: string;
+        };
+      };
+      friends: {
+        Row: {
+          id: string;
+          user_id: string;
+          friend_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          friend_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          friend_id?: string;
+          created_at?: string;
+        };
+      };
+      friend_requests: {
+        Row: {
+          id: string;
+          sender_id: string;
+          receiver_id: string;
+          status: 'pending' | 'accepted' | 'rejected';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          sender_id: string;
+          receiver_id: string;
+          status?: 'pending' | 'accepted' | 'rejected';
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          sender_id?: string;
+          receiver_id?: string;
+          status?: 'pending' | 'accepted' | 'rejected';
+          created_at?: string;
         };
       };
       comments: {
