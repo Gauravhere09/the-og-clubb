@@ -71,7 +71,7 @@ const ReactionSummary = ({ reactions }: { reactions: Record<string, number> }) =
               key={type}
               className={`w-4 h-4 rounded-full bg-background shadow-sm flex items-center justify-center ${reactionIcons[type as ReactionType].color}`}
             >
-              <Icon className="w-3 h-3" />
+              {typeof Icon === 'function' && <Icon className="w-3 h-3" />}
             </div>
           );
         })}
@@ -134,6 +134,10 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
   const userReaction = post.user_reaction as ReactionType | undefined;
   const totalReactions = Object.values(reactionsByType).reduce((sum, count) => sum + count, 0);
 
+  const handleReactionClick = (type: ReactionType) => {
+    onReaction(type);
+  };
+
   return (
     <div className="space-y-2">
       {/* Mostrar resumen de reacciones si hay alguna */}
@@ -161,10 +165,11 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
               variant="ghost"
               size="sm"
               className={`${userReaction ? reactionIcons[userReaction].color : ''} group`}
+              onClick={() => userReaction && handleReactionClick(userReaction)}
             >
               {userReaction ? (
                 <div className="flex items-center">
-                  {React.createElement(reactionIcons[userReaction].icon, {
+                  {typeof reactionIcons[userReaction].icon === 'function' && React.createElement(reactionIcons[userReaction].icon, {
                     className: "h-4 w-4 mr-2"
                   })}
                   {reactionIcons[userReaction].label}
@@ -190,9 +195,9 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
                   variant="ghost"
                   size="sm"
                   className={`hover:${color} ${userReaction === type ? color : ''} relative group hover:scale-125 transition-transform duration-200`}
-                  onClick={() => onReaction(type as ReactionType)}
+                  onClick={() => handleReactionClick(type as ReactionType)}
                 >
-                  <Icon className={`h-6 w-6 ${userReaction === type ? color : ''}`} />
+                  {typeof Icon === 'function' && <Icon className={`h-6 w-6 ${userReaction === type ? color : ''}`} />}
                   <span className="absolute -top-8 scale-0 transition-all rounded bg-black px-2 py-1 text-xs text-white group-hover:scale-100 whitespace-nowrap">
                     {label}
                   </span>
