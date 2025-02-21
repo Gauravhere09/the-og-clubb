@@ -56,7 +56,8 @@ export async function getPosts() {
       *,
       profiles(username, avatar_url),
       comments:comments(count),
-      reactions:likes(count)
+      likes:likes(count),
+      likes:likes(reaction_type)
     `);
 
   if (user?.user) {
@@ -74,25 +75,51 @@ export async function getPosts() {
 
     if (error) throw error;
 
-    return (data as unknown as Post[]).map(post => ({
-      ...post,
-      user_reaction: userReactionMap.get(post.id) || null,
-      reactions_count: post.reactions?.[0]?.count || 0,
-      reactions: { count: post.reactions?.[0]?.count || 0 },
-      comments_count: post.comments?.[0]?.count || 0
-    }));
+    return (data as unknown as Post[]).map(post => {
+      const reactionsByType = post.likes?.reduce((acc, reaction) => {
+        const type = reaction.reaction_type;
+        if (type) {
+          acc[type] = (acc[type] || 0) + 1;
+        }
+        return acc;
+      }, {} as Record<string, number>) || {};
+
+      return {
+        ...post,
+        user_reaction: userReactionMap.get(post.id) || null,
+        reactions_count: post.likes?.length || 0,
+        reactions: {
+          count: post.likes?.length || 0,
+          by_type: reactionsByType
+        },
+        comments_count: post.comments?.[0]?.count || 0
+      };
+    });
   } else {
     const { data, error } = await query
       .order('created_at', { ascending: false });
 
     if (error) throw error;
     
-    return (data as unknown as Post[]).map(post => ({
-      ...post,
-      reactions_count: post.reactions?.[0]?.count || 0,
-      reactions: { count: post.reactions?.[0]?.count || 0 },
-      comments_count: post.comments?.[0]?.count || 0
-    }));
+    return (data as unknown as Post[]).map(post => {
+      const reactionsByType = post.likes?.reduce((acc, reaction) => {
+        const type = reaction.reaction_type;
+        if (type) {
+          acc[type] = (acc[type] || 0) + 1;
+        }
+        return acc;
+      }, {} as Record<string, number>) || {};
+
+      return {
+        ...post,
+        reactions_count: post.likes?.length || 0,
+        reactions: {
+          count: post.likes?.length || 0,
+          by_type: reactionsByType
+        },
+        comments_count: post.comments?.[0]?.count || 0
+      };
+    });
   }
 }
 
