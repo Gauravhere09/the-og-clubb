@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@supabase/auth-helpers-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/types/database.types";
+import { toggleReaction } from "@/lib/api/likes";
 
 type ReactionType = Tables["likes"]["Row"]["reaction_type"];
 
@@ -67,7 +68,7 @@ export function usePostMutations(postId: string) {
             comment_id: commentId,
             post_id: null,
             reaction_type: type
-          });
+          } satisfies Tables['likes']['Insert']);
         if (error) throw error;
       }
     },
