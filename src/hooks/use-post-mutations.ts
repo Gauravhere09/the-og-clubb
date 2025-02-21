@@ -49,19 +49,11 @@ export function usePostMutations(postId: string) {
         .single<Like>();
 
       if (existingReaction) {
-        if (existingReaction.reaction_type === type) {
-          const { error } = await supabase
-            .from('likes')
-            .delete()
-            .eq('id', existingReaction.id);
-          if (error) throw error;
-        } else {
-          const { error } = await supabase
-            .from('likes')
-            .update({ type })
-            .eq('id', existingReaction.id);
-          if (error) throw error;
-        }
+        const { error } = await supabase
+          .from('likes')
+          .delete()
+          .eq('id', existingReaction.id);
+        if (error) throw error;
       } else {
         const { error } = await supabase
           .from('likes')
@@ -69,7 +61,7 @@ export function usePostMutations(postId: string) {
             user_id: session.user.id,
             comment_id: commentId,
             post_id: null,
-            type
+            created_at: new Date().toISOString()
           });
         if (error) throw error;
       }
