@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
@@ -48,6 +49,9 @@ export default function Profile() {
           bio,
           avatar_url,
           cover_url,
+          location,
+          education,
+          relationship_status,
           created_at,
           updated_at
         `)
@@ -71,6 +75,9 @@ export default function Profile() {
 
       const result: Profile = {
         ...data,
+        location: data.location || null,
+        education: data.education || null,
+        relationship_status: data.relationship_status || null,
         followers_count: followersCount || 0,
         following_count: followingCount || 0
       };
