@@ -17,14 +17,14 @@ export interface Post {
     id: string;
     user_id: string;
     post_id: string;
-    reaction_type: 'like' | 'love' | 'haha';
+    reaction_type: 'like' | 'love' | 'haha' | 'angry';
   }[];
   reactions?: {
     count: number;
     by_type: Record<string, number>;
   };
   reactions_count?: number;
-  user_reaction?: 'like' | 'love' | 'haha' | null;
+  user_reaction?: 'like' | 'love' | 'haha' | 'angry' | null;
   comments_count?: number;
 }
 

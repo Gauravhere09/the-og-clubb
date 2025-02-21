@@ -1,6 +1,13 @@
 
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, Heart, Laugh, MessagesSquare, Share } from "lucide-react";
+import { 
+  ThumbsUp, 
+  Heart, 
+  Laugh,
+  Angry,
+  MessagesSquare, 
+  Share 
+} from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -11,14 +18,15 @@ import type { Post } from "@/types/post";
 
 interface PostActionsProps {
   post: Post;
-  onReaction: (type: 'like' | 'love' | 'haha') => void;
+  onReaction: (type: 'like' | 'love' | 'haha' | 'angry') => void;
   onToggleComments: () => void;
 }
 
 const reactionIcons = {
   like: { icon: ThumbsUp, color: "text-blue-500", label: "Me gusta" },
   love: { icon: Heart, color: "text-red-500", label: "Me encanta" },
-  haha: { icon: Laugh, color: "text-yellow-500", label: "Me divierte" }
+  haha: { icon: Laugh, color: "text-yellow-500", label: "Me divierte" },
+  angry: { icon: Angry, color: "text-orange-500", label: "Me enoja" }
 } as const;
 
 type ReactionType = keyof typeof reactionIcons;
