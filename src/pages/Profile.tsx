@@ -2,13 +2,14 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
-import { Loader2, Camera, Edit2 } from "lucide-react";
+import { Loader2, Camera, Edit2, Globe2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FriendRequestButton } from "@/components/FriendRequestButton";
+import { useQuery } from "@tanstack/react-query";
 
 interface Profile {
   id: string;
@@ -16,69 +17,123 @@ interface Profile {
   bio: string | null;
   avatar_url: string | null;
   cover_url: string | null;
+  followers_count?: number;
+  following_count?: number;
 }
 
 export default function Profile() {
   const { id } = useParams<{ id: string }>();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const getProfile = async () => {
-      try {
-        setLoading(true);
-        
-        // Obtener el usuario actual
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          setCurrentUserId(user.id);
-        }
-
-        if (!id) {
-          throw new Error("ID de perfil no proporcionado");
-        }
-
-        // Obtener el perfil solicitado
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', id)
-          .single();
-
-        if (error) throw error;
-
-        if (data) {
-          setProfile(data);
-        } else {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Perfil no encontrado",
-          });
-          navigate('/');
-        }
-      } catch (error: any) {
-        console.error('Error loading profile:', error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "No se pudo cargar el perfil",
-        });
-        navigate('/');
-      } finally {
-        setLoading(false);
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
       }
     };
 
-    if (id) {
-      getProfile();
-    }
-  }, [id, toast, navigate]);
+    getCurrentUser();
+  }, []);
 
-  if (loading) {
+  const { data: profile, isLoading, error } = useQuery({
+    queryKey: ["profile", id],
+    queryFn: async () => {
+      if (!id) throw new Error("ID de perfil no proporcionado");
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+      if (!data) throw new Error("Perfil no encontrado");
+
+      // Obtener conteos de seguidores y seguidos
+      const { count: followersCount } = await supabase
+        .from("friendships")
+        .select("*", { count: "exact", head: true })
+        .eq("friend_id", id)
+        .eq("status", "accepted");
+
+      const { count: followingCount } = await supabase
+        .from("friendships")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", id)
+        .eq("status", "accepted");
+
+      return {
+        ...data,
+        followers_count: followersCount || 0,
+        following_count: followingCount || 0
+      };
+    },
+    retry: false,
+    onError: (error: any) => {
+      console.error("Error loading profile:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo cargar el perfil",
+      });
+      navigate("/");
+    },
+  });
+
+  const handleImageUpload = async (type: 'avatar' | 'cover', e: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      if (!e.target.files || !e.target.files[0]) return;
+
+      const file = e.target.files[0];
+      if (file.size > 2 * 1024 * 1024) {
+        throw new Error("El archivo no puede ser mayor a 2MB");
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${currentUserId}_${type}_${Date.now()}.${fileExt}`;
+      const filePath = `${type}s/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profiles')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profiles')
+        .getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          [`${type}_url`]: publicUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', currentUserId);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Imagen actualizada",
+        description: "La imagen se ha actualizado correctamente",
+      });
+
+      // Forzar recarga de la página para ver los cambios
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Error uploading image:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "No se pudo actualizar la imagen",
+      });
+    }
+  };
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex bg-muted/30">
         <Navigation />
@@ -117,16 +172,32 @@ export default function Profile() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full bg-muted" />
+              <div className="w-full h-full bg-muted flex items-center justify-center">
+                <Globe2 className="h-12 w-12 text-muted-foreground/50" />
+              </div>
             )}
             {currentUserId === profile.id && (
-              <Button
-                size="icon"
-                variant="secondary"
-                className="absolute right-4 top-4"
-              >
-                <Camera className="h-4 w-4" />
-              </Button>
+              <div className="absolute right-4 top-4">
+                <input
+                  type="file"
+                  id="cover-upload"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => handleImageUpload('cover', e)}
+                />
+                <label htmlFor="cover-upload">
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="cursor-pointer"
+                    asChild
+                  >
+                    <span>
+                      <Camera className="h-4 w-4" />
+                    </span>
+                  </Button>
+                </label>
+              </div>
             )}
           </div>
           <div className="p-6">
@@ -136,17 +207,31 @@ export default function Profile() {
                   <Avatar className="h-20 w-20">
                     <AvatarImage src={profile.avatar_url || undefined} />
                     <AvatarFallback>
-                      {profile.username?.[0]?.toUpperCase()}
+                      {profile.username?.[0]?.toUpperCase() || 'U'}
                     </AvatarFallback>
                   </Avatar>
                   {currentUserId === profile.id && (
-                    <Button
-                      size="icon"
-                      variant="secondary"
-                      className="absolute -right-2 -bottom-2"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </Button>
+                    <div className="absolute -right-2 -bottom-2">
+                      <input
+                        type="file"
+                        id="avatar-upload"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={(e) => handleImageUpload('avatar', e)}
+                      />
+                      <label htmlFor="avatar-upload">
+                        <Button
+                          size="icon"
+                          variant="secondary"
+                          className="cursor-pointer"
+                          asChild
+                        >
+                          <span>
+                            <Camera className="h-4 w-4" />
+                          </span>
+                        </Button>
+                      </label>
+                    </div>
                   )}
                 </div>
                 <div>
@@ -163,6 +248,16 @@ export default function Profile() {
                   {profile.bio && (
                     <p className="text-muted-foreground mt-1">{profile.bio}</p>
                   )}
+                  <div className="flex gap-4 mt-2">
+                    <p className="text-sm">
+                      <span className="font-semibold">{profile.followers_count}</span>{" "}
+                      <span className="text-muted-foreground">Seguidores</span>
+                    </p>
+                    <p className="text-sm">
+                      <span className="font-semibold">{profile.following_count}</span>{" "}
+                      <span className="text-muted-foreground">Siguiendo</span>
+                    </p>
+                  </div>
                 </div>
               </div>
               {currentUserId && currentUserId !== profile.id && (

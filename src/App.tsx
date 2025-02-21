@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,12 +21,10 @@ const App = () => {
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    // Obtener la sesión inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
 
-    // Escuchar cambios en la autenticación
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -49,6 +47,7 @@ const App = () => {
               path="/notifications" 
               element={session ? <Notifications /> : <Auth />} 
             />
+            <Route path="/profile" element={<Navigate to="/" replace />} />
             <Route 
               path="/profile/:id" 
               element={session ? <Profile /> : <Auth />} 
