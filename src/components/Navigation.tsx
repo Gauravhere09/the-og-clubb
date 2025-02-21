@@ -1,6 +1,8 @@
 
 import { Bell, Home, Mail, User, Users } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Logo = () => (
   <div className="hidden md:flex justify-center my-6">
@@ -13,13 +15,25 @@ const Logo = () => (
 
 export function Navigation() {
   const location = useLocation();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
+      }
+    };
+
+    getCurrentUser();
+  }, []);
 
   const links = [
     { to: "/", icon: Home, label: "Inicio" },
     { to: "/messages", icon: Mail, label: "Mensajes" },
     { to: "/friends", icon: Users, label: "Amigos" },
     { to: "/notifications", icon: Bell, label: "Notificaciones" },
-    { to: "/profile", icon: User, label: "Perfil" },
+    { to: currentUserId ? `/profile/${currentUserId}` : "/", icon: User, label: "Perfil" },
   ];
 
   return (
