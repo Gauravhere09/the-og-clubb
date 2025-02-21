@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
@@ -10,18 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FriendRequestButton } from "@/components/FriendRequestButton";
 import { useQuery } from "@tanstack/react-query";
+import { Database } from "@/types/database.types";
 
-interface Profile {
-  id: string;
-  username: string | null;
-  bio: string | null;
-  avatar_url: string | null;
-  cover_url: string | null;
-  location: string | null;
-  education: string | null;
-  relationship_status: string | null;
-  created_at: string;
-  updated_at: string;
+type ProfileRow = Database['public']['Tables']['profiles']['Row'];
+
+interface Profile extends ProfileRow {
   followers_count?: number;
   following_count?: number;
 }
@@ -48,7 +40,6 @@ export default function Profile() {
     queryFn: async () => {
       if (!id) throw new Error("ID de perfil no proporcionado");
 
-      // Obtener el perfil con todos los campos
       const { data: profileData, error } = await supabase
         .from("profiles")
         .select(`
@@ -69,7 +60,6 @@ export default function Profile() {
       if (error) throw error;
       if (!profileData) throw new Error("Perfil no encontrado");
 
-      // Obtener conteos de seguidores y seguidos
       const { count: followersCount } = await supabase
         .from("friendships")
         .select("*", { count: "exact", head: true })
@@ -82,12 +72,13 @@ export default function Profile() {
         .eq("user_id", id)
         .eq("status", "accepted");
 
-      // Combinar los datos del perfil con los conteos
-      return {
+      const result: Profile = {
         ...profileData,
         followers_count: followersCount || 0,
         following_count: followingCount || 0
-      } as Profile; // Aseguramos que el tipo coincida con la interfaz Profile
+      };
+
+      return result;
     },
     retry: false,
     meta: {
@@ -183,7 +174,6 @@ export default function Profile() {
       <Navigation />
       <main className="flex-1 max-w-4xl mx-auto">
         <div className="space-y-4">
-          {/* Portada */}
           <div className="relative h-[300px]">
             {profile.cover_url ? (
               <img
@@ -221,7 +211,6 @@ export default function Profile() {
             )}
           </div>
 
-          {/* Información del perfil */}
           <div className="relative px-6 -mt-[64px]">
             <div className="flex items-end gap-4">
               <div className="relative">
@@ -278,9 +267,7 @@ export default function Profile() {
             </div>
           </div>
 
-          {/* Detalles y publicaciones */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-6">
-            {/* Columna de información */}
             <div className="space-y-4">
               <Card className="p-4">
                 <h2 className="font-semibold mb-4">Detalles</h2>
@@ -313,11 +300,9 @@ export default function Profile() {
               </Card>
             </div>
 
-            {/* Columna de publicaciones */}
             <div className="md:col-span-2">
               <Card className="p-4">
                 <h2 className="font-semibold mb-4">Publicaciones</h2>
-                {/* Aquí irían las publicaciones del usuario */}
                 <p className="text-muted-foreground text-center py-8">
                   No hay publicaciones para mostrar
                 </p>
