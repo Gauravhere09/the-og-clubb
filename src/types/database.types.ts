@@ -1,3 +1,4 @@
+
 export interface Database {
   public: {
     Tables: {
@@ -8,6 +9,9 @@ export interface Database {
           bio: string | null;
           avatar_url: string | null;
           cover_url: string | null;
+          location: string | null;
+          education: string | null;
+          relationship_status: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -17,6 +21,9 @@ export interface Database {
           bio?: string | null;
           avatar_url?: string | null;
           cover_url?: string | null;
+          location?: string | null;
+          education?: string | null;
+          relationship_status?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -26,6 +33,9 @@ export interface Database {
           bio?: string | null;
           avatar_url?: string | null;
           cover_url?: string | null;
+          location?: string | null;
+          education?: string | null;
+          relationship_status?: string | null;
           created_at?: string;
           updated_at?: string;
         };

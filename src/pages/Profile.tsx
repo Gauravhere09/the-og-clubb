@@ -20,6 +20,8 @@ interface Profile {
   location: string | null;
   education: string | null;
   relationship_status: string | null;
+  created_at: string;
+  updated_at: string;
   followers_count?: number;
   following_count?: number;
 }
