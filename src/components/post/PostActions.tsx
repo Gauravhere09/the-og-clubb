@@ -51,7 +51,7 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
               );
             })}
           </div>
-          <span>{totalReactions}</span>
+          <span>Tú y {totalReactions - 1} personas más</span>
         </div>
       )}
 
@@ -83,6 +83,7 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
             className="w-fit p-2" 
             side="top"
             align="start"
+            sideOffset={5}
           >
             <div className="flex gap-1">
               {Object.entries(reactionIcons).map(([type, { icon: Icon, color, label }]) => (
@@ -90,11 +91,11 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
                   key={type}
                   variant="ghost"
                   size="sm"
-                  className={`hover:${color} ${userReaction === type ? color : ''} group relative`}
+                  className={`hover:${color} ${userReaction === type ? color : ''} relative group hover:scale-125 transition-transform duration-200`}
                   onClick={() => onReaction(type as ReactionType)}
                 >
-                  <Icon className="h-5 w-5" />
-                  <span className="absolute -top-8 scale-0 transition-all rounded bg-black px-2 py-1 text-xs text-white group-hover:scale-100">
+                  <Icon className={`h-6 w-6 ${userReaction === type ? color : ''}`} />
+                  <span className="absolute -top-8 scale-0 transition-all rounded bg-black px-2 py-1 text-xs text-white group-hover:scale-100 whitespace-nowrap">
                     {label}
                   </span>
                 </Button>
