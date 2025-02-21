@@ -26,6 +26,9 @@ export function SingleComment({
 }: SingleCommentProps) {
   const session = useSession();
 
+  const isAudioComment = comment.content.startsWith('[Audio]');
+  const audioUrl = isAudioComment ? comment.content.replace('[Audio] ', '') : null;
+
   return (
     <div className={`${isReply ? "ml-12" : ""} space-y-2`}>
       <div className="flex items-start gap-3">
@@ -36,11 +39,12 @@ export function SingleComment({
         <div className="flex-1">
           <div className="bg-muted p-3 rounded-lg">
             <p className="font-medium text-sm">{comment.profiles?.username}</p>
-            {comment.content.startsWith('[Audio]') ? (
+            {isAudioComment ? (
               <audio 
-                src={comment.content.replace('[Audio] ', '')} 
+                src={audioUrl} 
                 controls 
-                className="mt-2 max-w-[200px]"
+                className="mt-2 w-full max-w-[300px]"
+                preload="metadata"
               />
             ) : (
               <p className="text-sm">{comment.content}</p>
