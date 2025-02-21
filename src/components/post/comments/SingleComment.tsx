@@ -7,10 +7,11 @@ import { Trash } from "lucide-react";
 import type { Comment } from "@/types/post";
 import { CommentReactions } from "./CommentReactions";
 import { useSession } from "@supabase/auth-helpers-react";
+import type { ReactionType } from "@/lib/api/likes";
 
 interface SingleCommentProps {
   comment: Comment;
-  onReaction: (commentId: string, type: 'like' | 'love' | 'haha' | 'sad' | 'angry') => void;
+  onReaction: (commentId: string, type: ReactionType) => void;
   onReply: (id: string, username: string) => void;
   onDeleteComment: (commentId: string) => void;
   isReply?: boolean;
