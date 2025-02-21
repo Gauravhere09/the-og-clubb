@@ -5,10 +5,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@supabase/auth-helpers-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/types/database.types";
-import { toggleReaction } from "@/lib/api/likes";
+import { toggleReaction, ReactionType } from "@/lib/api/likes";
 import type { Database } from "@/integrations/supabase/types";
 
-type ReactionType = 'like' | 'love' | 'haha' | 'angry' | 'surprised' | 'sigma';
 type Like = Database['public']['Tables']['likes']['Row'];
 
 export function usePostMutations(postId: string) {
@@ -61,6 +60,7 @@ export function usePostMutations(postId: string) {
             user_id: session.user.id,
             comment_id: commentId,
             post_id: null,
+            reaction_type: type,
             created_at: new Date().toISOString()
           });
         if (error) throw error;

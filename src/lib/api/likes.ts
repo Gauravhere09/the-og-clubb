@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/types/database.types";
 
-type ReactionType = Tables["likes"]["Row"]["reaction_type"];
+export type ReactionType = 'like' | 'love' | 'haha' | 'angry' | 'surprised' | 'sigma';
 type Like = Tables["likes"]["Row"];
 
 export async function toggleReaction(postId: string | undefined, reactionType: ReactionType) {

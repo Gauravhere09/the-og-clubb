@@ -1,14 +1,20 @@
 
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ThumbsUp, Heart, SmilePlus, Frown, Angry } from "lucide-react";
+import { ThumbsUp, Heart, Laugh, Angry, Sigma } from "lucide-react";
 
 const reactionIcons = {
   'like': <ThumbsUp className="h-3 w-3" />,
   'love': <Heart className="h-3 w-3 text-red-500" />,
-  'haha': <SmilePlus className="h-3 w-3 text-yellow-500" />,
-  'sad': <Frown className="h-3 w-3 text-blue-500" />,
-  'angry': <Angry className="h-3 w-3 text-orange-500" />
+  'haha': <Laugh className="h-3 w-3 text-yellow-500" />,
+  'angry': <Angry className="h-3 w-3 text-orange-500" />,
+  'surprised': <svg className="h-3 w-3 text-purple-500" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+    <circle cx="12" cy="12" r="4" fill="currentColor"/>
+    <circle cx="8" cy="9" r="1.5" fill="currentColor"/>
+    <circle cx="16" cy="9" r="1.5" fill="currentColor"/>
+  </svg>,
+  'sigma': <Sigma className="h-3 w-3 text-gray-700" />
 } as const;
 
 interface CommentReactionsProps {
