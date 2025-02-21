@@ -25,6 +25,7 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
   const reactionsByType = post.reactions?.by_type || {};
   const userReaction = post.user_reaction as ReactionType | undefined;
   const totalReactions = Object.values(reactionsByType).reduce((sum, count) => sum + count, 0);
+  const commentCount = post.comments?.length || 0;
 
   return (
     <div className="space-y-2">
@@ -54,7 +55,13 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
           variant="ghost"
           size="sm"
           onClick={onToggleComments}
+          className="relative"
         >
+          {commentCount > 0 && (
+            <span className="absolute -top-4 text-xs text-muted-foreground">
+              {commentCount} {commentCount === 1 ? 'comentario' : 'comentarios'}
+            </span>
+          )}
           <MessagesSquare className="h-4 w-4 mr-2" />
           Comentar
         </Button>
