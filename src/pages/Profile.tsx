@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
-import { Loader2, Camera, Edit2, Globe2 } from "lucide-react";
+import { Loader2, Camera, Edit2, Globe2, Home, School, MapPin, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
@@ -17,6 +17,9 @@ interface Profile {
   bio: string | null;
   avatar_url: string | null;
   cover_url: string | null;
+  location: string | null;
+  education: string | null;
+  relationship_status: string | null;
   followers_count?: number;
   following_count?: number;
 }
@@ -123,7 +126,6 @@ export default function Profile() {
         description: "La imagen se ha actualizado correctamente",
       });
 
-      // Forzar recarga de la página para ver los cambios
       window.location.reload();
     } catch (error: any) {
       console.error('Error uploading image:', error);
@@ -164,9 +166,10 @@ export default function Profile() {
   return (
     <div className="min-h-screen flex bg-muted/30">
       <Navigation />
-      <main className="flex-1 max-w-4xl mx-auto p-6">
-        <Card className="overflow-hidden">
-          <div className="relative h-48">
+      <main className="flex-1 max-w-4xl mx-auto">
+        <div className="space-y-4">
+          {/* Portada */}
+          <div className="relative h-[300px]">
             {profile.cover_url ? (
               <img
                 src={profile.cover_url}
@@ -202,72 +205,111 @@ export default function Profile() {
               </div>
             )}
           </div>
-          <div className="p-6">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <Avatar className="h-20 w-20">
-                    <AvatarImage src={profile.avatar_url || undefined} />
-                    <AvatarFallback>
-                      {profile.username?.[0]?.toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  {currentUserId === profile.id && (
-                    <div className="absolute -right-2 -bottom-2">
-                      <input
-                        type="file"
-                        id="avatar-upload"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={(e) => handleImageUpload('avatar', e)}
-                      />
-                      <label htmlFor="avatar-upload">
-                        <Button
-                          size="icon"
-                          variant="secondary"
-                          className="cursor-pointer"
-                          asChild
-                        >
-                          <span>
-                            <Camera className="h-4 w-4" />
-                          </span>
-                        </Button>
-                      </label>
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
+
+          {/* Información del perfil */}
+          <div className="relative px-6 -mt-[64px]">
+            <div className="flex items-end gap-4">
+              <div className="relative">
+                <Avatar className="h-32 w-32 border-4 border-background">
+                  <AvatarImage src={profile.avatar_url || undefined} />
+                  <AvatarFallback>
+                    {profile.username?.[0]?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                {currentUserId === profile.id && (
+                  <div className="absolute -right-2 -bottom-2">
+                    <input
+                      type="file"
+                      id="avatar-upload"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={(e) => handleImageUpload('avatar', e)}
+                    />
+                    <label htmlFor="avatar-upload">
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="cursor-pointer"
+                        asChild
+                      >
+                        <span>
+                          <Camera className="h-4 w-4" />
+                        </span>
+                      </Button>
+                    </label>
+                  </div>
+                )}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <div>
                     <h1 className="text-2xl font-bold">
                       {profile.username || "Usuario sin nombre"}
                     </h1>
-                    {currentUserId === profile.id && (
-                      <Button size="icon" variant="ghost">
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <p className="text-muted-foreground">
+                      {profile.followers_count} amigos
+                    </p>
                   </div>
-                  {profile.bio && (
-                    <p className="text-muted-foreground mt-1">{profile.bio}</p>
+                  {currentUserId === profile.id ? (
+                    <Button variant="outline" onClick={() => navigate("/settings")}>
+                      <Edit2 className="h-4 w-4 mr-2" />
+                      Editar perfil
+                    </Button>
+                  ) : (
+                    <FriendRequestButton targetUserId={profile.id} />
                   )}
-                  <div className="flex gap-4 mt-2">
-                    <p className="text-sm">
-                      <span className="font-semibold">{profile.followers_count}</span>{" "}
-                      <span className="text-muted-foreground">Seguidores</span>
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold">{profile.following_count}</span>{" "}
-                      <span className="text-muted-foreground">Siguiendo</span>
-                    </p>
-                  </div>
                 </div>
               </div>
-              {currentUserId && currentUserId !== profile.id && (
-                <FriendRequestButton targetUserId={profile.id} />
-              )}
             </div>
           </div>
-        </Card>
+
+          {/* Detalles y publicaciones */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-6">
+            {/* Columna de información */}
+            <div className="space-y-4">
+              <Card className="p-4">
+                <h2 className="font-semibold mb-4">Detalles</h2>
+                <div className="space-y-3">
+                  {profile.location && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Home className="h-4 w-4 text-muted-foreground" />
+                      <span>Vive en {profile.location}</span>
+                    </div>
+                  )}
+                  {profile.education && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <School className="h-4 w-4 text-muted-foreground" />
+                      <span>Estudió en {profile.education}</span>
+                    </div>
+                  )}
+                  {profile.location && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                      <span>De {profile.location}</span>
+                    </div>
+                  )}
+                  {profile.relationship_status && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Heart className="h-4 w-4 text-muted-foreground" />
+                      <span>{profile.relationship_status}</span>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </div>
+
+            {/* Columna de publicaciones */}
+            <div className="md:col-span-2">
+              <Card className="p-4">
+                <h2 className="font-semibold mb-4">Publicaciones</h2>
+                {/* Aquí irían las publicaciones del usuario */}
+                <p className="text-muted-foreground text-center py-8">
+                  No hay publicaciones para mostrar
+                </p>
+              </Card>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );
