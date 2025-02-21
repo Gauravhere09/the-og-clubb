@@ -49,9 +49,6 @@ export default function Profile() {
           bio,
           avatar_url,
           cover_url,
-          location,
-          education,
-          relationship_status,
           created_at,
           updated_at
         `)
@@ -74,10 +71,16 @@ export default function Profile() {
         .eq("status", "accepted");
 
       const result: Profile = {
-        ...data,
-        location: data.location || null,
-        education: data.education || null,
-        relationship_status: data.relationship_status || null,
+        id: data.id,
+        username: data.username,
+        bio: data.bio,
+        avatar_url: data.avatar_url,
+        cover_url: data.cover_url,
+        created_at: data.created_at,
+        updated_at: data.updated_at,
+        location: null,
+        education: null,
+        relationship_status: null,
         followers_count: followersCount || 0,
         following_count: followingCount || 0
       };
