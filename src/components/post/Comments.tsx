@@ -9,7 +9,6 @@ interface CommentsProps {
   onReaction: (commentId: string, type: ReactionType) => void;
   onReply: (id: string, username: string) => void;
   onSubmitComment: () => void;
-  onAudioRecording: (blob: Blob) => void;
   onDeleteComment: (commentId: string) => void;
   newComment: string;
   onNewCommentChange: (value: string) => void;
@@ -22,7 +21,6 @@ export function Comments({
   onReaction,
   onReply,
   onSubmitComment,
-  onAudioRecording,
   onDeleteComment,
   newComment,
   onNewCommentChange,
@@ -47,7 +45,6 @@ export function Comments({
         newComment={newComment}
         onNewCommentChange={onNewCommentChange}
         onSubmitComment={onSubmitComment}
-        onAudioRecording={onAudioRecording}
         replyTo={replyTo}
         onCancelReply={onCancelReply}
       />

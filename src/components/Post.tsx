@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import type { Post as PostType } from "@/types/post";
 import { useQuery } from "@tanstack/react-query";
 import { getComments } from "@/lib/api";
-import { supabase } from "@/integrations/supabase/client";
 import { PostHeader } from "./post/PostHeader";
 import { PostContent } from "./post/PostContent";
 import { PostActions } from "./post/PostActions";
@@ -30,30 +29,6 @@ export function Post({ post }: PostProps) {
   const { handleReaction, handleDeletePost, toggleCommentReaction } = usePostMutations(post.id);
   const { submitComment, deleteComment } = useCommentMutations(post.id);
 
-  const handleAudioRecording = async (blob: Blob) => {
-    try {
-      const fileName = `${crypto.randomUUID()}.webm`;
-      const { error: uploadError } = await supabase.storage
-        .from('audio-messages')
-        .upload(fileName, blob);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('audio-messages')
-        .getPublicUrl(fileName);
-
-      await submitComment({ 
-        content: `[Audio] ${publicUrl}`,
-        replyToId: replyTo?.id
-      });
-      
-      setReplyTo(null);
-    } catch (error) {
-      console.error('Error sending audio:', error);
-    }
-  };
-
   const handleSubmitComment = () => {
     submitComment({ 
       content: newComment,
@@ -78,7 +53,6 @@ export function Post({ post }: PostProps) {
           onReaction={(commentId, type) => toggleCommentReaction({ commentId, type })}
           onReply={(id, username) => setReplyTo({ id, username })}
           onSubmitComment={handleSubmitComment}
-          onAudioRecording={handleAudioRecording}
           onDeleteComment={(commentId) => deleteComment(commentId)}
           newComment={newComment}
           onNewCommentChange={(value) => setNewComment(value)}

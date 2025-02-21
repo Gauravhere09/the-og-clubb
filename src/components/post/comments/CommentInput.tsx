@@ -1,13 +1,11 @@
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { AudioRecorder } from "@/components/AudioRecorder";
 
 interface CommentInputProps {
   newComment: string;
   onNewCommentChange: (value: string) => void;
   onSubmitComment: () => void;
-  onAudioRecording: (blob: Blob) => void;
   replyTo: { id: string; username: string } | null;
   onCancelReply: () => void;
 }
@@ -16,7 +14,6 @@ export function CommentInput({
   newComment, 
   onNewCommentChange, 
   onSubmitComment, 
-  onAudioRecording,
   replyTo,
   onCancelReply
 }: CommentInputProps) {
@@ -36,18 +33,15 @@ export function CommentInput({
         </div>
       )}
       <div className="flex gap-2">
-        <div className="flex-1 flex gap-2">
-          <Textarea
-            value={newComment}
-            onChange={(e) => onNewCommentChange(e.target.value)}
-            placeholder="Escribe un comentario..."
-            className="resize-none"
-          />
-          <Button onClick={onSubmitComment}>
-            Comentar
-          </Button>
-        </div>
-        <AudioRecorder onRecordingComplete={onAudioRecording} />
+        <Textarea
+          value={newComment}
+          onChange={(e) => onNewCommentChange(e.target.value)}
+          placeholder="Escribe un comentario..."
+          className="resize-none"
+        />
+        <Button onClick={onSubmitComment}>
+          Comentar
+        </Button>
       </div>
     </div>
   );
