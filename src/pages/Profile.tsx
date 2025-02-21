@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
@@ -36,10 +35,20 @@ export default function Profile() {
     getCurrentUser();
   }, []);
 
-  const { data: profile, isLoading } = useQuery({
+  const { data: profile, isLoading, error } = useQuery({
     queryKey: ["profile", id],
     queryFn: async () => {
       if (!id) throw new Error("ID de perfil no proporcionado");
+
+      const { data: profileExists, error: existsError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", id)
+        .single();
+
+      if (existsError || !profileExists) {
+        throw new Error("Perfil no encontrado");
+      }
 
       const { data, error } = await supabase
         .from("profiles")
@@ -55,8 +64,10 @@ export default function Profile() {
         .eq("id", id)
         .single();
 
-      if (error) throw error;
-      if (!data) throw new Error("Perfil no encontrado");
+      if (error || !data) {
+        console.error("Error fetching profile:", error);
+        throw new Error("Error al cargar el perfil");
+      }
 
       const { count: followersCount } = await supabase
         .from("friendships")
@@ -73,7 +84,7 @@ export default function Profile() {
       const result: Profile = {
         id: data.id,
         username: data.username,
-        bio: data.bio,
+        bio: data.bio || null,
         avatar_url: data.avatar_url,
         cover_url: data.cover_url,
         created_at: data.created_at,
@@ -87,7 +98,8 @@ export default function Profile() {
 
       return result;
     },
-    retry: false,
+    enabled: !!id,
+    retry: 1,
     meta: {
       errorHandler: (error: any) => {
         console.error("Error loading profile:", error);
@@ -96,10 +108,35 @@ export default function Profile() {
           title: "Error",
           description: "No se pudo cargar el perfil",
         });
-        navigate("/");
       }
     }
   });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex bg-muted/30">
+        <Navigation />
+        <main className="flex-1 p-6">
+          <div className="flex items-center justify-center h-full">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error || !profile) {
+    return (
+      <div className="min-h-screen flex bg-muted/30">
+        <Navigation />
+        <main className="flex-1 p-6">
+          <Card className="p-6 text-center">
+            <p className="text-muted-foreground">Perfil no encontrado</p>
+          </Card>
+        </main>
+      </div>
+    );
+  }
 
   const handleImageUpload = async (type: 'avatar' | 'cover', e: React.ChangeEvent<HTMLInputElement>) => {
     try {
@@ -149,32 +186,6 @@ export default function Profile() {
       });
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex bg-muted/30">
-        <Navigation />
-        <main className="flex-1 p-6">
-          <div className="flex items-center justify-center h-full">
-            <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (!profile) {
-    return (
-      <div className="min-h-screen flex bg-muted/30">
-        <Navigation />
-        <main className="flex-1 p-6">
-          <Card className="p-6 text-center">
-            <p className="text-muted-foreground">Perfil no encontrado</p>
-          </Card>
-        </main>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex bg-muted/30">
