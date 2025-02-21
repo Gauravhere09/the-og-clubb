@@ -5,7 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@supabase/auth-helpers-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/types/database.types";
-import { toggleReaction } from "@/lib/api/likes";
 
 type ReactionType = Tables["likes"]["Row"]["reaction_type"];
 
@@ -61,16 +60,14 @@ export function usePostMutations(postId: string) {
           if (error) throw error;
         }
       } else {
-        const newLike: Tables['likes']['Insert'] = {
-          user_id: session.user.id,
-          comment_id: commentId,
-          post_id: null,
-          reaction_type: type
-        };
-        
         const { error } = await supabase
           .from('likes')
-          .insert(newLike);
+          .insert({
+            user_id: session.user.id,
+            comment_id: commentId,
+            post_id: null,
+            reaction_type: type
+          });
         if (error) throw error;
       }
     },
