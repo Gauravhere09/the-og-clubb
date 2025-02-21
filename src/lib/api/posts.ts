@@ -23,7 +23,8 @@ export async function createPost(content: string, file: File | null = null) {
 
       media_url = publicUrl;
       media_type = file.type.startsWith('image/') ? 'image' :
-                   file.type.startsWith('video/') ? 'video' : null;
+                   file.type.startsWith('video/') ? 'video' :
+                   file.type.startsWith('audio/') || file.type === 'audio/webm' ? 'audio' : null;
     }
 
     const { data, error } = await supabase
