@@ -56,22 +56,32 @@ export function SingleComment({
         </Avatar>
         <div className="flex-1">
           <div className="bg-muted p-3 rounded-lg">
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-start gap-2">
               <p className="font-medium text-sm">{comment.profiles?.username}</p>
               {isAuthor && (
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-auto p-1">
+                  <DropdownMenuTrigger className="hover:bg-accent rounded-md">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 w-6 p-0"
+                    >
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-32">
-                    <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                  <DropdownMenuContent 
+                    align="end" 
+                    className="w-32 bg-background"
+                  >
+                    <DropdownMenuItem 
+                      className="cursor-pointer"
+                      onClick={() => setIsEditing(true)}
+                    >
                       <Pencil className="h-4 w-4 mr-2" />
                       <span>Editar</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem 
-                      className="text-destructive"
+                      className="cursor-pointer text-destructive focus:text-destructive"
                       onClick={() => onDeleteComment(comment.id)}
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
