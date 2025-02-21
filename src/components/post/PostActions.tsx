@@ -22,10 +22,13 @@ const reactionIcons = {
   haha: { icon: Laugh, color: "text-yellow-500", label: "Me divierte" },
   sad: { icon: Frown, color: "text-yellow-500", label: "Me entristece" },
   angry: { icon: Angry, color: "text-orange-500", label: "Me enoja" }
-};
+} as const;
+
+type ReactionType = keyof typeof reactionIcons;
 
 export function PostActions({ post, onReaction, onToggleComments }: PostActionsProps) {
   const reactionsByType = post.reactions?.by_type || {};
+  const userReaction = post.user_reaction as ReactionType | undefined;
 
   return (
     <div className="flex gap-4">
@@ -36,11 +39,11 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
               <Button
                 variant="ghost"
                 size="sm"
-                className={post.user_reaction ? reactionIcons[post.user_reaction].color : ""}
+                className={userReaction ? reactionIcons[userReaction].color : ""}
               >
-                {post.user_reaction ? (
+                {userReaction ? (
                   <div className="flex items-center">
-                    {React.createElement(reactionIcons[post.user_reaction].icon, {
+                    {React.createElement(reactionIcons[userReaction].icon, {
                       className: "h-4 w-4 mr-2"
                     })}
                     {post.reactions_count || 0}
@@ -55,13 +58,13 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
             </PopoverTrigger>
             <PopoverContent className="w-fit p-2">
               <div className="flex gap-1">
-                {Object.entries(reactionIcons).map(([type, { icon: Icon, color, label }]) => (
+                {Object.entries(reactionIcons).map(([type, { icon: Icon, color }]) => (
                   <Button
                     key={type}
                     variant="ghost"
                     size="sm"
-                    className={`hover:${color} ${post.user_reaction === type ? color : ''}`}
-                    onClick={() => onReaction(type as 'like' | 'love' | 'haha' | 'sad' | 'angry')}
+                    className={`hover:${color} ${userReaction === type ? color : ''}`}
+                    onClick={() => onReaction(type as ReactionType)}
                   >
                     <Icon className="h-4 w-4" />
                   </Button>
@@ -72,17 +75,22 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
         </HoverCardTrigger>
         <HoverCardContent className="w-48">
           <div className="space-y-1">
-            {Object.entries(reactionsByType).map(([type, count]) => (
-              <div key={type} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {React.createElement(reactionIcons[type].icon, {
-                    className: `h-4 w-4 ${reactionIcons[type].color}`
-                  })}
-                  <span>{reactionIcons[type].label}</span>
-                </div>
-                <span>{count}</span>
-              </div>
-            ))}
+            {Object.entries(reactionsByType).map(([type, count]) => {
+              const reactionType = type as ReactionType;
+              if (reactionIcons[reactionType]) {
+                const Icon = reactionIcons[reactionType].icon;
+                return (
+                  <div key={type} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Icon className={`h-4 w-4 ${reactionIcons[reactionType].color}`} />
+                      <span>{reactionIcons[reactionType].label}</span>
+                    </div>
+                    <span>{count}</span>
+                  </div>
+                );
+              }
+              return null;
+            })}
           </div>
         </HoverCardContent>
       </HoverCard>

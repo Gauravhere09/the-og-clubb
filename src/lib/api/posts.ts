@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "@/types/post";
 import type { Tables } from "@/types/database.types";
@@ -56,15 +55,14 @@ export async function getPosts() {
       *,
       profiles(username, avatar_url),
       comments:comments(count),
-      likes:likes(count),
-      likes:likes(reaction_type)
+      likes:likes(count, reaction_type)
     `);
 
   if (user?.user) {
     const { data: userReactions } = await supabase
       .from('likes')
       .select('post_id, reaction_type')
-      .eq('user_id', user.user.id) as { data: Pick<Tables['likes']['Row'], 'post_id' | 'reaction_type'>[] };
+      .eq('user_id', user.user.id);
 
     const userReactionMap = new Map(
       userReactions?.map(reaction => [reaction.post_id, reaction.reaction_type]) || []
@@ -75,14 +73,14 @@ export async function getPosts() {
 
     if (error) throw error;
 
-    return (data as unknown as Post[]).map(post => {
-      const reactionsByType = post.likes?.reduce((acc, reaction) => {
-        const type = reaction.reaction_type;
+    return (data || []).map((post: any) => {
+      const reactionsByType = (post.likes || []).reduce((acc: Record<string, number>, like: any) => {
+        const type = like.reaction_type;
         if (type) {
           acc[type] = (acc[type] || 0) + 1;
         }
         return acc;
-      }, {} as Record<string, number>) || {};
+      }, {});
 
       return {
         ...post,
@@ -93,7 +91,7 @@ export async function getPosts() {
           by_type: reactionsByType
         },
         comments_count: post.comments?.[0]?.count || 0
-      };
+      } as Post;
     });
   } else {
     const { data, error } = await query
@@ -101,14 +99,14 @@ export async function getPosts() {
 
     if (error) throw error;
     
-    return (data as unknown as Post[]).map(post => {
-      const reactionsByType = post.likes?.reduce((acc, reaction) => {
-        const type = reaction.reaction_type;
+    return (data || []).map((post: any) => {
+      const reactionsByType = (post.likes || []).reduce((acc: Record<string, number>, like: any) => {
+        const type = like.reaction_type;
         if (type) {
           acc[type] = (acc[type] || 0) + 1;
         }
         return acc;
-      }, {} as Record<string, number>) || {};
+      }, {});
 
       return {
         ...post,
@@ -118,7 +116,7 @@ export async function getPosts() {
           by_type: reactionsByType
         },
         comments_count: post.comments?.[0]?.count || 0
-      };
+      } as Post;
     });
   }
 }

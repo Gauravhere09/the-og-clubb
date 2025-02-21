@@ -12,10 +12,16 @@ export interface Post {
     username: string | null;
     avatar_url: string | null;
   };
-  comments?: { count: number };
-  reactions?: { count: number };
+  comments?: { count: number }[];
+  likes?: {
+    reaction_type: 'like' | 'love' | 'haha' | 'sad' | 'angry';
+  }[];
+  reactions?: {
+    count: number;
+    by_type: Record<string, number>;
+  };
   reactions_count?: number;
-  user_reaction?: string | null;
+  user_reaction?: 'like' | 'love' | 'haha' | 'sad' | 'angry' | null;
   comments_count?: number;
 }
 
