@@ -48,14 +48,26 @@ export default function Profile() {
     queryFn: async () => {
       if (!id) throw new Error("ID de perfil no proporcionado");
 
-      const { data, error } = await supabase
+      // Obtener el perfil con todos los campos
+      const { data: profileData, error } = await supabase
         .from("profiles")
-        .select("*")
+        .select(`
+          id,
+          username,
+          bio,
+          avatar_url,
+          cover_url,
+          location,
+          education,
+          relationship_status,
+          created_at,
+          updated_at
+        `)
         .eq("id", id)
         .single();
 
       if (error) throw error;
-      if (!data) throw new Error("Perfil no encontrado");
+      if (!profileData) throw new Error("Perfil no encontrado");
 
       // Obtener conteos de seguidores y seguidos
       const { count: followersCount } = await supabase
@@ -70,11 +82,12 @@ export default function Profile() {
         .eq("user_id", id)
         .eq("status", "accepted");
 
+      // Combinar los datos del perfil con los conteos
       return {
-        ...data,
+        ...profileData,
         followers_count: followersCount || 0,
         following_count: followingCount || 0
-      };
+      } as Profile; // Aseguramos que el tipo coincida con la interfaz Profile
     },
     retry: false,
     meta: {
