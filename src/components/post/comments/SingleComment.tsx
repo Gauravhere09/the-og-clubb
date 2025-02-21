@@ -3,11 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Trash2 } from "lucide-react";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import type { Comment } from "@/types/post";
 import { CommentReactions } from "./CommentReactions";
 import { useSession } from "@supabase/auth-helpers-react";
 import type { ReactionType } from "@/lib/api/likes";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
 
 interface SingleCommentProps {
   comment: Comment;
@@ -25,9 +33,19 @@ export function SingleComment({
   isReply = false 
 }: SingleCommentProps) {
   const session = useSession();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState(comment.content);
 
   const isAudioComment = comment.content.startsWith('[Audio]');
   const audioUrl = isAudioComment ? comment.content.replace('[Audio] ', '') : null;
+
+  const handleSaveEdit = () => {
+    // Por ahora solo actualizamos el estado local
+    // TODO: Implementar la funcionalidad de guardar en la base de datos
+    setIsEditing(false);
+  };
+
+  const isAuthor = session?.user?.id === comment.user_id;
 
   return (
     <div className={`${isReply ? "ml-12" : ""} space-y-2`}>
@@ -38,8 +56,51 @@ export function SingleComment({
         </Avatar>
         <div className="flex-1">
           <div className="bg-muted p-3 rounded-lg">
-            <p className="font-medium text-sm">{comment.profiles?.username}</p>
-            {isAudioComment ? (
+            <div className="flex justify-between items-start">
+              <p className="font-medium text-sm">{comment.profiles?.username}</p>
+              {isAuthor && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-auto p-1">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-32">
+                    <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                      <Pencil className="h-4 w-4 mr-2" />
+                      <span>Editar</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="text-destructive"
+                      onClick={() => onDeleteComment(comment.id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      <span>Eliminar</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+            {isEditing && !isAudioComment ? (
+              <div className="mt-2 flex gap-2">
+                <Input
+                  value={editedContent}
+                  onChange={(e) => setEditedContent(e.target.value)}
+                  className="flex-1"
+                />
+                <Button size="sm" onClick={handleSaveEdit}>Guardar</Button>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditedContent(comment.content);
+                  }}
+                >
+                  Cancelar
+                </Button>
+              </div>
+            ) : isAudioComment ? (
               <audio 
                 src={audioUrl} 
                 controls 
@@ -65,16 +126,6 @@ export function SingleComment({
             >
               Responder
             </Button>
-            {session?.user?.id === comment.user_id && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-auto p-0 text-xs text-destructive hover:text-destructive"
-                onClick={() => onDeleteComment(comment.id)}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            )}
             <span className="text-xs text-muted-foreground">
               {format(new Date(comment.created_at), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
             </span>
@@ -94,4 +145,3 @@ export function SingleComment({
     </div>
   );
 }
-
