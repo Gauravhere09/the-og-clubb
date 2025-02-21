@@ -44,7 +44,7 @@ export function usePostMutations(postId: string) {
         .select('*')
         .eq('user_id', session.user.id)
         .eq('comment_id', commentId)
-        .single();
+        .single<Tables["likes"]["Row"]>();
 
       if (existingReaction) {
         if (existingReaction.reaction_type === type) {
