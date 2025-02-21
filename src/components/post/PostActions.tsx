@@ -17,7 +17,7 @@ import { type ReactionType } from "./reactions/ReactionIcons";
 
 interface PostActionsProps {
   post: Post;
-  onReaction: (type: 'like' | 'love' | 'haha' | 'angry' | 'surprised' | 'sigma') => void;
+  onReaction: (type: ReactionType) => void;
   onToggleComments: () => void;
 }
 
