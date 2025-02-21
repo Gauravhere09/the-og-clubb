@@ -1,11 +1,12 @@
 
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, Camera, Edit2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { FriendRequestButton } from "@/components/FriendRequestButton";
 
@@ -18,11 +19,12 @@ interface Profile {
 }
 
 export default function Profile() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getProfile = async () => {
@@ -33,6 +35,10 @@ export default function Profile() {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           setCurrentUserId(user.id);
+        }
+
+        if (!id) {
+          throw new Error("ID de perfil no proporcionado");
         }
 
         // Obtener el perfil solicitado
@@ -52,6 +58,7 @@ export default function Profile() {
             title: "Error",
             description: "Perfil no encontrado",
           });
+          navigate('/');
         }
       } catch (error: any) {
         console.error('Error loading profile:', error);
@@ -60,6 +67,7 @@ export default function Profile() {
           title: "Error",
           description: "No se pudo cargar el perfil",
         });
+        navigate('/');
       } finally {
         setLoading(false);
       }
@@ -68,7 +76,7 @@ export default function Profile() {
     if (id) {
       getProfile();
     }
-  }, [id]);
+  }, [id, toast, navigate]);
 
   if (loading) {
     return (
@@ -101,28 +109,57 @@ export default function Profile() {
       <Navigation />
       <main className="flex-1 max-w-4xl mx-auto p-6">
         <Card className="overflow-hidden">
-          {profile.cover_url && (
-            <div className="h-48 overflow-hidden">
+          <div className="relative h-48">
+            {profile.cover_url ? (
               <img
                 src={profile.cover_url}
                 alt="Cover"
                 className="w-full h-full object-cover"
               />
-            </div>
-          )}
+            ) : (
+              <div className="w-full h-full bg-muted" />
+            )}
+            {currentUserId === profile.id && (
+              <Button
+                size="icon"
+                variant="secondary"
+                className="absolute right-4 top-4"
+              >
+                <Camera className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           <div className="p-6">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage src={profile.avatar_url || undefined} />
-                  <AvatarFallback>
-                    {profile.username?.[0]?.toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative">
+                  <Avatar className="h-20 w-20">
+                    <AvatarImage src={profile.avatar_url || undefined} />
+                    <AvatarFallback>
+                      {profile.username?.[0]?.toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  {currentUserId === profile.id && (
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="absolute -right-2 -bottom-2"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
                 <div>
-                  <h1 className="text-2xl font-bold">
-                    {profile.username || "Usuario sin nombre"}
-                  </h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-bold">
+                      {profile.username || "Usuario sin nombre"}
+                    </h1>
+                    {currentUserId === profile.id && (
+                      <Button size="icon" variant="ghost">
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                   {profile.bio && (
                     <p className="text-muted-foreground mt-1">{profile.bio}</p>
                   )}

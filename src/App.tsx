@@ -43,25 +43,19 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route
-              path="/"
-              element={session ? <Index /> : <Auth />}
+            <Route path="/" element={session ? <Index /> : <Auth />} />
+            <Route path="/messages" element={session ? <Messages /> : <Auth />} />
+            <Route 
+              path="/notifications" 
+              element={session ? <Notifications /> : <Auth />} 
             />
-            <Route
-              path="/messages"
-              element={session ? <Messages /> : <Auth />}
+            <Route 
+              path="/profile/:id" 
+              element={session ? <Profile /> : <Auth />} 
             />
-            <Route
-              path="/notifications"
-              element={session ? <Notifications /> : <Auth />}
-            />
-            <Route
-              path="/profile/:id"
-              element={session ? <Profile /> : <Auth />}
-            />
-            <Route
-              path="/friend-requests"
-              element={session ? <FriendRequests /> : <Auth />}
+            <Route 
+              path="/friend-requests" 
+              element={session ? <FriendRequests /> : <Auth />} 
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
