@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Trash } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import type { Comment } from "@/types/post";
 import { CommentReactions } from "./CommentReactions";
 import { useSession } from "@supabase/auth-helpers-react";
@@ -72,7 +72,7 @@ export function SingleComment({
                 className="h-auto p-0 text-xs text-destructive hover:text-destructive"
                 onClick={() => onDeleteComment(comment.id)}
               >
-                <Trash className="h-3 w-3" />
+                <Trash2 className="h-4 w-4" />
               </Button>
             )}
             <span className="text-xs text-muted-foreground">
@@ -94,3 +94,4 @@ export function SingleComment({
     </div>
   );
 }
+
