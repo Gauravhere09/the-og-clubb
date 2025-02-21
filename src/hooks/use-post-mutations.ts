@@ -6,9 +6,10 @@ import { useSession } from "@supabase/auth-helpers-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/types/database.types";
 import { toggleReaction } from "@/lib/api/likes";
+import type { Database } from "@/integrations/supabase/types";
 
 type ReactionType = 'like' | 'love' | 'haha' | 'sad' | 'angry';
-type Like = Tables["likes"]["Row"];
+type Like = Database['public']['Tables']['likes']['Row'];
 
 export function usePostMutations(postId: string) {
   const queryClient = useQueryClient();
@@ -42,10 +43,10 @@ export function usePostMutations(postId: string) {
       
       const { data: existingReaction } = await supabase
         .from('likes')
-        .select('*')
+        .select()
         .eq('user_id', session.user.id)
         .eq('comment_id', commentId)
-        .single();
+        .single<Like>();
 
       if (existingReaction) {
         if (existingReaction.reaction_type === type) {
@@ -57,9 +58,7 @@ export function usePostMutations(postId: string) {
         } else {
           const { error } = await supabase
             .from('likes')
-            .update({ 
-              reaction_type: type 
-            })
+            .update({ type })
             .eq('id', existingReaction.id);
           if (error) throw error;
         }
@@ -70,7 +69,7 @@ export function usePostMutations(postId: string) {
             user_id: session.user.id,
             comment_id: commentId,
             post_id: null,
-            reaction_type: type
+            type
           });
         if (error) throw error;
       }
