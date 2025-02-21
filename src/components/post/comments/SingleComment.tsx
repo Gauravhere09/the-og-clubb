@@ -13,6 +13,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -49,47 +50,59 @@ export function SingleComment({
 
   return (
     <div className={`${isReply ? "ml-12" : ""} space-y-2`}>
-      <div className="flex items-start gap-3">
-        <Avatar className="h-8 w-8">
+      <div className="flex items-start gap-2">
+        <Avatar className="h-7 w-7">
           <AvatarImage src={comment.profiles?.avatar_url} />
           <AvatarFallback>{comment.profiles?.username?.[0]}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
-          <div className="bg-muted p-3 rounded-lg">
+          <div className="bg-muted p-2 rounded-lg">
             <div className="flex justify-between items-start gap-2">
               <p className="font-medium text-sm">{comment.profiles?.username}</p>
-              {isAuthor && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger className="hover:bg-accent rounded-md">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 w-6 p-0"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent 
-                    align="end" 
-                    className="w-32 bg-background"
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-6 w-6 p-0 hover:bg-accent rounded-full"
                   >
-                    <DropdownMenuItem 
-                      className="cursor-pointer"
-                      onClick={() => setIsEditing(true)}
-                    >
-                      <Pencil className="h-4 w-4 mr-2" />
-                      <span>Editar</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      className="cursor-pointer text-destructive focus:text-destructive"
-                      onClick={() => onDeleteComment(comment.id)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      <span>Eliminar</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                  align="end" 
+                  className="w-48 bg-background"
+                >
+                  {isAuthor ? (
+                    <>
+                      <DropdownMenuItem 
+                        className="cursor-pointer"
+                        onClick={() => setIsEditing(true)}
+                      >
+                        <Pencil className="h-4 w-4 mr-2" />
+                        <span>Editar</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="cursor-pointer text-destructive focus:text-destructive"
+                        onClick={() => onDeleteComment(comment.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        <span>Eliminar</span>
+                      </DropdownMenuItem>
+                    </>
+                  ) : (
+                    <>
+                      <DropdownMenuItem className="cursor-pointer">
+                        Ocultar comentario
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem className="cursor-pointer text-destructive">
+                        Denunciar comentario
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             {isEditing && !isAudioComment ? (
               <div className="mt-2 flex gap-2">
