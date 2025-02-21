@@ -42,14 +42,18 @@ const reactionIcons = {
   love: { icon: Heart, color: "text-red-500", label: "Me encanta" },
   haha: { icon: Laugh, color: "text-yellow-500", label: "Me divierte" },
   angry: { icon: Angry, color: "text-orange-500", label: "Me enoja" },
-  surprised: { icon: () => (
-    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-      <circle cx="12" cy="12" r="4" fill="currentColor"/>
-      <circle cx="8" cy="9" r="1.5" fill="currentColor"/>
-      <circle cx="16" cy="9" r="1.5" fill="currentColor"/>
-    </svg>
-  ), color: "text-purple-500", label: "Me asombra" },
+  surprised: { 
+    icon: () => (
+      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
+        <circle cx="12" cy="12" r="4" fill="currentColor"/>
+        <circle cx="8" cy="9" r="1.5" fill="currentColor"/>
+        <circle cx="16" cy="9" r="1.5" fill="currentColor"/>
+      </svg>
+    ), 
+    color: "text-purple-500", 
+    label: "Me asombra" 
+  },
   sigma: { icon: Sigma, color: "text-gray-700", label: "Sigma" }
 } as const;
 
@@ -71,7 +75,10 @@ const ReactionSummary = ({ reactions }: { reactions: Record<string, number> }) =
               key={type}
               className={`w-4 h-4 rounded-full bg-background shadow-sm flex items-center justify-center ${reactionIcons[type as ReactionType].color}`}
             >
-              {typeof Icon === 'function' && <Icon className="w-3 h-3" />}
+              {type === 'surprised' ? 
+                <Icon /> : 
+                <Icon className="w-3 h-3" />
+              }
             </div>
           );
         })}
@@ -169,9 +176,15 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
             >
               {userReaction ? (
                 <div className="flex items-center">
-                  {typeof reactionIcons[userReaction].icon === 'function' && React.createElement(reactionIcons[userReaction].icon, {
-                    className: "h-4 w-4 mr-2"
-                  })}
+                  {userReaction === 'surprised' ? (
+                    reactionIcons.surprised.icon()
+                  ) : (
+                    <div className={reactionIcons[userReaction].color}>
+                      {React.createElement(reactionIcons[userReaction].icon, {
+                        className: "h-4 w-4 mr-2"
+                      })}
+                    </div>
+                  )}
                   {reactionIcons[userReaction].label}
                 </div>
               ) : (
@@ -197,7 +210,11 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
                   className={`hover:${color} ${userReaction === type ? color : ''} relative group hover:scale-125 transition-transform duration-200`}
                   onClick={() => handleReactionClick(type as ReactionType)}
                 >
-                  {typeof Icon === 'function' && <Icon className={`h-6 w-6 ${userReaction === type ? color : ''}`} />}
+                  {type === 'surprised' ? (
+                    <Icon />
+                  ) : (
+                    <Icon className={`h-6 w-6 ${userReaction === type ? color : ''}`} />
+                  )}
                   <span className="absolute -top-8 scale-0 transition-all rounded bg-black px-2 py-1 text-xs text-white group-hover:scale-100 whitespace-nowrap">
                     {label}
                   </span>
