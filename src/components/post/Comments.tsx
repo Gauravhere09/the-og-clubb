@@ -2,10 +2,11 @@
 import type { Comment } from "@/types/post";
 import { SingleComment } from "./comments/SingleComment";
 import { CommentInput } from "./comments/CommentInput";
+import type { ReactionType } from "@/lib/api/likes";
 
 interface CommentsProps {
   comments: Comment[];
-  onReaction: (commentId: string, type: 'like' | 'love' | 'haha' | 'sad' | 'angry') => void;
+  onReaction: (commentId: string, type: ReactionType) => void;
   onReply: (id: string, username: string) => void;
   onSubmitComment: () => void;
   onAudioRecording: (blob: Blob) => void;
