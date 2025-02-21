@@ -8,7 +8,7 @@ import type { Tables } from "@/types/database.types";
 import { toggleReaction } from "@/lib/api/likes";
 import type { Database } from "@/integrations/supabase/types";
 
-type ReactionType = 'like' | 'love' | 'haha' | 'sad' | 'angry';
+type ReactionType = 'like' | 'love' | 'haha' | 'angry' | 'surprised' | 'sigma';
 type Like = Database['public']['Tables']['likes']['Row'];
 
 export function usePostMutations(postId: string) {

@@ -69,7 +69,7 @@ export function Post({ post }: PostProps) {
       <PostContent post={post} />
       <PostActions 
         post={post}
-        onReaction={handleReaction}
+        onReaction={(type) => handleReaction(type)}
         onToggleComments={() => setShowComments(!showComments)}
       />
       {showComments && (
