@@ -8,6 +8,7 @@ import type { Tables } from "@/types/database.types";
 import { toggleReaction } from "@/lib/api/likes";
 
 type ReactionType = Tables["likes"]["Row"]["reaction_type"];
+type Like = Tables["likes"]["Row"];
 
 export function usePostMutations(postId: string) {
   const queryClient = useQueryClient();
@@ -44,7 +45,7 @@ export function usePostMutations(postId: string) {
         .select('*')
         .eq('user_id', session.user.id)
         .eq('comment_id', commentId)
-        .single();
+        .single<Like>();
 
       if (existingReaction) {
         if (existingReaction.reaction_type === type) {
@@ -56,7 +57,9 @@ export function usePostMutations(postId: string) {
         } else {
           const { error } = await supabase
             .from('likes')
-            .update({ reaction_type: type })
+            .update({ 
+              reaction_type: type 
+            } satisfies Partial<Like>)
             .eq('id', existingReaction.id);
           if (error) throw error;
         }
@@ -68,7 +71,7 @@ export function usePostMutations(postId: string) {
             comment_id: commentId,
             post_id: null,
             reaction_type: type
-          });
+          } satisfies Tables['likes']['Insert']);
         if (error) throw error;
       }
     },
