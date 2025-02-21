@@ -15,10 +15,6 @@ interface ReactionButtonProps {
 }
 
 export function ReactionButton({ userReaction, onReactionClick }: ReactionButtonProps) {
-  const handleReactionClick = (type: ReactionType) => {
-    onReactionClick(type);
-  };
-
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -26,7 +22,7 @@ export function ReactionButton({ userReaction, onReactionClick }: ReactionButton
           variant="ghost"
           size="sm"
           className={`${userReaction ? reactionIcons[userReaction].color : ''} group`}
-          onClick={() => userReaction && handleReactionClick(userReaction)}
+          // Eliminamos el onClick aquí para que no interfiera con el popover
         >
           {userReaction ? (
             <div className="flex items-center">
@@ -62,7 +58,7 @@ export function ReactionButton({ userReaction, onReactionClick }: ReactionButton
               variant="ghost"
               size="sm"
               className={`hover:${color} ${userReaction === type ? color : ''} relative group hover:scale-125 transition-transform duration-200`}
-              onClick={() => handleReactionClick(type as ReactionType)}
+              onClick={() => onReactionClick(type as ReactionType)}
             >
               {type === 'surprised' ? (
                 <Icon />
