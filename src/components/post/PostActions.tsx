@@ -25,7 +25,7 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
   const reactionsByType = post.reactions?.by_type || {};
   const userReaction = post.user_reaction as ReactionType | undefined;
   const totalReactions = Object.values(reactionsByType).reduce((sum, count) => sum + count, 0);
-  const commentCount = post.comments?.length || 0;
+  const commentCount = post.comments_count || 0;
 
   return (
     <div className="space-y-2">
