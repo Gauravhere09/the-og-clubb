@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
@@ -49,9 +48,6 @@ export default function Profile() {
           bio,
           avatar_url,
           cover_url,
-          location,
-          education,
-          relationship_status,
           created_at,
           updated_at
         `)
@@ -60,20 +56,6 @@ export default function Profile() {
 
       if (error) throw error;
       if (!data) throw new Error("Perfil no encontrado");
-
-      // Asegurarse de que data es del tipo correcto
-      const profileData: ProfileRow = {
-        id: data.id,
-        username: data.username,
-        bio: data.bio,
-        avatar_url: data.avatar_url,
-        cover_url: data.cover_url,
-        location: data.location,
-        education: data.education,
-        relationship_status: data.relationship_status,
-        created_at: data.created_at,
-        updated_at: data.updated_at
-      };
 
       const { count: followersCount } = await supabase
         .from("friendships")
@@ -88,7 +70,7 @@ export default function Profile() {
         .eq("status", "accepted");
 
       const result: Profile = {
-        ...profileData,
+        ...data,
         followers_count: followersCount || 0,
         following_count: followingCount || 0
       };
