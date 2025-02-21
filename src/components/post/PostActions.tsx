@@ -14,8 +14,22 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import React from "react";
 import type { Post } from "@/types/post";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface PostActionsProps {
   post: Post;
@@ -41,36 +55,102 @@ const reactionIcons = {
 
 type ReactionType = keyof typeof reactionIcons;
 
+const ReactionSummary = ({ reactions }: { reactions: Record<string, number> }) => {
+  const totalReactions = Object.values(reactions).reduce((sum, count) => sum + count, 0);
+  const sortedReactions = Object.entries(reactions)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 3);
+
+  return (
+    <div className="flex items-center gap-1">
+      <div className="flex -space-x-1">
+        {sortedReactions.map(([type]) => {
+          const Icon = reactionIcons[type as ReactionType].icon;
+          return (
+            <div 
+              key={type}
+              className={`w-4 h-4 rounded-full bg-background shadow-sm flex items-center justify-center ${reactionIcons[type as ReactionType].color}`}
+            >
+              <Icon className="w-3 h-3" />
+            </div>
+          );
+        })}
+      </div>
+      <span className="text-sm text-muted-foreground">
+        {totalReactions} {totalReactions === 1 ? 'reacción' : 'reacciones'}
+      </span>
+    </div>
+  );
+};
+
+const ReactionDetails = ({ post }: { post: Post }) => {
+  const reactions = post.reactions?.by_type || {};
+  const tabs = Object.entries(reactions).map(([type, count]) => ({
+    type,
+    count,
+    label: reactionIcons[type as ReactionType].label
+  }));
+
+  return (
+    <Tabs defaultValue="all" className="w-full">
+      <TabsList className="w-full">
+        <TabsTrigger value="all">
+          Todas ({Object.values(reactions).reduce((a, b) => a + b, 0)})
+        </TabsTrigger>
+        {tabs.map(({ type, count, label }) => (
+          <TabsTrigger key={type} value={type}>
+            {label} ({count})
+          </TabsTrigger>
+        ))}
+      </TabsList>
+      <TabsContent value="all" className="mt-4">
+        <div className="space-y-4">
+          {/* Aquí iría la lista de usuarios que han reaccionado */}
+          <div className="flex items-center gap-3 p-2 hover:bg-muted/50 rounded-lg">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src="/placeholder.svg" />
+              <AvatarFallback>UN</AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <p className="text-sm font-medium">Usuario</p>
+            </div>
+            <div className={reactionIcons.like.color}>
+              <ThumbsUp className="h-4 w-4" />
+            </div>
+          </div>
+        </div>
+      </TabsContent>
+      {tabs.map(({ type }) => (
+        <TabsContent key={type} value={type}>
+          {/* Aquí iría la lista filtrada por tipo de reacción */}
+        </TabsContent>
+      ))}
+    </Tabs>
+  );
+};
+
 export function PostActions({ post, onReaction, onToggleComments }: PostActionsProps) {
   const reactionsByType = post.reactions?.by_type || {};
   const userReaction = post.user_reaction as ReactionType | undefined;
   const totalReactions = Object.values(reactionsByType).reduce((sum, count) => sum + count, 0);
 
-  // Ordenar las reacciones por cantidad y obtener las más usadas
-  const sortedReactions = Object.entries(reactionsByType)
-    .sort(([, a], [, b]) => b - a)
-    .slice(0, 3);
-
   return (
     <div className="space-y-2">
       {/* Mostrar resumen de reacciones si hay alguna */}
       {totalReactions > 0 && (
-        <div className="flex items-center gap-1 px-2 text-sm text-muted-foreground">
-          <div className="flex -space-x-1">
-            {sortedReactions.map(([type]) => {
-              const Icon = reactionIcons[type as ReactionType].icon;
-              return (
-                <div 
-                  key={type}
-                  className={`w-4 h-4 rounded-full bg-background shadow-sm flex items-center justify-center ${reactionIcons[type as ReactionType].color}`}
-                >
-                  <Icon className="w-3 h-3" />
-                </div>
-              );
-            })}
-          </div>
-          <span>Tú y {totalReactions - 1} personas más</span>
-        </div>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="ghost" size="sm" className="px-2">
+              <ReactionSummary reactions={reactionsByType} />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Reacciones</DialogTitle>
+            </DialogHeader>
+            <ReactionDetails post={post} />
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Botones de acción */}
@@ -80,7 +160,7 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
             <Button
               variant="ghost"
               size="sm"
-              className={`${userReaction ? reactionIcons[userReaction].color : ''} relative group`}
+              className={`${userReaction ? reactionIcons[userReaction].color : ''} group`}
             >
               {userReaction ? (
                 <div className="flex items-center">
