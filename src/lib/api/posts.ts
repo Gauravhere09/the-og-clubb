@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "@/types/post";
 import type { Tables } from "@/types/database.types";
@@ -56,17 +55,17 @@ export async function getPosts() {
       *,
       profiles(username, avatar_url),
       comments:comments(count),
-      likes:likes(*)
+      likes:likes(id, user_id)
     `);
 
   if (user?.user) {
     const { data: userLikes } = await supabase
       .from('likes')
-      .select('post_id, reaction_type')
+      .select('id, post_id')
       .eq('user_id', user.user.id);
 
-    const userReactionsMap = new Map(
-      userLikes?.map(like => [like.post_id, like.reaction_type || 'like']) || []
+    const userLikesMap = new Map(
+      userLikes?.map(like => [like.post_id, 'like']) || []
     );
 
     const { data, error } = await query
@@ -76,19 +75,14 @@ export async function getPosts() {
 
     return (data || []).map((post: any) => {
       const likes = post.likes || [];
-      const reactionsByType = likes.reduce((acc: Record<string, number>, like: any) => {
-        const type = like.reaction_type || 'like';
-        acc[type] = (acc[type] || 0) + 1;
-        return acc;
-      }, {});
 
       return {
         ...post,
-        user_reaction: userReactionsMap.get(post.id) || null,
+        user_reaction: userLikesMap.get(post.id) || null,
         reactions_count: likes.length,
         reactions: {
           count: likes.length,
-          by_type: reactionsByType
+          by_type: { 'like': likes.length }
         },
         comments_count: post.comments?.[0]?.count || 0
       } as Post;
@@ -101,18 +95,13 @@ export async function getPosts() {
     
     return (data || []).map((post: any) => {
       const likes = post.likes || [];
-      const reactionsByType = likes.reduce((acc: Record<string, number>, like: any) => {
-        const type = like.reaction_type || 'like';
-        acc[type] = (acc[type] || 0) + 1;
-        return acc;
-      }, {});
 
       return {
         ...post,
         reactions_count: likes.length,
         reactions: {
           count: likes.length,
-          by_type: reactionsByType
+          by_type: { 'like': likes.length }
         },
         comments_count: post.comments?.[0]?.count || 0
       } as Post;
