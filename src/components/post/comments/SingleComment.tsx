@@ -13,10 +13,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { useCommentMutations } from "@/hooks/use-comment-mutations";
 
 interface SingleCommentProps {
   comment: Comment;
@@ -36,17 +36,23 @@ export function SingleComment({
   const session = useSession();
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(comment.content);
+  const { editComment } = useCommentMutations(comment.post_id);
 
   const isAudioComment = comment.content.startsWith('[Audio]');
   const audioUrl = isAudioComment ? comment.content.replace('[Audio] ', '') : null;
 
   const handleSaveEdit = () => {
-    // Por ahora solo actualizamos el estado local
-    // TODO: Implementar la funcionalidad de guardar en la base de datos
-    setIsEditing(false);
+    if (editedContent.trim() === '') return;
+    
+    editComment({ 
+      commentId: comment.id, 
+      content: editedContent 
+    }, {
+      onSuccess: () => {
+        setIsEditing(false);
+      }
+    });
   };
-
-  const isAuthor = session?.user?.id === comment.user_id;
 
   return (
     <div className={`${isReply ? "ml-12" : ""} space-y-2`}>
@@ -73,34 +79,20 @@ export function SingleComment({
                   align="end" 
                   className="w-48 bg-background"
                 >
-                  {isAuthor ? (
-                    <>
-                      <DropdownMenuItem 
-                        className="cursor-pointer"
-                        onClick={() => setIsEditing(true)}
-                      >
-                        <Pencil className="h-4 w-4 mr-2" />
-                        <span>Editar</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        className="cursor-pointer text-destructive focus:text-destructive"
-                        onClick={() => onDeleteComment(comment.id)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        <span>Eliminar</span>
-                      </DropdownMenuItem>
-                    </>
-                  ) : (
-                    <>
-                      <DropdownMenuItem className="cursor-pointer">
-                        Ocultar comentario
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem className="cursor-pointer text-destructive">
-                        Denunciar comentario
-                      </DropdownMenuItem>
-                    </>
-                  )}
+                  <DropdownMenuItem 
+                    className="cursor-pointer"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    <span>Editar</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                    onClick={() => onDeleteComment(comment.id)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    <span>Eliminar</span>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>

@@ -53,8 +53,33 @@ export function useCommentMutations(postId: string) {
     },
   });
 
+  const { mutate: editComment } = useMutation({
+    mutationFn: async ({ commentId, content }: { commentId: string; content: string }) => {
+      const { error } = await supabase
+        .from('comments')
+        .update({ content })
+        .eq('id', commentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+      toast({
+        title: "Comentario actualizado",
+        description: "El comentario se ha actualizado correctamente",
+      });
+    },
+    onError: () => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo actualizar el comentario",
+      });
+    },
+  });
+
   return {
     submitComment,
-    deleteComment
+    deleteComment,
+    editComment
   };
 }
