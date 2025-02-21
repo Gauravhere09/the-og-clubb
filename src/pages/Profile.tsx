@@ -38,7 +38,7 @@ export default function Profile() {
     getCurrentUser();
   }, []);
 
-  const { data: profile, isLoading, error } = useQuery({
+  const { data: profile, isLoading } = useQuery({
     queryKey: ["profile", id],
     queryFn: async () => {
       if (!id) throw new Error("ID de perfil no proporcionado");
@@ -72,15 +72,17 @@ export default function Profile() {
       };
     },
     retry: false,
-    onError: (error: any) => {
-      console.error("Error loading profile:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se pudo cargar el perfil",
-      });
-      navigate("/");
-    },
+    meta: {
+      errorHandler: (error: any) => {
+        console.error("Error loading profile:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No se pudo cargar el perfil",
+        });
+        navigate("/");
+      }
+    }
   });
 
   const handleImageUpload = async (type: 'avatar' | 'cover', e: React.ChangeEvent<HTMLInputElement>) => {
