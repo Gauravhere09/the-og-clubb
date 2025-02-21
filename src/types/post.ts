@@ -14,14 +14,17 @@ export interface Post {
   };
   comments?: { count: number }[];
   likes?: {
-    reaction_type: 'like' | 'love' | 'haha' | 'sad' | 'angry';
+    id: string;
+    user_id: string;
+    post_id: string;
+    reaction_type: 'like' | 'love' | 'haha';
   }[];
   reactions?: {
     count: number;
     by_type: Record<string, number>;
   };
   reactions_count?: number;
-  user_reaction?: 'like' | 'love' | 'haha' | 'sad' | 'angry' | null;
+  user_reaction?: 'like' | 'love' | 'haha' | null;
   comments_count?: number;
 }
 
