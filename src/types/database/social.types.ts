@@ -28,6 +28,30 @@ export interface ReactionTable {
   };
 }
 
+export interface FriendshipTable {
+  Row: {
+    id: string;
+    user_id: string;
+    friend_id: string;
+    status: 'pending' | 'accepted' | 'rejected';
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    user_id: string;
+    friend_id: string;
+    status?: 'pending' | 'accepted' | 'rejected';
+    created_at?: string;
+  };
+  Update: {
+    id?: string;
+    user_id?: string;
+    friend_id?: string;
+    status?: 'pending' | 'accepted' | 'rejected';
+    created_at?: string;
+  };
+}
+
 export interface NotificationTable {
   Row: {
     id: string;

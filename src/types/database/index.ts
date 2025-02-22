@@ -1,15 +1,15 @@
 
 import { ProfileTable } from './profile.types';
-import { LikeTable, FriendshipTable } from './social.types';
+import { ReactionTable, FriendshipTable } from './social.types';
 import { PostTable, CommentTable } from './content.types';
 import { MessageTable, GroupMessageTable } from './messaging.types';
-import { NotificationTable } from './notification.types';
+import { NotificationTable } from './social.types';
 
 export interface Database {
   public: {
     Tables: {
       profiles: ProfileTable;
-      likes: LikeTable;
+      reactions: ReactionTable;
       friendships: FriendshipTable;
       posts: PostTable;
       comments: CommentTable;

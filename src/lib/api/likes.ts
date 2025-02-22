@@ -8,19 +8,14 @@ export async function toggleReaction(postId: string, type: ReactionType) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.id || !postId) return null;
   
-  const { data: existingReaction, error } = await supabase
+  const { data: existingReaction } = await supabase
     .from('reactions')
-    .select('*')
+    .select()
     .match({ 
       user_id: user.id,
       post_id: postId
     })
-    .single() as { data: ReactionTable['Row'] | null, error: any };
-
-  if (error && error.code !== 'PGRST116') {
-    console.error('Error checking existing reaction:', error);
-    return null;
-  }
+    .single() as { data: ReactionTable['Row'] | null };
 
   if (existingReaction) {
     if (existingReaction.reaction_type === type) {

@@ -1,4 +1,3 @@
-
 import { Bell, Home, Mail, User, Users } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -31,7 +30,7 @@ interface RealtimePostPayload {
   };
 }
 
-interface RealtimeNotificationPayload {
+interface RealtimeNotification {
   new: {
     id: string;
     sender_id: string | null;
@@ -71,7 +70,7 @@ export function Navigation() {
               table: 'notifications',
               filter: `receiver_id=eq.${user.id}`,
             },
-            async (payload: RealtimeNotificationPayload) => {
+            async (payload: RealtimeNotification) => {
               setUnreadNotifications(prev => prev + 1);
               
               if (payload.new.sender_id) {
