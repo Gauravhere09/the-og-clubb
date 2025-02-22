@@ -16,6 +16,9 @@ type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 export interface Profile extends ProfileRow {
   followers_count?: number;
   following_count?: number;
+  location?: string | null;
+  education?: string | null;
+  relationship_status?: string | null;
 }
 
 export default function Profile() {
@@ -78,10 +81,9 @@ export default function Profile() {
         ...profileData,
         followers_count: followersCount || 0,
         following_count: followingCount || 0,
-        cover_url: null,
         location: null,
         education: null,
-        relationship_status: null,
+        relationship_status: null
       };
 
       return result;
