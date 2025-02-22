@@ -2,12 +2,18 @@
 import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/Feed";
-import { Home, Plus, Search, Menu } from "lucide-react";
+import { Home, Plus, Search, Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -58,14 +64,23 @@ const Index = () => {
                 className="pl-10 pr-4 rounded-full bg-gray-100 border-0"
               />
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full bg-gray-100"
-              onClick={handleLogout}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full bg-gray-100"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Cerrar sesión
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
         <div className="space-y-6">
