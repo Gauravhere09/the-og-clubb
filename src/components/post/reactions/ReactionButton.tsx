@@ -37,7 +37,7 @@ export function ReactionButton({ userReaction, onReactionClick }: ReactionButton
         >
           {userReaction ? (
             <div className="flex items-center">
-              {React.createElement(reactionIcons[userReaction].icon)}
+              {React.createElement(reactionIcons[userReaction].icon, { className: "h-4 w-4" })}
               <span className="ml-2">{reactionIcons[userReaction].label}</span>
             </div>
           ) : (
@@ -63,7 +63,7 @@ export function ReactionButton({ userReaction, onReactionClick }: ReactionButton
               className={`hover:${color} ${userReaction === type ? color : ''} relative group hover:scale-125 transition-transform duration-200`}
               onClick={() => handleReactionClick(type as ReactionType)}
             >
-              <Icon />
+              <Icon className="h-6 w-6" />
               <span className="absolute -top-8 scale-0 transition-all rounded bg-black px-2 py-1 text-xs text-white group-hover:scale-100 whitespace-nowrap">
                 {label}
               </span>
