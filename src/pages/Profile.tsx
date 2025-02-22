@@ -65,10 +65,12 @@ export default function Profile() {
           console.error('Error fetching followers:', followersError);
         }
 
-        setProfile({
+        const profileData: Profile = {
           ...data,
           followers_count: followersCount || 0
-        });
+        };
+
+        setProfile(profileData);
       } catch (err) {
         console.error('Error in loadProfile:', err);
         setError(true);
@@ -80,24 +82,16 @@ export default function Profile() {
     loadProfile();
   }, [id]);
 
-  const onImageUpload = async (type: 'avatar', e: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      const url = await handleImageUpload(type, e);
-      if (url && profile) {
-        setProfile({ ...profile, avatar_url: url });
-        toast({
-          title: "Imagen actualizada",
-          description: "Tu foto de perfil ha sido actualizada exitosamente",
-        });
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error);
+  const onImageUpload = async (type: 'avatar', e: React.ChangeEvent<HTMLInputElement>): Promise<string> => {
+    const url = await handleImageUpload(type, e);
+    if (url && profile) {
+      setProfile({ ...profile, avatar_url: url });
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se pudo actualizar la imagen",
+        title: "Imagen actualizada",
+        description: "Tu foto de perfil ha sido actualizada exitosamente",
       });
     }
+    return url;
   };
 
   return (
