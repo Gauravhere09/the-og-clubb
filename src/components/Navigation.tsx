@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import type { Tables } from "@/types/database";
 import type { DatabaseNotification } from "@/types/notifications";
 
 const Logo = () => (
@@ -54,12 +53,12 @@ export function Navigation() {
               const { data: sender } = await supabase
                 .from('profiles')
                 .select('username')
-                .eq('id', (payload.new as any).sender_id)
+                .eq('id', (payload.new as DatabaseNotification).sender_id)
                 .single();
 
               toast({
                 title: "Nueva notificación",
-                description: `${sender?.username || 'Alguien'} ${(payload.new as any).message || ''}`,
+                description: `${sender?.username || 'Alguien'} ${(payload.new as DatabaseNotification).message || ''}`,
               });
             }
           )
@@ -74,10 +73,9 @@ export function Navigation() {
               table: 'posts',
             },
             (payload) => {
-              const newPost = payload.new as Tables['posts']['Row'];
-              if (location.pathname !== '/' && newPost.user_id !== user.id) {
+              if (location.pathname !== '/' && payload.new.user_id !== user.id) {
                 setNewPosts(prev => prev + 1);
-                setLatestPostId(newPost.id);
+                setLatestPostId(payload.new.id);
               }
             }
           )
@@ -110,13 +108,13 @@ export function Navigation() {
     }
   };
 
-  type NavigationLink = {
+  interface NavigationLink {
     to?: string;
     icon: typeof Home;
     label: string;
     badge?: number | null;
     onClick?: () => void;
-  };
+  }
 
   const links: NavigationLink[] = [
     { 

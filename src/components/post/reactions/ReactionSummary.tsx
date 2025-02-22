@@ -16,13 +16,15 @@ export function ReactionSummary({ reactions }: ReactionSummaryProps) {
     <div className="flex items-center gap-1">
       <div className="flex -space-x-1">
         {sortedReactions.map(([type]) => {
-          const ReactionIcon = reactionIcons[type as ReactionType].icon;
+          const Icon = reactionIcons[type as keyof typeof reactionIcons].icon;
           return (
             <div 
               key={type}
-              className={`w-4 h-4 rounded-full bg-background shadow-sm flex items-center justify-center ${reactionIcons[type as ReactionType].color}`}
+              className={`w-4 h-4 rounded-full bg-background shadow-sm flex items-center justify-center ${
+                reactionIcons[type as keyof typeof reactionIcons].color
+              }`}
             >
-              <ReactionIcon className="w-3 h-3" />
+              <Icon className="w-3 h-3" />
             </div>
           );
         })}
