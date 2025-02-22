@@ -2,29 +2,35 @@
 export interface NotificationTable {
   Row: {
     id: string;
-    type: 'post_like' | 'post_comment' | 'comment_reply' | 'new_post';
-    sender_id: string;
+    sender_id: string | null;
     receiver_id: string;
+    post_id: string | null;
+    comment_id: string | null;
+    type: string;
+    message: string | null;
+    read: boolean;
     created_at: string;
-    post_id?: string;
-    comment_id?: string;
   };
   Insert: {
     id?: string;
-    type: 'post_like' | 'post_comment' | 'comment_reply' | 'new_post';
-    sender_id: string;
+    sender_id?: string | null;
     receiver_id: string;
+    post_id?: string | null;
+    comment_id?: string | null;
+    type: string;
+    message?: string | null;
+    read?: boolean;
     created_at?: string;
-    post_id?: string;
-    comment_id?: string;
   };
   Update: {
     id?: string;
-    type?: 'post_like' | 'post_comment' | 'comment_reply' | 'new_post';
-    sender_id?: string;
+    sender_id?: string | null;
     receiver_id?: string;
+    post_id?: string | null;
+    comment_id?: string | null;
+    type?: string;
+    message?: string | null;
+    read?: boolean;
     created_at?: string;
-    post_id?: string;
-    comment_id?: string;
   };
 }

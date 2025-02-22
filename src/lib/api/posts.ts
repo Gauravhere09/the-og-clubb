@@ -52,10 +52,11 @@ export async function createPost(content: string, file: File | null = null) {
 
     if (friends && friends.length > 0) {
       const notifications = friends.map(friend => ({
-        type: 'new_post' as const,
+        type: 'new_post',
         sender_id: user.id,
         receiver_id: friend.friend_id,
-        post_id: post.id
+        post_id: post.id,
+        message: 'Ha realizado una nueva publicación'
       }));
 
       await supabase

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Comment } from "@/types/post";
 
@@ -40,7 +41,8 @@ export async function createComment(postId: string, content: string, parentId?: 
         sender_id: user.id,
         receiver_id: post.user_id,
         post_id: postId,
-        comment_id: comment.id
+        comment_id: comment.id,
+        message: 'Ha comentado en tu publicación'
       });
   }
 
@@ -53,7 +55,8 @@ export async function createComment(postId: string, content: string, parentId?: 
         sender_id: user.id,
         receiver_id: parentComment.user_id,
         post_id: postId,
-        comment_id: comment.id
+        comment_id: comment.id,
+        message: 'Ha respondido a tu comentario'
       });
   }
 

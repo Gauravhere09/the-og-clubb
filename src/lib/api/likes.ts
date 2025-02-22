@@ -37,7 +37,7 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
       return reactionType;
     }
   } else {
-    // Get post owner ID
+    // Get post owner ID and username
     const { data: post } = await supabase
       .from('posts')
       .select('user_id')
@@ -62,7 +62,8 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
           type: 'post_like',
           sender_id: user.id,
           receiver_id: post.user_id,
-          post_id: postId
+          post_id: postId,
+          message: `Ha reaccionado a tu publicación con ${reactionType}`
         });
     }
 
