@@ -21,7 +21,7 @@ export async function uploadProfileImage(file: File, type: 'avatar' | 'cover') {
     const fileName = `${user.id}_${type}_${Date.now()}.${fileExt}`;
     const filePath = `${fileName}`; // Simplificamos el path
 
-    // Subir el archivo directamente, sin crear bucket (debe existir en Supabase)
+    // Subir el archivo directamente al bucket
     const { error: uploadError, data } = await supabase.storage
       .from('profiles')
       .upload(filePath, file, {
