@@ -1,4 +1,3 @@
-
 import { Bell, Home, Mail, User, Users } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -56,19 +55,18 @@ export function Navigation() {
               table: 'notifications',
               filter: `receiver_id=eq.${user.id}`,
             },
-            async (payload) => {
+            async (payload: { new: NotificationTable['Row'] }) => {
               setUnreadNotifications(prev => prev + 1);
               
-              const notification = payload.new as NotificationTable['Row'];
               const { data: sender } = await supabase
                 .from('profiles')
                 .select('username')
-                .eq('id', notification.sender_id)
+                .eq('id', payload.new.sender_id)
                 .single();
 
               toast({
                 title: "Nueva notificación",
-                description: `${sender?.username || 'Alguien'} ${notification.message || ''}`,
+                description: `${sender?.username || 'Alguien'} ${payload.new.message || ''}`,
               });
             }
           )
@@ -82,7 +80,7 @@ export function Navigation() {
               schema: 'public',
               table: 'posts',
             },
-            (payload) => {
+            (payload: { new: { id: string; user_id: string } }) => {
               if (location.pathname !== '/' && payload.new.user_id !== user.id) {
                 setNewPosts(prev => prev + 1);
                 setLatestPostId(payload.new.id);
