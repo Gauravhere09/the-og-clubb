@@ -3,12 +3,13 @@ import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/Feed";
 import { StoryViewer } from "@/components/stories/StoryViewer";
-import { Home, Plus, Search, Menu, LogOut } from "lucide-react";
+import { Home, Plus, Search, Menu, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from "next-themes";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,30 +22,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-
-  // Datos de ejemplo para las historias
-  const mockStories = [
-    {
-      id: "1",
-      user: {
-        id: "1",
-        username: "lunamedrano_20",
-        avatar_url: null
-      },
-      media_url: "",
-      created_at: new Date().toISOString()
-    },
-    {
-      id: "2",
-      user: {
-        id: "2",
-        username: "david.young.12",
-        avatar_url: null
-      },
-      media_url: "",
-      created_at: new Date().toISOString()
-    },
-  ];
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const getUser = async () => {
@@ -110,6 +88,19 @@ const Index = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+                  {theme === "dark" ? (
+                    <>
+                      <Sun className="mr-2 h-4 w-4" />
+                      <span>Modo claro</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon className="mr-2 h-4 w-4" />
+                      <span>Modo oscuro</span>
+                    </>
+                  )}
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   Cerrar sesión
@@ -119,7 +110,7 @@ const Index = () => {
           </div>
         </div>
 
-        {currentUserId && <StoryViewer stories={mockStories} currentUserId={currentUserId} />}
+        {currentUserId && <StoryViewer stories={[]} currentUserId={currentUserId} />}
         
         <div className="space-y-6">
           <PostCreator />
