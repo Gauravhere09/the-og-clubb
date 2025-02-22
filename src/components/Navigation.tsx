@@ -16,7 +16,7 @@ const Logo = () => (
   </div>
 );
 
-type NavigationItem = {
+type NavigationLink = {
   to?: string;
   icon: React.ElementType;
   label: string;
@@ -118,7 +118,7 @@ export function Navigation() {
     }
   };
 
-  const links: NavigationItem[] = [
+  const links: NavigationLink[] = [
     { 
       onClick: handleHomeClick,
       icon: Home, 
