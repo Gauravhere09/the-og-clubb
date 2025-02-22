@@ -2,6 +2,7 @@
 import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/Feed";
+import { StoryViewer } from "@/components/stories/StoryViewer";
 import { Home, Plus, Search, Menu, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,10 +15,44 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useEffect, useState } from "react";
 
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Datos de ejemplo para las historias
+  const mockStories = [
+    {
+      id: "1",
+      user: {
+        id: "1",
+        username: "lunamedrano_20",
+        avatar_url: null
+      },
+      media_url: "",
+      created_at: new Date().toISOString()
+    },
+    {
+      id: "2",
+      user: {
+        id: "2",
+        username: "david.young.12",
+        avatar_url: null
+      },
+      media_url: "",
+      created_at: new Date().toISOString()
+    },
+  ];
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    getUser();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -83,6 +118,9 @@ const Index = () => {
             </DropdownMenu>
           </div>
         </div>
+
+        {currentUserId && <StoryViewer stories={mockStories} currentUserId={currentUserId} />}
+        
         <div className="space-y-6">
           <PostCreator />
           <Feed />
