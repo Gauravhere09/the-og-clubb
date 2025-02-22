@@ -1,0 +1,40 @@
+
+import { Friend } from "@/hooks/use-friends";
+import { Card } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+
+interface AllFriendsListProps {
+  friends: Friend[];
+}
+
+export function AllFriendsList({ friends }: AllFriendsListProps) {
+  return (
+    <Card className="p-6">
+      <h2 className="text-2xl font-bold mb-6">Todos los amigos</h2>
+      {friends.length === 0 ? (
+        <p className="text-center text-muted-foreground">
+          Aún no tienes amigos agregados
+        </p>
+      ) : (
+        <div className="space-y-4">
+          {friends.map((friend) => (
+            <div
+              key={friend.friend_id}
+              className="flex items-center justify-between p-4 rounded-lg hover:bg-accent"
+            >
+              <div className="flex items-center gap-3">
+                <Avatar>
+                  <AvatarImage src={friend.friend_avatar_url || undefined} />
+                  <AvatarFallback>
+                    {friend.friend_username[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="font-medium">{friend.friend_username}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </Card>
+  );
+}
