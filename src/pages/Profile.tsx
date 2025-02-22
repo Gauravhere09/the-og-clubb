@@ -40,33 +40,26 @@ export default function Profile() {
     queryFn: async () => {
       if (!id) throw new Error("ID de perfil no proporcionado");
 
-      const { data: profileExists, error: existsError } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("id", id)
-        .single();
-
-      if (existsError || !profileExists) {
-        throw new Error("Perfil no encontrado");
-      }
-
-      const { data, error } = await supabase
+      const { data: profileData, error } = await supabase
         .from("profiles")
         .select(`
           id,
           username,
           bio,
           avatar_url,
-          cover_url,
           created_at,
           updated_at
         `)
         .eq("id", id)
         .single();
 
-      if (error || !data) {
+      if (error) {
         console.error("Error fetching profile:", error);
         throw new Error("Error al cargar el perfil");
+      }
+
+      if (!profileData) {
+        throw new Error("Perfil no encontrado");
       }
 
       const { count: followersCount } = await supabase
@@ -82,18 +75,13 @@ export default function Profile() {
         .eq("status", "accepted");
 
       const result: Profile = {
-        id: data.id,
-        username: data.username,
-        bio: data.bio || null,
-        avatar_url: data.avatar_url,
-        cover_url: data.cover_url,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
+        ...profileData,
+        followers_count: followersCount || 0,
+        following_count: followingCount || 0,
+        cover_url: null,
         location: null,
         education: null,
         relationship_status: null,
-        followers_count: followersCount || 0,
-        following_count: followingCount || 0
       };
 
       return result;
