@@ -1,15 +1,14 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { Friend, FriendRequest, FriendSuggestion } from "@/types/friends";
 
 export async function loadFriendsAndRequests(currentUserId: string) {
-  // Load friends - using profiles through friend_id
+  // Load friends with simpler join
   const { data: friendships, error: friendshipsError } = await supabase
     .from('friendships')
     .select(`
       id,
       friend_id,
-      friend:profiles!friendships_friend_id_fkey (
+      friend:profiles!friend_id(
         id,
         username,
         avatar_url
@@ -20,7 +19,7 @@ export async function loadFriendsAndRequests(currentUserId: string) {
 
   if (friendshipsError) throw friendshipsError;
 
-  // Load pending requests - using profiles through user_id
+  // Load pending requests with simpler join
   const { data: requests, error: requestsError } = await supabase
     .from('friendships')
     .select(`
@@ -29,7 +28,7 @@ export async function loadFriendsAndRequests(currentUserId: string) {
       friend_id,
       status,
       created_at,
-      sender:profiles!friendships_user_id_fkey (
+      sender:profiles!user_id(
         username,
         avatar_url
       )
