@@ -7,6 +7,8 @@ export type NotificationType =
   | 'like' 
   | 'new_post' 
   | 'post_like' 
+  | 'post_comment'
+  | 'comment_reply'
   | 'friend_accepted';
 
 export interface Notification {
@@ -15,6 +17,7 @@ export interface Notification {
   sender_id: string;
   receiver_id: string;
   post_id?: string;
+  comment_id?: string;
   message?: string;
   created_at: string;
   read: boolean;

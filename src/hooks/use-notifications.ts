@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { NotificationType } from "@/types/notifications";
-import type { Tables } from "@/types/database";
 
 interface NotificationWithSender {
   id: string;
@@ -15,6 +14,8 @@ interface NotificationWithSender {
   };
   created_at: string;
   message?: string;
+  post_id?: string;
+  comment_id?: string;
 }
 
 export const useNotifications = () => {
@@ -32,8 +33,8 @@ export const useNotifications = () => {
         type,
         created_at,
         message,
-        read,
-        sender_id,
+        post_id,
+        comment_id,
         sender:profiles!sender_id (
           id,
           username,
@@ -54,19 +55,14 @@ export const useNotifications = () => {
         type: notification.type as NotificationType,
         created_at: notification.created_at,
         message: notification.message ?? undefined,
+        post_id: notification.post_id ?? undefined,
+        comment_id: notification.comment_id ?? undefined,
         sender: {
           id: notification.sender.id,
           username: notification.sender.username || '',
           avatar_url: notification.sender.avatar_url
         }
       })));
-
-      // Mark notifications as read
-      await supabase
-        .from('notifications')
-        .update({ read: false })
-        .eq('receiver_id', user.id)
-        .eq('read', false);
     }
   };
 

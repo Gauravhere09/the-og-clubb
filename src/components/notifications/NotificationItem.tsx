@@ -18,6 +18,7 @@ interface NotificationItemProps {
     created_at: string;
     message?: string;
     post_id?: string;
+    comment_id?: string;
   };
   onHandleFriendRequest?: (notificationId: string, senderId: string, accept: boolean) => void;
 }
@@ -28,6 +29,10 @@ export const NotificationItem = ({ notification, onHandleFriendRequest }: Notifi
   const handleClick = () => {
     if (notification.post_id) {
       navigate(`/post/${notification.post_id}`);
+      if (notification.comment_id) {
+        // Aquí podríamos agregar lógica para hacer scroll al comentario específico
+        // cuando se implemente esa funcionalidad
+      }
     }
   };
 
@@ -67,16 +72,22 @@ export const NotificationItem = ({ notification, onHandleFriendRequest }: Notifi
             )}
           </div>
         );
-      case 'like':
-        return (
-          <span>
-            <span className="font-medium">{notification.sender.username}</span> le dio me gusta a tu publicación
-          </span>
-        );
       case 'post_like':
         return (
           <span>
-            <span className="font-medium">{notification.sender.username}</span> reaccionó a tu publicación
+            <span className="font-medium">{notification.sender.username}</span> ha reaccionado a tu publicación
+          </span>
+        );
+      case 'post_comment':
+        return (
+          <span>
+            <span className="font-medium">{notification.sender.username}</span> ha comentado en tu publicación
+          </span>
+        );
+      case 'comment_reply':
+        return (
+          <span>
+            <span className="font-medium">{notification.sender.username}</span> ha respondido a tu comentario
           </span>
         );
       case 'message':
