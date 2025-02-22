@@ -20,6 +20,7 @@ export async function uploadProfileImage(file: File, type: 'avatar' | 'cover') {
     const { error: bucketError } = await supabase.storage.createBucket('profiles', {
       public: true,
       fileSizeLimit: 2097152, // 2MB en bytes
+      allowedMimeTypes: ['image/*']
     });
 
     // Ignoramos el error si el bucket ya existe
@@ -30,7 +31,7 @@ export async function uploadProfileImage(file: File, type: 'avatar' | 'cover') {
     // Crear nombre único para el archivo
     const fileExt = file.name.split('.').pop();
     const fileName = `${user.id}_${type}_${Date.now()}.${fileExt}`;
-    const filePath = `${type}s/${fileName}`;
+    const filePath = `${user.id}/${type}s/${fileName}`; // Agregamos el user.id al path
 
     // Subir el archivo
     const { error: uploadError, data } = await supabase.storage
