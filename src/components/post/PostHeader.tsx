@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { MoreVertical } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,12 +22,19 @@ export function PostHeader({ post, onDelete }: PostHeaderProps) {
   return (
     <div className="flex items-start gap-3 mb-4">
       <div className="flex-1 flex items-start gap-3">
-        <Avatar>
-          <AvatarImage src={post.profiles?.avatar_url} />
-          <AvatarFallback>{post.profiles?.username?.[0]}</AvatarFallback>
-        </Avatar>
+        <Link to={`/profile/${post.user_id}`}>
+          <Avatar>
+            <AvatarImage src={post.profiles?.avatar_url} />
+            <AvatarFallback>{post.profiles?.username?.[0]}</AvatarFallback>
+          </Avatar>
+        </Link>
         <div className="flex-1 min-w-0">
-          <h3 className="font-medium">{post.profiles?.username}</h3>
+          <Link 
+            to={`/profile/${post.user_id}`}
+            className="hover:underline"
+          >
+            <h3 className="font-medium">{post.profiles?.username}</h3>
+          </Link>
           <p className="text-sm text-muted-foreground">
             {format(new Date(post.created_at), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
           </p>

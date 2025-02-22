@@ -2,7 +2,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Edit2, ImagePlus } from "lucide-react";
+import { Camera, Edit2, ImagePlus, MessageCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { FriendRequestButton } from "@/components/FriendRequestButton";
 import { ProfileEditDialog } from "@/components/profile/ProfileEditDialog";
 import type { Profile } from "@/pages/Profile";
@@ -16,9 +17,14 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfileUpdate }: ProfileHeaderProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleProfileUpdate = (updatedProfile: Profile) => {
     onProfileUpdate?.(updatedProfile);
+  };
+
+  const handleMessageClick = () => {
+    navigate(`/messages?userId=${profile.id}`);
   };
 
   return (
@@ -111,7 +117,13 @@ export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfile
                   Editar perfil
                 </Button>
               ) : (
-                <FriendRequestButton targetUserId={profile.id} />
+                <div className="flex gap-2">
+                  <FriendRequestButton targetUserId={profile.id} />
+                  <Button variant="outline" onClick={handleMessageClick}>
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Mensaje
+                  </Button>
+                </div>
               )}
             </div>
           </div>
