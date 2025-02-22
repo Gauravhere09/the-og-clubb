@@ -1,11 +1,13 @@
 
+export type ReactionType = 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
+
 export interface LikeTable {
   Row: {
     id: string;
     user_id: string;
     post_id: string | null;
     comment_id: string | null;
-    reaction_type: 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
+    reaction_type: ReactionType;
     created_at: string;
     read: boolean;
   };
@@ -14,7 +16,7 @@ export interface LikeTable {
     user_id: string;
     post_id?: string | null;
     comment_id?: string | null;
-    reaction_type: 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
+    reaction_type: ReactionType;
     created_at?: string;
     read?: boolean;
   };
@@ -23,7 +25,7 @@ export interface LikeTable {
     user_id?: string;
     post_id?: string | null;
     comment_id?: string | null;
-    reaction_type?: 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
+    reaction_type?: ReactionType;
     created_at?: string;
     read?: boolean;
   };

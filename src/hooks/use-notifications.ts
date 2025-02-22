@@ -1,9 +1,8 @@
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { NotificationType } from "@/types/notifications";
-import type { Tables } from "@/types/database";
 
 interface Notification {
   id: string;
@@ -48,18 +47,17 @@ export const useNotifications = () => {
     }
 
     if (data) {
-      const typedNotifications: Notification[] = data.map(item => ({
+      setNotifications(data.map(item => ({
         id: item.id,
         type: item.type as NotificationType,
         created_at: item.created_at,
-        message: item.message || undefined,
+        message: item.message,
         sender: {
           id: item.sender.id,
           username: item.sender.username || '',
           avatar_url: item.sender.avatar_url
         }
-      }));
-      setNotifications(typedNotifications);
+      })));
     }
 
     await supabase

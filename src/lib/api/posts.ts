@@ -44,19 +44,20 @@ export async function createPost(content: string, file: File | null = null) {
 
     if (error) throw error;
 
-    // Notificar a los amigos sobre la nueva publicación
-    const { data: friends } = await supabase
-      .from('friends')
+    const { data: friendships } = await supabase
+      .from('friendships')
       .select('friend_id')
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .eq('status', 'accepted');
 
-    if (friends && friends.length > 0) {
-      const notifications = friends.map(friend => ({
+    if (friendships && friendships.length > 0) {
+      const notifications = friendships.map(friendship => ({
         type: 'new_post',
         sender_id: user.id,
-        receiver_id: friend.friend_id,
+        receiver_id: friendship.friend_id,
         post_id: post.id,
-        message: 'Ha realizado una nueva publicación'
+        message: 'Ha realizado una nueva publicación',
+        read: false
       }));
 
       await supabase

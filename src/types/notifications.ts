@@ -11,3 +11,15 @@ export interface Notification {
   created_at: string;
   read: boolean;
 }
+
+// Update database type to match Supabase schema
+export interface NotificationRow {
+  id: string;
+  type: string;
+  sender_id: string;
+  receiver_id: string;
+  post_id?: string;
+  message?: string;
+  created_at: string;
+  read: boolean;
+}

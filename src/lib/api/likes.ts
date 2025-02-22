@@ -1,31 +1,19 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/types/database";
-
-export type ReactionType = 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
-type Like = Tables["likes"]["Row"];
+import type { ReactionType } from "@/types/database/social.types";
 
 export async function toggleReaction(postId: string | undefined, reactionType: ReactionType) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.id || !postId) return null;
   
-  const { data: existingReaction, error: selectError } = await supabase
+  const { data: existingReaction } = await supabase
     .from('likes')
-    .select(`
-      id,
-      user_id,
-      post_id,
-      comment_id,
-      reaction_type,
-      created_at
-    `)
+    .select('*')
     .match({ 
       user_id: user.id,
       post_id: postId
     })
     .single();
-
-  if (selectError && selectError.code !== 'PGRST116') throw selectError;
 
   if (existingReaction) {
     if (existingReaction.reaction_type === reactionType) {
@@ -58,7 +46,8 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
       .insert({
         user_id: user.id,
         post_id: postId,
-        reaction_type: reactionType
+        reaction_type: reactionType,
+        read: false
       });
 
     if (post.user_id !== user.id) {
