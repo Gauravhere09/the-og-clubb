@@ -8,6 +8,7 @@ export interface Friend {
   friend_username: string;
   friend_avatar_url: string | null;
   mutual_friends_count?: number;
+  status?: 'pending' | 'accepted' | 'rejected';
 }
 
 export interface FriendRequest {
@@ -52,11 +53,13 @@ export function useFriends(currentUserId: string | null) {
       .eq('status', 'accepted');
 
     if (!error && friendships) {
-      setFriends(friendships.map(f => ({
+      const processedFriends = friendships.map(f => ({
         friend_id: f.friend.id,
         friend_username: f.friend.username || '',
-        friend_avatar_url: f.friend.avatar_url
-      })));
+        friend_avatar_url: f.friend.avatar_url,
+        status: 'accepted' as const
+      }));
+      setFriends(processedFriends);
     }
   };
 
@@ -80,17 +83,18 @@ export function useFriends(currentUserId: string | null) {
       .eq('status', 'pending');
 
     if (!error && data) {
-      setFriendRequests(data.map(request => ({
+      const processedRequests = data.map(request => ({
         id: request.id,
         user_id: request.user_id,
         friend_id: request.friend_id,
-        status: 'pending' as const,
+        status: request.status as 'pending',
         created_at: request.created_at,
         user: {
           username: request.user.username || '',
-          avatar_url: request.user.avatar_url || null
+          avatar_url: request.user.avatar_url
         }
-      })));
+      }));
+      setFriendRequests(processedRequests);
     }
   };
 
@@ -104,12 +108,13 @@ export function useFriends(currentUserId: string | null) {
       .limit(5);
 
     if (!error && data) {
-      setSuggestions(data.map(s => ({
+      const processedSuggestions = data.map(s => ({
         id: s.id,
         username: s.username || '',
         avatar_url: s.avatar_url,
         mutual_friends_count: 0 // This would need to be calculated
-      })));
+      }));
+      setSuggestions(processedSuggestions);
     }
   };
 

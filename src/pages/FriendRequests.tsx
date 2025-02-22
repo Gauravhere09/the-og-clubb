@@ -65,14 +65,17 @@ export default function FriendRequests() {
 
       if (error) throw error;
 
-      setRequests((data || []).map(request => ({
-        id: request.id,
-        sender: {
-          id: request.user.id,
-          username: request.user.username || '',
-          avatar_url: request.user.avatar_url
-        }
-      })));
+      if (data) {
+        const processedRequests = data.map(request => ({
+          id: request.id,
+          sender: {
+            id: request.user.id,
+            username: request.user.username || '',
+            avatar_url: request.user.avatar_url
+          }
+        }));
+        setRequests(processedRequests);
+      }
     } catch (error) {
       console.error('Error loading friend requests:', error);
       toast({
