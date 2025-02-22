@@ -3,7 +3,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 interface Story {
@@ -24,7 +23,6 @@ interface StoryViewerProps {
 
 export function StoryViewer({ stories, currentUserId }: StoryViewerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate();
 
   const handleCreateStory = () => {
     // Implementar la creación de historias
@@ -55,7 +53,7 @@ export function StoryViewer({ stories, currentUserId }: StoryViewerProps) {
           </div>
 
           {/* Friend Stories */}
-          {stories.map((story) => (
+          {stories.filter(story => story.user.id !== currentUserId).map((story) => (
             <div 
               key={story.id}
               className="flex flex-col items-center space-y-1"
@@ -78,7 +76,6 @@ export function StoryViewer({ stories, currentUserId }: StoryViewerProps) {
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-screen-md h-[80vh] p-0">
-          {/* Story viewer implementation */}
           <div className="w-full h-full bg-black flex items-center justify-center">
             <span className="text-white">Historia seleccionada</span>
           </div>

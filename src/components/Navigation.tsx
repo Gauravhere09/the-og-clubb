@@ -1,4 +1,4 @@
-import { Bell, Home, Mail, User, Users } from "lucide-react";
+import { Bell, Home, Mail, Moon, Sun, User, Users } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import type { DatabaseNotification } from "@/types/notifications";
 import type { LucideIcon } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Menu } from "lucide-react";
+import { useTheme } from "next-themes";
 
 const Logo = () => (
   <div className="hidden md:flex justify-center my-6">
@@ -34,6 +38,7 @@ export function Navigation() {
   const [newPosts, setNewPosts] = useState(0);
   const [latestPostId, setLatestPostId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -187,6 +192,33 @@ export function Navigation() {
             </Link>
           );
         })}
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="p-4 transition-colors hover:text-primary text-muted-foreground"
+            >
+              <Menu className="w-6 h-6" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+              {theme === "dark" ? (
+                <>
+                  <Sun className="mr-2 h-4 w-4" />
+                  <span>Modo claro</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="mr-2 h-4 w-4" />
+                  <span>Modo oscuro</span>
+                </>
+              )}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </nav>
   );
