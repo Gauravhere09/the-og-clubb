@@ -1,6 +1,6 @@
 
 import React from "react";
-import { reactionIcons, type ReactionType } from "./ReactionIcons";
+import { reactionIcons } from "./ReactionIcons";
 
 interface ReactionSummaryProps {
   reactions: Record<string, number>;
@@ -16,13 +16,14 @@ export function ReactionSummary({ reactions }: ReactionSummaryProps) {
     <div className="flex items-center gap-1">
       <div className="flex -space-x-1">
         {sortedReactions.map(([type]) => {
-          const Icon = reactionIcons[type as keyof typeof reactionIcons].icon;
+          const Icon = reactionIcons[type as keyof typeof reactionIcons]?.icon;
+          if (!Icon) return null;
+          
           return (
             <div 
               key={type}
-              className={`w-4 h-4 rounded-full bg-background shadow-sm flex items-center justify-center ${
-                reactionIcons[type as keyof typeof reactionIcons].color
-              }`}
+              style={{ backgroundColor: 'white' }}
+              className="w-4 h-4 rounded-full shadow-sm flex items-center justify-center"
             >
               <Icon className="w-3 h-3" />
             </div>

@@ -16,6 +16,14 @@ const Logo = () => (
   </div>
 );
 
+interface NavigationLink {
+  to?: string;
+  icon: typeof Home;
+  label: string;
+  badge?: number | null;
+  onClick?: () => void | Promise<void>;
+}
+
 export function Navigation() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -110,7 +118,7 @@ export function Navigation() {
     }
   };
 
-  const links = [
+  const links: NavigationLink[] = [
     { 
       onClick: handleHomeClick,
       icon: Home, 
@@ -147,7 +155,7 @@ export function Navigation() {
       icon: User, 
       label: "Perfil" 
     },
-  ] as const;
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 w-full bg-background border-t md:relative md:border-t-0 md:border-r md:w-[70px] md:h-screen z-50">
