@@ -144,7 +144,7 @@ export function Navigation() {
         if (currentUserId) {
           await supabase
             .from('notifications')
-            .update({ read: true })
+            .update({ read: false })
             .eq('receiver_id', currentUserId);
           setUnreadNotifications(0);
         }
