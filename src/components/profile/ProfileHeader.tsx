@@ -1,19 +1,25 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Edit2, Globe2 } from "lucide-react";
 import { FriendRequestButton } from "@/components/FriendRequestButton";
-import { useNavigate } from "react-router-dom";
+import { ProfileEditDialog } from "@/components/profile/ProfileEditDialog";
 import type { Profile } from "@/pages/Profile";
 
 interface ProfileHeaderProps {
   profile: Profile;
   currentUserId: string | null;
-  onImageUpload: (type: 'avatar', e: React.ChangeEvent<HTMLInputElement>) => Promise<string | undefined>;
+  onImageUpload: (type: 'avatar', e: React.ChangeEvent<HTMLInputElement>) => Promise<string>;
+  onProfileUpdate?: (profile: Profile) => void;
 }
 
-export function ProfileHeader({ profile, currentUserId, onImageUpload }: ProfileHeaderProps) {
-  const navigate = useNavigate();
+export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfileUpdate }: ProfileHeaderProps) {
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const handleProfileUpdate = (updatedProfile: Profile) => {
+    onProfileUpdate?.(updatedProfile);
+  };
 
   return (
     <>
@@ -67,7 +73,7 @@ export function ProfileHeader({ profile, currentUserId, onImageUpload }: Profile
                 </p>
               </div>
               {currentUserId === profile.id ? (
-                <Button variant="outline" onClick={() => navigate("/settings")}>
+                <Button variant="outline" onClick={() => setIsEditDialogOpen(true)}>
                   <Edit2 className="h-4 w-4 mr-2" />
                   Editar perfil
                 </Button>
@@ -78,6 +84,13 @@ export function ProfileHeader({ profile, currentUserId, onImageUpload }: Profile
           </div>
         </div>
       </div>
+
+      <ProfileEditDialog
+        profile={profile}
+        isOpen={isEditDialogOpen}
+        onClose={() => setIsEditDialogOpen(false)}
+        onUpdate={handleProfileUpdate}
+      />
     </>
   );
 }

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +29,10 @@ export default function Profile() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { handleImageUpload } = useProfileImage();
   const { toast } = useToast();
+
+  const handleProfileUpdate = (updatedProfile: Profile) => {
+    setProfile(updatedProfile);
+  };
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -110,6 +113,7 @@ export default function Profile() {
             profile={profile}
             currentUserId={currentUserId}
             onImageUpload={onImageUpload}
+            onProfileUpdate={handleProfileUpdate}
           />
           <div className="space-y-4 px-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
