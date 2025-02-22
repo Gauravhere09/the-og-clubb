@@ -1,5 +1,5 @@
 
-export type NotificationType = 'friend_request' | 'message' | 'like' | 'new_post' | 'post_like';
+export type NotificationType = 'friend_request' | 'message' | 'like' | 'new_post' | 'post_like' | 'friend_accepted';
 
 export interface Notification {
   id: string;

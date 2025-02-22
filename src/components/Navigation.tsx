@@ -1,10 +1,10 @@
-
 import { Bell, Home, Mail, User, Users } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import type { Tables } from "@/types/database";
 
 const Logo = () => (
   <div className="hidden md:flex justify-center my-6">
@@ -28,7 +28,6 @@ export function Navigation() {
       if (user) {
         setCurrentUserId(user.id);
 
-        // Cargar notificaciones no leídas iniciales
         const { count } = await supabase
           .from('notifications')
           .select('*', { count: 'exact', head: true })
@@ -37,7 +36,6 @@ export function Navigation() {
 
         setUnreadNotifications(count || 0);
 
-        // Suscribirse a nuevas notificaciones
         const notificationsChannel = supabase.channel('notifications')
           .on(
             'postgres_changes',
@@ -47,10 +45,9 @@ export function Navigation() {
               table: 'notifications',
               filter: `receiver_id=eq.${user.id}`,
             },
-            async (payload) => {
+            async (payload: { new: Tables['notifications']['Row'] }) => {
               setUnreadNotifications(prev => prev + 1);
               
-              // Obtener detalles del remitente
               const { data: sender } = await supabase
                 .from('profiles')
                 .select('username')
@@ -59,13 +56,12 @@ export function Navigation() {
 
               toast({
                 title: "Nueva notificación",
-                description: `${sender?.username || 'Alguien'} ${payload.new.message}`,
+                description: `${sender?.username || 'Alguien'} ${payload.new.message || ''}`,
               });
             }
           )
           .subscribe();
 
-        // Suscribirse a nuevas publicaciones
         const postsChannel = supabase.channel('posts')
           .on(
             'postgres_changes',
@@ -74,7 +70,7 @@ export function Navigation() {
               schema: 'public',
               table: 'posts',
             },
-            (payload) => {
+            (payload: { new: Tables['posts']['Row'] }) => {
               if (location.pathname !== '/' && payload.new.user_id !== user.id) {
                 setNewPosts(prev => prev + 1);
               }
@@ -90,9 +86,8 @@ export function Navigation() {
     };
 
     getCurrentUser();
-  }, [location.pathname]);
+  }, [location.pathname, toast]);
 
-  // Resetear contador de nuevas publicaciones cuando se navega a inicio
   useEffect(() => {
     if (location.pathname === '/') {
       setNewPosts(0);
@@ -123,7 +118,6 @@ export function Navigation() {
       badge: unreadNotifications > 0 ? unreadNotifications : null,
       onClick: async () => {
         if (currentUserId) {
-          // Marcar todas las notificaciones como leídas
           await supabase
             .from('notifications')
             .update({ read: true })
