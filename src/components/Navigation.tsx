@@ -16,13 +16,13 @@ const Logo = () => (
   </div>
 );
 
-interface NavigationItem {
+type NavigationItem = {
   to?: string;
   icon: React.ElementType;
   label: string;
   badge?: number | null;
   onClick?: () => void;
-}
+};
 
 export function Navigation() {
   const location = useLocation();
@@ -142,9 +142,12 @@ export function Navigation() {
       badge: unreadNotifications > 0 ? unreadNotifications : null,
       onClick: async () => {
         if (currentUserId) {
+          const updateData: NotificationTable['Update'] = {
+            read: true
+          };
           await supabase
             .from('notifications')
-            .update({ read: false })
+            .update(updateData)
             .eq('receiver_id', currentUserId);
           setUnreadNotifications(0);
         }
