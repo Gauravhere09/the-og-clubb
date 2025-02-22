@@ -1,3 +1,4 @@
+
 export interface Post {
   id: string;
   content: string;
@@ -12,18 +13,12 @@ export interface Post {
     avatar_url: string | null;
   };
   comments?: { count: number }[];
-  likes?: {
-    id: string;
-    user_id: string;
-    post_id: string;
-    reaction_type: 'like' | 'love' | 'haha' | 'angry' | 'wow' | 'sad';
-  }[];
   reactions?: {
     count: number;
     by_type: Record<string, number>;
   };
   reactions_count?: number;
-  user_reaction?: 'like' | 'love' | 'haha' | 'angry' | 'wow' | 'sad' | null;
+  user_reaction?: 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry' | null;
   comments_count?: number;
 }
 
@@ -39,9 +34,7 @@ export interface Comment {
     username: string;
     avatar_url: string;
   };
-  likes?: { count: number }[];
   likes_count?: number;
-  user_has_liked?: boolean;
-  user_reaction?: 'like' | 'love' | 'haha' | 'angry' | 'surprised' | 'sigma' | null;
+  user_reaction?: 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry' | null;
   replies?: Comment[];
 }

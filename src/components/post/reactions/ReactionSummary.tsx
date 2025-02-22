@@ -44,15 +44,20 @@ export function ReactionSummary({ reactions }: ReactionSummaryProps) {
           </div>
         </TooltipTrigger>
         <TooltipContent>
-          {Object.entries(reactions).map(([type, count]) => (
-            <div key={type} className="flex items-center gap-1">
-              <div className={reactionIcons[type as keyof typeof reactionIcons].color}>
-                <Icon className="w-3 h-3" />
+          {Object.entries(reactions).map(([type, count]) => {
+            const ReactionIcon = reactionIcons[type as keyof typeof reactionIcons]?.icon;
+            if (!ReactionIcon) return null;
+
+            return (
+              <div key={type} className="flex items-center gap-1">
+                <div className={reactionIcons[type as keyof typeof reactionIcons].color}>
+                  <ReactionIcon className="w-3 h-3" />
+                </div>
+                <span>{count}</span>
+                <span>{reactionIcons[type as keyof typeof reactionIcons].label}</span>
               </div>
-              <span>{count}</span>
-              <span>{reactionIcons[type as keyof typeof reactionIcons].label}</span>
-            </div>
-          ))}
+            );
+          })}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

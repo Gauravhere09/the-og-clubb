@@ -2,6 +2,17 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+interface ProfileData {
+  id: string;
+  username: string | null;
+  avatar_url: string | null;
+}
+
+interface FriendshipData {
+  id: string;
+  friend: ProfileData;
+}
+
 export interface Friend {
   friend_id: string;
   friend_username: string;
@@ -49,13 +60,13 @@ export function useFriends(currentUserId: string | null) {
         )
       `)
       .eq('user_id', currentUserId)
-      .eq('status', 'accepted');
+      .eq('status', 'accepted') as { data: FriendshipData[] | null; error: any };
 
     if (!error && friendships) {
       const processedFriends = friendships.map(f => ({
-        friend_id: f.friend?.id || '',
-        friend_username: f.friend?.username || '',
-        friend_avatar_url: f.friend?.avatar_url,
+        friend_id: f.friend.id,
+        friend_username: f.friend.username || '',
+        friend_avatar_url: f.friend.avatar_url,
         status: 'accepted' as const
       }));
       setFriends(processedFriends);

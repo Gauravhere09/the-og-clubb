@@ -1,8 +1,5 @@
-
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import type { Comment } from "@/types/post";
 import { CommentReactions } from "./CommentReactions";
@@ -118,7 +115,7 @@ export function SingleComment({
           <div className="flex items-center gap-4 mt-1">
             <CommentReactions
               commentId={comment.id}
-              userReaction={comment.user_reaction || null}
+              userReaction={comment.user_reaction as ReactionType | null}
               reactionsCount={comment.likes_count || 0}
               onReaction={onReaction}
             />

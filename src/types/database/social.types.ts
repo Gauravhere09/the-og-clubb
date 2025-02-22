@@ -27,3 +27,51 @@ export interface ReactionTable {
     created_at?: string;
   };
 }
+
+export interface FriendshipTable {
+  Row: {
+    id: string;
+    user_id: string;
+    friend_id: string;
+    status: 'pending' | 'accepted' | 'rejected';
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    user_id: string;
+    friend_id: string;
+    status?: 'pending' | 'accepted' | 'rejected';
+    created_at?: string;
+  };
+  Update: {
+    id?: string;
+    user_id?: string;
+    friend_id?: string;
+    status?: 'pending' | 'accepted' | 'rejected';
+    created_at?: string;
+  };
+}
+
+export interface NotificationTable {
+  Row: {
+    id: string;
+    user_id: string;
+    type: string;
+    read: boolean;
+    created_at: string;
+  };
+  Insert: {
+    id?: string;
+    user_id: string;
+    type: string;
+    read?: boolean;
+    created_at?: string;
+  };
+  Update: {
+    id?: string;
+    user_id?: string;
+    type?: string;
+    read?: boolean;
+    created_at?: string;
+  };
+}
