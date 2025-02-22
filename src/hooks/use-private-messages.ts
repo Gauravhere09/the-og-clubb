@@ -1,9 +1,8 @@
-
 import { useState } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Friend } from './use-friends';
-import { Tables } from "@/types/database.types";
+import { Tables } from "@/types/database";
 
 export interface Message {
   id: string;

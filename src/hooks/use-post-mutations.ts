@@ -1,12 +1,11 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deletePost } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@supabase/auth-helpers-react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/types/database.types";
+import { Tables } from "@/types/database";
 import { toggleReaction, ReactionType } from "@/lib/api/likes";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database } from "@/types/database";
 
 type Like = Database['public']['Tables']['likes']['Row'];
 

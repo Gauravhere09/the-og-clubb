@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "@/types/post";
-import type { Tables } from "@/types/database.types";
+import { Tables } from "@/types/database";
 
 export async function createPost(content: string, file: File | null = null) {
   try {
