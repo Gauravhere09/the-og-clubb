@@ -2,6 +2,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/components/theme-provider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -37,37 +38,38 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={session ? <Index /> : <Auth />} />
-            <Route path="/messages" element={session ? <Messages /> : <Auth />} />
-            <Route 
-              path="/notifications" 
-              element={session ? <Notifications /> : <Auth />} 
-            />
-            <Route path="/profile" element={<Navigate to="/" replace />} />
-            <Route 
-              path="/profile/:id" 
-              element={session ? <Profile /> : <Auth />} 
-            />
-            <Route 
-              path="/friends" 
-              element={session ? <Friends /> : <Auth />} 
-            />
-            <Route 
-              path="/friend-requests" 
-              element={session ? <FriendRequests /> : <Auth />} 
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={session ? <Index /> : <Auth />} />
+              <Route path="/messages" element={session ? <Messages /> : <Auth />} />
+              <Route 
+                path="/notifications" 
+                element={session ? <Notifications /> : <Auth />} 
+              />
+              <Route path="/profile" element={<Navigate to="/" replace />} />
+              <Route 
+                path="/profile/:id" 
+                element={session ? <Profile /> : <Auth />} 
+              />
+              <Route 
+                path="/friends" 
+                element={session ? <Friends /> : <Auth />} 
+              />
+              <Route 
+                path="/friend-requests" 
+                element={session ? <FriendRequests /> : <Auth />} 
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 };
 
 export default App;
-
