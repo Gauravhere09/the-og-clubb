@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deletePost } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +20,10 @@ export function usePostMutations(postId: string) {
       toggleReaction(postId, type),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
+      toast({
+        title: "Reacción actualizada",
+        description: "Tu reacción se ha actualizado correctamente",
+      });
     },
   });
 
@@ -59,18 +64,13 @@ export function usePostMutations(postId: string) {
             user_id: session.user.id,
             comment_id: commentId,
             post_id: null,
-            reaction_type: type,
-            created_at: new Date().toISOString()
+            reaction_type: type
           });
         if (error) throw error;
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", postId] });
-      toast({
-        title: "Reacción actualizada",
-        description: "Tu reacción se ha actualizado correctamente",
-      });
     },
     onError: (error) => {
       toast({
