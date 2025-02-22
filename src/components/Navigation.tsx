@@ -18,7 +18,7 @@ const Logo = () => (
 
 interface NavigationItem {
   to?: string;
-  icon: typeof Home;
+  icon: React.ElementType;
   label: string;
   badge?: number | null;
   onClick?: () => void;
