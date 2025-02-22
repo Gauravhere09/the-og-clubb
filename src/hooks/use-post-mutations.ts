@@ -8,7 +8,7 @@ import { Tables } from "@/types/database";
 import { toggleReaction, ReactionType } from "@/lib/api/likes";
 import type { Database } from "@/types/database";
 
-type Like = Database['public']['Tables']['likes']['Row'];
+type Reaction = Database['public']['Tables']['reactions']['Row'];
 
 export function usePostMutations(postId: string) {
   const queryClient = useQueryClient();
@@ -45,21 +45,21 @@ export function usePostMutations(postId: string) {
       }
       
       const { data: existingReaction } = await supabase
-        .from('likes')
+        .from('reactions')
         .select()
         .eq('user_id', session.user.id)
         .eq('comment_id', commentId)
-        .single<Like>();
+        .single<Reaction>();
 
       if (existingReaction) {
         const { error } = await supabase
-          .from('likes')
+          .from('reactions')
           .delete()
           .eq('id', existingReaction.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from('likes')
+          .from('reactions')
           .insert({
             user_id: session.user.id,
             comment_id: commentId,

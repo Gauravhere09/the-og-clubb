@@ -31,11 +31,7 @@ interface RealtimePostPayload {
 }
 
 interface RealtimeNotification {
-  new: {
-    id: string;
-    sender_id: string | null;
-    message: string | null;
-  };
+  new: NotificationTable['Row'];
 }
 
 export function Navigation() {
