@@ -12,6 +12,7 @@ import Messages from "./pages/Messages";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import FriendRequests from "./pages/FriendRequests";
+import Friends from "./pages/Friends";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 
@@ -53,6 +54,10 @@ const App = () => {
               element={session ? <Profile /> : <Auth />} 
             />
             <Route 
+              path="/friends" 
+              element={session ? <Friends /> : <Auth />} 
+            />
+            <Route 
               path="/friend-requests" 
               element={session ? <FriendRequests /> : <Auth />} 
             />
@@ -65,3 +70,4 @@ const App = () => {
 };
 
 export default App;
+
