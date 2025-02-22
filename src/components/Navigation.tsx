@@ -1,3 +1,4 @@
+
 import { Bell, Home, Mail, User, Users } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -5,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import type { NotificationTable } from "@/types/database/social.types";
+import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 const Logo = () => (
   <div className="hidden md:flex justify-center my-6">
@@ -46,6 +48,13 @@ export function Navigation() {
 
         setUnreadNotifications(count || 0);
 
+        type NotificationPayload = RealtimePostgresChangesPayload<{
+          [key: string]: any;
+          id: string;
+          sender_id: string | null;
+          message: string | null;
+        }>;
+
         const notificationsChannel = supabase.channel('notifications')
           .on(
             'postgres_changes',
@@ -55,7 +64,7 @@ export function Navigation() {
               table: 'notifications',
               filter: `receiver_id=eq.${user.id}`,
             },
-            async (payload: { new: NotificationTable['Row'] }) => {
+            async (payload: NotificationPayload) => {
               setUnreadNotifications(prev => prev + 1);
               
               const { data: sender } = await supabase
@@ -72,6 +81,11 @@ export function Navigation() {
           )
           .subscribe();
 
+        type PostPayload = RealtimePostgresChangesPayload<{
+          id: string;
+          user_id: string;
+        }>;
+
         const postsChannel = supabase.channel('posts')
           .on(
             'postgres_changes',
@@ -80,7 +94,7 @@ export function Navigation() {
               schema: 'public',
               table: 'posts',
             },
-            (payload: { new: { id: string; user_id: string } }) => {
+            (payload: PostPayload) => {
               if (location.pathname !== '/' && payload.new.user_id !== user.id) {
                 setNewPosts(prev => prev + 1);
                 setLatestPostId(payload.new.id);
