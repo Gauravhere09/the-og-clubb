@@ -18,9 +18,10 @@ export function Navigation() {
 
   const links: NavigationLink[] = [
     { 
-      onClick: handleHomeClick,
+      to: "/",
       icon: Home, 
       label: "Inicio",
+      onClick: handleHomeClick,
       badge: newPosts > 0 ? newPosts : null 
     },
     { 
@@ -55,7 +56,7 @@ export function Navigation() {
           <NavigationItem
             key={link.label}
             link={link}
-            isActive={link.to ? location.pathname === link.to : location.pathname === '/'}
+            isActive={link.to === location.pathname}
           />
         ))}
       </div>
