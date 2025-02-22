@@ -9,6 +9,7 @@ import { ProfileLayout } from "@/components/profile/ProfileLayout";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileInfo } from "@/components/profile/ProfileInfo";
 import { ProfileContent } from "@/components/profile/ProfileContent";
+import { useProfileImage } from "@/hooks/use-profile-image";
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
@@ -21,6 +22,7 @@ export default function Profile() {
   const { id } = useParams<{ id: string }>();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { handleImageUpload } = useProfileImage();
 
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -97,55 +99,6 @@ export default function Profile() {
       }
     }
   });
-
-  const handleImageUpload = async (type: 'avatar' | 'cover', e: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      if (!e.target.files || !e.target.files[0]) return;
-
-      const file = e.target.files[0];
-      if (file.size > 2 * 1024 * 1024) {
-        throw new Error("El archivo no puede ser mayor a 2MB");
-      }
-
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${currentUserId}_${type}_${Date.now()}.${fileExt}`;
-      const filePath = `${type}s/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('profiles')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('profiles')
-        .getPublicUrl(filePath);
-
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
-          [`${type}_url`]: publicUrl,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', currentUserId);
-
-      if (updateError) throw updateError;
-
-      toast({
-        title: "Imagen actualizada",
-        description: "La imagen se ha actualizado correctamente",
-      });
-
-      window.location.reload();
-    } catch (error: any) {
-      console.error('Error uploading image:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "No se pudo actualizar la imagen",
-      });
-    }
-  };
 
   return (
     <ProfileLayout isLoading={isLoading} error={!!error}>
