@@ -3,38 +3,37 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Friend, FriendRequest, FriendSuggestion } from "@/types/friends";
 
 export async function loadFriendsAndRequests(currentUserId: string) {
-  // Load friends using the friendships table
+  // Load friends using the friends table
   const { data: friendsData, error: friendsError } = await supabase
-    .from('friendships')
+    .from('friends')
     .select(`
       id,
       friend_id,
-      profiles!friendships_friend_id_fkey (
+      profiles!friends_friend_id_fkey (
         id,
         username,
         avatar_url
       )
     `)
-    .eq('user_id', currentUserId)
-    .eq('status', 'accepted');
+    .eq('user_id', currentUserId);
 
   if (friendsError) throw friendsError;
 
   // Load pending friend requests
   const { data: requests, error: requestsError } = await supabase
-    .from('friendships')
+    .from('friend_requests')
     .select(`
       id,
-      user_id,
-      friend_id,
+      sender_id,
+      receiver_id,
       status,
       created_at,
-      profiles!friendships_user_id_fkey (
+      profiles!friend_requests_sender_id_fkey (
         username,
         avatar_url
       )
     `)
-    .eq('friend_id', currentUserId)
+    .eq('receiver_id', currentUserId)
     .eq('status', 'pending');
 
   if (requestsError) throw requestsError;
@@ -47,8 +46,8 @@ export async function loadFriendsAndRequests(currentUserId: string) {
 
   const friendRequests: FriendRequest[] = requests?.map(r => ({
     id: r.id,
-    user_id: r.user_id,
-    friend_id: r.friend_id,
+    user_id: r.sender_id,
+    friend_id: r.receiver_id,
     status: r.status as 'pending',
     created_at: r.created_at,
     user: {
@@ -61,10 +60,33 @@ export async function loadFriendsAndRequests(currentUserId: string) {
 }
 
 export async function loadSuggestions(currentUserId: string): Promise<FriendSuggestion[]> {
+  // First, get all existing friends and pending requests
+  const { data: friends } = await supabase
+    .from('friends')
+    .select('friend_id')
+    .eq('user_id', currentUserId);
+
+  const { data: sentRequests } = await supabase
+    .from('friend_requests')
+    .select('receiver_id')
+    .eq('sender_id', currentUserId);
+
+  const { data: receivedRequests } = await supabase
+    .from('friend_requests')
+    .select('sender_id')
+    .eq('receiver_id', currentUserId);
+
+  // Create arrays of IDs to exclude
+  const friendIds = friends?.map(f => f.friend_id) || [];
+  const sentRequestIds = sentRequests?.map(r => r.receiver_id) || [];
+  const receivedRequestIds = receivedRequests?.map(r => r.sender_id) || [];
+  const excludeIds = [...friendIds, ...sentRequestIds, ...receivedRequestIds, currentUserId];
+
+  // Get suggestions excluding friends and users with pending requests
   const { data: suggestions, error: suggestionsError } = await supabase
     .from('profiles')
     .select('id, username, avatar_url')
-    .neq('id', currentUserId)
+    .not('id', 'in', `(${excludeIds.join(',')})`)
     .limit(5);
 
   if (suggestionsError) throw suggestionsError;
@@ -79,10 +101,10 @@ export async function loadSuggestions(currentUserId: string): Promise<FriendSugg
 
 export async function sendFriendRequest(currentUserId: string, friendId: string) {
   const { error } = await supabase
-    .from('friendships')
+    .from('friend_requests')
     .insert({
-      user_id: currentUserId,
-      friend_id: friendId,
+      sender_id: currentUserId,
+      receiver_id: friendId,
       status: 'pending'
     });
 
@@ -90,9 +112,30 @@ export async function sendFriendRequest(currentUserId: string, friendId: string)
 }
 
 export async function respondToFriendRequest(requestId: string, accept: boolean) {
+  if (accept) {
+    // First get the request details
+    const { data: request, error: requestError } = await supabase
+      .from('friend_requests')
+      .select('sender_id, receiver_id')
+      .eq('id', requestId)
+      .single();
+
+    if (requestError) throw requestError;
+
+    // Create the friendship record
+    const { error: friendError } = await supabase
+      .from('friends')
+      .insert({
+        user_id: request.receiver_id,
+        friend_id: request.sender_id
+      });
+
+    if (friendError) throw friendError;
+  }
+
   // Update the request status
   const { error } = await supabase
-    .from('friendships')
+    .from('friend_requests')
     .update({
       status: accept ? 'accepted' : 'rejected'
     })
@@ -100,4 +143,3 @@ export async function respondToFriendRequest(requestId: string, accept: boolean)
 
   if (error) throw error;
 }
-
