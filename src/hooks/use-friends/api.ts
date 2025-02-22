@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Friend, FriendRequest, FriendSuggestion } from "@/types/friends";
 
 export async function loadFriendsAndRequests(currentUserId: string) {
-  // Load friends using explicit foreign key join constraint
+  // Load friends using foreign key join
   const { data: friendships, error: friendshipsError } = await supabase
     .from('friendships')
     .select(`
@@ -20,7 +20,7 @@ export async function loadFriendsAndRequests(currentUserId: string) {
 
   if (friendshipsError) throw friendshipsError;
 
-  // Load pending requests using explicit foreign key join constraint
+  // Load pending requests
   const { data: requests, error: requestsError } = await supabase
     .from('friendships')
     .select(`
@@ -29,7 +29,7 @@ export async function loadFriendsAndRequests(currentUserId: string) {
       friend_id,
       status,
       created_at,
-      profiles!friendships_user_id_fkey (
+      profiles (
         username,
         avatar_url
       )
