@@ -10,7 +10,7 @@ import type { Profile } from "@/pages/Profile";
 interface ProfileHeaderProps {
   profile: Profile;
   currentUserId: string | null;
-  onImageUpload: (type: 'avatar', e: React.ChangeEvent<HTMLInputElement>) => Promise<string>;
+  onImageUpload: (type: 'avatar' | 'cover', e: React.ChangeEvent<HTMLInputElement>) => Promise<string>;
   onProfileUpdate?: (profile: Profile) => void;
 }
 
