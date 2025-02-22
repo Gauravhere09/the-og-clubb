@@ -66,8 +66,16 @@ export default function Profile() {
         }
 
         const profileData: Profile = {
-          ...data,
-          followers_count: followersCount || 0
+          id: data.id,
+          username: data.username,
+          bio: data.bio,
+          avatar_url: data.avatar_url,
+          location: data.location,
+          education: data.education,
+          relationship_status: data.relationship_status,
+          followers_count: followersCount || 0,
+          created_at: data.created_at,
+          updated_at: data.updated_at
         };
 
         setProfile(profileData);
