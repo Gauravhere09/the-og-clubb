@@ -3,7 +3,28 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Friend, FriendRequest, FriendSuggestion } from "@/types/friends";
 import type { Tables } from "@/types/database";
 
-export async function loadFriendsAndRequests(currentUserId: string) {
+interface FriendshipWithProfile {
+  id: string;
+  friend: {
+    id: string;
+    username: string | null;
+    avatar_url: string | null;
+  };
+}
+
+interface FriendRequestWithProfile {
+  id: string;
+  user_id: string;
+  friend_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  user: {
+    username: string | null;
+    avatar_url: string | null;
+  };
+}
+
+export async function getFriendsData(userId: string) {
   const { data: friendships, error: friendshipsError } = await supabase
     .from('friendships')
     .select(`
@@ -14,10 +35,9 @@ export async function loadFriendsAndRequests(currentUserId: string) {
         avatar_url
       )
     `)
-    .eq('user_id', currentUserId)
-    .eq('status', 'accepted');
-
-  if (friendshipsError) throw friendshipsError;
+    .eq('user_id', userId)
+    .eq('status', 'accepted')
+    .returns<FriendshipWithProfile[]>();
 
   const { data: requests, error: requestsError } = await supabase
     .from('friendships')
@@ -32,9 +52,11 @@ export async function loadFriendsAndRequests(currentUserId: string) {
         avatar_url
       )
     `)
-    .eq('friend_id', currentUserId)
-    .eq('status', 'pending');
+    .eq('friend_id', userId)
+    .eq('status', 'pending')
+    .returns<FriendRequestWithProfile[]>();
 
+  if (friendshipsError) throw friendshipsError;
   if (requestsError) throw requestsError;
 
   const friends: Friend[] = (friendships || []).map(f => ({
@@ -58,11 +80,11 @@ export async function loadFriendsAndRequests(currentUserId: string) {
   return { friends, friendRequests };
 }
 
-export async function loadSuggestions(currentUserId: string): Promise<FriendSuggestion[]> {
+export async function getFriendSuggestions(userId: string): Promise<FriendSuggestion[]> {
   const { data: suggestions, error: suggestionsError } = await supabase
     .from('profiles')
     .select('id, username, avatar_url')
-    .neq('id', currentUserId)
+    .neq('id', userId)
     .limit(5);
 
   if (suggestionsError) throw suggestionsError;
@@ -75,25 +97,3 @@ export async function loadSuggestions(currentUserId: string): Promise<FriendSugg
   }));
 }
 
-export async function sendFriendRequest(currentUserId: string, friendId: string) {
-  const { error } = await supabase
-    .from('friendships')
-    .insert({
-      user_id: currentUserId,
-      friend_id: friendId,
-      status: 'pending'
-    });
-
-  if (error) throw error;
-}
-
-export async function respondToFriendRequest(requestId: string, accept: boolean) {
-  const { error } = await supabase
-    .from('friendships')
-    .update({
-      status: accept ? 'accepted' : 'rejected'
-    })
-    .eq('id', requestId);
-
-  if (error) throw error;
-}

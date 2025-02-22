@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Friend, FriendRequest, FriendSuggestion } from "@/types/friends";
@@ -131,3 +132,4 @@ export function useFriends(currentUserId: string | null) {
     respondToFriendRequest
   };
 }
+
