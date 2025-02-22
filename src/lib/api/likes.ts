@@ -17,7 +17,7 @@ export async function toggleReaction(postId: string, type: ReactionType) {
     })
     .single();
 
-  if (error) {
+  if (error && error.code !== 'PGRST116') {
     console.error('Error checking existing reaction:', error);
     return null;
   }
@@ -27,19 +27,29 @@ export async function toggleReaction(postId: string, type: ReactionType) {
     const existingType = reaction.reaction_type;
     
     if (existingType === type) {
-      await supabase
+      const { error: deleteError } = await supabase
         .from('likes')
         .delete()
         .eq('id', existingReaction.id);
+        
+      if (deleteError) {
+        console.error('Error deleting reaction:', deleteError);
+        return null;
+      }
       return null;
     } else {
-      await supabase
+      const { error: updateError } = await supabase
         .from('likes')
         .update({
           reaction_type: type,
           created_at: new Date().toISOString()
         })
         .eq('id', existingReaction.id);
+        
+      if (updateError) {
+        console.error('Error updating reaction:', updateError);
+        return null;
+      }
       return type;
     }
   }
@@ -51,7 +61,7 @@ export async function toggleReaction(postId: string, type: ReactionType) {
     .single();
 
   if (post) {
-    await supabase
+    const { error: insertError } = await supabase
       .from('likes')
       .insert({
         user_id: user.id,
@@ -59,8 +69,13 @@ export async function toggleReaction(postId: string, type: ReactionType) {
         reaction_type: type,
       });
 
+    if (insertError) {
+      console.error('Error inserting reaction:', insertError);
+      return null;
+    }
+
     if (post.user_id !== user.id) {
-      await supabase
+      const { error: notificationError } = await supabase
         .from('notifications')
         .insert({
           type: 'post_like',
@@ -71,6 +86,10 @@ export async function toggleReaction(postId: string, type: ReactionType) {
           read: false,
           created_at: new Date().toISOString()
         });
+
+      if (notificationError) {
+        console.error('Error creating notification:', notificationError);
+      }
     }
   }
 

@@ -1,4 +1,3 @@
-
 export interface Post {
   id: string;
   content: string;
@@ -17,14 +16,14 @@ export interface Post {
     id: string;
     user_id: string;
     post_id: string;
-    reaction_type: 'like' | 'love' | 'haha' | 'angry' | 'surprised' | 'sigma';
+    reaction_type: 'like' | 'love' | 'haha' | 'angry' | 'wow' | 'sad';
   }[];
   reactions?: {
     count: number;
     by_type: Record<string, number>;
   };
   reactions_count?: number;
-  user_reaction?: 'like' | 'love' | 'haha' | 'angry' | 'surprised' | 'sigma' | null;
+  user_reaction?: 'like' | 'love' | 'haha' | 'angry' | 'wow' | 'sad' | null;
   comments_count?: number;
 }
 

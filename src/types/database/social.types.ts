@@ -1,5 +1,5 @@
 
-export type ReactionType = 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry' | 'surprised' | 'sigma';
+export type ReactionType = 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
 
 export interface NotificationTable {
   Row: {
