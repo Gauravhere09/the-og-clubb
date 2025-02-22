@@ -11,13 +11,12 @@ export interface Database {
       profiles: ProfileTable;
       likes: LikeTable;
       friendships: FriendshipTable;
-      friends: FriendshipTable;
-      friend_requests: FriendRequestTable;
       posts: PostTable;
       comments: CommentTable;
       messages: MessageTable;
       group_messages: GroupMessageTable;
       notifications: NotificationTable;
+      friend_requests: FriendRequestTable;
     };
     Views: {
       [_ in never]: never;

@@ -3,19 +3,20 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Friend, FriendRequest, FriendSuggestion } from "@/types/friends";
 
 export async function loadFriendsAndRequests(currentUserId: string) {
-  // Load friends using the friends table
+  // Load friends using the friendships table
   const { data: friendsData, error: friendsError } = await supabase
-    .from('friends')
+    .from('friendships')
     .select(`
       id,
       friend_id,
-      profiles!friends_friend_id_fkey (
+      profiles!friendships_friend_id_fkey (
         id,
         username,
         avatar_url
       )
     `)
-    .eq('user_id', currentUserId);
+    .eq('user_id', currentUserId)
+    .eq('status', 'accepted');
 
   if (friendsError) throw friendsError;
 
@@ -28,7 +29,7 @@ export async function loadFriendsAndRequests(currentUserId: string) {
       receiver_id,
       status,
       created_at,
-      profiles!friend_requests_sender_id_fkey (
+      sender:profiles!friend_requests_sender_id_fkey (
         username,
         avatar_url
       )
@@ -51,8 +52,8 @@ export async function loadFriendsAndRequests(currentUserId: string) {
     status: r.status as 'pending',
     created_at: r.created_at,
     user: {
-      username: r.profiles?.username || '',
-      avatar_url: r.profiles?.avatar_url
+      username: r.sender?.username || '',
+      avatar_url: r.sender?.avatar_url
     }
   })) || [];
 
@@ -62,7 +63,7 @@ export async function loadFriendsAndRequests(currentUserId: string) {
 export async function loadSuggestions(currentUserId: string): Promise<FriendSuggestion[]> {
   // First, get all existing friends and pending requests
   const { data: friends } = await supabase
-    .from('friends')
+    .from('friendships')
     .select('friend_id')
     .eq('user_id', currentUserId);
 
@@ -124,10 +125,11 @@ export async function respondToFriendRequest(requestId: string, accept: boolean)
 
     // Create the friendship record
     const { error: friendError } = await supabase
-      .from('friends')
+      .from('friendships')
       .insert({
         user_id: request.receiver_id,
-        friend_id: request.sender_id
+        friend_id: request.sender_id,
+        status: 'accepted'
       });
 
     if (friendError) throw friendError;

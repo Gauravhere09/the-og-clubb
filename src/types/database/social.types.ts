@@ -28,18 +28,21 @@ export interface FriendshipTable {
     id: string;
     user_id: string;
     friend_id: string;
+    status: 'pending' | 'accepted' | 'rejected';
     created_at: string;
   };
   Insert: {
     id?: string;
     user_id: string;
     friend_id: string;
+    status?: 'pending' | 'accepted' | 'rejected';
     created_at?: string;
   };
   Update: {
     id?: string;
     user_id?: string;
     friend_id?: string;
+    status?: 'pending' | 'accepted' | 'rejected';
     created_at?: string;
   };
 }
@@ -49,21 +52,21 @@ export interface FriendRequestTable {
     id: string;
     sender_id: string;
     receiver_id: string;
-    status: string;
+    status: 'pending' | 'accepted' | 'rejected';
     created_at: string;
   };
   Insert: {
     id?: string;
     sender_id: string;
     receiver_id: string;
-    status: string;
+    status: 'pending' | 'accepted' | 'rejected';
     created_at?: string;
   };
   Update: {
     id?: string;
     sender_id?: string;
     receiver_id?: string;
-    status?: string;
+    status?: 'pending' | 'accepted' | 'rejected';
     created_at?: string;
   };
 }
