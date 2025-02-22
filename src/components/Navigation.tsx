@@ -1,5 +1,5 @@
 
-import { Bell, Home, Mail, User, Users, LogOut } from "lucide-react";
+import { Bell, Home, Mail, User, Users } from "lucide-react";
 import { Logo } from "./navigation/Logo";
 import { NavigationItem } from "./navigation/NavigationItem";
 import { useNavigation } from "./navigation/use-navigation";
@@ -44,11 +44,6 @@ export function Navigation() {
       to: currentUserId ? `/profile/${currentUserId}` : "/", 
       icon: User, 
       label: "Perfil" 
-    },
-    {
-      icon: LogOut,
-      label: "Cerrar sesión",
-      onClick: handleLogout
     }
   ];
 
