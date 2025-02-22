@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { Friend, FriendRequest, FriendSuggestion } from "@/types/friends";
 
@@ -8,7 +9,7 @@ export async function loadFriendsAndRequests(currentUserId: string) {
     .select(`
       id,
       friend_id,
-      profiles (
+      friend:profiles!friendships_friend_id_fkey (
         id,
         username,
         avatar_url
@@ -40,8 +41,8 @@ export async function loadFriendsAndRequests(currentUserId: string) {
 
   const friends: Friend[] = friendships?.map(f => ({
     friend_id: f.friend_id,
-    friend_username: f.profiles?.username || '',
-    friend_avatar_url: f.profiles?.avatar_url
+    friend_username: f.friend?.username || '',
+    friend_avatar_url: f.friend?.avatar_url
   })) || [];
 
   const friendRequests: FriendRequest[] = requests?.map(r => ({
@@ -98,3 +99,4 @@ export async function respondToFriendRequest(requestId: string, accept: boolean)
 
   if (error) throw error;
 }
+
