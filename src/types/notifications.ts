@@ -1,4 +1,6 @@
 
+import type { Database } from "@/integrations/supabase/types";
+
 export type NotificationType = 
   | 'friend_request' 
   | 'message' 
@@ -18,6 +20,6 @@ export interface Notification {
   read: boolean;
 }
 
-export interface NotificationRow extends Notification {
-  type: string;
-}
+export type DatabaseNotification = Database['public']['Tables']['notifications']['Row'];
+export type DatabaseNotificationInsert = Database['public']['Tables']['notifications']['Insert'];
+export type DatabaseNotificationUpdate = Database['public']['Tables']['notifications']['Update'];

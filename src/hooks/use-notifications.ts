@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -24,7 +25,7 @@ export const useNotifications = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data: notificationsData } = await supabase
+    const { data: notificationsData, error } = await supabase
       .from('notifications')
       .select(`
         id,
@@ -32,6 +33,7 @@ export const useNotifications = () => {
         created_at,
         message,
         read,
+        sender_id,
         sender:profiles!sender_id (
           id,
           username,
@@ -41,22 +43,28 @@ export const useNotifications = () => {
       .eq('receiver_id', user.id)
       .order('created_at', { ascending: false });
 
+    if (error) {
+      console.error('Error loading notifications:', error);
+      return;
+    }
+
     if (notificationsData) {
-      setNotifications(notificationsData.map(item => ({
-        id: item.id,
-        type: item.type as NotificationType,
-        created_at: item.created_at,
-        message: item.message ?? undefined,
+      setNotifications(notificationsData.map(notification => ({
+        id: notification.id,
+        type: notification.type as NotificationType,
+        created_at: notification.created_at,
+        message: notification.message ?? undefined,
         sender: {
-          id: item.sender.id,
-          username: item.sender.username || '',
-          avatar_url: item.sender.avatar_url
+          id: notification.sender.id,
+          username: notification.sender.username || '',
+          avatar_url: notification.sender.avatar_url
         }
       })));
 
+      // Mark notifications as read
       await supabase
         .from('notifications')
-        .update({ read: true })
+        .update({ read: false })
         .eq('receiver_id', user.id)
         .eq('read', false);
     }

@@ -8,7 +8,7 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.id || !postId) return null;
   
-  const { data: existingReaction } = await supabase
+  const { data: existingReaction, error } = await supabase
     .from('likes')
     .select('*')
     .match({ 
@@ -17,8 +17,14 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
     })
     .single();
 
+  if (error) {
+    console.error('Error checking existing reaction:', error);
+    return null;
+  }
+
   if (existingReaction) {
-    if (existingReaction.reaction_type === reactionType) {
+    const { reaction_type: existingType } = existingReaction as { reaction_type: ReactionType };
+    if (existingType === reactionType) {
       await supabase
         .from('likes')
         .delete()
@@ -61,7 +67,8 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
           receiver_id: post.user_id,
           post_id: postId,
           message: `ha reaccionado a tu publicación con ${reactionType}`,
-          read: false
+          read: false,
+          created_at: new Date().toISOString()
         });
     }
   }
