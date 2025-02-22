@@ -1,31 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-
-export interface Friend {
-  friend_id: string;
-  friend_username: string;
-  friend_avatar_url: string | null;
-  status?: 'pending' | 'accepted' | 'rejected';
-}
-
-export interface FriendRequest {
-  id: string;
-  user_id: string;
-  friend_id: string;
-  status: 'pending';
-  created_at: string;
-  user: {
-    username: string;
-    avatar_url: string | null;
-  };
-}
-
-export interface FriendSuggestion {
-  id: string;
-  username: string;
-  avatar_url: string | null;
-  mutual_friends_count: number;
-}
+import type { Friend, FriendRequest, FriendSuggestion } from "@/types/friends";
 
 export function useFriends(currentUserId: string | null) {
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -78,11 +53,17 @@ export function useFriends(currentUserId: string | null) {
       .eq('status', 'pending');
 
     if (!error && data) {
-      const typedData = data.map(request => ({
-        ...request,
-        status: 'pending' as const
-      }));
-      setFriendRequests(typedData);
+      setFriendRequests(data.map(request => ({
+        id: request.id,
+        user_id: request.user_id,
+        friend_id: request.friend_id,
+        status: 'pending' as const,
+        created_at: request.created_at,
+        user: {
+          username: request.user.username || '',
+          avatar_url: request.user.avatar_url || null
+        }
+      })));
     }
   };
 

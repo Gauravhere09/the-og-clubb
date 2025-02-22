@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { Friend, FriendRequest, FriendSuggestion } from "@/types/friends";
 import type { Tables } from "@/types/database";
@@ -36,23 +37,23 @@ export async function loadFriendsAndRequests(currentUserId: string) {
 
   if (requestsError) throw requestsError;
 
-  const friends: Friend[] = friendships?.map(f => ({
+  const friends: Friend[] = (friendships || []).map(f => ({
     friend_id: f.friend.id,
     friend_username: f.friend.username || '',
     friend_avatar_url: f.friend.avatar_url
-  })) || [];
+  }));
 
-  const friendRequests: FriendRequest[] = requests?.map(r => ({
+  const friendRequests: FriendRequest[] = (requests || []).map(r => ({
     id: r.id,
     user_id: r.user_id,
     friend_id: r.friend_id,
-    status: r.status as 'pending',
+    status: 'pending',
     created_at: r.created_at,
     user: {
       username: r.user.username || '',
-      avatar_url: r.user.avatar_url
+      avatar_url: r.user.avatar_url || null
     }
-  })) || [];
+  }));
 
   return { friends, friendRequests };
 }
@@ -66,11 +67,11 @@ export async function loadSuggestions(currentUserId: string): Promise<FriendSugg
 
   if (suggestionsError) throw suggestionsError;
 
-  return suggestions.map(s => ({
+  return (suggestions || []).map(s => ({
     id: s.id,
     username: s.username || '',
     avatar_url: s.avatar_url,
-    mutual_friends_count: Math.floor(Math.random() * 5) // Simulated for now
+    mutual_friends_count: 0 // This would need to be calculated
   }));
 }
 

@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { format } from "date-fns";
@@ -7,7 +6,7 @@ import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import type { Comment } from "@/types/post";
 import { CommentReactions } from "./CommentReactions";
 import { useSession } from "@supabase/auth-helpers-react";
-import type { ReactionType } from "@/lib/api/likes";
+import type { ReactionType } from "@/components/post/reactions/ReactionIcons";
 import {
   DropdownMenu,
   DropdownMenuContent,

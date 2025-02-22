@@ -15,7 +15,7 @@ interface FriendRequest {
   id: string;
   sender: {
     id: string;
-    username: string | null;
+    username: string;
     avatar_url: string | null;
   };
 }
@@ -65,10 +65,14 @@ export default function FriendRequests() {
 
       if (error) throw error;
 
-      setRequests(data?.map(request => ({
+      setRequests((data || []).map(request => ({
         id: request.id,
-        sender: request.user
-      })) || []);
+        sender: {
+          id: request.user.id,
+          username: request.user.username || '',
+          avatar_url: request.user.avatar_url
+        }
+      })));
     } catch (error) {
       console.error('Error loading friend requests:', error);
       toast({
