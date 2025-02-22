@@ -1,4 +1,3 @@
-
 export interface LikeTable {
   Row: {
     id: string;
@@ -31,21 +30,21 @@ export interface FriendshipTable {
     id: string;
     user_id: string;
     friend_id: string;
-    status: string | null;
+    status: 'pending' | 'accepted' | 'rejected';
     created_at: string;
   };
   Insert: {
     id?: string;
     user_id: string;
     friend_id: string;
-    status?: string | null;
+    status?: 'pending' | 'accepted' | 'rejected';
     created_at?: string;
   };
   Update: {
     id?: string;
     user_id?: string;
     friend_id?: string;
-    status?: string | null;
+    status?: 'pending' | 'accepted' | 'rejected';
     created_at?: string;
   };
 }
