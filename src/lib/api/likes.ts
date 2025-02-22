@@ -1,6 +1,5 @@
-
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/types/database.types";
+import type { Tables } from "@/types/database";
 
 export type ReactionType = 'like' | 'love' | 'haha' | 'angry' | 'surprised' | 'sigma';
 type Like = Tables["likes"]["Row"];
