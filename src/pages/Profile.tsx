@@ -50,13 +50,13 @@ export default function Profile() {
           return;
         }
 
-        const { data, error: profileError } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('id, username, bio, avatar_url, cover_url, location, education, relationship_status, created_at, updated_at')
           .eq('id', id)
           .single();
 
-        if (profileError || !data) {
+        if (profileError || !profileData) {
           console.error('Error fetching profile:', profileError);
           setError(true);
           return;
@@ -73,10 +73,22 @@ export default function Profile() {
           console.error('Error fetching followers:', followersError);
         }
 
-        setProfile({
-          ...data,
-          followers_count: followersCount || 0
-        });
+        // Crear el objeto Profile con los datos obtenidos
+        const newProfile: Profile = {
+          id: profileData.id,
+          username: profileData.username,
+          bio: profileData.bio,
+          avatar_url: profileData.avatar_url,
+          cover_url: profileData.cover_url,
+          location: profileData.location,
+          education: profileData.education,
+          relationship_status: profileData.relationship_status,
+          followers_count: followersCount || 0,
+          created_at: profileData.created_at,
+          updated_at: profileData.updated_at
+        };
+
+        setProfile(newProfile);
       } catch (err) {
         console.error('Error in loadProfile:', err);
         setError(true);
