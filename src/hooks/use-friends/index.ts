@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { Friend, FriendRequest, FriendSuggestion } from "@/types/friends";
 import { loadFriendsAndRequests, loadSuggestions, sendFriendRequest, respondToFriendRequest } from "./api";
+import { FRIENDS_TOAST_MESSAGES } from "./constants";
 
 export function useFriends(currentUserId: string | null) {
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -23,7 +24,7 @@ export function useFriends(currentUserId: string | null) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudieron cargar los amigos",
+        description: FRIENDS_TOAST_MESSAGES.ERROR.LOAD_FRIENDS,
       });
     } finally {
       setLoading(false);
@@ -64,17 +65,14 @@ export function useFriends(currentUserId: string | null) {
     try {
       if (!currentUserId) throw new Error("No autenticado");
       await sendFriendRequest(currentUserId, friendId);
-      toast({
-        title: "Solicitud enviada",
-        description: "La solicitud de amistad ha sido enviada",
-      });
+      toast(FRIENDS_TOAST_MESSAGES.SUCCESS.REQUEST_SENT);
       await handleLoadSuggestions();
     } catch (error) {
       console.error('Error sending friend request:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo enviar la solicitud de amistad",
+        description: FRIENDS_TOAST_MESSAGES.ERROR.SEND_REQUEST,
       });
     }
   };
@@ -82,19 +80,17 @@ export function useFriends(currentUserId: string | null) {
   const handleRespondToFriendRequest = async (requestId: string, accept: boolean) => {
     try {
       await respondToFriendRequest(requestId, accept);
-      toast({
-        title: accept ? "Solicitud aceptada" : "Solicitud rechazada",
-        description: accept 
-          ? "Ahora son amigos" 
-          : "Has rechazado la solicitud de amistad",
-      });
+      toast(accept 
+        ? FRIENDS_TOAST_MESSAGES.SUCCESS.REQUEST_ACCEPTED 
+        : FRIENDS_TOAST_MESSAGES.SUCCESS.REQUEST_REJECTED
+      );
       await handleLoadFriendsAndRequests();
     } catch (error) {
       console.error('Error responding to friend request:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo procesar la solicitud",
+        description: FRIENDS_TOAST_MESSAGES.ERROR.PROCESS_REQUEST,
       });
     }
   };
