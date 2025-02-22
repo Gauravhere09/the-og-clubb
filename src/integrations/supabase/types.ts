@@ -61,79 +61,50 @@ export type Database = {
           },
         ]
       }
-      friendships: {
+      friend_requests: {
         Row: {
-          created_at: string
-          friend_id: string
+          created_at: string | null
           id: string
+          receiver_id: string | null
+          sender_id: string | null
           status: string | null
-          user_id: string
         }
         Insert: {
-          created_at?: string
-          friend_id: string
+          created_at?: string | null
           id?: string
+          receiver_id?: string | null
+          sender_id?: string | null
           status?: string | null
-          user_id: string
         }
         Update: {
-          created_at?: string
-          friend_id?: string
+          created_at?: string | null
           id?: string
+          receiver_id?: string | null
+          sender_id?: string | null
           status?: string | null
-          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "friendships_friend_id_fkey"
-            columns: ["friend_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "friendships_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
-      group_messages: {
+      friends: {
         Row: {
-          content: string
-          created_at: string
+          created_at: string | null
+          friend_id: string | null
           id: string
-          media_url: string | null
-          sender_id: string
-          type: string | null
+          user_id: string | null
         }
         Insert: {
-          content: string
-          created_at?: string
+          created_at?: string | null
+          friend_id?: string | null
           id?: string
-          media_url?: string | null
-          sender_id: string
-          type?: string | null
+          user_id?: string | null
         }
         Update: {
-          content?: string
-          created_at?: string
+          created_at?: string | null
+          friend_id?: string | null
           id?: string
-          media_url?: string | null
-          sender_id?: string
-          type?: string | null
+          user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "group_messages_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       likes: {
         Row: {
@@ -141,6 +112,7 @@ export type Database = {
           created_at: string
           id: string
           post_id: string | null
+          reaction_type: string
           user_id: string
         }
         Insert: {
@@ -148,6 +120,7 @@ export type Database = {
           created_at?: string
           id?: string
           post_id?: string | null
+          reaction_type: string
           user_id: string
         }
         Update: {
@@ -155,6 +128,7 @@ export type Database = {
           created_at?: string
           id?: string
           post_id?: string | null
+          reaction_type?: string
           user_id?: string
         }
         Relationships: [
@@ -181,117 +155,87 @@ export type Database = {
           },
         ]
       }
-      messages: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          read_at: string | null
-          receiver_id: string
-          sender_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          read_at?: string | null
-          receiver_id: string
-          sender_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          read_at?: string | null
-          receiver_id?: string
-          sender_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_receiver_id_fkey"
-            columns: ["receiver_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       notifications: {
         Row: {
-          created_at: string
+          comment_id: string | null
+          created_at: string | null
           id: string
+          message: string | null
+          post_id: string | null
+          read: boolean | null
           receiver_id: string
-          sender_id: string
+          sender_id: string | null
           type: string
         }
         Insert: {
-          created_at?: string
+          comment_id?: string | null
+          created_at?: string | null
           id?: string
+          message?: string | null
+          post_id?: string | null
+          read?: boolean | null
           receiver_id: string
-          sender_id: string
+          sender_id?: string | null
           type: string
         }
         Update: {
-          created_at?: string
+          comment_id?: string | null
+          created_at?: string | null
           id?: string
+          message?: string | null
+          post_id?: string | null
+          read?: boolean | null
           receiver_id?: string
-          sender_id?: string
+          sender_id?: string | null
           type?: string
         }
         Relationships: [
           {
-            foreignKeyName: "notifications_receiver_id_fkey"
-            columns: ["receiver_id"]
+            foreignKeyName: "notifications_comment_id_fkey"
+            columns: ["comment_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "comments"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "notifications_sender_id_fkey"
-            columns: ["sender_id"]
+            foreignKeyName: "notifications_post_id_fkey"
+            columns: ["post_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "posts"
             referencedColumns: ["id"]
           },
         ]
       }
       posts: {
         Row: {
-          content: string
+          content: string | null
           created_at: string
           id: string
           media_type: string | null
           media_url: string | null
           updated_at: string
           user_id: string
-          visibility: string | null
+          visibility: Database["public"]["Enums"]["post_visibility"]
         }
         Insert: {
-          content: string
+          content?: string | null
           created_at?: string
           id?: string
           media_type?: string | null
           media_url?: string | null
           updated_at?: string
           user_id: string
-          visibility?: string | null
+          visibility?: Database["public"]["Enums"]["post_visibility"]
         }
         Update: {
-          content?: string
+          content?: string | null
           created_at?: string
           id?: string
           media_type?: string | null
           media_url?: string | null
           updated_at?: string
           user_id?: string
-          visibility?: string | null
+          visibility?: Database["public"]["Enums"]["post_visibility"]
         }
         Relationships: [
           {
@@ -333,6 +277,85 @@ export type Database = {
         }
         Relationships: []
       }
+      reactions: {
+        Row: {
+          comment_id: string | null
+          created_at: string | null
+          id: string
+          post_id: string | null
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          comment_id?: string | null
+          created_at?: string | null
+          id?: string
+          post_id?: string | null
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string | null
+          created_at?: string | null
+          id?: string
+          post_id?: string | null
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_comment"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_post"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_user"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usuarios_nuevo: {
+        Row: {
+          actualizado_en: string | null
+          auth_usuario_id: number | null
+          contraseña_hash: string
+          correo_electronico: string
+          creado_en: string | null
+          id: number
+          nombre_usuario: string
+        }
+        Insert: {
+          actualizado_en?: string | null
+          auth_usuario_id?: number | null
+          contraseña_hash: string
+          correo_electronico: string
+          creado_en?: string | null
+          id?: number
+          nombre_usuario: string
+        }
+        Update: {
+          actualizado_en?: string | null
+          auth_usuario_id?: number | null
+          contraseña_hash?: string
+          correo_electronico?: string
+          creado_en?: string | null
+          id?: number
+          nombre_usuario?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -341,7 +364,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      post_visibility: "public" | "friends" | "private"
     }
     CompositeTypes: {
       [_ in never]: never
