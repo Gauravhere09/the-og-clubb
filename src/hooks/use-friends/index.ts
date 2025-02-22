@@ -90,8 +90,8 @@ export function useFriends(currentUserId: string | null) {
         status: request.status as 'pending',
         created_at: request.created_at,
         user: {
-          username: request.user.username || '',
-          avatar_url: request.user.avatar_url
+          username: request.user?.username || '',
+          avatar_url: request.user?.avatar_url
         }
       }));
       setFriendRequests(processedRequests);

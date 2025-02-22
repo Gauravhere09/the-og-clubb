@@ -7,7 +7,7 @@ import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import type { Comment } from "@/types/post";
 import { CommentReactions } from "./CommentReactions";
 import { useSession } from "@supabase/auth-helpers-react";
-import type { ReactionType } from "@/components/post/reactions/ReactionIcons";
+import type { ReactionType } from "@/types/database/social.types";
 import {
   DropdownMenu,
   DropdownMenuContent,

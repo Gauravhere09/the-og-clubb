@@ -69,9 +69,9 @@ export default function FriendRequests() {
         const processedRequests = data.map(request => ({
           id: request.id,
           sender: {
-            id: request.user.id,
-            username: request.user.username || '',
-            avatar_url: request.user.avatar_url
+            id: request.user?.id || '',
+            username: request.user?.username || '',
+            avatar_url: request.user?.avatar_url || null
           }
         }));
         setRequests(processedRequests);
