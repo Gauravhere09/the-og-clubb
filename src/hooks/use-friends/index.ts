@@ -1,7 +1,33 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Friend, FriendRequest, FriendSuggestion } from "@/types/friends";
+import type { Tables } from "@/types/database";
+
+export interface Friend {
+  friend_id: string;
+  friend_username: string;
+  friend_avatar_url: string | null;
+  mutual_friends_count?: number;
+}
+
+export interface FriendRequest {
+  id: string;
+  user_id: string;
+  friend_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  user: {
+    username: string;
+    avatar_url: string | null;
+  };
+}
+
+export interface FriendSuggestion {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+  mutual_friends_count: number;
+}
 
 export function useFriends(currentUserId: string | null) {
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -132,4 +158,3 @@ export function useFriends(currentUserId: string | null) {
     respondToFriendRequest
   };
 }
-
