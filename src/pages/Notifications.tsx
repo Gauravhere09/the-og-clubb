@@ -11,16 +11,17 @@ import { useToast } from "@/hooks/use-toast";
 
 interface Notification {
   id: string;
-  type: 'friend_request' | 'message' | 'like';
+  type: 'friend_request' | 'message' | 'like' | 'new_post';
   sender: {
     id: string;
     username: string;
     avatar_url: string | null;
   };
   created_at: string;
+  message?: string;
 }
 
-const NotificationIcon = ({ type }: { type: 'friend_request' | 'message' | 'like' }) => {
+const NotificationIcon = ({ type }: { type: 'friend_request' | 'message' | 'like' | 'new_post' }) => {
   switch (type) {
     case "friend_request":
       return <UserPlus className="h-4 w-4 text-green-500" />;
@@ -28,6 +29,8 @@ const NotificationIcon = ({ type }: { type: 'friend_request' | 'message' | 'like
       return <MessageCircle className="h-4 w-4 text-blue-500" />;
     case "like":
       return <Heart className="h-4 w-4 text-red-500" />;
+    case "new_post":
+      return <MessageCircle className="h-4 w-4 text-purple-500" />;
     default:
       return null;
   }
@@ -42,12 +45,14 @@ const Notifications = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Obtener notificaciones
       const { data, error } = await supabase
         .from('notifications')
         .select(`
           id,
           type,
           created_at,
+          message,
           sender:profiles!sender_id(id, username, avatar_url)
         `)
         .eq('receiver_id', user.id)
@@ -61,8 +66,9 @@ const Notifications = () => {
       if (data) {
         const typedNotifications: Notification[] = data.map(item => ({
           id: item.id,
-          type: item.type as 'friend_request' | 'message' | 'like',
+          type: item.type as 'friend_request' | 'message' | 'like' | 'new_post',
           created_at: item.created_at,
+          message: item.message,
           sender: {
             id: item.sender.id,
             username: item.sender.username || '',
@@ -71,6 +77,13 @@ const Notifications = () => {
         }));
         setNotifications(typedNotifications);
       }
+
+      // Marcar todas como leídas
+      await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('receiver_id', user.id)
+        .eq('read', false);
     };
 
     loadNotifications();
@@ -102,10 +115,14 @@ const Notifications = () => {
 
       // Actualizar el estado de la amistad
       const { error: friendshipError } = await supabase
-        .from('friendships')
-        .update({ status: accept ? 'accepted' : 'rejected' })
-        .eq('user_id', senderId)
-        .eq('friend_id', user.id);
+        .from('friends')
+        .upsert([
+          {
+            user_id: user.id,
+            friend_id: senderId,
+            status: accept ? 'accepted' : 'rejected'
+          }
+        ]);
 
       if (friendshipError) throw friendshipError;
 
@@ -135,6 +152,14 @@ const Notifications = () => {
   };
 
   const renderNotificationContent = (notification: Notification) => {
+    if (notification.message) {
+      return (
+        <span>
+          <span className="font-medium">{notification.sender.username}</span> {notification.message}
+        </span>
+      );
+    }
+
     switch (notification.type) {
       case 'friend_request':
         return (
@@ -168,6 +193,12 @@ const Notifications = () => {
         return (
           <span>
             <span className="font-medium">{notification.sender.username}</span> le dio me gusta a tu publicación
+          </span>
+        );
+      case 'new_post':
+        return (
+          <span>
+            <span className="font-medium">{notification.sender.username}</span> ha realizado una nueva publicación
           </span>
         );
     }
