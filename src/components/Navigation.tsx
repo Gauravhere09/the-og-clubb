@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import type { NotificationTable } from "@/types/database/notification.types";
 import type { DatabaseNotification } from "@/types/notifications";
 
 const Logo = () => (
@@ -16,13 +17,23 @@ const Logo = () => (
   </div>
 );
 
-interface NavigationLink {
-  to?: string;
+type NavigationLinkBase = {
   icon: typeof Home;
   label: string;
   badge?: number | null;
+};
+
+type NavigationLinkWithTo = NavigationLinkBase & {
+  to: string;
   onClick?: () => void | Promise<void>;
-}
+};
+
+type NavigationLinkWithoutTo = NavigationLinkBase & {
+  to?: never;
+  onClick: () => void;
+};
+
+type NavigationLink = NavigationLinkWithTo | NavigationLinkWithoutTo;
 
 export function Navigation() {
   const location = useLocation();
@@ -142,9 +153,10 @@ export function Navigation() {
       badge: unreadNotifications > 0 ? unreadNotifications : null,
       onClick: async () => {
         if (currentUserId) {
+          const update: NotificationTable['Update'] = { read: true };
           await supabase
             .from('notifications')
-            .update({ read: true })
+            .update(update)
             .eq('receiver_id', currentUserId);
           setUnreadNotifications(0);
         }

@@ -11,8 +11,8 @@ const sadIcon = () => (
 
 export const reactionIcons = {
   like: { 
-    icon: () => (
-      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+    icon: ({ className }: { className?: string }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
         <path d="M14 10h3v7h-3z M14.5 4h-5l-1 6h7z M6.5 10H3v7h3.5z" fill="white"/>
         <path d="M14.5 4l1.5 6v7h-7l-1-5-2-2h3l1-6z" fill="currentColor"/>
       </svg>
@@ -21,8 +21,8 @@ export const reactionIcons = {
     label: "Me gusta" 
   },
   love: { 
-    icon: () => (
-      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+    icon: ({ className }: { className?: string }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
       </svg>
     ), 
@@ -30,8 +30,8 @@ export const reactionIcons = {
     label: "Me encanta" 
   },
   haha: { 
-    icon: () => (
-      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+    icon: ({ className }: { className?: string }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
         <circle cx="12" cy="12" r="10" />
         <path d="M7 14c0 2.5 2.5 4 5 4s5-1.5 5-4" fill="white"/>
         <path d="M7 13c0 0 2.5 2 5 2s5-2 5-2" stroke="white" strokeWidth="1"/>
@@ -42,8 +42,8 @@ export const reactionIcons = {
     label: "Me divierte" 
   },
   wow: { 
-    icon: () => (
-      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+    icon: ({ className }: { className?: string }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
         <circle cx="12" cy="12" r="10"/>
         <circle cx="12" cy="12" r="3" fill="white"/>
         <circle cx="8" cy="9" r="1.5" fill="white"/>
@@ -53,14 +53,26 @@ export const reactionIcons = {
     color: "text-yellow-400", 
     label: "Me asombra" 
   },
+  surprised: { 
+    icon: ({ className }: { className?: string }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+        <circle cx="12" cy="12" r="10"/>
+        <circle cx="12" cy="12" r="3" fill="white"/>
+        <circle cx="8" cy="9" r="1.5" fill="white"/>
+        <circle cx="16" cy="9" r="1.5" fill="white"/>
+      </svg>
+    ), 
+    color: "text-yellow-300", 
+    label: "Me sorprende" 
+  },
   sad: { 
-    icon: sadIcon, 
+    icon: ({ className }: { className?: string }) => sadIcon(), 
     color: "text-yellow-300", 
     label: "Me entristece" 
   },
   angry: { 
-    icon: () => (
-      <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+    icon: ({ className }: { className?: string }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
         <circle cx="12" cy="12" r="10"/>
         <path d="M16 16s-1.5-2-4-2-4 2-4 2" stroke="white" strokeWidth="1.5" fill="none"/>
         <path d="M7 9l4 2M17 9l-4 2" stroke="white" strokeWidth="1.5"/>
@@ -68,6 +80,15 @@ export const reactionIcons = {
     ), 
     color: "text-orange-500", 
     label: "Me enoja" 
+  },
+  sigma: { 
+    icon: ({ className }: { className?: string }) => (
+      <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19 21h-6.7l4.2-4.2c1.6-1.6 2.5-3.7 2.5-6C19 5.8 15.2 2 10.5 2S2 5.8 2 10.5C2 15.2 5.8 19 10.5 19h.5" stroke="currentColor" strokeWidth="2" fill="none"/>
+      </svg>
+    ), 
+    color: "text-purple-500", 
+    label: "Sigma" 
   }
 } as const;
 

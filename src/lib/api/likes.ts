@@ -1,10 +1,9 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import type { ReactionType } from "@/types/database/social.types";
 
-export type { ReactionType };
+export type ReactionType = 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry' | 'surprised' | 'sigma';
 
-export async function toggleReaction(postId: string | undefined, reactionType: ReactionType) {
+export async function toggleReaction(postId: string, type: ReactionType) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.id || !postId) return null;
   
@@ -26,7 +25,7 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
     const reaction = existingReaction as unknown as { reaction_type?: ReactionType };
     const existingType = reaction.reaction_type;
     
-    if (existingType === reactionType) {
+    if (existingType === type) {
       await supabase
         .from('likes')
         .delete()
@@ -36,11 +35,11 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
       await supabase
         .from('likes')
         .update({
-          reaction_type: reactionType,
+          reaction_type: type,
           created_at: new Date().toISOString()
         })
         .eq('id', existingReaction.id);
-      return reactionType;
+      return type;
     }
   }
 
@@ -56,7 +55,7 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
       .insert({
         user_id: user.id,
         post_id: postId,
-        reaction_type: reactionType,
+        reaction_type: type,
         read: false
       });
 
@@ -68,13 +67,12 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
           sender_id: user.id,
           receiver_id: post.user_id,
           post_id: postId,
-          message: `ha reaccionado a tu publicación con ${reactionType}`,
+          message: `ha reaccionado a tu publicación con ${type}`,
           read: false,
           created_at: new Date().toISOString()
         });
     }
   }
 
-  return reactionType;
+  return type;
 }
-
