@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
@@ -11,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import type { Tables } from "@/types/database";
 
-interface FriendRequest {
+interface FriendRequestData {
   id: string;
   sender: {
     id: string;
@@ -21,7 +20,7 @@ interface FriendRequest {
 }
 
 export default function FriendRequests() {
-  const [requests, setRequests] = useState<FriendRequest[]>([]);
+  const [requests, setRequests] = useState<FriendRequestData[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -71,7 +70,7 @@ export default function FriendRequests() {
           sender: {
             id: request.user?.id || '',
             username: request.user?.username || '',
-            avatar_url: request.user?.avatar_url || null
+            avatar_url: request.user?.avatar_url
           }
         }));
         setRequests(processedRequests);

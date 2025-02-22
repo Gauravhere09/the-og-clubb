@@ -54,9 +54,9 @@ export function useFriends(currentUserId: string | null) {
 
     if (!error && friendships) {
       const processedFriends = friendships.map(f => ({
-        friend_id: f.friend.id,
-        friend_username: f.friend.username || '',
-        friend_avatar_url: f.friend.avatar_url,
+        friend_id: f.friend?.id || '',
+        friend_username: f.friend?.username || '',
+        friend_avatar_url: f.friend?.avatar_url,
         status: 'accepted' as const
       }));
       setFriends(processedFriends);
