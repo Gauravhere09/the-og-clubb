@@ -9,7 +9,7 @@ export async function loadFriendsAndRequests(currentUserId: string) {
     .select(`
       id,
       friend_id,
-      friend:profiles!friendships_friend_id_fkey (
+      profiles!profiles_id_fkey (
         id,
         username,
         avatar_url
@@ -29,7 +29,7 @@ export async function loadFriendsAndRequests(currentUserId: string) {
       friend_id,
       status,
       created_at,
-      sender:profiles!friendships_user_id_fkey (
+      profiles!profiles_user_id_fkey (
         username,
         avatar_url
       )
@@ -41,8 +41,8 @@ export async function loadFriendsAndRequests(currentUserId: string) {
 
   const friends: Friend[] = friendships?.map(f => ({
     friend_id: f.friend_id,
-    friend_username: f.friend?.username || '',
-    friend_avatar_url: f.friend?.avatar_url
+    friend_username: f.profiles?.username || '',
+    friend_avatar_url: f.profiles?.avatar_url
   })) || [];
 
   const friendRequests: FriendRequest[] = requests?.map(r => ({
@@ -52,8 +52,8 @@ export async function loadFriendsAndRequests(currentUserId: string) {
     status: r.status as 'pending',
     created_at: r.created_at,
     user: {
-      username: r.sender?.username || '',
-      avatar_url: r.sender?.avatar_url
+      username: r.profiles?.username || '',
+      avatar_url: r.profiles?.avatar_url
     }
   })) || [];
 
@@ -99,4 +99,3 @@ export async function respondToFriendRequest(requestId: string, accept: boolean)
 
   if (error) throw error;
 }
-
