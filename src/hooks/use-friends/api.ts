@@ -3,43 +3,42 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Friend, FriendRequest, FriendSuggestion } from "@/types/friends";
 
 export async function loadFriendsAndRequests(currentUserId: string) {
-  // Load friends using foreign key join with explicit relationship hint
-  const { data: friendships, error: friendshipsError } = await supabase
-    .from('friendships')
+  // Load friends using the friends table
+  const { data: friendsData, error: friendsError } = await supabase
+    .from('friends')
     .select(`
       id,
       friend_id,
-      profiles!friendships_friend_id_fkey (
+      profiles!friends_friend_id_fkey (
         id,
         username,
         avatar_url
       )
     `)
-    .eq('user_id', currentUserId)
-    .eq('status', 'accepted');
+    .eq('user_id', currentUserId);
 
-  if (friendshipsError) throw friendshipsError;
+  if (friendsError) throw friendsError;
 
-  // Load pending requests with explicit relationship hint
+  // Load pending friend requests
   const { data: requests, error: requestsError } = await supabase
-    .from('friendships')
+    .from('friend_requests')
     .select(`
       id,
-      user_id,
-      friend_id,
+      sender_id,
+      receiver_id,
       status,
       created_at,
-      profiles!friendships_user_id_fkey (
+      profiles!friend_requests_sender_id_fkey (
         username,
         avatar_url
       )
     `)
-    .eq('friend_id', currentUserId)
+    .eq('receiver_id', currentUserId)
     .eq('status', 'pending');
 
   if (requestsError) throw requestsError;
 
-  const friends: Friend[] = friendships?.map(f => ({
+  const friends: Friend[] = friendsData?.map(f => ({
     friend_id: f.friend_id,
     friend_username: f.profiles?.username || '',
     friend_avatar_url: f.profiles?.avatar_url
@@ -47,8 +46,8 @@ export async function loadFriendsAndRequests(currentUserId: string) {
 
   const friendRequests: FriendRequest[] = requests?.map(r => ({
     id: r.id,
-    user_id: r.user_id,
-    friend_id: r.friend_id,
+    user_id: r.sender_id,
+    friend_id: r.receiver_id,
     status: r.status as 'pending',
     created_at: r.created_at,
     user: {
@@ -79,10 +78,10 @@ export async function loadSuggestions(currentUserId: string): Promise<FriendSugg
 
 export async function sendFriendRequest(currentUserId: string, friendId: string) {
   const { error } = await supabase
-    .from('friendships')
+    .from('friend_requests')
     .insert({
-      user_id: currentUserId,
-      friend_id: friendId,
+      sender_id: currentUserId,
+      receiver_id: friendId,
       status: 'pending'
     });
 
@@ -90,8 +89,30 @@ export async function sendFriendRequest(currentUserId: string, friendId: string)
 }
 
 export async function respondToFriendRequest(requestId: string, accept: boolean) {
+  if (accept) {
+    // First get the request details
+    const { data: request, error: requestError } = await supabase
+      .from('friend_requests')
+      .select('sender_id, receiver_id')
+      .eq('id', requestId)
+      .single();
+
+    if (requestError) throw requestError;
+
+    // Create the friendship record
+    const { error: friendError } = await supabase
+      .from('friends')
+      .insert({
+        user_id: request.receiver_id,
+        friend_id: request.sender_id
+      });
+
+    if (friendError) throw friendError;
+  }
+
+  // Update the request status
   const { error } = await supabase
-    .from('friendships')
+    .from('friend_requests')
     .update({
       status: accept ? 'accepted' : 'rejected'
     })
