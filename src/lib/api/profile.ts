@@ -16,13 +16,24 @@ export async function uploadProfileImage(file: File, type: 'avatar' | 'cover') {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("No user found");
 
+    // Intentar crear el bucket si no existe
+    const { error: bucketError } = await supabase.storage.createBucket('profiles', {
+      public: true,
+      fileSizeLimit: 2097152, // 2MB en bytes
+    });
+
+    // Ignoramos el error si el bucket ya existe
+    if (bucketError && bucketError.message !== 'Bucket already exists') {
+      throw bucketError;
+    }
+
     // Crear nombre único para el archivo
     const fileExt = file.name.split('.').pop();
     const fileName = `${user.id}_${type}_${Date.now()}.${fileExt}`;
     const filePath = `${type}s/${fileName}`;
 
     // Subir el archivo
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError, data } = await supabase.storage
       .from('profiles')
       .upload(filePath, file, {
         cacheControl: '3600',
