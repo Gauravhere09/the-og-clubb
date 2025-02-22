@@ -15,6 +15,17 @@ interface ReactionButtonProps {
 }
 
 export function ReactionButton({ userReaction, onReactionClick }: ReactionButtonProps) {
+  const handleReactionClick = (type: ReactionType) => {
+    if (userReaction === type) {
+      // Si el usuario hace clic en la misma reacción, llama a onReactionClick con la misma reacción
+      // para activar el proceso de eliminación
+      onReactionClick(type);
+    } else {
+      // Si es una reacción diferente, actualiza a la nueva reacción
+      onReactionClick(type);
+    }
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -22,6 +33,7 @@ export function ReactionButton({ userReaction, onReactionClick }: ReactionButton
           variant="ghost"
           size="sm"
           className={`${userReaction ? reactionIcons[userReaction].color : ''} group`}
+          onClick={() => userReaction && handleReactionClick(userReaction)}
         >
           {userReaction ? (
             <div className="flex items-center">
@@ -49,7 +61,7 @@ export function ReactionButton({ userReaction, onReactionClick }: ReactionButton
               variant="ghost"
               size="sm"
               className={`hover:${color} ${userReaction === type ? color : ''} relative group hover:scale-125 transition-transform duration-200`}
-              onClick={() => onReactionClick(type as ReactionType)}
+              onClick={() => handleReactionClick(type as ReactionType)}
             >
               <Icon />
               <span className="absolute -top-8 scale-0 transition-all rounded bg-black px-2 py-1 text-xs text-white group-hover:scale-100 whitespace-nowrap">

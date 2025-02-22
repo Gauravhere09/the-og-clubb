@@ -21,6 +21,7 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
   if (selectError) throw selectError;
 
   if (existingReaction) {
+    // Si el usuario hace clic en la misma reacción, la eliminamos
     if (existingReaction.reaction_type === reactionType) {
       const { error } = await supabase
         .from('likes')
@@ -29,15 +30,19 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
       if (error) throw error;
       return null;
     } else {
+      // Si el usuario selecciona una reacción diferente, actualizamos la existente
       const { error } = await supabase
         .from('likes')
-        .update({ reaction_type: reactionType })
+        .update({ 
+          reaction_type: reactionType,
+          read: false
+        })
         .eq('id', existingReaction.id);
       if (error) throw error;
       return reactionType;
     }
   } else {
-    // Get post owner ID and username
+    // Si no existe una reacción previa, creamos una nueva
     const { data: post } = await supabase
       .from('posts')
       .select('user_id')
@@ -55,7 +60,7 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
 
     if (error) throw error;
 
-    // Create notification for post owner
+    // Crear notificación para el dueño del post
     if (post && post.user_id !== user.id) {
       await supabase
         .from('notifications')
