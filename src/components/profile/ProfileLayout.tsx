@@ -1,7 +1,9 @@
 
 import { Navigation } from "@/components/Navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserX } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface ProfileLayoutProps {
   isLoading?: boolean;
@@ -10,6 +12,8 @@ interface ProfileLayoutProps {
 }
 
 export function ProfileLayout({ isLoading, error, children }: ProfileLayoutProps) {
+  const navigate = useNavigate();
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex bg-muted/30">
@@ -27,9 +31,20 @@ export function ProfileLayout({ isLoading, error, children }: ProfileLayoutProps
     return (
       <div className="min-h-screen flex bg-muted/30">
         <Navigation />
-        <main className="flex-1 p-6">
-          <Card className="p-6 text-center">
-            <p className="text-muted-foreground">Perfil no encontrado</p>
+        <main className="flex-1 p-6 flex items-center justify-center">
+          <Card className="max-w-md w-full p-6">
+            <div className="text-center space-y-4">
+              <div className="flex justify-center">
+                <UserX className="h-12 w-12 text-muted-foreground" />
+              </div>
+              <h2 className="text-2xl font-semibold">Perfil no encontrado</h2>
+              <p className="text-muted-foreground">
+                Lo sentimos, el perfil que buscas no existe o no está disponible.
+              </p>
+              <Button onClick={() => navigate("/")} variant="default">
+                Volver al inicio
+              </Button>
+            </div>
           </Card>
         </main>
       </div>

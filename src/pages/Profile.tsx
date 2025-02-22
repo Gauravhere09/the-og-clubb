@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +39,9 @@ export default function Profile() {
   useEffect(() => {
     const loadProfile = async () => {
       try {
+        setLoading(true);
+        setError(false);
+
         const { data: { user } } = await supabase.auth.getUser();
         setCurrentUserId(user?.id || null);
 
@@ -48,7 +52,7 @@ export default function Profile() {
 
         const { data, error: profileError } = await supabase
           .from('profiles')
-          .select('id, username, bio, avatar_url, cover_url, created_at, updated_at')
+          .select('id, username, bio, avatar_url, cover_url, location, education, relationship_status, created_at, updated_at')
           .eq('id', id)
           .single();
 
@@ -69,21 +73,10 @@ export default function Profile() {
           console.error('Error fetching followers:', followersError);
         }
 
-        const profileData: Profile = {
-          id: data.id,
-          username: data.username,
-          bio: data.bio,
-          avatar_url: data.avatar_url,
-          cover_url: data.cover_url,
-          location: null,
-          education: null,
-          relationship_status: null,
-          followers_count: followersCount || 0,
-          created_at: data.created_at,
-          updated_at: data.updated_at
-        };
-
-        setProfile(profileData);
+        setProfile({
+          ...data,
+          followers_count: followersCount || 0
+        });
       } catch (err) {
         console.error('Error in loadProfile:', err);
         setError(true);
