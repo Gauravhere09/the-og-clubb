@@ -19,14 +19,25 @@ export function ProfileContent({ profileId }: ProfileContentProps) {
           *,
           profiles(username, avatar_url),
           comments(count),
-          likes(id, user_id, reaction_type)
+          likes(id, user_id)
         `)
         .eq("user_id", profileId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      return data as PostType[];
+      // Transformamos los datos para que coincidan con el tipo PostType
+      return (data || []).map((post): PostType => ({
+        ...post,
+        media_type: post.media_type as 'image' | 'video' | 'audio' | null,
+        visibility: post.visibility as 'public' | 'friends' | 'private',
+        likes: post.likes?.map(like => ({
+          ...like,
+          post_id: post.id,
+          reaction_type: 'like' as const
+        })) || [],
+        comments_count: post.comments?.[0]?.count || 0
+      }));
     },
   });
 

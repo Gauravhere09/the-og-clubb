@@ -95,13 +95,17 @@ export default function Profile() {
     loadProfile();
   }, [id]);
 
-  const onImageUpload = async (type: 'avatar', e: React.ChangeEvent<HTMLInputElement>): Promise<string> => {
+  const onImageUpload = async (type: 'avatar' | 'cover', e: React.ChangeEvent<HTMLInputElement>): Promise<string> => {
     const url = await handleImageUpload(type, e);
     if (url && profile) {
-      setProfile({ ...profile, avatar_url: url });
+      if (type === 'avatar') {
+        setProfile({ ...profile, avatar_url: url });
+      } else {
+        setProfile({ ...profile, cover_url: url });
+      }
       toast({
         title: "Imagen actualizada",
-        description: "Tu foto de perfil ha sido actualizada exitosamente",
+        description: `Tu foto de ${type === 'avatar' ? 'perfil' : 'portada'} ha sido actualizada exitosamente`,
       });
     }
     return url;

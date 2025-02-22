@@ -5,7 +5,7 @@ import { uploadProfileImage } from "@/lib/api/profile";
 export function useProfileImage() {
   const { toast } = useToast();
 
-  const handleImageUpload = async (type: 'avatar', e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (type: 'avatar' | 'cover', e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       if (!e.target.files || !e.target.files[0]) return '';
 
