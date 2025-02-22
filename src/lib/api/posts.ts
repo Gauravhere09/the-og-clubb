@@ -38,24 +38,23 @@ export async function createPost(content: string, file: File | null = null) {
         media_type,
         user_id: user.id,
         visibility: 'public'
-      })
+      } as Tables['posts']['Insert'])
       .select('*, profiles(username, avatar_url)')
       .single();
 
     if (error) throw error;
 
     // Notificar a los amigos sobre la nueva publicación
-    const { data: friendships } = await supabase
-      .from('friendships')
+    const { data: friends } = await supabase
+      .from('friends')
       .select('friend_id')
-      .eq('user_id', user.id)
-      .eq('status', 'accepted');
+      .eq('user_id', user.id);
 
-    if (friendships && friendships.length > 0) {
-      const notifications = friendships.map(friendship => ({
+    if (friends && friends.length > 0) {
+      const notifications = friends.map(friend => ({
         type: 'new_post',
         sender_id: user.id,
-        receiver_id: friendship.friend_id,
+        receiver_id: friend.friend_id,
         post_id: post.id,
         message: 'Ha realizado una nueva publicación'
       }));
