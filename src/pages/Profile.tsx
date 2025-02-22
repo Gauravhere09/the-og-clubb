@@ -8,8 +8,9 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileInfo } from "@/components/profile/ProfileInfo";
 import { ProfileContent } from "@/components/profile/ProfileContent";
 import { useToast } from "@/hooks/use-toast";
+import type { ProfileTable } from "@/types/database/profile.types";
 
-export interface Profile {
+export type Profile = {
   id: string;
   username: string | null;
   bio: string | null;
@@ -21,7 +22,7 @@ export interface Profile {
   followers_count: number;
   created_at: string;
   updated_at: string;
-}
+};
 
 export default function Profile() {
   const { id } = useParams();
@@ -53,7 +54,7 @@ export default function Profile() {
         // Primero obtenemos los datos básicos del perfil
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('id, username, bio, avatar_url, created_at, updated_at')
+          .select('id, username, bio, avatar_url, cover_url, created_at, updated_at')
           .eq('id', id)
           .single();
 
@@ -80,7 +81,7 @@ export default function Profile() {
           username: profileData.username,
           bio: profileData.bio,
           avatar_url: profileData.avatar_url,
-          cover_url: null, // Estos campos no existen en la tabla, los inicializamos como null
+          cover_url: profileData.cover_url,
           location: null,
           education: null,
           relationship_status: null,
@@ -102,19 +103,28 @@ export default function Profile() {
   }, [id]);
 
   const onImageUpload = async (type: 'avatar' | 'cover', e: React.ChangeEvent<HTMLInputElement>): Promise<string> => {
-    const url = await handleImageUpload(type, e);
-    if (url && profile) {
-      if (type === 'avatar') {
-        setProfile({ ...profile, avatar_url: url });
-      } else {
-        setProfile({ ...profile, cover_url: url });
+    try {
+      const url = await handleImageUpload(type, e);
+      if (url && profile) {
+        const updatedProfile = {
+          ...profile,
+          [type === 'avatar' ? 'avatar_url' : 'cover_url']: url
+        };
+        setProfile(updatedProfile);
+        toast({
+          title: "Imagen actualizada",
+          description: `Tu foto de ${type === 'avatar' ? 'perfil' : 'portada'} ha sido actualizada exitosamente`,
+        });
       }
+      return url;
+    } catch (error: any) {
       toast({
-        title: "Imagen actualizada",
-        description: `Tu foto de ${type === 'avatar' ? 'perfil' : 'portada'} ha sido actualizada exitosamente`,
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "No se pudo actualizar la imagen",
       });
+      return '';
     }
-    return url;
   };
 
   return (
