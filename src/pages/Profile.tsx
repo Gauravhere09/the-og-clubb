@@ -50,9 +50,10 @@ export default function Profile() {
           return;
         }
 
+        // Primero obtenemos los datos básicos del perfil
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('id, username, bio, avatar_url, cover_url, location, education, relationship_status, created_at, updated_at')
+          .select('id, username, bio, avatar_url, created_at, updated_at')
           .eq('id', id)
           .single();
 
@@ -79,10 +80,10 @@ export default function Profile() {
           username: profileData.username,
           bio: profileData.bio,
           avatar_url: profileData.avatar_url,
-          cover_url: profileData.cover_url,
-          location: profileData.location,
-          education: profileData.education,
-          relationship_status: profileData.relationship_status,
+          cover_url: null, // Estos campos no existen en la tabla, los inicializamos como null
+          location: null,
+          education: null,
+          relationship_status: null,
           followers_count: followersCount || 0,
           created_at: profileData.created_at,
           updated_at: profileData.updated_at
