@@ -9,7 +9,7 @@ export async function loadFriendsAndRequests(currentUserId: string) {
     .select(`
       id,
       friend_id,
-      profiles!profiles_id_fkey (
+      profiles!inner (
         id,
         username,
         avatar_url
@@ -29,7 +29,7 @@ export async function loadFriendsAndRequests(currentUserId: string) {
       friend_id,
       status,
       created_at,
-      profiles!profiles_user_id_fkey (
+      profiles!inner!friendships_user_id_fkey (
         username,
         avatar_url
       )
