@@ -1,6 +1,6 @@
 
 import { ProfileTable } from './profile.types';
-import { LikeTable, FriendshipTable, FriendRequestTable } from './social.types';
+import { LikeTable, FriendshipTable } from './social.types';
 import { PostTable, CommentTable } from './content.types';
 import { MessageTable, GroupMessageTable } from './messaging.types';
 import { NotificationTable } from './notification.types';
@@ -16,7 +16,6 @@ export interface Database {
       messages: MessageTable;
       group_messages: GroupMessageTable;
       notifications: NotificationTable;
-      friend_requests: FriendRequestTable;
     };
     Views: {
       [_ in never]: never;
