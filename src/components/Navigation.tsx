@@ -45,7 +45,7 @@ export function Navigation() {
               table: 'notifications',
               filter: `receiver_id=eq.${user.id}`,
             },
-            async (payload: { new: Tables['notifications']['Row'] }) => {
+            async (payload) => {
               setUnreadNotifications(prev => prev + 1);
               
               const { data: sender } = await supabase
