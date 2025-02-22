@@ -4,20 +4,19 @@ import type { Friend, FriendRequest, FriendSuggestion } from "@/types/friends";
 import type { Database } from "@/types/database";
 
 export async function loadFriendsAndRequests(currentUserId: string) {
-  // Load friends using the friendships table
+  // Load friends using the friends table
   const { data: friendsData, error: friendsError } = await supabase
-    .from('friendships')
+    .from('friends')
     .select(`
       id,
       friend_id,
-      profiles!friendships_friend_id_fkey (
+      profiles!friends_friend_id_fkey (
         id,
         username,
         avatar_url
       )
     `)
-    .eq('user_id', currentUserId)
-    .eq('status', 'accepted');
+    .eq('user_id', currentUserId);
 
   if (friendsError) throw friendsError;
 
@@ -65,7 +64,7 @@ export async function loadFriendsAndRequests(currentUserId: string) {
 export async function loadSuggestions(currentUserId: string): Promise<FriendSuggestion[]> {
   // First, get all existing friends and pending requests
   const { data: friends } = await supabase
-    .from('friendships')
+    .from('friends')
     .select('friend_id')
     .eq('user_id', currentUserId);
 
@@ -98,7 +97,7 @@ export async function loadSuggestions(currentUserId: string): Promise<FriendSugg
     id: s.id,
     username: s.username || '',
     avatar_url: s.avatar_url,
-    mutual_friends_count: Math.floor(Math.random() * 5) // Simulated for now
+    mutual_friends_count: Math.floor(Math.random() * 5) // Simulado por ahora
   }));
 }
 
@@ -109,7 +108,7 @@ export async function sendFriendRequest(currentUserId: string, friendId: string)
       sender_id: currentUserId,
       receiver_id: friendId,
       status: 'pending'
-    } as Database['public']['Tables']['friend_requests']['Insert']);
+    });
 
   if (error) throw error;
 }
@@ -127,12 +126,11 @@ export async function respondToFriendRequest(requestId: string, accept: boolean)
 
     // Create the friendship record
     const { error: friendError } = await supabase
-      .from('friendships')
+      .from('friends')
       .insert({
         user_id: request.receiver_id,
-        friend_id: request.sender_id,
-        status: 'accepted'
-      } as Database['public']['Tables']['friendships']['Insert']);
+        friend_id: request.sender_id
+      });
 
     if (friendError) throw friendError;
   }
@@ -142,7 +140,7 @@ export async function respondToFriendRequest(requestId: string, accept: boolean)
     .from('friend_requests')
     .update({
       status: accept ? 'accepted' : 'rejected'
-    } as Database['public']['Tables']['friend_requests']['Update'])
+    })
     .eq('id', requestId);
 
   if (error) throw error;
