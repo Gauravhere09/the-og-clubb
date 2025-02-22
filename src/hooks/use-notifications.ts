@@ -26,7 +26,7 @@ export const useNotifications = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data: notificationsData, error } = await supabase
+    const { data, error } = await supabase
       .from('notifications')
       .select(`
         id,
@@ -49,8 +49,8 @@ export const useNotifications = () => {
       return;
     }
 
-    if (notificationsData) {
-      setNotifications(notificationsData.map(notification => ({
+    if (data) {
+      setNotifications(data.map((notification: any) => ({
         id: notification.id,
         type: notification.type as NotificationType,
         created_at: notification.created_at,
@@ -58,9 +58,9 @@ export const useNotifications = () => {
         post_id: notification.post_id ?? undefined,
         comment_id: notification.comment_id ?? undefined,
         sender: {
-          id: notification.sender.id,
-          username: notification.sender.username || '',
-          avatar_url: notification.sender.avatar_url
+          id: notification.sender?.id ?? '',
+          username: notification.sender?.username ?? '',
+          avatar_url: notification.sender?.avatar_url
         }
       })));
     }
@@ -128,3 +128,4 @@ export const useNotifications = () => {
     handleFriendRequest
   };
 };
+

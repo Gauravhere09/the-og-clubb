@@ -1,4 +1,3 @@
-
 import { Bell, Home, Mail, User, Users } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -6,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/types/database";
+import type { DatabaseNotification } from "@/types/notifications";
 
 const Logo = () => (
   <div className="hidden md:flex justify-center my-6">
@@ -110,7 +110,15 @@ export function Navigation() {
     }
   };
 
-  const links = [
+  type NavigationLink = {
+    to?: string;
+    icon: typeof Home;
+    label: string;
+    badge?: number | null;
+    onClick?: () => void;
+  };
+
+  const links: NavigationLink[] = [
     { 
       onClick: handleHomeClick,
       icon: Home, 
@@ -137,8 +145,7 @@ export function Navigation() {
           await supabase
             .from('notifications')
             .update({ read: true })
-            .eq('receiver_id', currentUserId)
-            .eq('read', false);
+            .eq('receiver_id', currentUserId);
           setUnreadNotifications(0);
         }
       }
@@ -154,7 +161,7 @@ export function Navigation() {
     <nav className="fixed bottom-0 left-0 w-full bg-background border-t md:relative md:border-t-0 md:border-r md:w-[70px] md:h-screen z-50">
       <Logo />
       <div className="flex justify-around md:flex-col md:h-full md:justify-start md:pt-6 md:gap-8">
-        {links.map((link, index) => {
+        {links.map((link) => {
           const Icon = link.icon;
           const isActive = link.to ? location.pathname === link.to : location.pathname === '/';
           return (

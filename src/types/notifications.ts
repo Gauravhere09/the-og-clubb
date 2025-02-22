@@ -26,3 +26,4 @@ export interface Notification {
 export type DatabaseNotification = Database['public']['Tables']['notifications']['Row'];
 export type DatabaseNotificationInsert = Database['public']['Tables']['notifications']['Insert'];
 export type DatabaseNotificationUpdate = Database['public']['Tables']['notifications']['Update'];
+

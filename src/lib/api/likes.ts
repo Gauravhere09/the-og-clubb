@@ -23,7 +23,9 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
   }
 
   if (existingReaction) {
-    const { reaction_type: existingType } = existingReaction as { reaction_type: ReactionType };
+    const reaction = existingReaction as unknown as { reaction_type?: ReactionType };
+    const existingType = reaction.reaction_type;
+    
     if (existingType === reactionType) {
       await supabase
         .from('likes')
@@ -75,3 +77,4 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
 
   return reactionType;
 }
+
