@@ -21,7 +21,7 @@ interface NavigationItem {
   icon: typeof Home;
   label: string;
   badge?: number | null;
-  onClick?: () => void | Promise<void>;
+  onClick?: () => void;
 }
 
 export function Navigation() {
