@@ -62,7 +62,7 @@ export default function FriendRequests() {
       if (error) throw error;
 
       if (data) {
-        const processedRequests = data.map(request => ({
+        const processedRequests: FriendRequestData[] = data.map(request => ({
           id: request.id,
           sender: {
             id: request.user?.id || '',

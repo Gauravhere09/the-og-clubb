@@ -96,7 +96,7 @@ export function SingleComment({
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            {isEditing && !isAudioComment ? (
+            {isEditing ? (
               <div className="mt-2 flex gap-2">
                 <Input
                   value={editedContent}
@@ -104,60 +104,35 @@ export function SingleComment({
                   className="flex-1"
                 />
                 <Button size="sm" onClick={handleSaveEdit}>Guardar</Button>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={() => {
-                    setIsEditing(false);
-                    setEditedContent(comment.content);
-                  }}
-                >
-                  Cancelar
-                </Button>
               </div>
-            ) : isAudioComment ? (
-              <audio 
-                src={audioUrl} 
-                controls 
-                className="mt-2 w-full max-w-[300px]"
-                preload="metadata"
-              />
             ) : (
-              <p className="text-sm">{comment.content}</p>
+              <>
+                {isAudioComment ? (
+                  <audio src={audioUrl || undefined} controls className="mt-2 max-w-[200px]" />
+                ) : (
+                  <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                )}
+              </>
             )}
           </div>
           <div className="flex items-center gap-4 mt-1">
             <CommentReactions
               commentId={comment.id}
-              userReaction={comment.user_reaction}
-              reactionsCount={comment.likes?.[0]?.count || 0}
+              userReaction={comment.user_reaction || null}
+              reactionsCount={comment.likes_count || 0}
               onReaction={onReaction}
             />
             <Button
               variant="ghost"
               size="sm"
               className="h-auto p-0 text-xs"
-              onClick={() => onReply(comment.id, comment.profiles?.username || "")}
+              onClick={() => onReply(comment.id, comment.profiles?.username || '')}
             >
               Responder
             </Button>
-            <span className="text-xs text-muted-foreground">
-              {format(new Date(comment.created_at), "d 'de' MMMM 'a las' HH:mm", { locale: es })}
-            </span>
           </div>
         </div>
       </div>
-      {comment.replies?.map((reply) => (
-        <SingleComment
-          key={reply.id}
-          comment={reply}
-          onReaction={onReaction}
-          onReply={onReply}
-          onDeleteComment={onDeleteComment}
-          isReply
-        />
-      ))}
     </div>
   );
 }
-

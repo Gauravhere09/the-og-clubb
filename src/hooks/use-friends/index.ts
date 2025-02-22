@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/types/database";
 
 export interface Friend {
   friend_id: string;
@@ -83,7 +82,7 @@ export function useFriends(currentUserId: string | null) {
       .eq('status', 'pending');
 
     if (!error && data) {
-      const processedRequests = data.map(request => ({
+      const processedRequests: FriendRequest[] = data.map(request => ({
         id: request.id,
         user_id: request.user_id,
         friend_id: request.friend_id,
@@ -108,11 +107,11 @@ export function useFriends(currentUserId: string | null) {
       .limit(5);
 
     if (!error && data) {
-      const processedSuggestions = data.map(s => ({
+      const processedSuggestions: FriendSuggestion[] = data.map(s => ({
         id: s.id,
         username: s.username || '',
         avatar_url: s.avatar_url,
-        mutual_friends_count: 0 // This would need to be calculated
+        mutual_friends_count: 0
       }));
       setSuggestions(processedSuggestions);
     }
