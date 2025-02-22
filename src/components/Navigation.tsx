@@ -1,3 +1,4 @@
+
 import { Bell, Home, Mail, User, Users } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -50,15 +51,16 @@ export function Navigation() {
             async (payload) => {
               setUnreadNotifications(prev => prev + 1);
               
+              const notification = payload.new as DatabaseNotification;
               const { data: sender } = await supabase
                 .from('profiles')
                 .select('username')
-                .eq('id', (payload.new as DatabaseNotification).sender_id)
+                .eq('id', notification.sender_id)
                 .single();
 
               toast({
                 title: "Nueva notificación",
-                description: `${sender?.username || 'Alguien'} ${(payload.new as DatabaseNotification).message || ''}`,
+                description: `${sender?.username || 'Alguien'} ${notification.message || ''}`,
               });
             }
           )
@@ -108,15 +110,7 @@ export function Navigation() {
     }
   };
 
-  interface NavigationLink {
-    to?: string;
-    icon: typeof Home;
-    label: string;
-    badge?: number | null;
-    onClick?: () => void;
-  }
-
-  const links: NavigationLink[] = [
+  const links = [
     { 
       onClick: handleHomeClick,
       icon: Home, 
@@ -153,7 +147,7 @@ export function Navigation() {
       icon: User, 
       label: "Perfil" 
     },
-  ];
+  ] as const;
 
   return (
     <nav className="fixed bottom-0 left-0 w-full bg-background border-t md:relative md:border-t-0 md:border-r md:w-[70px] md:h-screen z-50">

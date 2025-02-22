@@ -23,7 +23,17 @@ export interface Notification {
   read: boolean;
 }
 
-export type DatabaseNotification = Database['public']['Tables']['notifications']['Row'];
-export type DatabaseNotificationInsert = Database['public']['Tables']['notifications']['Insert'];
-export type DatabaseNotificationUpdate = Database['public']['Tables']['notifications']['Update'];
+export interface DatabaseNotification {
+  id: string;
+  type: string;
+  sender_id: string;
+  receiver_id: string;
+  message?: string;
+  created_at: string;
+  read: boolean;
+  post_id?: string;
+  comment_id?: string;
+}
 
+export type DatabaseNotificationInsert = Partial<DatabaseNotification>;
+export type DatabaseNotificationUpdate = Partial<DatabaseNotification>;

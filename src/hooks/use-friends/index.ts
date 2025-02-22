@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -79,7 +78,11 @@ export function useFriends(currentUserId: string | null) {
       .eq('status', 'pending');
 
     if (!error && data) {
-      setFriendRequests(data);
+      const typedData = data.map(request => ({
+        ...request,
+        status: 'pending' as const
+      }));
+      setFriendRequests(typedData);
     }
   };
 
