@@ -7,7 +7,7 @@ export function useProfileImage() {
 
   const handleImageUpload = async (type: 'avatar', e: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      if (!e.target.files || !e.target.files[0]) return;
+      if (!e.target.files || !e.target.files[0]) return '';
 
       const file = e.target.files[0];
       const publicUrl = await uploadProfileImage(file, type);
@@ -17,7 +17,6 @@ export function useProfileImage() {
         description: "La imagen se ha actualizado correctamente",
       });
 
-      window.location.reload();
       return publicUrl;
     } catch (error: any) {
       console.error('Error uploading image:', error);
@@ -26,6 +25,7 @@ export function useProfileImage() {
         title: "Error",
         description: error.message || "No se pudo actualizar la imagen",
       });
+      return '';
     }
   };
 

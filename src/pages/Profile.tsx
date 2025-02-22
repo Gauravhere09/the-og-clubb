@@ -28,7 +28,7 @@ export default function Profile() {
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const { uploadImage } = useProfileImage();
+  const { handleImageUpload } = useProfileImage();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function Profile() {
           .eq('id', id)
           .single();
 
-        if (profileError) {
+        if (profileError || !data) {
           console.error('Error fetching profile:', profileError);
           setError(true);
           return;
@@ -80,12 +80,9 @@ export default function Profile() {
     loadProfile();
   }, [id]);
 
-  const handleImageUpload = async (type: 'avatar', e: React.ChangeEvent<HTMLInputElement>) => {
+  const onImageUpload = async (type: 'avatar', e: React.ChangeEvent<HTMLInputElement>) => {
     try {
-      const file = e.target.files?.[0];
-      if (!file) return;
-
-      const url = await uploadImage(file, type);
+      const url = await handleImageUpload(type, e);
       if (url && profile) {
         setProfile({ ...profile, avatar_url: url });
         toast({
@@ -110,7 +107,7 @@ export default function Profile() {
           <ProfileHeader
             profile={profile}
             currentUserId={currentUserId}
-            onImageUpload={handleImageUpload}
+            onImageUpload={onImageUpload}
           />
           <div className="space-y-4 px-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

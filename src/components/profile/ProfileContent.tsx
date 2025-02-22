@@ -1,7 +1,11 @@
 
 import { Card } from "@/components/ui/card";
 
-export function ProfileContent() {
+interface ProfileContentProps {
+  profileId: string;
+}
+
+export function ProfileContent({ profileId }: ProfileContentProps) {
   return (
     <Card className="p-4">
       <h2 className="font-semibold mb-4">Publicaciones</h2>
