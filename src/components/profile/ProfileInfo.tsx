@@ -11,6 +11,9 @@ export function ProfileInfo({ profile }: ProfileInfoProps) {
   return (
     <Card className="p-4">
       <h2 className="font-semibold mb-4">Detalles</h2>
+      {profile.bio && (
+        <p className="text-sm text-muted-foreground mb-4">{profile.bio}</p>
+      )}
       <div className="space-y-3">
         {profile.location && (
           <div className="flex items-center gap-2 text-sm">

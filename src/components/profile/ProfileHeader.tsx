@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Edit2, Globe2 } from "lucide-react";
+import { Camera, Edit2, ImagePlus } from "lucide-react";
 import { FriendRequestButton } from "@/components/FriendRequestButton";
 import { ProfileEditDialog } from "@/components/profile/ProfileEditDialog";
 import type { Profile } from "@/pages/Profile";
@@ -25,7 +25,40 @@ export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfile
     <>
       <div className="relative h-[300px]">
         <div className="w-full h-full bg-muted flex items-center justify-center">
-          <Globe2 className="h-12 w-12 text-muted-foreground/50" />
+          {profile.cover_url ? (
+            <img 
+              src={profile.cover_url} 
+              alt="Cover" 
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="flex items-center justify-center w-full h-full">
+              <ImagePlus className="h-12 w-12 text-muted-foreground/50" />
+            </div>
+          )}
+          {currentUserId === profile.id && (
+            <div className="absolute bottom-4 right-4">
+              <input
+                type="file"
+                id="cover-upload"
+                className="hidden"
+                accept="image/*"
+                onChange={(e) => onImageUpload('cover', e)}
+              />
+              <label htmlFor="cover-upload">
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  className="cursor-pointer"
+                  asChild
+                >
+                  <span>
+                    <ImagePlus className="h-4 w-4" />
+                  </span>
+                </Button>
+              </label>
+            </div>
+          )}
         </div>
       </div>
 
