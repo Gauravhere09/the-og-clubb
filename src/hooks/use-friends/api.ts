@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Friend, FriendRequest, FriendSuggestion } from "@/types/friends";
+import type { Database } from "@/types/database";
 
 export async function loadFriendsAndRequests(currentUserId: string) {
   // Load friends using the friendships table
@@ -29,7 +30,8 @@ export async function loadFriendsAndRequests(currentUserId: string) {
       receiver_id,
       status,
       created_at,
-      sender:profiles!friend_requests_sender_id_fkey (
+      profiles!friend_requests_sender_id_fkey (
+        id,
         username,
         avatar_url
       )
@@ -52,8 +54,8 @@ export async function loadFriendsAndRequests(currentUserId: string) {
     status: r.status as 'pending',
     created_at: r.created_at,
     user: {
-      username: r.sender?.username || '',
-      avatar_url: r.sender?.avatar_url
+      username: r.profiles?.username || '',
+      avatar_url: r.profiles?.avatar_url
     }
   })) || [];
 
@@ -107,7 +109,7 @@ export async function sendFriendRequest(currentUserId: string, friendId: string)
       sender_id: currentUserId,
       receiver_id: friendId,
       status: 'pending'
-    });
+    } as Database['public']['Tables']['friend_requests']['Insert']);
 
   if (error) throw error;
 }
@@ -130,7 +132,7 @@ export async function respondToFriendRequest(requestId: string, accept: boolean)
         user_id: request.receiver_id,
         friend_id: request.sender_id,
         status: 'accepted'
-      });
+      } as Database['public']['Tables']['friendships']['Insert']);
 
     if (friendError) throw friendError;
   }
@@ -140,7 +142,7 @@ export async function respondToFriendRequest(requestId: string, accept: boolean)
     .from('friend_requests')
     .update({
       status: accept ? 'accepted' : 'rejected'
-    })
+    } as Database['public']['Tables']['friend_requests']['Update'])
     .eq('id', requestId);
 
   if (error) throw error;
