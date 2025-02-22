@@ -1,6 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import type { ReactionType } from "@/types/database/social.types";
+import { ReactionType } from "@/types/database/social.types";
+
+export { type ReactionType };
 
 export async function toggleReaction(postId: string, type: ReactionType) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -55,7 +57,6 @@ export async function toggleReaction(postId: string, type: ReactionType) {
         user_id: user.id,
         post_id: postId,
         reaction_type: type,
-        read: false
       });
 
     if (post.user_id !== user.id) {

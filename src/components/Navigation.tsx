@@ -1,3 +1,4 @@
+
 import { Bell, Home, Mail, User, Users } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -58,7 +59,7 @@ export function Navigation() {
             async (payload) => {
               setUnreadNotifications(prev => prev + 1);
               
-              const notification = payload.new as DatabaseNotification;
+              const notification = payload.new as NotificationTable['Row'];
               const { data: sender } = await supabase
                 .from('profiles')
                 .select('username')
