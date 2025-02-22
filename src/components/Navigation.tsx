@@ -1,12 +1,11 @@
-
 import { Bell, Home, Mail, User, Users } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import type { NotificationTable } from "@/types/database/notification.types";
 import type { DatabaseNotification } from "@/types/notifications";
+import type { LucideIcon } from "lucide-react";
 
 const Logo = () => (
   <div className="hidden md:flex justify-center my-6">
@@ -17,23 +16,15 @@ const Logo = () => (
   </div>
 );
 
-type NavigationLinkBase = {
-  icon: typeof Home;
+type NavigationItemBase = {
+  icon: LucideIcon;
   label: string;
   badge?: number | null;
 };
 
-type NavigationLinkWithTo = NavigationLinkBase & {
-  to: string;
-  onClick?: () => void | Promise<void>;
-};
-
-type NavigationLinkWithoutTo = NavigationLinkBase & {
-  to?: never;
-  onClick: () => void;
-};
-
-type NavigationLink = NavigationLinkWithTo | NavigationLinkWithoutTo;
+type NavigationItem =
+  | (NavigationItemBase & { to: string; onClick?: () => void | Promise<void> })
+  | (NavigationItemBase & { to?: never; onClick: () => void });
 
 export function Navigation() {
   const location = useLocation();
@@ -129,7 +120,7 @@ export function Navigation() {
     }
   };
 
-  const links: NavigationLink[] = [
+  const links: NavigationItem[] = [
     { 
       onClick: handleHomeClick,
       icon: Home, 
@@ -153,10 +144,9 @@ export function Navigation() {
       badge: unreadNotifications > 0 ? unreadNotifications : null,
       onClick: async () => {
         if (currentUserId) {
-          const update: NotificationTable['Update'] = { read: true };
           await supabase
             .from('notifications')
-            .update(update)
+            .update({ read: true })
             .eq('receiver_id', currentUserId);
           setUnreadNotifications(0);
         }

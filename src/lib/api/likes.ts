@@ -1,7 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { ReactionType } from "@/types/database/social.types";
-
-export type ReactionType = 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry' | 'surprised' | 'sigma';
 
 export async function toggleReaction(postId: string, type: ReactionType) {
   const { data: { user } } = await supabase.auth.getUser();
