@@ -3,7 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/types/database";
 
 export type ReactionType = 'like' | 'love' | 'haha' | 'angry' | 'surprised' | 'sigma';
-type Like = Tables["likes"]["Row"];
+
+interface Like extends Tables["likes"]["Row"] {
+  reaction_type: ReactionType;
+}
 
 export async function toggleReaction(postId: string | undefined, reactionType: ReactionType) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -50,7 +53,7 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
         user_id: user.id,
         post_id: postId,
         reaction_type: reactionType
-      });
+      } as any); // Using type assertion here since the table needs to be updated
 
     if (error) throw error;
 
