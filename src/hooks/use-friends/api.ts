@@ -3,12 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Friend, FriendRequest, FriendSuggestion } from "@/types/friends";
 
 export async function loadFriendsAndRequests(currentUserId: string) {
-  // Cargar amigos
+  // Load friends
   const { data: friendships, error: friendshipsError } = await supabase
     .from('friendships')
     .select(`
-      *,
-      friend:profiles!friendships_friend_id_fkey(
+      id,
+      friend_id,
+      profiles!friendships_friend_id_fkey (
         id,
         username,
         avatar_url
@@ -19,12 +20,16 @@ export async function loadFriendsAndRequests(currentUserId: string) {
 
   if (friendshipsError) throw friendshipsError;
 
-  // Cargar solicitudes pendientes
+  // Load pending requests
   const { data: requests, error: requestsError } = await supabase
     .from('friendships')
     .select(`
-      *,
-      sender:profiles!friendships_user_id_fkey(
+      id,
+      user_id,
+      friend_id,
+      status,
+      created_at,
+      profiles!friendships_user_id_fkey (
         username,
         avatar_url
       )
@@ -35,9 +40,9 @@ export async function loadFriendsAndRequests(currentUserId: string) {
   if (requestsError) throw requestsError;
 
   const friends: Friend[] = friendships?.map(f => ({
-    friend_id: f.friend.id,
-    friend_username: f.friend.username || '',
-    friend_avatar_url: f.friend.avatar_url
+    friend_id: f.friend_id,
+    friend_username: f.profiles.username || '',
+    friend_avatar_url: f.profiles.avatar_url
   })) || [];
 
   const friendRequests: FriendRequest[] = requests?.map(r => ({
@@ -47,8 +52,8 @@ export async function loadFriendsAndRequests(currentUserId: string) {
     status: r.status as 'pending',
     created_at: r.created_at,
     user: {
-      username: r.sender.username || '',
-      avatar_url: r.sender.avatar_url
+      username: r.profiles.username || '',
+      avatar_url: r.profiles.avatar_url
     }
   })) || [];
 
@@ -68,7 +73,7 @@ export async function loadSuggestions(currentUserId: string): Promise<FriendSugg
     id: s.id,
     username: s.username || '',
     avatar_url: s.avatar_url,
-    mutual_friends_count: Math.floor(Math.random() * 5) // Simulado por ahora
+    mutual_friends_count: Math.floor(Math.random() * 5) // Simulated for now
   }));
 }
 
