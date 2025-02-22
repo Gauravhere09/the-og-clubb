@@ -1,85 +1,137 @@
 
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { NotificationType } from "@/types/notifications";
 
-export function useNotifications() {
+interface Notification {
+  id: string;
+  type: NotificationType;
+  sender: {
+    id: string;
+    username: string;
+    avatar_url: string | null;
+  };
+  created_at: string;
+  message?: string;
+}
+
+export const useNotifications = () => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const { toast } = useToast();
 
-  const { data: notifications, refetch } = useQuery({
-    queryKey: ["notifications"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+  const loadNotifications = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
 
-      const { data, error } = await supabase
-        .from('notifications')
-        .select(`
-          *,
-          sender:profiles!sender_id(username, avatar_url),
-          posts(*),
-          comments(*)
-        `)
-        .eq('receiver_id', user.id)
-        .order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('notifications')
+      .select(`
+        id,
+        type,
+        created_at,
+        message,
+        sender:profiles!sender_id(id, username, avatar_url)
+      `)
+      .eq('receiver_id', user.id)
+      .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data;
+    if (error) {
+      console.error('Error loading notifications:', error);
+      return;
     }
-  });
+
+    if (data) {
+      const typedNotifications: Notification[] = data.map(item => ({
+        id: item.id,
+        type: item.type as NotificationType,
+        created_at: item.created_at,
+        message: item.message,
+        sender: {
+          id: item.sender.id,
+          username: item.sender.username || '',
+          avatar_url: item.sender.avatar_url
+        }
+      }));
+      setNotifications(typedNotifications);
+    }
+
+    // Marcar como leídas
+    await supabase
+      .from('notifications')
+      .update({ read: true })
+      .eq('receiver_id', user.id)
+      .is('read', false);
+  };
+
+  const handleFriendRequest = async (notificationId: string, senderId: string, accept: boolean) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Actualizar el estado de la amistad
+      const { error: friendshipError } = await supabase
+        .from('friendships')
+        .upsert([
+          {
+            user_id: user.id,
+            friend_id: senderId,
+            status: accept ? 'accepted' : 'rejected'
+          }
+        ]);
+
+      if (friendshipError) throw friendshipError;
+
+      // Eliminar la notificación
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('id', notificationId);
+
+      if (notificationError) throw notificationError;
+
+      toast({
+        title: accept ? "Solicitud aceptada" : "Solicitud rechazada",
+        description: accept ? "Ahora son amigos" : "Has rechazado la solicitud de amistad",
+      });
+
+      // Actualizar la lista de notificaciones
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    } catch (error) {
+      console.error('Error handling friend request:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo procesar la solicitud",
+      });
+    }
+  };
 
   useEffect(() => {
+    loadNotifications();
+
     const channel = supabase
       .channel('notifications')
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'notifications',
         },
-        async (payload) => {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user && payload.new.receiver_id === user.id) {
-            refetch();
-            
-            // Obtener información del remitente
-            const { data: senderData } = await supabase
-              .from('profiles')
-              .select('username')
-              .eq('id', payload.new.sender_id)
-              .single();
-
-            let message = '';
-            switch (payload.new.type) {
-              case 'post_like':
-                message = `${senderData?.username} ha reaccionado a tu publicación`;
-                break;
-              case 'post_comment':
-                message = `${senderData?.username} ha comentado en tu publicación`;
-                break;
-              case 'comment_reply':
-                message = `${senderData?.username} ha respondido a tu comentario`;
-                break;
-              case 'new_post':
-                message = `${senderData?.username} ha realizado una nueva publicación`;
-                break;
-            }
-
-            toast({
-              title: "Nueva notificación",
-              description: message,
-            });
-          }
+        () => {
+          loadNotifications();
         }
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      channel.unsubscribe();
     };
-  }, [refetch, toast]);
+  }, []);
 
-  return { notifications };
-}
+  return {
+    notifications,
+    handleFriendRequest
+  };
+};
