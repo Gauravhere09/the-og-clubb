@@ -9,7 +9,7 @@ export async function toggleReaction(postId: string, type: ReactionType) {
   if (!user?.id || !postId) return null;
   
   const { data: existingReaction, error } = await supabase
-    .from('likes')
+    .from('reactions')
     .select('*')
     .match({ 
       user_id: user.id,
@@ -23,12 +23,9 @@ export async function toggleReaction(postId: string, type: ReactionType) {
   }
 
   if (existingReaction) {
-    const reaction = existingReaction as unknown as { reaction_type?: ReactionType };
-    const existingType = reaction.reaction_type;
-    
-    if (existingType === type) {
+    if (existingReaction.reaction_type === type) {
       const { error: deleteError } = await supabase
-        .from('likes')
+        .from('reactions')
         .delete()
         .eq('id', existingReaction.id);
         
@@ -39,7 +36,7 @@ export async function toggleReaction(postId: string, type: ReactionType) {
       return null;
     } else {
       const { error: updateError } = await supabase
-        .from('likes')
+        .from('reactions')
         .update({
           reaction_type: type,
           created_at: new Date().toISOString()
@@ -62,7 +59,7 @@ export async function toggleReaction(postId: string, type: ReactionType) {
 
   if (post) {
     const { error: insertError } = await supabase
-      .from('likes')
+      .from('reactions')
       .insert({
         user_id: user.id,
         post_id: postId,
@@ -78,7 +75,7 @@ export async function toggleReaction(postId: string, type: ReactionType) {
       const { error: notificationError } = await supabase
         .from('notifications')
         .insert({
-          type: 'post_like',
+          type: 'post_reaction',
           sender_id: user.id,
           receiver_id: post.user_id,
           post_id: postId,
