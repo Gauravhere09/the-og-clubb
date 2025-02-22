@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { ReactionType } from "@/types/database/social.types";
+import type { ReactionType, ReactionTable } from "@/types/database/social.types";
 
 export { type ReactionType };
 
@@ -15,7 +15,7 @@ export async function toggleReaction(postId: string, type: ReactionType) {
       user_id: user.id,
       post_id: postId
     })
-    .single();
+    .single() as { data: ReactionTable['Row'] | null, error: any };
 
   if (error && error.code !== 'PGRST116') {
     console.error('Error checking existing reaction:', error);
@@ -64,7 +64,7 @@ export async function toggleReaction(postId: string, type: ReactionType) {
         user_id: user.id,
         post_id: postId,
         reaction_type: type,
-      });
+      } as ReactionTable['Insert']);
 
     if (insertError) {
       console.error('Error inserting reaction:', insertError);
