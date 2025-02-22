@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export async function uploadProfileImage(file: File, type: 'avatar' | 'cover') {
+export async function uploadProfileImage(file: File, type: 'avatar') {
   try {
     // Validar tamaño del archivo
     if (file.size > 2 * 1024 * 1024) {
@@ -40,7 +40,7 @@ export async function uploadProfileImage(file: File, type: 'avatar' | 'cover') {
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
-        [`${type}_url`]: publicUrl,
+        avatar_url: publicUrl,
         updated_at: new Date().toISOString(),
       })
       .eq('id', user.id);
