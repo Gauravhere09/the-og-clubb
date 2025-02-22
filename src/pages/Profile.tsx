@@ -44,7 +44,7 @@ export default function Profile() {
 
         const { data, error: profileError } = await supabase
           .from('profiles')
-          .select('id, username, bio, avatar_url, location, education, relationship_status, created_at, updated_at')
+          .select('id, username, bio, avatar_url, created_at, updated_at')
           .eq('id', id)
           .single();
 
@@ -70,9 +70,9 @@ export default function Profile() {
           username: data.username,
           bio: data.bio,
           avatar_url: data.avatar_url,
-          location: data.location,
-          education: data.education,
-          relationship_status: data.relationship_status,
+          location: null, // Estos campos no existen en la base de datos
+          education: null, // por lo que los inicializamos como null
+          relationship_status: null,
           followers_count: followersCount || 0,
           created_at: data.created_at,
           updated_at: data.updated_at
