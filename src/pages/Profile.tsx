@@ -1,19 +1,18 @@
+
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Navigation } from "@/components/Navigation";
-import { Loader2, Camera, Edit2, Globe2, Home, School, MapPin, Heart } from "lucide-react";
+import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FriendRequestButton } from "@/components/FriendRequestButton";
 import { useQuery } from "@tanstack/react-query";
 import { Database } from "@/types/database.types";
+import { ProfileLayout } from "@/components/profile/ProfileLayout";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { ProfileInfo } from "@/components/profile/ProfileInfo";
+import { ProfileContent } from "@/components/profile/ProfileContent";
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
-interface Profile extends ProfileRow {
+export interface Profile extends ProfileRow {
   followers_count?: number;
   following_count?: number;
 }
@@ -22,7 +21,6 @@ export default function Profile() {
   const { id } = useParams<{ id: string }>();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { toast } = useToast();
-  const navigate = useNavigate();
 
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -100,32 +98,6 @@ export default function Profile() {
     }
   });
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex bg-muted/30">
-        <Navigation />
-        <main className="flex-1 p-6">
-          <div className="flex items-center justify-center h-full">
-            <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  if (error || !profile) {
-    return (
-      <div className="min-h-screen flex bg-muted/30">
-        <Navigation />
-        <main className="flex-1 p-6">
-          <Card className="p-6 text-center">
-            <p className="text-muted-foreground">Perfil no encontrado</p>
-          </Card>
-        </main>
-      </div>
-    );
-  }
-
   const handleImageUpload = async (type: 'avatar' | 'cover', e: React.ChangeEvent<HTMLInputElement>) => {
     try {
       if (!e.target.files || !e.target.files[0]) return;
@@ -176,147 +148,24 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen flex bg-muted/30">
-      <Navigation />
-      <main className="flex-1 max-w-4xl mx-auto">
-        <div className="space-y-4">
-          <div className="relative h-[300px]">
-            {profile.cover_url ? (
-              <img
-                src={profile.cover_url}
-                alt="Cover"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full bg-muted flex items-center justify-center">
-                <Globe2 className="h-12 w-12 text-muted-foreground/50" />
-              </div>
-            )}
-            {currentUserId === profile.id && (
-              <div className="absolute right-4 top-4">
-                <input
-                  type="file"
-                  id="cover-upload"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) => handleImageUpload('cover', e)}
-                />
-                <label htmlFor="cover-upload">
-                  <Button
-                    size="icon"
-                    variant="secondary"
-                    className="cursor-pointer"
-                    asChild
-                  >
-                    <span>
-                      <Camera className="h-4 w-4" />
-                    </span>
-                  </Button>
-                </label>
-              </div>
-            )}
-          </div>
-
-          <div className="relative px-6 -mt-[64px]">
-            <div className="flex items-end gap-4">
-              <div className="relative">
-                <Avatar className="h-32 w-32 border-4 border-background">
-                  <AvatarImage src={profile.avatar_url || undefined} />
-                  <AvatarFallback>
-                    {profile.username?.[0]?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                {currentUserId === profile.id && (
-                  <div className="absolute -right-2 -bottom-2">
-                    <input
-                      type="file"
-                      id="avatar-upload"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) => handleImageUpload('avatar', e)}
-                    />
-                    <label htmlFor="avatar-upload">
-                      <Button
-                        size="icon"
-                        variant="secondary"
-                        className="cursor-pointer"
-                        asChild
-                      >
-                        <span>
-                          <Camera className="h-4 w-4" />
-                        </span>
-                      </Button>
-                    </label>
-                  </div>
-                )}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h1 className="text-2xl font-bold">
-                      {profile.username || "Usuario sin nombre"}
-                    </h1>
-                    <p className="text-muted-foreground">
-                      {profile.followers_count} amigos
-                    </p>
-                  </div>
-                  {currentUserId === profile.id ? (
-                    <Button variant="outline" onClick={() => navigate("/settings")}>
-                      <Edit2 className="h-4 w-4 mr-2" />
-                      Editar perfil
-                    </Button>
-                  ) : (
-                    <FriendRequestButton targetUserId={profile.id} />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
+    <ProfileLayout isLoading={isLoading} error={!!error}>
+      {profile && (
+        <>
+          <ProfileHeader
+            profile={profile}
+            currentUserId={currentUserId}
+            onImageUpload={handleImageUpload}
+          />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-6">
             <div className="space-y-4">
-              <Card className="p-4">
-                <h2 className="font-semibold mb-4">Detalles</h2>
-                <div className="space-y-3">
-                  {profile.location && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Home className="h-4 w-4 text-muted-foreground" />
-                      <span>Vive en {profile.location}</span>
-                    </div>
-                  )}
-                  {profile.education && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <School className="h-4 w-4 text-muted-foreground" />
-                      <span>Estudió en {profile.education}</span>
-                    </div>
-                  )}
-                  {profile.location && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>De {profile.location}</span>
-                    </div>
-                  )}
-                  {profile.relationship_status && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Heart className="h-4 w-4 text-muted-foreground" />
-                      <span>{profile.relationship_status}</span>
-                    </div>
-                  )}
-                </div>
-              </Card>
+              <ProfileInfo profile={profile} />
             </div>
-
             <div className="md:col-span-2">
-              <Card className="p-4">
-                <h2 className="font-semibold mb-4">Publicaciones</h2>
-                <p className="text-muted-foreground text-center py-8">
-                  No hay publicaciones para mostrar
-                </p>
-              </Card>
+              <ProfileContent />
             </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </>
+      )}
+    </ProfileLayout>
   );
 }
