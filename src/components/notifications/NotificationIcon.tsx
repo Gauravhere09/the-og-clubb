@@ -1,7 +1,6 @@
 
-import { Heart, MessageCircle, UserPlus } from "lucide-react";
-
-type NotificationType = 'friend_request' | 'message' | 'like' | 'new_post';
+import { Heart, MessageCircle, UserPlus, ThumbsUp } from "lucide-react";
+import type { NotificationType } from "@/types/notifications";
 
 export const NotificationIcon = ({ type }: { type: NotificationType }) => {
   switch (type) {
@@ -10,9 +9,12 @@ export const NotificationIcon = ({ type }: { type: NotificationType }) => {
     case "message":
       return <MessageCircle className="h-4 w-4 text-blue-500" />;
     case "like":
+    case "post_like":
       return <Heart className="h-4 w-4 text-red-500" />;
     case "new_post":
       return <MessageCircle className="h-4 w-4 text-purple-500" />;
+    case "friend_accepted":
+      return <UserPlus className="h-4 w-4 text-blue-500" />;
     default:
       return null;
   }

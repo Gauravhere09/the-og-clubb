@@ -1,4 +1,5 @@
 
+import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
@@ -16,11 +17,20 @@ interface NotificationItemProps {
     };
     created_at: string;
     message?: string;
+    post_id?: string;
   };
   onHandleFriendRequest?: (notificationId: string, senderId: string, accept: boolean) => void;
 }
 
 export const NotificationItem = ({ notification, onHandleFriendRequest }: NotificationItemProps) => {
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    if (notification.post_id) {
+      navigate(`/post/${notification.post_id}`);
+    }
+  };
+
   const renderContent = () => {
     if (notification.message) {
       return (
@@ -57,16 +67,22 @@ export const NotificationItem = ({ notification, onHandleFriendRequest }: Notifi
             )}
           </div>
         );
-      case 'message':
-        return (
-          <span>
-            <span className="font-medium">{notification.sender.username}</span> te envió un mensaje
-          </span>
-        );
       case 'like':
         return (
           <span>
             <span className="font-medium">{notification.sender.username}</span> le dio me gusta a tu publicación
+          </span>
+        );
+      case 'post_like':
+        return (
+          <span>
+            <span className="font-medium">{notification.sender.username}</span> reaccionó a tu publicación
+          </span>
+        );
+      case 'message':
+        return (
+          <span>
+            <span className="font-medium">{notification.sender.username}</span> te envió un mensaje
           </span>
         );
       case 'new_post':
@@ -75,11 +91,26 @@ export const NotificationItem = ({ notification, onHandleFriendRequest }: Notifi
             <span className="font-medium">{notification.sender.username}</span> ha realizado una nueva publicación
           </span>
         );
+      case 'friend_accepted':
+        return (
+          <span>
+            <span className="font-medium">{notification.sender.username}</span> aceptó tu solicitud de amistad
+          </span>
+        );
+      default:
+        return null;
     }
   };
 
+  const isClickable = notification.post_id && notification.type !== 'friend_request';
+
   return (
-    <div className="p-4 flex items-center gap-4 hover:bg-muted/50 transition-colors border-b last:border-b-0">
+    <div 
+      className={`p-4 flex items-center gap-4 hover:bg-muted/50 transition-colors border-b last:border-b-0 ${
+        isClickable ? 'cursor-pointer' : ''
+      }`}
+      onClick={isClickable ? handleClick : undefined}
+    >
       <Avatar>
         <AvatarImage src={notification.sender.avatar_url || undefined} />
         <AvatarFallback>{notification.sender.username[0]}</AvatarFallback>
