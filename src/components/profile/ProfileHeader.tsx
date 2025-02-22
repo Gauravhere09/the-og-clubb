@@ -3,9 +3,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Edit2, ImagePlus, MessageCircle } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { FriendRequestButton } from "@/components/FriendRequestButton";
 import { ProfileEditDialog } from "@/components/profile/ProfileEditDialog";
+import { ChatDialog } from "@/components/messages/ChatDialog";
 import type { Profile } from "@/pages/Profile";
 
 interface ProfileHeaderProps {
@@ -17,14 +17,14 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfileUpdate }: ProfileHeaderProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const navigate = useNavigate();
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const handleProfileUpdate = (updatedProfile: Profile) => {
     onProfileUpdate?.(updatedProfile);
   };
 
   const handleMessageClick = () => {
-    navigate(`/messages?userId=${profile.id}`);
+    setIsChatOpen(true);
   };
 
   return (
@@ -136,6 +136,19 @@ export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfile
         onClose={() => setIsEditDialogOpen(false)}
         onUpdate={handleProfileUpdate}
       />
+
+      {currentUserId && (
+        <ChatDialog
+          isOpen={isChatOpen}
+          onClose={() => setIsChatOpen(false)}
+          targetUser={{
+            id: profile.id,
+            username: profile.username || "Usuario",
+            avatar_url: profile.avatar_url
+          }}
+          currentUserId={currentUserId}
+        />
+      )}
     </>
   );
 }
