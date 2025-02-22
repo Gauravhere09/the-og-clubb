@@ -1,3 +1,4 @@
+
 export interface LikeTable {
   Row: {
     id: string;
@@ -6,6 +7,7 @@ export interface LikeTable {
     comment_id: string | null;
     reaction_type: 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
     created_at: string;
+    read: boolean;
   };
   Insert: {
     id?: string;
@@ -14,6 +16,7 @@ export interface LikeTable {
     comment_id?: string | null;
     reaction_type: 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
     created_at?: string;
+    read?: boolean;
   };
   Update: {
     id?: string;
@@ -22,6 +25,7 @@ export interface LikeTable {
     comment_id?: string | null;
     reaction_type?: 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
     created_at?: string;
+    read?: boolean;
   };
 }
 

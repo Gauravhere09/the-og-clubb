@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/types/database";
 
-export type ReactionType = 'like' | 'love' | 'haha' | 'angry' | 'surprised' | 'sigma';
+export type ReactionType = 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
 type Like = Tables["likes"]["Row"];
 
 export async function toggleReaction(postId: string | undefined, reactionType: ReactionType) {
@@ -49,7 +49,8 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
       .insert({
         user_id: user.id,
         post_id: postId,
-        reaction_type: reactionType
+        reaction_type: reactionType,
+        read: false
       });
 
     if (error) throw error;
@@ -63,7 +64,8 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
           sender_id: user.id,
           receiver_id: post.user_id,
           post_id: postId,
-          message: `Ha reaccionado a tu publicación con ${reactionType}`
+          message: `ha reaccionado a tu publicación con ${reactionType}`,
+          read: false
         });
     }
 
