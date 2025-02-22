@@ -77,11 +77,14 @@ export function useNavigation() {
           notificationsChannel.unsubscribe();
           postsChannel.unsubscribe();
         };
+      } else {
+        // If no user is found, redirect to auth page
+        navigate('/auth');
       }
     };
 
     getCurrentUser();
-  }, [location.pathname, toast]);
+  }, [location.pathname, toast, navigate]);
 
   useEffect(() => {
     if (location.pathname === '/') {
@@ -92,15 +95,16 @@ export function useNavigation() {
 
   const handleLogout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      await supabase.auth.signOut();
       
       toast({
         title: "Sesión cerrada",
         description: "Has cerrado sesión correctamente"
       });
       
+      // First navigate to auth page, then clear the user ID
       navigate('/auth');
+      setCurrentUserId(null);
     } catch (error) {
       toast({
         variant: "destructive",
@@ -140,3 +144,4 @@ export function useNavigation() {
     location
   };
 }
+
