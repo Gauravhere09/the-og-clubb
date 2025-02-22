@@ -8,11 +8,6 @@ interface ProfileData {
   avatar_url: string | null;
 }
 
-interface FriendshipData {
-  id: string;
-  friend: ProfileData;
-}
-
 export interface Friend {
   friend_id: string;
   friend_username: string;
@@ -52,7 +47,7 @@ export function useFriends(currentUserId: string | null) {
     const { data: friendships, error } = await supabase
       .from('friendships')
       .select(`
-        id,
+        *,
         friend:profiles!friendships_friend_id_fkey (
           id,
           username,
@@ -60,7 +55,7 @@ export function useFriends(currentUserId: string | null) {
         )
       `)
       .eq('user_id', currentUserId)
-      .eq('status', 'accepted') as { data: FriendshipData[] | null; error: any };
+      .eq('status', 'accepted');
 
     if (!error && friendships) {
       const processedFriends = friendships.map(f => ({
@@ -79,12 +74,8 @@ export function useFriends(currentUserId: string | null) {
     const { data, error } = await supabase
       .from('friendships')
       .select(`
-        id,
-        user_id,
-        friend_id,
-        status,
-        created_at,
-        user:profiles!friendships_user_id_fkey (
+        *,
+        sender:profiles!friendships_user_id_fkey (
           username,
           avatar_url
         )
@@ -93,18 +84,17 @@ export function useFriends(currentUserId: string | null) {
       .eq('status', 'pending');
 
     if (!error && data) {
-      const processedRequests: FriendRequest[] = data.map(request => ({
+      setFriendRequests(data.map(request => ({
         id: request.id,
         user_id: request.user_id,
         friend_id: request.friend_id,
         status: request.status as 'pending',
         created_at: request.created_at,
         user: {
-          username: request.user?.username || '',
-          avatar_url: request.user?.avatar_url
+          username: request.sender.username || '',
+          avatar_url: request.sender.avatar_url
         }
-      }));
-      setFriendRequests(processedRequests);
+      })));
     }
   };
 
@@ -118,15 +108,24 @@ export function useFriends(currentUserId: string | null) {
       .limit(5);
 
     if (!error && data) {
-      const processedSuggestions: FriendSuggestion[] = data.map(s => ({
+      setSuggestions(data.map(s => ({
         id: s.id,
         username: s.username || '',
         avatar_url: s.avatar_url,
         mutual_friends_count: 0
-      }));
-      setSuggestions(processedSuggestions);
+      })));
     }
   };
+
+  useEffect(() => {
+    if (currentUserId) {
+      Promise.all([
+        loadFriends(),
+        loadRequests(),
+        loadSuggestions()
+      ]).finally(() => setLoading(false));
+    }
+  }, [currentUserId]);
 
   const sendFriendRequest = async (friendId: string) => {
     if (!currentUserId) return;
@@ -150,19 +149,11 @@ export function useFriends(currentUserId: string | null) {
       })
       .eq('id', requestId);
 
-    await loadRequests();
-    if (accept) await loadFriends();
+    await Promise.all([
+      loadRequests(),
+      accept && loadFriends()
+    ]);
   };
-
-  useEffect(() => {
-    if (currentUserId) {
-      Promise.all([
-        loadFriends(),
-        loadRequests(),
-        loadSuggestions()
-      ]).finally(() => setLoading(false));
-    }
-  }, [currentUserId]);
 
   return {
     friends,

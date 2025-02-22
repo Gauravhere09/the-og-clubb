@@ -9,8 +9,7 @@ export async function getFriends() {
     const { data: friendships, error: friendshipsError } = await supabase
       .from('friendships')
       .select(`
-        *,
-        friend:profiles!friendships_friend_id_fkey(
+        friend:profiles!friendships_friend_id_fkey (
           id,
           username,
           avatar_url
@@ -41,7 +40,7 @@ export async function checkFriendship(targetUserId: string) {
     const { data, error } = await supabase
       .from('friendships')
       .select('status')
-      .or(`and(user_id.eq.${user.id},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${user.id})`)
+      .or(`user_id.eq.${user.id}.and.friend_id.eq.${targetUserId},user_id.eq.${targetUserId}.and.friend_id.eq.${user.id}`)
       .maybeSingle();
 
     if (error) throw error;
@@ -84,7 +83,7 @@ export async function getFriendRequests() {
       .from('friendships')
       .select(`
         *,
-        sender:profiles!friendships_user_id_fkey(
+        sender:profiles!friendships_user_id_fkey (
           id,
           username,
           avatar_url
