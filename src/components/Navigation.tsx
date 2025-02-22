@@ -1,4 +1,5 @@
-import { Bell, Home, Mail, User, Users } from "lucide-react";
+
+import { Bell, Home, Mail, User, Users, LogOut } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -119,6 +120,26 @@ export function Navigation() {
     }
   }, [location.pathname]);
 
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      toast({
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión correctamente"
+      });
+      
+      navigate('/auth');
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo cerrar la sesión"
+      });
+    }
+  };
+
   const handleHomeClick = () => {
     if (newPosts > 0 && latestPostId) {
       navigate(`/post/${latestPostId}`);
@@ -169,6 +190,11 @@ export function Navigation() {
       icon: User, 
       label: "Perfil" 
     },
+    {
+      icon: LogOut,
+      label: "Cerrar sesión",
+      onClick: handleLogout
+    }
   ];
 
   return (
@@ -181,7 +207,7 @@ export function Navigation() {
           return (
             <Link
               key={link.label}
-              to={link.to || '/'}
+              to={link.to || '#'}
               onClick={link.onClick}
               className={`p-4 transition-colors hover:text-primary relative ${
                 isActive ? "text-primary" : "text-muted-foreground"
