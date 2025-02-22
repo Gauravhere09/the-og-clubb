@@ -31,6 +31,7 @@ export const useNotifications = () => {
         type,
         created_at,
         message,
+        read,
         sender:profiles!sender_id(id, username, avatar_url)
       `)
       .eq('receiver_id', user.id)
@@ -61,50 +62,7 @@ export const useNotifications = () => {
       .from('notifications')
       .update({ read: true })
       .eq('receiver_id', user.id)
-      .is('read', false);
-  };
-
-  const handleFriendRequest = async (notificationId: string, senderId: string, accept: boolean) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      // Actualizar el estado de la amistad
-      const { error: friendshipError } = await supabase
-        .from('friendships')
-        .upsert([
-          {
-            user_id: user.id,
-            friend_id: senderId,
-            status: accept ? 'accepted' : 'rejected'
-          }
-        ]);
-
-      if (friendshipError) throw friendshipError;
-
-      // Eliminar la notificación
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .delete()
-        .eq('id', notificationId);
-
-      if (notificationError) throw notificationError;
-
-      toast({
-        title: accept ? "Solicitud aceptada" : "Solicitud rechazada",
-        description: accept ? "Ahora son amigos" : "Has rechazado la solicitud de amistad",
-      });
-
-      // Actualizar la lista de notificaciones
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-    } catch (error) {
-      console.error('Error handling friend request:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se pudo procesar la solicitud",
-      });
-    }
+      .eq('read', false);
   };
 
   useEffect(() => {
@@ -132,6 +90,5 @@ export const useNotifications = () => {
 
   return {
     notifications,
-    handleFriendRequest
   };
 };
