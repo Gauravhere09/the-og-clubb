@@ -1,21 +1,63 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Comment } from "@/types/post";
 
 export async function createComment(postId: string, content: string, parentId?: string) {
-  const { data, error } = await supabase
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Usuario no autenticado");
+
+  const { data: comment, error } = await supabase
     .from('comments')
     .insert({
       post_id: postId,
       content,
       parent_id: parentId,
-      user_id: (await supabase.auth.getUser()).data.user?.id
+      user_id: user.id
     })
     .select('*, profiles(username, avatar_url)')
     .single();
 
   if (error) throw error;
-  return data;
+
+  // Get post owner and parent comment owner IDs
+  const { data: post } = await supabase
+    .from('posts')
+    .select('user_id')
+    .eq('id', postId)
+    .single();
+
+  const { data: parentComment } = parentId ? await supabase
+    .from('comments')
+    .select('user_id')
+    .eq('id', parentId)
+    .single() : { data: null };
+
+  // Create notification for post owner if it's a direct comment
+  if (post && post.user_id !== user.id && !parentId) {
+    await supabase
+      .from('notifications')
+      .insert({
+        type: 'post_comment',
+        sender_id: user.id,
+        receiver_id: post.user_id,
+        post_id: postId,
+        comment_id: comment.id
+      });
+  }
+
+  // Create notification for parent comment owner if it's a reply
+  if (parentComment && parentComment.user_id !== user.id) {
+    await supabase
+      .from('notifications')
+      .insert({
+        type: 'comment_reply',
+        sender_id: user.id,
+        receiver_id: parentComment.user_id,
+        post_id: postId,
+        comment_id: comment.id
+      });
+  }
+
+  return comment;
 }
 
 export async function getComments(postId: string) {

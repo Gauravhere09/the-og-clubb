@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/types/database";
 
@@ -30,25 +31,41 @@ export async function toggleReaction(postId: string | undefined, reactionType: R
     } else {
       const { error } = await supabase
         .from('likes')
-        .update({ 
-          reaction_type: reactionType,
-          user_id: user.id,
-          post_id: postId 
-        })
+        .update({ reaction_type: reactionType })
         .eq('id', existingReaction.id);
       if (error) throw error;
       return reactionType;
     }
   } else {
+    // Get post owner ID
+    const { data: post } = await supabase
+      .from('posts')
+      .select('user_id')
+      .eq('id', postId)
+      .single();
+
     const { error } = await supabase
       .from('likes')
       .insert({
         user_id: user.id,
         post_id: postId,
-        reaction_type: reactionType,
-        comment_id: null
-      } satisfies Tables['likes']['Insert']);
+        reaction_type: reactionType
+      });
+
     if (error) throw error;
+
+    // Create notification for post owner
+    if (post && post.user_id !== user.id) {
+      await supabase
+        .from('notifications')
+        .insert({
+          type: 'post_like',
+          sender_id: user.id,
+          receiver_id: post.user_id,
+          post_id: postId
+        });
+    }
+
     return reactionType;
   }
 }

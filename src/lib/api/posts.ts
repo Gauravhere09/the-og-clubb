@@ -1,9 +1,13 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "@/types/post";
 import { Tables } from "@/types/database";
 
 export async function createPost(content: string, file: File | null = null) {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Usuario no autenticado");
+
     let media_url = null;
     let media_type = null;
 
@@ -26,20 +30,40 @@ export async function createPost(content: string, file: File | null = null) {
                    file.type.startsWith('audio/') || file.type === 'audio/webm' ? 'audio' : null;
     }
 
-    const { data, error } = await supabase
+    const { data: post, error } = await supabase
       .from('posts')
       .insert({
         content,
         media_url,
         media_type,
-        user_id: (await supabase.auth.getUser()).data.user?.id,
+        user_id: user.id,
         visibility: 'public'
       } as Tables['posts']['Insert'])
       .select('*, profiles(username, avatar_url)')
       .single();
 
     if (error) throw error;
-    return data as unknown as Post;
+
+    // Notificar a los amigos sobre la nueva publicación
+    const { data: friends } = await supabase
+      .from('friends')
+      .select('friend_id')
+      .eq('user_id', user.id);
+
+    if (friends && friends.length > 0) {
+      const notifications = friends.map(friend => ({
+        type: 'new_post' as const,
+        sender_id: user.id,
+        receiver_id: friend.friend_id,
+        post_id: post.id
+      }));
+
+      await supabase
+        .from('notifications')
+        .insert(notifications);
+    }
+
+    return post as unknown as Post;
   } catch (error) {
     console.error('Error creating post:', error);
     throw error;
