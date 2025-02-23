@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Friend } from './use-friends';
-import { Tables } from "@/types/database";
 
 export interface Message {
   id: string;
@@ -41,7 +40,7 @@ export function usePrivateMessages() {
   };
 
   const sendMessage = async (content: string, currentUserId: string, selectedFriend: Friend) => {
-    if (!content.trim() || !selectedFriend || !currentUserId) return;
+    if (!content.trim() || !selectedFriend || !currentUserId) return false;
 
     try {
       const { data, error } = await supabase
@@ -71,15 +70,14 @@ export function usePrivateMessages() {
 
   useEffect(() => {
     const channel = supabase
-      .channel('messages')
+      .channel('private-messages-channel')
       .on('postgres_changes', { 
-        event: '*', 
+        event: 'INSERT', 
         schema: 'public', 
         table: 'messages' 
       }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          setMessages(prev => [...prev, payload.new as Message]);
-        }
+        const newMessage = payload.new as Message;
+        setMessages(prev => [...prev, newMessage]);
       })
       .subscribe();
 

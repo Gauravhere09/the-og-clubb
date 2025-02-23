@@ -23,6 +23,25 @@ export const useNotifications = () => {
   const [notifications, setNotifications] = useState<NotificationWithSender[]>([]);
   const { toast } = useToast();
 
+  const formatNotificationMessage = (type: NotificationType, username: string) => {
+    switch (type) {
+      case 'friend_request':
+        return `${username} te ha enviado una solicitud de amistad`;
+      case 'post_comment':
+        return `${username} ha comentado en tu publicación`;
+      case 'comment_reply':
+        return `${username} ha respondido a tu comentario`;
+      case 'post_like':
+        return `${username} ha reaccionado a tu publicación`;
+      case 'new_post':
+        return `${username} ha realizado una nueva publicación`;
+      case 'friend_accepted':
+        return `${username} ha aceptado tu solicitud de amistad`;
+      default:
+        return `Nueva notificación de ${username}`;
+    }
+  };
+
   const loadNotifications = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -73,22 +92,45 @@ export const useNotifications = () => {
     loadNotifications();
 
     const channel = supabase
-      .channel('notifications')
+      .channel('notifications-channel')
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'notifications',
         },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
+        async (payload) => {
+          // Fetch sender info for the new notification
+          const { data: senderData, error: senderError } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url')
+            .eq('id', payload.new.sender_id)
+            .single();
+          
+          if (!senderError && senderData) {
+            const newNotification: NotificationWithSender = {
+              id: payload.new.id,
+              type: payload.new.type as NotificationType,
+              created_at: payload.new.created_at,
+              message: payload.new.message ?? undefined,
+              post_id: payload.new.post_id ?? undefined,
+              comment_id: payload.new.comment_id ?? undefined,
+              read: payload.new.read,
+              sender: {
+                id: senderData.id,
+                username: senderData.username,
+                avatar_url: senderData.avatar_url
+              }
+            };
+
+            setNotifications(prev => [newNotification, ...prev]);
+            
             toast({
               title: "Nueva notificación",
-              description: payload.new.message || "Tienes una nueva notificación"
+              description: formatNotificationMessage(payload.new.type, senderData.username),
             });
           }
-          loadNotifications();
         }
       )
       .subscribe();

@@ -25,29 +25,6 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
 
     const loadGroupMessages = async () => {
       try {
-        // Verificamos si el usuario ya está en el grupo
-        const { data: existingMember } = await supabase
-          .from('group_members')
-          .select('*')
-          .eq('user_id', currentUserId)
-          .single();
-
-        // Si no está en el grupo, lo agregamos
-        if (!existingMember) {
-          await supabase
-            .from('group_members')
-            .insert({
-              user_id: currentUserId,
-              group_id: 'h', // ID fijo para el grupo "h"
-              joined_at: new Date().toISOString()
-            });
-
-          toast({
-            title: "¡Bienvenido al grupo h!",
-            description: "Has sido agregado automáticamente al grupo de chat.",
-          });
-        }
-
         // Cargamos los mensajes del grupo
         const { data, error } = await supabase
           .from('group_messages')
@@ -86,23 +63,30 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
     loadGroupMessages();
 
     const channel = supabase
-      .channel('group-messages')
+      .channel('group-messages-channel')
       .on('postgres_changes', { 
-        event: '*', 
+        event: 'INSERT', 
         schema: 'public', 
         table: 'group_messages' 
-      }, (payload) => {
-        if (payload.eventType === 'INSERT') {
-          const newMessage: GroupMessage = {
-            id: payload.new.id,
-            content: payload.new.content,
-            sender_id: payload.new.sender_id,
-            type: payload.new.type as 'text' | 'audio',
-            media_url: payload.new.media_url,
-            created_at: payload.new.created_at
-          };
-          setGroupMessages(prev => [...prev, newMessage]);
-        }
+      }, async (payload) => {
+        // Fetch sender info for the new message
+        const { data: senderData } = await supabase
+          .from('profiles')
+          .select('username, avatar_url')
+          .eq('id', payload.new.sender_id)
+          .single();
+
+        const newMessage: GroupMessage = {
+          id: payload.new.id,
+          content: payload.new.content,
+          sender_id: payload.new.sender_id,
+          type: payload.new.type as 'text' | 'audio',
+          media_url: payload.new.media_url,
+          created_at: payload.new.created_at,
+          sender: senderData || undefined
+        };
+
+        setGroupMessages(prev => [...prev, newMessage]);
       })
       .subscribe();
 
@@ -140,16 +124,19 @@ export async function sendGroupMessage(
       media_url = publicUrl;
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('group_messages')
       .insert({
         content,
         sender_id: senderId,
         type,
         media_url
-      });
+      })
+      .select()
+      .single();
 
     if (error) throw error;
+    return data;
   } catch (error) {
     console.error('Error sending group message:', error);
     throw error;
