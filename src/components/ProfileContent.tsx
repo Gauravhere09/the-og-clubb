@@ -1,0 +1,109 @@
+
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Post } from "@/components/Post";
+import type { Post as PostType } from "@/types/post";
+
+interface ProfileContentProps {
+  profileId: string;
+}
+
+export function ProfileContent({ profileId }: ProfileContentProps) {
+  const { data: posts, isLoading } = useQuery({
+    queryKey: ["profile-posts", profileId],
+    queryFn: async () => {
+      const { data: postsData, error: postsError } = await supabase
+        .from("posts")
+        .select(`
+          *,
+          profiles(username, avatar_url)
+        `)
+        .eq("user_id", profileId)
+        .order("created_at", { ascending: false });
+
+      if (postsError) throw postsError;
+
+      // Fetch comments count separately
+      const { data: commentsData, error: commentsError } = await supabase
+        .from("comments")
+        .select("post_id, count(*)", { count: "exact" })
+        .in("post_id", (postsData || []).map(p => p.id))
+        .group("post_id");
+
+      if (commentsError) throw commentsError;
+
+      // Fetch reactions count and types separately
+      const { data: reactionsData, error: reactionsError } = await supabase
+        .from("reactions")
+        .select("post_id, reaction_type, count(*)", { count: "exact" })
+        .in("post_id", (postsData || []).map(p => p.id))
+        .group("post_id, reaction_type");
+
+      if (reactionsError) throw reactionsError;
+
+      // Create reactions map
+      const reactionsMap = (reactionsData || []).reduce((acc, reaction) => {
+        if (!acc[reaction.post_id]) {
+          acc[reaction.post_id] = {
+            count: 0,
+            by_type: {}
+          };
+        }
+        acc[reaction.post_id].count += parseInt(reaction.count);
+        acc[reaction.post_id].by_type[reaction.reaction_type] = parseInt(reaction.count);
+        return acc;
+      }, {} as Record<string, { count: number, by_type: Record<string, number> }>);
+
+      // Create comments map
+      const commentsMap = (commentsData || []).reduce((acc, comment) => {
+        acc[comment.post_id] = parseInt(comment.count);
+        return acc;
+      }, {} as Record<string, number>);
+
+      // Combine all data
+      return (postsData || []).map((post): PostType => ({
+        ...post,
+        media_type: post.media_type as 'image' | 'video' | 'audio' | null,
+        visibility: post.visibility as 'public' | 'friends' | 'private',
+        reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
+        reactions_count: reactionsMap[post.id]?.count || 0,
+        comments_count: commentsMap[post.id] || 0
+      }));
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <Card className="p-4">
+        <h2 className="font-semibold mb-4">Publicaciones</h2>
+        <div className="animate-pulse space-y-4">
+          <div className="h-24 bg-muted rounded-md" />
+          <div className="h-24 bg-muted rounded-md" />
+        </div>
+      </Card>
+    );
+  }
+
+  if (!posts?.length) {
+    return (
+      <Card className="p-4">
+        <h2 className="font-semibold mb-4">Publicaciones</h2>
+        <p className="text-muted-foreground text-center py-8">
+          No hay publicaciones para mostrar
+        </p>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-4">
+        <h2 className="font-semibold mb-4">Publicaciones</h2>
+      </Card>
+      {posts.map((post) => (
+        <Post key={post.id} post={post} />
+      ))}
+    </div>
+  );
+}

@@ -75,64 +75,77 @@ export async function createPost(content: string, file: File | null = null) {
 export async function getPosts() {
   const { data: user } = await supabase.auth.getUser();
   
-  let query = supabase
+  const { data: postsData, error: postsError } = await supabase
     .from('posts')
     .select(`
       *,
-      profiles(username, avatar_url),
-      comments:comments(count),
-      likes:likes(id, user_id)
-    `);
+      profiles(username, avatar_url)
+    `)
+    .order('created_at', { ascending: false });
 
+  if (postsError) throw postsError;
+
+  // Fetch comments count separately
+  const { data: commentsData, error: commentsError } = await supabase
+    .from("comments")
+    .select("post_id, count(*)", { count: "exact" })
+    .in("post_id", (postsData || []).map(p => p.id))
+    .group("post_id");
+
+  if (commentsError) throw commentsError;
+
+  // Fetch reactions separately
+  const { data: reactionsData, error: reactionsError } = await supabase
+    .from("reactions")
+    .select("post_id, reaction_type, count(*)", { count: "exact" })
+    .in("post_id", (postsData || []).map(p => p.id))
+    .group("post_id, reaction_type");
+
+  if (reactionsError) throw reactionsError;
+
+  // Create reactions map
+  const reactionsMap = (reactionsData || []).reduce((acc, reaction) => {
+    if (!acc[reaction.post_id]) {
+      acc[reaction.post_id] = {
+        count: 0,
+        by_type: {}
+      };
+    }
+    acc[reaction.post_id].count += parseInt(reaction.count);
+    acc[reaction.post_id].by_type[reaction.reaction_type] = parseInt(reaction.count);
+    return acc;
+  }, {} as Record<string, { count: number, by_type: Record<string, number> }>);
+
+  // Create comments map
+  const commentsMap = (commentsData || []).reduce((acc, comment) => {
+    acc[comment.post_id] = parseInt(comment.count);
+    return acc;
+  }, {} as Record<string, number>);
+
+  // Get user's reactions if logged in
+  let userReactionsMap = {};
   if (user?.user) {
-    const { data: userLikes } = await supabase
-      .from('likes')
-      .select('id, post_id')
+    const { data: userReactions } = await supabase
+      .from('reactions')
+      .select('post_id, reaction_type')
       .eq('user_id', user.user.id);
 
-    const userLikesMap = new Map(
-      userLikes?.map(like => [like.post_id, 'like']) || []
-    );
-
-    const { data, error } = await query
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-
-    return (data || []).map((post: any) => {
-      const likes = post.likes || [];
-
-      return {
-        ...post,
-        user_reaction: userLikesMap.get(post.id) || null,
-        reactions_count: likes.length,
-        reactions: {
-          count: likes.length,
-          by_type: { 'like': likes.length }
-        },
-        comments_count: post.comments?.[0]?.count || 0
-      } as Post;
-    });
-  } else {
-    const { data, error } = await query
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    
-    return (data || []).map((post: any) => {
-      const likes = post.likes || [];
-
-      return {
-        ...post,
-        reactions_count: likes.length,
-        reactions: {
-          count: likes.length,
-          by_type: { 'like': likes.length }
-        },
-        comments_count: post.comments?.[0]?.count || 0
-      } as Post;
-    });
+    userReactionsMap = (userReactions || []).reduce((acc, reaction) => {
+      acc[reaction.post_id] = reaction.reaction_type;
+      return acc;
+    }, {} as Record<string, string>);
   }
+
+  // Combine all data
+  return (postsData || []).map((post) => ({
+    ...post,
+    media_type: post.media_type as 'image' | 'video' | 'audio' | null,
+    visibility: post.visibility as 'public' | 'friends' | 'private',
+    user_reaction: userReactionsMap[post.id] || null,
+    reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
+    reactions_count: reactionsMap[post.id]?.count || 0,
+    comments_count: commentsMap[post.id] || 0
+  }));
 }
 
 export async function deletePost(postId: string) {
