@@ -40,8 +40,13 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
         
         // Transform the data to match GroupMessage type
         const transformedData = (data || []).map(message => ({
-          ...message,
-          type: message.type as 'text' | 'audio'
+          id: message.id,
+          content: message.content,
+          sender_id: message.sender_id,
+          type: message.type as 'text' | 'audio',
+          media_url: message.media_url,
+          created_at: message.created_at,
+          sender: message.sender
         }));
         
         setGroupMessages(transformedData);
@@ -65,9 +70,13 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
         table: 'group_messages' 
       }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          const newMessage = {
-            ...payload.new,
-            type: payload.new.type as 'text' | 'audio'
+          const newMessage: GroupMessage = {
+            id: payload.new.id,
+            content: payload.new.content,
+            sender_id: payload.new.sender_id,
+            type: payload.new.type as 'text' | 'audio',
+            media_url: payload.new.media_url,
+            created_at: payload.new.created_at
           };
           setGroupMessages(prev => [...prev, newMessage]);
         }
