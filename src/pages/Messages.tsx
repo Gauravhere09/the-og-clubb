@@ -54,11 +54,11 @@ const Messages = () => {
   );
 
   return (
-    <div className="min-h-screen flex bg-white dark:bg-[#000000] text-gray-900 dark:text-white">
+    <div className="min-h-screen flex bg-white dark:bg-[#111B21] text-gray-900 dark:text-white">
       <Navigation />
       <main className="flex-1">
         <div className="h-[calc(100vh-64px)] flex">
-          <Card className="w-[380px] rounded-none bg-gray-50 dark:bg-[#1F2C33] border-r border-gray-200 dark:border-[#313D45]">
+          <Card className="w-[380px] rounded-none bg-gray-50 dark:bg-[#111B21] border-r border-gray-200 dark:border-[#313D45]">
             <div className="p-4 border-b border-gray-200 dark:border-[#313D45]">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -67,7 +67,7 @@ const Messages = () => {
                   placeholder="Buscar o empezar un nuevo chat"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-white dark:bg-[#2A3942] rounded-lg text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none border border-gray-200 dark:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 bg-white dark:bg-[#202C33] rounded-lg text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none border border-gray-200 dark:border-transparent"
                 />
               </div>
             </div>
@@ -79,7 +79,7 @@ const Messages = () => {
                 }}
                 className="w-full p-4 flex items-center gap-3 hover:bg-gray-100 dark:hover:bg-[#2A3942] transition-colors border-b border-gray-200 dark:border-[#313D45]"
               >
-                <div className="w-12 h-12 rounded-full bg-[#9b87f5] dark:bg-[#1F2C33] border border-[#7E69AB] dark:border-[#313D45] flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-[#9b87f5] dark:bg-[#202C33] border border-[#7E69AB] dark:border-[#313D45] flex items-center justify-center">
                   <span className="text-lg font-semibold text-white">H</span>
                 </div>
                 <div className="flex-1">
@@ -101,7 +101,7 @@ const Messages = () => {
             </div>
           </Card>
 
-          <div className="flex-1 bg-gray-50 dark:bg-[#000000] flex flex-col">
+          <div className="flex-1 bg-gray-50 dark:bg-[#0B141A] flex flex-col">
             {showGroupChat ? (
               currentUserId && (
                 <GroupChat
@@ -140,3 +140,4 @@ const Messages = () => {
 };
 
 export default Messages;
+
