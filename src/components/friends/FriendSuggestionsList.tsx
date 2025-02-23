@@ -1,10 +1,12 @@
 
+import { useState } from "react";
 import { FriendSuggestion } from "@/hooks/use-friends";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { UserPlus, Users } from "lucide-react";
+import { UserPlus, Users, UserCheck } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface FriendSuggestionsListProps {
   suggestions: FriendSuggestion[];
@@ -12,6 +14,17 @@ interface FriendSuggestionsListProps {
 }
 
 export function FriendSuggestionsList({ suggestions, onSendRequest }: FriendSuggestionsListProps) {
+  const [requestedFriends, setRequestedFriends] = useState<Record<string, boolean>>({});
+
+  const handleSendRequest = async (friendId: string) => {
+    try {
+      await onSendRequest(friendId);
+      setRequestedFriends(prev => ({ ...prev, [friendId]: true }));
+    } catch (error) {
+      console.error('Error sending friend request:', error);
+    }
+  };
+
   return (
     <Card className="p-6">
       <h2 className="text-2xl font-bold mb-6">Personas que quizá conozcas</h2>
@@ -41,16 +54,23 @@ export function FriendSuggestionsList({ suggestions, onSendRequest }: FriendSugg
                 )}
               </div>
             </Link>
-            <Button
-              size="sm"
-              onClick={(e) => {
-                e.preventDefault();
-                onSendRequest(suggestion.id);
-              }}
-            >
-              <UserPlus className="mr-2 h-4 w-4" />
-              Agregar
-            </Button>
+            {requestedFriends[suggestion.id] ? (
+              <Button size="sm" variant="secondary" disabled>
+                <UserCheck className="mr-2 h-4 w-4" />
+                Solicitud enviada
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleSendRequest(suggestion.id);
+                }}
+              >
+                <UserPlus className="mr-2 h-4 w-4" />
+                Agregar
+              </Button>
+            )}
           </div>
         ))}
       </div>
