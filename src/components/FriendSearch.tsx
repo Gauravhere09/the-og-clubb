@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,36 +7,65 @@ import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { FriendRequestButton } from "./FriendRequestButton";
+import { useDebounce } from "@/hooks/use-debounce";
+import { useToast } from "@/hooks/use-toast";
 
 export function FriendSearch() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const debouncedSearch = useDebounce(searchQuery, 300);
+  const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    if (query.length < 2) {
-      setSearchResults([]);
-      return;
-    }
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setSearchResults([]);
+        setSearchQuery("");
+      }
+    };
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .neq('id', user.id)
-      .or(`username.ilike.%${query}%, email.ilike.%${query}%`)
-      .limit(5);
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (debouncedSearch.length < 2) {
+        setSearchResults([]);
+        return;
+      }
 
-    if (error) {
-      console.error('Error searching users:', error);
-      return;
-    }
+      setIsSearching(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
 
-    setSearchResults(data || []);
-  };
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .neq('id', user.id)
+          .or(`username.ilike.%${debouncedSearch}%,bio.ilike.%${debouncedSearch}%`)
+          .limit(5);
+
+        if (error) throw error;
+        setSearchResults(data || []);
+      } catch (error) {
+        console.error('Error searching users:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No se pudo realizar la búsqueda"
+        });
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    searchUsers();
+  }, [debouncedSearch]);
 
   const handleUserClick = (userId: string) => {
     navigate(`/profile/${userId}`);
@@ -45,41 +74,51 @@ export function FriendSearch() {
   };
 
   return (
-    <Card className="p-4">
+    <div ref={searchRef} className="relative w-full max-w-sm">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar usuarios por nombre o correo..."
+          placeholder="Buscar usuarios..."
           value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
-          className="pl-9"
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-9 pr-4"
         />
       </div>
       {searchResults.length > 0 && (
-        <div className="mt-4 space-y-2">
-          {searchResults.map((user) => (
-            <div 
-              key={user.id} 
-              className="flex items-center justify-between p-2 rounded-lg hover:bg-accent cursor-pointer"
-              onClick={() => handleUserClick(user.id)}
-            >
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage src={user.avatar_url || undefined} />
-                  <AvatarFallback>{user.username?.[0]?.toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="font-medium">{user.username}</div>
-                  {user.email && (
-                    <div className="text-sm text-muted-foreground">{user.email}</div>
-                  )}
+        <Card className="absolute w-full mt-1 p-2 z-50 shadow-lg">
+          <div className="space-y-2">
+            {searchResults.map((user) => (
+              <div 
+                key={user.id} 
+                className="flex items-center justify-between p-2 rounded-lg hover:bg-accent cursor-pointer"
+                onClick={() => handleUserClick(user.id)}
+              >
+                <div className="flex items-center gap-3">
+                  <Avatar>
+                    <AvatarImage src={user.avatar_url || undefined} />
+                    <AvatarFallback>{user.username?.[0]?.toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-medium">{user.username || 'Usuario sin nombre'}</div>
+                    {user.bio && (
+                      <div className="text-sm text-muted-foreground line-clamp-1">
+                        {user.bio}
+                      </div>
+                    )}
+                  </div>
                 </div>
+                <FriendRequestButton targetUserId={user.id} />
               </div>
-              <FriendRequestButton targetUserId={user.id} />
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </Card>
       )}
-    </Card>
+      {isSearching && searchQuery.length >= 2 && (
+        <Card className="absolute w-full mt-1 p-4 z-50 shadow-lg">
+          <div className="flex items-center justify-center">
+            <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
+          </div>
+        </Card>
+      )}
+    </div>
   );
-}
