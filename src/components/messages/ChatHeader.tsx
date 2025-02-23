@@ -15,7 +15,7 @@ interface ChatHeaderProps {
 
 export const ChatHeader = ({ friend }: ChatHeaderProps) => {
   return (
-    <div className="p-3 bg-white dark:bg-[#1F2C33] border-l border-gray-200 dark:border-[#313D45] flex items-center justify-between">
+    <div className="p-3 bg-white dark:bg-[#0B141A] border-l border-gray-200 dark:border-[#313D45] flex items-center justify-between">
       <div className="flex items-center gap-3">
         <Avatar className="h-10 w-10">
           <AvatarImage src={friend.friend_avatar_url || undefined} />
@@ -43,3 +43,4 @@ export const ChatHeader = ({ friend }: ChatHeaderProps) => {
     </div>
   );
 };
+
