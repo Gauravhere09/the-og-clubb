@@ -18,13 +18,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 const Index = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { setTheme, theme } = useTheme();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const loadCurrentUser = async () => {
@@ -49,6 +50,12 @@ const Index = () => {
     }
   };
 
+  const handleCreateStory = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   return (
     <div className="min-h-screen flex bg-background">
       <Navigation />
@@ -63,9 +70,27 @@ const Index = () => {
               variant="ghost"
               size="icon"
               className="rounded-full"
+              onClick={handleCreateStory}
             >
               <Plus className="h-5 w-5" />
             </Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*,video/*"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  const file = e.target.files[0];
+                  // Restablecer el input para permitir seleccionar el mismo archivo nuevamente
+                  e.target.value = '';
+                  // Subir el archivo usando StoryCreator
+                  const event = { target: { files: [file] } } as React.ChangeEvent<HTMLInputElement>;
+                  const storyCreator = new StoryCreator();
+                  storyCreator.handleFileUpload(event);
+                }
+              }}
+            />
             <FriendSearch />
             <NotificationDropdown />
             <DropdownMenu>
@@ -102,10 +127,7 @@ const Index = () => {
         </div>
 
         {currentUserId && (
-          <>
-            <StoryCreator />
-            <StoryViewer stories={[]} currentUserId={currentUserId} />
-          </>
+          <StoryViewer stories={[]} currentUserId={currentUserId} />
         )}
         
         <div className="space-y-6">

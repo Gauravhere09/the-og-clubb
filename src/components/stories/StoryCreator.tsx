@@ -1,16 +1,11 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Plus, Video, Image } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-export function StoryCreator() {
-  const [isUploading, setIsUploading] = useState(false);
-  const { toast } = useToast();
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+export class StoryCreator {
+  async handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const { toast } = useToast();
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -24,7 +19,6 @@ export function StoryCreator() {
       return;
     }
 
-    setIsUploading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuario no autenticado");
@@ -64,50 +58,21 @@ export function StoryCreator() {
         title: "Error",
         description: "No se pudo subir el estado",
       });
-    } finally {
-      setIsUploading(false);
     }
+  }
+}
+
+// Componente de React que expone la funcionalidad
+export function StoryCreatorComponent() {
+  const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
+
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    setIsUploading(true);
+    const creator = new StoryCreator();
+    await creator.handleFileUpload(event);
+    setIsUploading(false);
   };
 
-  return (
-    <Card className="p-4 mb-4">
-      <div className="flex items-center gap-4">
-        <input
-          type="file"
-          id="story-upload"
-          className="hidden"
-          accept="image/*,video/*"
-          onChange={handleFileUpload}
-          disabled={isUploading}
-        />
-        <label 
-          htmlFor="story-upload" 
-          className="flex-1 cursor-pointer"
-        >
-          <div className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
-            <Plus className="h-5 w-5" />
-            <span>Crear estado</span>
-          </div>
-        </label>
-        <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => document.getElementById('story-upload')?.click()}
-            disabled={isUploading}
-          >
-            <Image className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => document.getElementById('story-upload')?.click()}
-            disabled={isUploading}
-          >
-            <Video className="h-4 w-4" />
-          </Button>
-        </div>
-      </div>
-    </Card>
-  );
+  return null; // Este componente no renderiza nada, solo expone la funcionalidad
 }
