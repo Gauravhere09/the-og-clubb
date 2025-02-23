@@ -2,10 +2,10 @@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
-export class StoryCreator {
-  async handleFile(file: File) {
-    const { toast } = useToast();
+export function useStoryCreator() {
+  const { toast } = useToast();
 
+  const handleFile = async (file: File) => {
     // Validar tamaño (máximo 50MB)
     if (file.size > 50 * 1024 * 1024) {
       toast({
@@ -56,5 +56,7 @@ export class StoryCreator {
         description: "No se pudo subir el estado",
       });
     }
-  }
+  };
+
+  return { handleFile };
 }

@@ -3,7 +3,7 @@ import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/Feed";
 import { StoryViewer } from "@/components/stories/StoryViewer";
-import { StoryCreator } from "@/components/stories/StoryCreator";
+import { useStoryCreator } from "@/components/stories/StoryCreator";
 import { Home, Plus, Menu, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +26,7 @@ const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { handleFile } = useStoryCreator();
 
   useEffect(() => {
     const loadCurrentUser = async () => {
@@ -61,9 +62,7 @@ const Index = () => {
       const file = e.target.files[0];
       // Restablecer el input para permitir seleccionar el mismo archivo nuevamente
       e.target.value = '';
-      // Subir el archivo usando StoryCreator
-      const storyCreator = new StoryCreator();
-      await storyCreator.handleFile(file);
+      await handleFile(file);
     }
   };
 
