@@ -71,16 +71,22 @@ export async function createPost(content: string, file: File | null = null) {
   }
 }
 
-export async function getPosts() {
+export async function getPosts(userId?: string) {
   const { data: user } = await supabase.auth.getUser();
   
-  const { data: postsData, error: postsError } = await supabase
+  let query = supabase
     .from('posts')
     .select(`
       *,
       profiles(username, avatar_url)
     `)
     .order('created_at', { ascending: false });
+
+  if (userId) {
+    query = query.eq('user_id', userId);
+  }
+
+  const { data: postsData, error: postsError } = await query;
 
   if (postsError) throw postsError;
 

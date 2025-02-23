@@ -1,47 +1,68 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { getPosts } from "@/lib/api";
-import { Post } from "@/components/Post";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect } from "react";
+import { Post as PostComponent } from "@/components/Post";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getPosts } from "@/lib/api/posts";
+import { supabase } from "@/integrations/supabase/client";
 
-export function Feed() {
-  const { data: posts, isLoading, error } = useQuery({
-    queryKey: ["posts"],
-    queryFn: getPosts
+interface FeedProps {
+  userId?: string;
+}
+
+export function Feed({ userId }: FeedProps) {
+  const queryClient = useQueryClient();
+
+  const { data: posts = [], isLoading } = useQuery({
+    queryKey: ['posts', userId],
+    queryFn: () => getPosts(userId),
   });
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('posts')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'posts'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['posts'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   if (isLoading) {
     return (
       <div className="space-y-4">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="p-4 space-y-4 border rounded-lg">
-            <div className="flex items-center space-x-4">
-              <Skeleton className="h-12 w-12 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-[200px]" />
-                <Skeleton className="h-4 w-[150px]" />
-              </div>
-            </div>
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-3/4" />
-          </div>
+          <div
+            key={i}
+            className="p-4 bg-card rounded-lg shadow animate-pulse h-48"
+          />
         ))}
       </div>
     );
   }
 
-  if (error) {
+  if (!posts.length) {
     return (
-      <div className="text-center py-8 text-destructive">
-        Error al cargar las publicaciones
+      <div className="text-center p-8 bg-card rounded-lg">
+        <p className="text-muted-foreground">No hay publicaciones para mostrar</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      {posts?.map((post) => (
-        <Post key={post.id} post={post} />
+      {posts.map((post) => (
+        <PostComponent key={post.id} post={post} />
       ))}
     </div>
   );

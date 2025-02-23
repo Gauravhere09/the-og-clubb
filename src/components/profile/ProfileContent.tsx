@@ -25,7 +25,7 @@ export function ProfileContent({ profileId }: ProfileContentProps) {
         <TabsTrigger value="friends">Amigos ({friends.length})</TabsTrigger>
       </TabsList>
       <TabsContent value="feed">
-        <Feed key={profileId} />
+        <Feed userId={profileId} />
       </TabsContent>
       <TabsContent value="friends">
         <Card className="p-4">
