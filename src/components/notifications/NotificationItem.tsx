@@ -21,20 +21,11 @@ interface NotificationItemProps {
     comment_id?: string;
   };
   onHandleFriendRequest?: (notificationId: string, senderId: string, accept: boolean) => void;
+  onClick?: () => void;
 }
 
-export const NotificationItem = ({ notification, onHandleFriendRequest }: NotificationItemProps) => {
+export const NotificationItem = ({ notification, onHandleFriendRequest, onClick }: NotificationItemProps) => {
   const navigate = useNavigate();
-
-  const handleClick = () => {
-    if (notification.post_id) {
-      navigate(`/post/${notification.post_id}`);
-      if (notification.comment_id) {
-        // Aquí podríamos agregar lógica para hacer scroll al comentario específico
-        // cuando se implemente esa funcionalidad
-      }
-    }
-  };
 
   const renderContent = () => {
     if (notification.message) {
@@ -120,7 +111,7 @@ export const NotificationItem = ({ notification, onHandleFriendRequest }: Notifi
       className={`p-4 flex items-center gap-4 hover:bg-muted/50 transition-colors border-b last:border-b-0 ${
         isClickable ? 'cursor-pointer' : ''
       }`}
-      onClick={isClickable ? handleClick : undefined}
+      onClick={isClickable && onClick ? onClick : undefined}
     >
       <Avatar>
         <AvatarImage src={notification.sender.avatar_url || undefined} />

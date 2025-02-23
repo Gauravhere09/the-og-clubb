@@ -24,25 +24,29 @@ export function ProfileContent({ profileId }: ProfileContentProps) {
 
       if (postsError) throw postsError;
 
-      // Fetch comments count separately
+      // Fetch all comments
       const { data: commentsData, error: commentsError } = await supabase
         .from("comments")
-        .select("post_id, count(*)", { count: "exact" })
-        .in("post_id", (postsData || []).map(p => p.id))
-        .group("post_id");
+        .select("post_id")
+        .in("post_id", (postsData || []).map(p => p.id));
 
       if (commentsError) throw commentsError;
 
-      // Fetch reactions count and types separately
+      // Fetch all reactions
       const { data: reactionsData, error: reactionsError } = await supabase
         .from("reactions")
-        .select("post_id, reaction_type, count(*)", { count: "exact" })
-        .in("post_id", (postsData || []).map(p => p.id))
-        .group("post_id, reaction_type");
+        .select("post_id, reaction_type")
+        .in("post_id", (postsData || []).map(p => p.id));
 
       if (reactionsError) throw reactionsError;
 
-      // Create reactions map
+      // Count comments manually
+      const commentsMap = (commentsData || []).reduce((acc, comment) => {
+        acc[comment.post_id] = (acc[comment.post_id] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      // Count reactions manually
       const reactionsMap = (reactionsData || []).reduce((acc, reaction) => {
         if (!acc[reaction.post_id]) {
           acc[reaction.post_id] = {
@@ -50,16 +54,11 @@ export function ProfileContent({ profileId }: ProfileContentProps) {
             by_type: {}
           };
         }
-        acc[reaction.post_id].count += parseInt(reaction.count);
-        acc[reaction.post_id].by_type[reaction.reaction_type] = parseInt(reaction.count);
+        acc[reaction.post_id].count += 1;
+        acc[reaction.post_id].by_type[reaction.reaction_type] = 
+          (acc[reaction.post_id].by_type[reaction.reaction_type] || 0) + 1;
         return acc;
       }, {} as Record<string, { count: number, by_type: Record<string, number> }>);
-
-      // Create comments map
-      const commentsMap = (commentsData || []).reduce((acc, comment) => {
-        acc[comment.post_id] = parseInt(comment.count);
-        return acc;
-      }, {} as Record<string, number>);
 
       // Combine all data
       return (postsData || []).map((post): PostType => ({
