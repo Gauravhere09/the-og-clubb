@@ -3,6 +3,7 @@ import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/Feed";
 import { StoryViewer } from "@/components/stories/StoryViewer";
+import { StoryCreator } from "@/components/stories/StoryCreator";
 import { Home, Plus, Menu, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -20,44 +21,33 @@ import {
 import { useEffect, useState } from "react";
 
 const Index = () => {
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { setTheme, theme } = useTheme();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const getUser = async () => {
+    const loadCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUserId(user?.id || null);
+      if (user) {
+        setCurrentUserId(user.id);
+      }
     };
-    getUser();
+    loadCurrentUser();
   }, []);
 
   const handleLogout = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
-      toast({
-        title: "Sesión cerrada",
-        description: "Has cerrado sesión correctamente"
-      });
-      
-      navigate('/auth');
-    } catch (error) {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo cerrar la sesión"
+        description: "No se pudo cerrar sesión",
       });
+    } else {
+      navigate("/auth");
     }
   };
-
-  if (!mounted) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -111,7 +101,12 @@ const Index = () => {
           </div>
         </div>
 
-        {currentUserId && <StoryViewer stories={[]} currentUserId={currentUserId} />}
+        {currentUserId && (
+          <>
+            <StoryCreator />
+            <StoryViewer stories={[]} currentUserId={currentUserId} />
+          </>
+        )}
         
         <div className="space-y-6">
           <PostCreator />

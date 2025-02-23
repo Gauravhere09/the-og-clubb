@@ -3,25 +3,25 @@ import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-export interface GroupMessage {
+interface GroupMessage {
   id: string;
   content: string;
   sender_id: string;
   type: 'text' | 'audio';
   media_url: string | null;
   created_at: string;
-  sender: {
+  profiles?: {
     username: string;
     avatar_url: string | null;
   };
 }
 
-export function useGroupMessages(currentUserId: string | null, showGroupChat: boolean) {
+export function useGroupMessages(currentUserId: string | null, enabled: boolean) {
   const [groupMessages, setGroupMessages] = useState<GroupMessage[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!currentUserId || !showGroupChat) return;
+    if (!enabled || !currentUserId) return;
 
     const loadGroupMessages = async () => {
       try {
@@ -29,7 +29,7 @@ export function useGroupMessages(currentUserId: string | null, showGroupChat: bo
           .from('group_messages')
           .select(`
             *,
-            sender:profiles!group_messages_sender_id_fkey (
+            profiles (
               username,
               avatar_url
             )
@@ -37,22 +37,7 @@ export function useGroupMessages(currentUserId: string | null, showGroupChat: bo
           .order('created_at', { ascending: true });
 
         if (error) throw error;
-
-        if (data) {
-          const messages: GroupMessage[] = data.map(message => ({
-            id: message.id,
-            content: message.content,
-            sender_id: message.sender_id,
-            type: message.type as 'text' | 'audio',
-            media_url: message.media_url,
-            created_at: message.created_at,
-            sender: {
-              username: message.sender.username || '',
-              avatar_url: message.sender.avatar_url
-            }
-          }));
-          setGroupMessages(messages);
-        }
+        setGroupMessages(data);
       } catch (error) {
         console.error('Error loading group messages:', error);
         toast({
@@ -65,48 +50,48 @@ export function useGroupMessages(currentUserId: string | null, showGroupChat: bo
 
     loadGroupMessages();
 
-    const subscription = supabase
-      .channel('group_messages')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'group_messages',
-      }, () => {
-        loadGroupMessages();
+    const channel = supabase
+      .channel('group-messages')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'group_messages' 
+      }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setGroupMessages(prev => [...prev, payload.new as GroupMessage]);
+        }
       })
       .subscribe();
 
     return () => {
-      subscription.unsubscribe();
+      channel.unsubscribe();
     };
-  }, [currentUserId, showGroupChat]);
+  }, [currentUserId, enabled]);
 
   return { groupMessages };
 }
 
 export async function sendGroupMessage(
-  currentUserId: string | null,
-  content: string,
-  type: 'text' | 'audio',
+  senderId: string | null, 
+  content: string, 
+  type: 'text' | 'audio' = 'text',
   audioBlob?: Blob
 ) {
-  const { toast } = useToast();
-
-  if (!currentUserId) return;
+  if (!senderId) return;
 
   try {
-    let media_url = undefined;
+    let media_url = null;
 
     if (type === 'audio' && audioBlob) {
       const fileName = `${crypto.randomUUID()}.webm`;
-      const { error: uploadError } = await supabase.storage
-        .from('audio-messages')
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('media')
         .upload(fileName, audioBlob);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('audio-messages')
+        .from('media')
         .getPublicUrl(fileName);
 
       media_url = publicUrl;
@@ -115,8 +100,8 @@ export async function sendGroupMessage(
     const { error } = await supabase
       .from('group_messages')
       .insert({
-        content: content || '',
-        sender_id: currentUserId,
+        content,
+        sender_id: senderId,
         type,
         media_url
       });
@@ -124,10 +109,6 @@ export async function sendGroupMessage(
     if (error) throw error;
   } catch (error) {
     console.error('Error sending group message:', error);
-    toast({
-      variant: "destructive",
-      title: "Error",
-      description: "No se pudo enviar el mensaje",
-    });
+    throw error;
   }
 }

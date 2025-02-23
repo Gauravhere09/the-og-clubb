@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Friend } from './use-friends';
@@ -24,7 +24,8 @@ export function usePrivateMessages() {
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${selectedFriend.friend_id}),and(sender_id.eq.${selectedFriend.friend_id},receiver_id.eq.${currentUserId})`)
+        .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`)
+        .or(`sender_id.eq.${selectedFriend.friend_id},receiver_id.eq.${selectedFriend.friend_id}`)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -43,16 +44,19 @@ export function usePrivateMessages() {
     if (!content.trim() || !selectedFriend || !currentUserId) return;
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('messages')
         .insert({
           content,
           sender_id: currentUserId,
           receiver_id: selectedFriend.friend_id
-        });
+        })
+        .select()
+        .single();
       
       if (error) throw error;
-      await loadMessages(currentUserId, selectedFriend);
+      
+      setMessages(prev => [...prev, data as Message]);
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
@@ -64,6 +68,25 @@ export function usePrivateMessages() {
       return false;
     }
   };
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('messages')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'messages' 
+      }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          setMessages(prev => [...prev, payload.new as Message]);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, []);
 
   return { messages, loadMessages, sendMessage };
 }
