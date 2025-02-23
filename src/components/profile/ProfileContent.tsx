@@ -19,25 +19,32 @@ export function ProfileContent({ profileId }: ProfileContentProps) {
           *,
           profiles(username, avatar_url),
           comments(count),
-          likes(id, user_id)
+          reactions(count, reaction_type)
         `)
         .eq("user_id", profileId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      // Transformamos los datos para que coincidan con el tipo PostType
-      return (data || []).map((post): PostType => ({
-        ...post,
-        media_type: post.media_type as 'image' | 'video' | 'audio' | null,
-        visibility: post.visibility as 'public' | 'friends' | 'private',
-        likes: post.likes?.map(like => ({
-          ...like,
-          post_id: post.id,
-          reaction_type: 'like' as const
-        })) || [],
-        comments_count: post.comments?.[0]?.count || 0
-      }));
+      // Transform the data to match PostType
+      return (data || []).map((post): PostType => {
+        const reactionsByType = post.reactions?.reduce((acc: Record<string, number>, reaction: any) => {
+          acc[reaction.reaction_type] = (acc[reaction.reaction_type] || 0) + 1;
+          return acc;
+        }, {}) || {};
+
+        return {
+          ...post,
+          media_type: post.media_type as 'image' | 'video' | 'audio' | null,
+          visibility: post.visibility as 'public' | 'friends' | 'private',
+          reactions: {
+            count: post.reactions?.length || 0,
+            by_type: reactionsByType
+          },
+          reactions_count: post.reactions?.length || 0,
+          comments_count: post.comments?.[0]?.count || 0
+        };
+      });
     },
   });
 

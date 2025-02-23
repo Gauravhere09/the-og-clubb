@@ -1,89 +1,64 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import type { ReactionType, ReactionTable } from "@/types/database/social.types";
+import type { ReactionTable } from "@/types/database/social.types";
 
-export { type ReactionType };
+export type ReactionType = 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';
 
 export async function toggleReaction(postId: string, type: ReactionType) {
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.id || !postId) return null;
-  
+  if (!user) throw new Error("Debes iniciar sesión para reaccionar");
+
   const { data: existingReaction } = await supabase
     .from('reactions')
     .select()
-    .match({ 
-      user_id: user.id,
-      post_id: postId
-    })
-    .single() as { data: ReactionTable['Row'] | null };
+    .eq('user_id', user.id)
+    .eq('post_id', postId)
+    .single<ReactionTable['Row']>();
 
   if (existingReaction) {
     if (existingReaction.reaction_type === type) {
-      const { error: deleteError } = await supabase
+      // Si el usuario hace clic en la misma reacción, la eliminamos
+      const { error } = await supabase
         .from('reactions')
         .delete()
         .eq('id', existingReaction.id);
-        
-      if (deleteError) {
-        console.error('Error deleting reaction:', deleteError);
-        return null;
-      }
-      return null;
+      if (error) throw error;
     } else {
-      const { error: updateError } = await supabase
+      // Si es una reacción diferente, actualizamos el tipo
+      const { error } = await supabase
         .from('reactions')
-        .update({
-          reaction_type: type,
-          created_at: new Date().toISOString()
-        })
+        .update({ reaction_type: type })
         .eq('id', existingReaction.id);
-        
-      if (updateError) {
-        console.error('Error updating reaction:', updateError);
-        return null;
-      }
-      return type;
+      if (error) throw error;
     }
-  }
-
-  const { data: post } = await supabase
-    .from('posts')
-    .select('user_id')
-    .eq('id', postId)
-    .single();
-
-  if (post) {
-    const { error: insertError } = await supabase
+  } else {
+    // Si no existe una reacción previa, creamos una nueva
+    const { error } = await supabase
       .from('reactions')
       .insert({
         user_id: user.id,
         post_id: postId,
-        reaction_type: type,
-      } as ReactionTable['Insert']);
-
-    if (insertError) {
-      console.error('Error inserting reaction:', insertError);
-      return null;
-    }
-
-    if (post.user_id !== user.id) {
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert({
-          type: 'post_reaction',
-          sender_id: user.id,
-          receiver_id: post.user_id,
-          post_id: postId,
-          message: `ha reaccionado a tu publicación con ${type}`,
-          read: false,
-          created_at: new Date().toISOString()
-        });
-
-      if (notificationError) {
-        console.error('Error creating notification:', notificationError);
-      }
-    }
+        reaction_type: type
+      });
+    if (error) throw error;
   }
+}
 
-  return type;
+export async function getPostReactions(postId: string) {
+  const { data, error } = await supabase
+    .from('reactions')
+    .select('reaction_type')
+    .eq('post_id', postId);
+
+  if (error) throw error;
+
+  const reactionCounts = data.reduce((acc: Record<string, number>, reaction) => {
+    acc[reaction.reaction_type] = (acc[reaction.reaction_type] || 0) + 1;
+    return acc;
+  }, {});
+
+  return {
+    total: data.length,
+    by_type: reactionCounts
+  };
 }
