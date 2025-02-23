@@ -11,7 +11,7 @@ interface MessageInputProps {
 
 export const MessageInput = ({ newMessage, onMessageChange, onSendMessage }: MessageInputProps) => {
   return (
-    <div className="p-4 bg-white dark:bg-[#0B141A] border-t border-gray-200 dark:border-[#313D45] flex items-center gap-2">
+    <div className="p-4 bg-white dark:bg-[#111B21] border-t border-gray-200 dark:border-[#313D45] flex items-center gap-2">
       <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
         <Smile className="h-6 w-6" />
       </Button>
@@ -29,14 +29,14 @@ export const MessageInput = ({ newMessage, onMessageChange, onSendMessage }: Mes
           placeholder="Escribe un mensaje" 
           value={newMessage}
           onChange={(e) => onMessageChange(e.target.value)}
-          className="flex-1 bg-white dark:bg-[#0B141A] border-gray-200 dark:border-transparent text-gray-900 dark:text-white placeholder:text-gray-400 focus-visible:ring-0"
+          className="flex-1 bg-white dark:bg-[#111B21] border-gray-200 dark:border-transparent text-gray-900 dark:text-white placeholder:text-gray-400 focus-visible:ring-0"
         />
         {newMessage ? (
-          <Button type="submit" size="icon" variant="ghost" className="text-[#9b87f5] hover:text-[#7E69AB] dark:hover:bg-[#0B141A]">
+          <Button type="submit" size="icon" variant="ghost" className="text-[#9b87f5] hover:text-[#7E69AB] dark:hover:bg-[#111B21]">
             <Send className="h-6 w-6" />
           </Button>
         ) : (
-          <Button type="button" size="icon" variant="ghost" className="text-[#9b87f5] hover:text-[#7E69AB] dark:hover:bg-[#0B141A]">
+          <Button type="button" size="icon" variant="ghost" className="text-[#9b87f5] hover:text-[#7E69AB] dark:hover:bg-[#111B21]">
             <Mic className="h-6 w-6" />
           </Button>
         )}
@@ -44,4 +44,3 @@ export const MessageInput = ({ newMessage, onMessageChange, onSendMessage }: Mes
     </div>
   );
 };
-

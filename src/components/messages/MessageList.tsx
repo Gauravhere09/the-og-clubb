@@ -38,7 +38,7 @@ export const MessageList = ({ messages, currentUserId }: MessageListProps) => {
                 className={`max-w-[65%] rounded-lg p-3 ${
                   isSender
                     ? "bg-[#9b87f5] dark:bg-[#6E59A5]"
-                    : "bg-white dark:bg-[#0B141A] border border-gray-200 dark:border-[#313D45]"
+                    : "bg-white dark:bg-[#111B21] border border-gray-200 dark:border-[#313D45]"
                 }`}
               >
                 <p className={`${isSender ? "text-white" : "text-gray-900 dark:text-white"}`}>
@@ -58,4 +58,3 @@ export const MessageList = ({ messages, currentUserId }: MessageListProps) => {
     </ScrollArea>
   );
 };
-
