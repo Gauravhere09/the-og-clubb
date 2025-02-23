@@ -1,9 +1,8 @@
 
 import { ProfileTable } from './profile.types';
-import { ReactionTable, FriendshipTable } from './social.types';
+import { ReactionTable, FriendshipTable, NotificationTable } from './social.types';
 import { PostTable, CommentTable } from './content.types';
 import { MessageTable, GroupMessageTable } from './messaging.types';
-import { NotificationTable } from './social.types';
 
 export interface Database {
   public: {

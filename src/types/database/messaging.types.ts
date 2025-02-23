@@ -31,7 +31,7 @@ export interface GroupMessageTable {
     id: string;
     content: string;
     sender_id: string;
-    type: string | null;
+    type: 'text' | 'audio';
     media_url: string | null;
     created_at: string;
   };
@@ -39,7 +39,7 @@ export interface GroupMessageTable {
     id?: string;
     content: string;
     sender_id: string;
-    type?: string | null;
+    type: 'text' | 'audio';
     media_url?: string | null;
     created_at?: string;
   };
@@ -47,7 +47,7 @@ export interface GroupMessageTable {
     id?: string;
     content?: string;
     sender_id?: string;
-    type?: string | null;
+    type?: 'text' | 'audio';
     media_url?: string | null;
     created_at?: string;
   };
