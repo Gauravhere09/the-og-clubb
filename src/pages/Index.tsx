@@ -56,6 +56,17 @@ const Index = () => {
     }
   };
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      // Restablecer el input para permitir seleccionar el mismo archivo nuevamente
+      e.target.value = '';
+      // Subir el archivo usando StoryCreator
+      const storyCreator = new StoryCreator();
+      await storyCreator.handleFile(file);
+    }
+  };
+
   return (
     <div className="min-h-screen flex bg-background">
       <Navigation />
@@ -79,17 +90,7 @@ const Index = () => {
               ref={fileInputRef}
               className="hidden"
               accept="image/*,video/*"
-              onChange={(e) => {
-                if (e.target.files && e.target.files[0]) {
-                  const file = e.target.files[0];
-                  // Restablecer el input para permitir seleccionar el mismo archivo nuevamente
-                  e.target.value = '';
-                  // Subir el archivo usando StoryCreator
-                  const event = { target: { files: [file] } } as React.ChangeEvent<HTMLInputElement>;
-                  const storyCreator = new StoryCreator();
-                  storyCreator.handleFileUpload(event);
-                }
-              }}
+              onChange={handleFileChange}
             />
             <FriendSearch />
             <NotificationDropdown />

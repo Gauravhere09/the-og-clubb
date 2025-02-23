@@ -1,13 +1,10 @@
 
-import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 export class StoryCreator {
-  async handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
+  async handleFile(file: File) {
     const { toast } = useToast();
-    const file = event.target.files?.[0];
-    if (!file) return;
 
     // Validar tamaño (máximo 50MB)
     if (file.size > 50 * 1024 * 1024) {
@@ -60,19 +57,4 @@ export class StoryCreator {
       });
     }
   }
-}
-
-// Componente de React que expone la funcionalidad
-export function StoryCreatorComponent() {
-  const [isUploading, setIsUploading] = useState(false);
-  const { toast } = useToast();
-
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    setIsUploading(true);
-    const creator = new StoryCreator();
-    await creator.handleFileUpload(event);
-    setIsUploading(false);
-  };
-
-  return null; // Este componente no renderiza nada, solo expone la funcionalidad
 }
