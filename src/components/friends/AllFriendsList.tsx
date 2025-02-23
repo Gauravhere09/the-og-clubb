@@ -2,6 +2,7 @@
 import { Friend } from "@/hooks/use-friends";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Link } from "react-router-dom";
 
 interface AllFriendsListProps {
   friends: Friend[];
@@ -18,9 +19,10 @@ export function AllFriendsList({ friends }: AllFriendsListProps) {
       ) : (
         <div className="space-y-4">
           {friends.map((friend) => (
-            <div
+            <Link
               key={friend.friend_id}
-              className="flex items-center justify-between p-4 rounded-lg hover:bg-accent"
+              to={`/profile/${friend.friend_id}`}
+              className="flex items-center justify-between p-4 rounded-lg hover:bg-accent block"
             >
               <div className="flex items-center gap-3">
                 <Avatar>
@@ -31,7 +33,7 @@ export function AllFriendsList({ friends }: AllFriendsListProps) {
                 </Avatar>
                 <div className="font-medium">{friend.friend_username}</div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}

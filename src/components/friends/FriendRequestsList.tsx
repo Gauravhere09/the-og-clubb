@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { UserCheck, UserX } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface FriendRequestsListProps {
   requests: FriendRequest[];
@@ -25,17 +26,18 @@ export function FriendRequestsList({ requests, onRespond }: FriendRequestsListPr
               key={request.id}
               className="flex items-center justify-between p-4 rounded-lg hover:bg-accent"
             >
-              <div className="flex items-center gap-3">
+              <Link
+                to={`/profile/${request.user_id}`}
+                className="flex items-center gap-3"
+              >
                 <Avatar>
                   <AvatarImage src={request.user.avatar_url || undefined} />
                   <AvatarFallback>
                     {request.user.username[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <div className="font-medium">{request.user.username}</div>
-                </div>
-              </div>
+                <div className="font-medium">{request.user.username}</div>
+              </Link>
               <div className="flex gap-2">
                 <Button
                   size="sm"

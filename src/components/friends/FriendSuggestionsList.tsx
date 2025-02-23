@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { UserPlus, Users } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface FriendSuggestionsListProps {
   suggestions: FriendSuggestion[];
@@ -20,7 +21,10 @@ export function FriendSuggestionsList({ suggestions, onSendRequest }: FriendSugg
             key={suggestion.id}
             className="flex items-center justify-between p-4 rounded-lg hover:bg-accent"
           >
-            <div className="flex items-center gap-3">
+            <Link
+              to={`/profile/${suggestion.id}`}
+              className="flex items-center gap-3"
+            >
               <Avatar>
                 <AvatarImage src={suggestion.avatar_url || undefined} />
                 <AvatarFallback>
@@ -36,10 +40,13 @@ export function FriendSuggestionsList({ suggestions, onSendRequest }: FriendSugg
                   </div>
                 )}
               </div>
-            </div>
+            </Link>
             <Button
               size="sm"
-              onClick={() => onSendRequest(suggestion.id)}
+              onClick={(e) => {
+                e.preventDefault();
+                onSendRequest(suggestion.id);
+              }}
             >
               <UserPlus className="mr-2 h-4 w-4" />
               Agregar
