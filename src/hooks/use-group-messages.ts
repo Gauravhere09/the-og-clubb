@@ -3,14 +3,14 @@ import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-interface GroupMessage {
+export interface GroupMessage {
   id: string;
   content: string;
   sender_id: string;
   type: 'text' | 'audio';
   media_url: string | null;
   created_at: string;
-  profiles?: {
+  sender?: {
     username: string;
     avatar_url: string | null;
   };
@@ -29,7 +29,7 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
           .from('group_messages')
           .select(`
             *,
-            profiles (
+            sender:profiles!group_messages_sender_id_fkey (
               username,
               avatar_url
             )
@@ -37,7 +37,14 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
           .order('created_at', { ascending: true });
 
         if (error) throw error;
-        setGroupMessages(data);
+        
+        // Transform the data to match GroupMessage type
+        const transformedData = (data || []).map(message => ({
+          ...message,
+          type: message.type as 'text' | 'audio'
+        }));
+        
+        setGroupMessages(transformedData);
       } catch (error) {
         console.error('Error loading group messages:', error);
         toast({
@@ -58,7 +65,11 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
         table: 'group_messages' 
       }, (payload) => {
         if (payload.eventType === 'INSERT') {
-          setGroupMessages(prev => [...prev, payload.new as GroupMessage]);
+          const newMessage = {
+            ...payload.new,
+            type: payload.new.type as 'text' | 'audio'
+          };
+          setGroupMessages(prev => [...prev, newMessage]);
         }
       })
       .subscribe();

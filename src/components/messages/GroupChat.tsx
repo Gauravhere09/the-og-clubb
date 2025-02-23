@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send, Mic, Square } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { GroupMessage } from "@/hooks/use-group-messages";
+import type { GroupMessage } from "@/hooks/use-group-messages";
 
 interface GroupChatProps {
   messages: GroupMessage[];
@@ -73,8 +73,8 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage }: GroupChatP
               <div className="flex gap-2">
                 {message.sender_id !== currentUserId && (
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={message.sender.avatar_url || undefined} />
-                    <AvatarFallback>{message.sender.username[0]}</AvatarFallback>
+                    <AvatarImage src={message.sender?.avatar_url || undefined} />
+                    <AvatarFallback>{message.sender?.username[0]}</AvatarFallback>
                   </Avatar>
                 )}
                 <div
@@ -96,7 +96,7 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage }: GroupChatP
                         : "text-muted-foreground"
                     }`}
                   >
-                    {message.sender.username} • {new Date(message.created_at).toLocaleTimeString()}
+                    {message.sender?.username} • {new Date(message.created_at).toLocaleTimeString()}
                   </div>
                 </div>
               </div>

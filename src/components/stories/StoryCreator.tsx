@@ -32,21 +32,24 @@ export function StoryCreator() {
       const fileExt = file.name.split('.').pop();
       const fileName = `${crypto.randomUUID()}.${fileExt}`;
       const { error: uploadError } = await supabase.storage
-        .from('stories')
-        .upload(fileName, file);
+        .from('media')
+        .upload(`stories/${fileName}`, file);
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('stories')
-        .getPublicUrl(fileName);
+        .from('media')
+        .getPublicUrl(`stories/${fileName}`);
 
       await supabase
-        .from('stories')
+        .from('posts')
         .insert({
           user_id: user.id,
+          content: '',
           media_url: publicUrl,
           media_type: file.type.startsWith('image/') ? 'image' : 'video',
+          visibility: 'public',
+          is_story: true,
           expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
         });
 
