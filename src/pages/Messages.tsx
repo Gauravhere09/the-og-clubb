@@ -79,7 +79,7 @@ const Messages = () => {
                 }}
                 className="w-full p-4 flex items-center gap-3 hover:bg-[#2A3942] transition-colors border-b border-[#313D45]"
               >
-                <div className="w-12 h-12 rounded-full bg-[#00A884] flex items-center justify-center">
+                <div className="w-12 h-12 rounded-full bg-[#1F2C33] border border-[#313D45] flex items-center justify-center">
                   <span className="text-lg font-semibold">H</span>
                 </div>
                 <div className="flex-1">
