@@ -54,7 +54,7 @@ const Messages = () => {
   );
 
   return (
-    <div className="min-h-screen flex bg-white dark:bg-[#111B21] text-gray-900 dark:text-white">
+    <div className="min-h-screen flex bg-white dark:bg-[#000000] text-gray-900 dark:text-white">
       <Navigation />
       <main className="flex-1">
         <div className="h-[calc(100vh-64px)] flex">
@@ -101,7 +101,7 @@ const Messages = () => {
             </div>
           </Card>
 
-          <div className="flex-1 bg-gray-50 dark:bg-[#0B141A] flex flex-col">
+          <div className="flex-1 bg-gray-50 dark:bg-[#000000] flex flex-col">
             {showGroupChat ? (
               currentUserId && (
                 <GroupChat
