@@ -78,7 +78,7 @@ export function FriendRequestButton({ targetUserId, onRequestSent }: FriendReque
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: "No se pudo enviar la solicitud de amistad",
       });
     } finally {
       setIsLoading(false);
@@ -91,7 +91,6 @@ export function FriendRequestButton({ targetUserId, onRequestSent }: FriendReque
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuario no autenticado");
 
-      // Eliminar la amistad o solicitud pendiente
       const { error: friendshipError } = await supabase
         .from('friendships')
         .delete()
@@ -122,7 +121,7 @@ export function FriendRequestButton({ targetUserId, onRequestSent }: FriendReque
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message,
+        description: "No se pudo procesar la solicitud",
       });
     } finally {
       setIsLoading(false);

@@ -1,84 +1,63 @@
 
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
-import { Post } from "@/components/Post";
-import type { Post as PostType } from "@/types/post";
+import { Feed } from "@/components/Feed";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getFriends } from "@/lib/api/friends";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ProfileContentProps {
   profileId: string;
 }
 
 export function ProfileContent({ profileId }: ProfileContentProps) {
-  const { data: posts, isLoading } = useQuery({
-    queryKey: ["profile-posts", profileId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("posts")
-        .select(`
-          *,
-          profiles(username, avatar_url),
-          comments(count),
-          reactions(count, reaction_type)
-        `)
-        .eq("user_id", profileId)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      // Transform the data to match PostType
-      return (data || []).map((post): PostType => {
-        const reactionsByType = post.reactions?.reduce((acc: Record<string, number>, reaction: any) => {
-          acc[reaction.reaction_type] = (acc[reaction.reaction_type] || 0) + 1;
-          return acc;
-        }, {}) || {};
-
-        return {
-          ...post,
-          media_type: post.media_type as 'image' | 'video' | 'audio' | null,
-          visibility: post.visibility as 'public' | 'friends' | 'private',
-          reactions: {
-            count: post.reactions?.length || 0,
-            by_type: reactionsByType
-          },
-          reactions_count: post.reactions?.length || 0,
-          comments_count: post.comments?.[0]?.count || 0
-        };
-      });
-    },
+  const { data: friends = [], isLoading: isLoadingFriends } = useQuery({
+    queryKey: ['friends', profileId],
+    queryFn: () => getFriends()
   });
 
-  if (isLoading) {
-    return (
-      <Card className="p-4">
-        <h2 className="font-semibold mb-4">Publicaciones</h2>
-        <div className="animate-pulse space-y-4">
-          <div className="h-24 bg-muted rounded-md" />
-          <div className="h-24 bg-muted rounded-md" />
-        </div>
-      </Card>
-    );
-  }
-
-  if (!posts?.length) {
-    return (
-      <Card className="p-4">
-        <h2 className="font-semibold mb-4">Publicaciones</h2>
-        <p className="text-muted-foreground text-center py-8">
-          No hay publicaciones para mostrar
-        </p>
-      </Card>
-    );
-  }
-
   return (
-    <div className="space-y-4">
-      <Card className="p-4">
-        <h2 className="font-semibold mb-4">Publicaciones</h2>
-      </Card>
-      {posts.map((post) => (
-        <Post key={post.id} post={post} />
-      ))}
-    </div>
+    <Tabs defaultValue="feed" className="w-full">
+      <TabsList className="w-full">
+        <TabsTrigger value="feed">Publicaciones</TabsTrigger>
+        <TabsTrigger value="friends">Amigos ({friends.length})</TabsTrigger>
+      </TabsList>
+      <TabsContent value="feed">
+        <Feed userId={profileId} />
+      </TabsContent>
+      <TabsContent value="friends">
+        <Card className="p-4">
+          {isLoadingFriends ? (
+            <p className="text-center text-muted-foreground">Cargando amigos...</p>
+          ) : friends.length === 0 ? (
+            <p className="text-center text-muted-foreground">Esta persona aún no tiene amigos</p>
+          ) : (
+            <ScrollArea className="h-[400px] pr-4">
+              <div className="space-y-4">
+                {friends.map((friend) => (
+                  <Link
+                    key={friend.friend_id}
+                    to={`/profile/${friend.friend_id}`}
+                    className="flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+                  >
+                    <Avatar>
+                      <AvatarImage src={friend.friend_avatar_url || undefined} />
+                      <AvatarFallback>
+                        {friend.friend_username?.[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-medium">{friend.friend_username}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+        </Card>
+      </TabsContent>
+    </Tabs>
   );
 }
