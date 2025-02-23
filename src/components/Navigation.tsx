@@ -1,5 +1,5 @@
 
-import { Bell, Home, Mail, User, Users } from "lucide-react";
+import { Bell, Home, MessageCircle, User, Users } from "lucide-react";
 import { Logo } from "./navigation/Logo";
 import { NavigationItem } from "./navigation/NavigationItem";
 import { useNavigation } from "./navigation/use-navigation";
@@ -26,7 +26,7 @@ export function Navigation() {
     },
     { 
       to: "/messages", 
-      icon: Mail, 
+      icon: MessageCircle, 
       label: "Mensajes" 
     },
     { 

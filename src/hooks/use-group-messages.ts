@@ -25,6 +25,30 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
 
     const loadGroupMessages = async () => {
       try {
+        // Verificamos si el usuario ya está en el grupo
+        const { data: existingMember } = await supabase
+          .from('group_members')
+          .select('*')
+          .eq('user_id', currentUserId)
+          .single();
+
+        // Si no está en el grupo, lo agregamos
+        if (!existingMember) {
+          await supabase
+            .from('group_members')
+            .insert({
+              user_id: currentUserId,
+              group_id: 'h', // ID fijo para el grupo "h"
+              joined_at: new Date().toISOString()
+            });
+
+          toast({
+            title: "¡Bienvenido al grupo h!",
+            description: "Has sido agregado automáticamente al grupo de chat.",
+          });
+        }
+
+        // Cargamos los mensajes del grupo
         const { data, error } = await supabase
           .from('group_messages')
           .select(`
@@ -38,7 +62,6 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
 
         if (error) throw error;
         
-        // Transform the data to match GroupMessage type
         const transformedData = (data || []).map(message => ({
           id: message.id,
           content: message.content,
@@ -86,7 +109,7 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
     return () => {
       channel.unsubscribe();
     };
-  }, [currentUserId, enabled]);
+  }, [currentUserId, enabled, toast]);
 
   return { groupMessages };
 }
