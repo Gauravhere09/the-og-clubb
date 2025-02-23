@@ -3,14 +3,13 @@ import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { FriendSearch } from "@/components/FriendSearch";
 import { FriendList } from "@/components/messages/FriendList";
 import { ChatHeader } from "@/components/messages/ChatHeader";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageInput } from "@/components/messages/MessageInput";
 import { GroupChat } from "@/components/messages/GroupChat";
 import { useFriends, Friend } from "@/hooks/use-friends";
-import { useGroupMessages, sendGroupMessage } from "@/hooks/use-group-messages";
+import { useGroupMessages } from "@/hooks/use-group-messages";
 import { usePrivateMessages } from "@/hooks/use-private-messages";
 
 const Messages = () => {
@@ -48,25 +47,37 @@ const Messages = () => {
     }
   };
 
-  const handleSendGroupMessage = async (content: string, type: 'text' | 'audio', audioBlob?: Blob) => {
-    await sendGroupMessage(currentUserId, content, type, audioBlob);
-  };
-
   return (
-    <div className="min-h-screen flex bg-muted/30">
+    <div className="min-h-screen flex bg-[#111B21] text-white">
       <Navigation />
-      <main className="flex-1 max-w-6xl mx-auto p-4 md:p-6 pb-20 md:pb-6">
-        <div className="grid gap-6 md:grid-cols-[1fr,320px]">
-          <Card className="grid md:grid-cols-[320px,1fr] h-[calc(100vh-120px)]">
-            <div className="border-r">
+      <main className="flex-1">
+        <div className="h-[calc(100vh-64px)] flex">
+          <Card className="w-[380px] rounded-none bg-[#1F2C33] border-r border-[#313D45]">
+            <div className="p-4 border-b border-[#313D45]">
+              <input
+                type="text"
+                placeholder="Buscar o empezar un nuevo chat"
+                className="w-full px-4 py-2 bg-[#2A3942] rounded-lg text-sm placeholder:text-gray-400 focus:outline-none"
+              />
+            </div>
+            <div className="overflow-y-auto h-[calc(100%-73px)]">
               <button
                 onClick={() => {
                   setShowGroupChat(true);
                   setSelectedFriend(null);
                 }}
-                className="w-full p-4 flex items-center gap-3 hover:bg-muted/50 transition-colors border-b"
+                className="w-full p-4 flex items-center gap-3 hover:bg-[#2A3942] transition-colors border-b border-[#313D45]"
               >
-                <div className="font-medium">Chat grupal "h"</div>
+                <div className="w-12 h-12 rounded-full bg-[#00A884] flex items-center justify-center">
+                  <span className="text-lg font-semibold">H</span>
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium">Red H</div>
+                  <div className="text-sm text-gray-400">Chat grupal</div>
+                </div>
+                <div className="text-xs text-gray-400">
+                  {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </div>
               </button>
               <FriendList 
                 friends={friends}
@@ -77,43 +88,39 @@ const Messages = () => {
                 }}
               />
             </div>
-
-            <div className="flex flex-col">
-              {showGroupChat ? (
-                currentUserId && (
-                  <GroupChat
-                    messages={groupMessages}
-                    currentUserId={currentUserId}
-                    onSendMessage={handleSendGroupMessage}
-                  />
-                )
-              ) : selectedFriend ? (
-                <>
-                  <ChatHeader friend={selectedFriend} />
-                  {currentUserId && (
-                    <>
-                      <MessageList 
-                        messages={messages}
-                        currentUserId={currentUserId}
-                      />
-                      <MessageInput 
-                        newMessage={newMessage}
-                        onMessageChange={setNewMessage}
-                        onSendMessage={handleSendMessage}
-                      />
-                    </>
-                  )}
-                </>
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  Selecciona un chat para comenzar
-                </div>
-              )}
-            </div>
           </Card>
 
-          <div className="space-y-4">
-            <FriendSearch />
+          <div className="flex-1 bg-[#0B141A] flex flex-col">
+            {showGroupChat ? (
+              currentUserId && (
+                <GroupChat
+                  messages={groupMessages}
+                  currentUserId={currentUserId}
+                  onSendMessage={async (content, type, audioBlob) => {}}
+                />
+              )
+            ) : selectedFriend ? (
+              <>
+                <ChatHeader friend={selectedFriend} />
+                {currentUserId && (
+                  <>
+                    <MessageList 
+                      messages={messages}
+                      currentUserId={currentUserId}
+                    />
+                    <MessageInput 
+                      newMessage={newMessage}
+                      onMessageChange={setNewMessage}
+                      onSendMessage={handleSendMessage}
+                    />
+                  </>
+                )}
+              </>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-400">
+                Selecciona un chat para comenzar
+              </div>
+            )}
           </div>
         </div>
       </main>

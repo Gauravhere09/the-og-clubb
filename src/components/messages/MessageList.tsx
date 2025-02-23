@@ -25,33 +25,33 @@ export const MessageList = ({ messages, currentUserId }: MessageListProps) => {
   }, [messages]);
 
   return (
-    <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-      <div className="space-y-4">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.sender_id === currentUserId ? "justify-end" : "justify-start"}`}
-          >
+    <ScrollArea className="flex-1 px-4" ref={scrollRef}>
+      <div className="space-y-2 py-4">
+        {messages.map((message) => {
+          const isSender = message.sender_id === currentUserId;
+          return (
             <div
-              className={`max-w-[80%] rounded-lg p-3 ${
-                message.sender_id === currentUserId
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted"
-              }`}
+              key={message.id}
+              className={`flex ${isSender ? "justify-end" : "justify-start"}`}
             >
-              <p>{message.content}</p>
               <div
-                className={`text-xs mt-1 ${
-                  message.sender_id === currentUserId 
-                    ? "text-primary-foreground/70" 
-                    : "text-muted-foreground"
+                className={`max-w-[65%] rounded-lg p-3 ${
+                  isSender
+                    ? "bg-[#005C4B]"
+                    : "bg-[#1F2C33]"
                 }`}
               >
-                {new Date(message.created_at).toLocaleTimeString()}
+                <p className="text-white">{message.content}</p>
+                <div className="text-xs text-gray-400 mt-1 flex justify-end">
+                  {new Date(message.created_at).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </ScrollArea>
   );
