@@ -11,12 +11,14 @@ import { GroupChat } from "@/components/messages/GroupChat";
 import { useFriends, Friend } from "@/hooks/use-friends";
 import { useGroupMessages } from "@/hooks/use-group-messages";
 import { usePrivateMessages } from "@/hooks/use-private-messages";
+import { Search } from "lucide-react";
 
 const Messages = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [showGroupChat, setShowGroupChat] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { friends } = useFriends(currentUserId);
   const { messages, loadMessages, sendMessage } = usePrivateMessages();
@@ -47,6 +49,10 @@ const Messages = () => {
     }
   };
 
+  const filteredFriends = friends.filter(friend =>
+    friend.friend_username.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen flex bg-[#111B21] text-white">
       <Navigation />
@@ -54,11 +60,16 @@ const Messages = () => {
         <div className="h-[calc(100vh-64px)] flex">
           <Card className="w-[380px] rounded-none bg-[#1F2C33] border-r border-[#313D45]">
             <div className="p-4 border-b border-[#313D45]">
-              <input
-                type="text"
-                placeholder="Buscar o empezar un nuevo chat"
-                className="w-full px-4 py-2 bg-[#2A3942] rounded-lg text-sm placeholder:text-gray-400 focus:outline-none"
-              />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar o empezar un nuevo chat"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-[#2A3942] rounded-lg text-sm text-white placeholder:text-gray-400 focus:outline-none"
+                />
+              </div>
             </div>
             <div className="overflow-y-auto h-[calc(100%-73px)]">
               <button
@@ -80,7 +91,7 @@ const Messages = () => {
                 </div>
               </button>
               <FriendList 
-                friends={friends}
+                friends={filteredFriends}
                 selectedFriend={selectedFriend}
                 onSelectFriend={(friend) => {
                   setSelectedFriend(friend);

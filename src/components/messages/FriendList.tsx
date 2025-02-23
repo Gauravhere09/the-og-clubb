@@ -1,8 +1,6 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
 
 interface Friend {
   friend_id: string;
@@ -19,18 +17,12 @@ interface FriendListProps {
 export const FriendList = ({ friends, selectedFriend, onSelectFriend }: FriendListProps) => {
   return (
     <div className="border-r">
-      <div className="p-4 border-b">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Buscar mensajes" className="pl-9" />
-        </div>
-      </div>
-      <ScrollArea className="h-[calc(100%-73px)]">
+      <ScrollArea className="h-full">
         {friends.map((friend) => (
           <button
             key={friend.friend_id}
-            className={`w-full p-4 flex items-center gap-3 hover:bg-muted/50 transition-colors border-b ${
-              selectedFriend?.friend_id === friend.friend_id ? 'bg-muted' : ''
+            className={`w-full p-4 flex items-center gap-3 hover:bg-[#2A3942] transition-colors border-b border-[#313D45] ${
+              selectedFriend?.friend_id === friend.friend_id ? 'bg-[#2A3942]' : ''
             }`}
             onClick={() => onSelectFriend(friend)}
           >
