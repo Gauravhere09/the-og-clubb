@@ -72,6 +72,10 @@ export function FriendSearch() {
     setSearchResults([]);
   };
 
+  const getFirstName = (username: string) => {
+    return username?.split(' ')[0] || 'Usuario';
+  };
+
   return (
     <div ref={searchRef} className="relative w-full max-w-sm">
       <div className="relative">
@@ -98,7 +102,7 @@ export function FriendSearch() {
                     <AvatarFallback>{user.username?.[0]?.toUpperCase()}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="font-medium">{user.username || 'Usuario sin nombre'}</div>
+                    <div className="font-medium">{getFirstName(user.username || 'Usuario')}</div>
                     {user.bio && (
                       <div className="text-sm text-muted-foreground line-clamp-1">
                         {user.bio}
