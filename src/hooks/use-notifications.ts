@@ -16,6 +16,7 @@ interface NotificationWithSender {
   message?: string;
   post_id?: string;
   comment_id?: string;
+  read: boolean;
 }
 
 export const useNotifications = () => {
@@ -35,6 +36,7 @@ export const useNotifications = () => {
         message,
         post_id,
         comment_id,
+        read,
         sender:profiles!sender_id (
           id,
           username,
@@ -57,6 +59,7 @@ export const useNotifications = () => {
         message: notification.message ?? undefined,
         post_id: notification.post_id ?? undefined,
         comment_id: notification.comment_id ?? undefined,
+        read: notification.read,
         sender: {
           id: notification.sender?.id ?? '',
           username: notification.sender?.username ?? '',
@@ -78,7 +81,13 @@ export const useNotifications = () => {
           schema: 'public',
           table: 'notifications',
         },
-        () => {
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            toast({
+              title: "Nueva notificación",
+              description: payload.new.message || "Tienes una nueva notificación"
+            });
+          }
           loadNotifications();
         }
       )
@@ -104,7 +113,7 @@ export const useNotifications = () => {
 
       await supabase
         .from('notifications')
-        .delete()
+        .update({ read: true })
         .eq('id', notificationId);
 
       toast({
@@ -112,7 +121,7 @@ export const useNotifications = () => {
         description: accept ? "Ahora son amigos" : "Has rechazado la solicitud de amistad",
       });
 
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      loadNotifications();
     } catch (error) {
       console.error('Error handling friend request:', error);
       toast({
@@ -128,4 +137,3 @@ export const useNotifications = () => {
     handleFriendRequest
   };
 };
-

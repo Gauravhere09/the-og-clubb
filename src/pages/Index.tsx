@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "next-themes";
 import { FriendSearch } from "@/components/FriendSearch";
+import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,6 +77,7 @@ const Index = () => {
               <Plus className="h-5 w-5" />
             </Button>
             <FriendSearch />
+            <NotificationDropdown />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
