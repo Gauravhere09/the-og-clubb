@@ -6,7 +6,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { FriendRequestButton } from "./FriendRequestButton";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useToast } from "@/hooks/use-toast";
 
@@ -90,7 +89,7 @@ export function FriendSearch() {
             {searchResults.map((user) => (
               <div 
                 key={user.id} 
-                className="flex items-center justify-between p-2 rounded-lg hover:bg-accent cursor-pointer"
+                className="flex items-center p-2 rounded-lg hover:bg-accent cursor-pointer"
                 onClick={() => handleUserClick(user.id)}
               >
                 <div className="flex items-center gap-3">
@@ -107,7 +106,6 @@ export function FriendSearch() {
                     )}
                   </div>
                 </div>
-                <FriendRequestButton targetUserId={user.id} />
               </div>
             ))}
           </div>
