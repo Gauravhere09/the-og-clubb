@@ -37,12 +37,14 @@ export const MessageList = ({ messages, currentUserId }: MessageListProps) => {
               <div
                 className={`max-w-[65%] rounded-lg p-3 ${
                   isSender
-                    ? "bg-[#005C4B]"
-                    : "bg-[#1F2C33]"
+                    ? "bg-[#9b87f5] dark:bg-[#6E59A5]"
+                    : "bg-white dark:bg-[#1F2C33] border border-gray-200 dark:border-[#313D45]"
                 }`}
               >
-                <p className="text-white">{message.content}</p>
-                <div className="text-xs text-gray-400 mt-1 flex justify-end">
+                <p className={`${isSender ? "text-white" : "text-gray-900 dark:text-white"}`}>
+                  {message.content}
+                </p>
+                <div className={`text-xs ${isSender ? "text-white/70" : "text-gray-500 dark:text-gray-400"} mt-1 flex justify-end`}>
                   {new Date(message.created_at).toLocaleTimeString([], {
                     hour: '2-digit',
                     minute: '2-digit'
