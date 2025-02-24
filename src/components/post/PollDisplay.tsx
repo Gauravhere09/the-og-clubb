@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Poll } from "@/types/post";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
 
 interface PollDisplayProps {
   poll: Poll;
@@ -28,10 +29,18 @@ export function PollDisplay({ poll, onVote }: PollDisplayProps) {
   };
 
   return (
-    <div className="space-y-4 mt-4 bg-muted/30 p-4 rounded-lg">
-      <h3 className="font-semibold text-lg border-b pb-2">
-        {poll.question}
-      </h3>
+    <div className="space-y-4 mt-4 bg-background rounded-lg p-4">
+      <div className="space-y-2">
+        <h3 className="text-xl font-semibold">
+          {poll.question}
+        </h3>
+        {!poll.user_vote && (
+          <p className="text-sm text-muted-foreground">
+            Selecciona una opción.
+          </p>
+        )}
+      </div>
+
       <div className="space-y-3">
         {poll.options.map((option) => {
           const percentage = getPercentage(option.votes);
@@ -43,50 +52,62 @@ export function PollDisplay({ poll, onVote }: PollDisplayProps) {
               key={option.id}
               className="relative"
             >
-              <div
+              <button
+                onClick={() => handleVote(option.id)}
+                disabled={hasVoted || isVoting}
                 className={cn(
-                  "relative z-10",
-                  hasVoted && "pointer-events-none"
+                  "w-full text-left p-4 rounded-lg transition-all relative overflow-hidden",
+                  "group flex items-center justify-between",
+                  hasVoted ? "bg-primary/10" : "hover:bg-primary/5",
+                  isSelected && "bg-primary/20"
                 )}
               >
-                <button
-                  onClick={() => handleVote(option.id)}
-                  disabled={hasVoted || isVoting}
-                  className={cn(
-                    "w-full text-left px-4 py-3 rounded-lg transition-all",
-                    "relative z-10 bg-transparent",
-                    !hasVoted && "hover:bg-accent",
-                    isSelected && "font-semibold"
-                  )}
-                >
-                  <div className="relative z-10 flex justify-between items-center">
-                    <span>{option.content}</span>
-                    {hasVoted && (
-                      <span className="text-sm font-medium">
-                        {percentage}%
-                      </span>
-                    )}
+                <div className="flex items-center gap-3 z-10">
+                  <div className={cn(
+                    "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                    isSelected ? "border-primary bg-primary" : "border-muted-foreground"
+                  )}>
+                    {isSelected && <Check className="h-3 w-3 text-white" />}
                   </div>
-                </button>
+                  <span className={cn(
+                    "font-medium",
+                    isSelected && "text-primary"
+                  )}>
+                    {option.content}
+                  </span>
+                </div>
+                {hasVoted && (
+                  <span className="text-sm font-medium z-10">
+                    {option.votes || 0}
+                  </span>
+                )}
                 {hasVoted && (
                   <div 
                     className={cn(
-                      "absolute inset-0 rounded-lg",
-                      isSelected ? "bg-primary/20" : "bg-muted",
-                      "transition-all duration-500 ease-out"
+                      "absolute inset-0 rounded-lg bg-primary/5",
+                      isSelected && "bg-primary/10"
                     )}
                     style={{ width: `${percentage}%` }}
                   />
                 )}
-              </div>
+              </button>
             </div>
           );
         })}
       </div>
-      <div className="text-sm text-muted-foreground pt-2 border-t">
-        {poll.total_votes} {poll.total_votes === 1 ? "voto" : "votos"}
-        {poll.user_vote && " • Ya has votado"}
-      </div>
+
+      {poll.user_vote && (
+        <div className="flex items-center justify-between text-sm text-muted-foreground pt-2">
+          <span>{poll.total_votes} {poll.total_votes === 1 ? "voto" : "votos"}</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-primary hover:text-primary/90"
+          >
+            Ver votos
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

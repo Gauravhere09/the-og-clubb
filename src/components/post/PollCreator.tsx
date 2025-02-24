@@ -2,13 +2,14 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, X, HelpCircle } from "lucide-react";
+import { PlusCircle, X, HelpCircle, ArrowLeft, ChevronRight } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Switch } from "@/components/ui/switch";
 
 interface PollCreatorProps {
   onPollCreate: (poll: { question: string; options: string[] }) => void;
@@ -18,6 +19,7 @@ interface PollCreatorProps {
 export function PollCreator({ onPollCreate, onCancel }: PollCreatorProps) {
   const [question, setQuestion] = useState("");
   const [options, setOptions] = useState<string[]>(["", ""]);
+  const [allowMultipleAnswers, setAllowMultipleAnswers] = useState(false);
   const maxOptions = 4;
 
   const addOption = () => {
@@ -50,38 +52,34 @@ export function PollCreator({ onPollCreate, onCancel }: PollCreatorProps) {
   const isValid = question.trim() && options.every(opt => opt.trim());
 
   return (
-    <div className="space-y-4 p-4 border rounded-lg bg-card">
-      <div className="flex items-center justify-between border-b pb-2">
-        <h3 className="font-semibold">Crear encuesta</h3>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <HelpCircle className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Crea una encuesta con hasta {maxOptions} opciones</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+    <div className="space-y-4 p-4 bg-background">
+      <div className="flex items-center gap-4 mb-6">
+        <Button variant="ghost" size="icon" onClick={onCancel}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h2 className="text-xl font-semibold">Crea una encuesta</h2>
       </div>
       
-      <div className="space-y-4">
-        <Input
-          placeholder="Escribe tu pregunta"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          className="font-medium"
-        />
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <label className="text-sm text-muted-foreground">Pregunta</label>
+          <Input
+            placeholder="Escribe tu pregunta"
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            className="bg-background border-muted-foreground/20"
+          />
+        </div>
         
         <div className="space-y-2">
+          <label className="text-sm text-muted-foreground">Opciones</label>
           {options.map((option, index) => (
-            <div key={index} className="flex gap-2">
+            <div key={index} className="flex items-center gap-2">
               <Input
                 placeholder={`Opción ${index + 1}`}
                 value={option}
                 onChange={(e) => updateOption(index, e.target.value)}
+                className="bg-background border-muted-foreground/20"
               />
               {options.length > 2 && (
                 <Button
@@ -93,34 +91,40 @@ export function PollCreator({ onPollCreate, onCancel }: PollCreatorProps) {
                   <X className="h-4 w-4" />
                 </Button>
               )}
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </div>
           ))}
         </div>
 
         {options.length < maxOptions && (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
             onClick={addOption}
-            className="w-full"
+            className="w-full text-primary"
           >
             <PlusCircle className="h-4 w-4 mr-2" />
-            Agregar opción
+            Añadir
           </Button>
         )}
+
+        <div className="flex items-center justify-between py-4 border-t border-muted-foreground/20">
+          <span className="text-sm">Permitir varias respuestas</span>
+          <Switch
+            checked={allowMultipleAnswers}
+            onCheckedChange={setAllowMultipleAnswers}
+          />
+        </div>
       </div>
 
-      <div className="flex justify-end gap-2 pt-2 border-t">
-        <Button variant="ghost" onClick={onCancel}>
-          Cancelar
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          disabled={!isValid}
-        >
-          Crear encuesta
-        </Button>
-      </div>
+      <Button
+        onClick={handleSubmit}
+        disabled={!isValid}
+        className="w-full bg-primary text-primary-foreground mt-4"
+        size="lg"
+      >
+        Publicar
+      </Button>
     </div>
   );
 }
