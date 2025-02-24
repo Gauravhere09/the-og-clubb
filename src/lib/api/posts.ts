@@ -1,8 +1,13 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "@/types/post";
 import { Tables } from "@/types/database";
 
-export async function createPost(content: string, file: File | null = null) {
+export async function createPost(
+  content: string, 
+  file: File | null = null,
+  pollData?: { question: string; options: string[] }
+) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Usuario no autenticado");
@@ -29,12 +34,27 @@ export async function createPost(content: string, file: File | null = null) {
                    file.type.startsWith('audio/') || file.type === 'audio/webm' ? 'audio' : null;
     }
 
+    let poll = null;
+    if (pollData) {
+      poll = {
+        question: pollData.question,
+        options: pollData.options.map((content, index) => ({
+          id: crypto.randomUUID(),
+          content,
+          votes: 0
+        })),
+        total_votes: 0,
+        user_vote: null
+      };
+    }
+
     const { data: post, error } = await supabase
       .from('posts')
       .insert({
         content,
         media_url,
         media_type,
+        poll,
         user_id: user.id,
         visibility: 'public'
       } as Tables['posts']['Insert'])

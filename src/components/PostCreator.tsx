@@ -20,11 +20,11 @@ export function PostCreator() {
   const queryClient = useQueryClient();
 
   const { mutate: submitPost, isPending } = useMutation({
-    mutationFn: async () => {
-      if (!content && !file) {
-        throw new Error("Debes agregar texto o un archivo multimedia");
+    mutationFn: async (pollData?: { question: string; options: string[] }) => {
+      if (!content && !file && !pollData) {
+        throw new Error("Debes agregar texto, un archivo multimedia o una encuesta");
       }
-      return createPost(content, file);
+      return createPost(content, file, pollData);
     },
     onSuccess: () => {
       setContent("");
@@ -61,9 +61,7 @@ export function PostCreator() {
   };
 
   const handlePollCreate = (pollData: { question: string; options: string[] }) => {
-    // Here we would update the content to include the poll data
-    setContent(`${content}\n\nEncuesta: ${pollData.question}\nOpciones:\n${pollData.options.join('\n')}`);
-    setShowPollCreator(false);
+    submitPost(pollData);
   };
 
   return (
