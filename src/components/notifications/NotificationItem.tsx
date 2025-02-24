@@ -27,6 +27,16 @@ interface NotificationItemProps {
 export const NotificationItem = ({ notification, onHandleFriendRequest, onClick }: NotificationItemProps) => {
   const navigate = useNavigate();
 
+  const handleClick = () => {
+    if (notification.type === 'friend_request') {
+      return; // No navegar en solicitudes de amistad
+    }
+    
+    if (notification.post_id) {
+      navigate(`/post/${notification.post_id}`);
+    }
+  };
+
   const renderContent = () => {
     if (notification.message) {
       return (
@@ -111,7 +121,7 @@ export const NotificationItem = ({ notification, onHandleFriendRequest, onClick 
       className={`p-4 flex items-center gap-4 hover:bg-muted/50 transition-colors border-b last:border-b-0 ${
         isClickable ? 'cursor-pointer' : ''
       }`}
-      onClick={isClickable && onClick ? onClick : undefined}
+      onClick={isClickable ? handleClick : undefined}
     >
       <Avatar>
         <AvatarImage src={notification.sender.avatar_url || undefined} />
