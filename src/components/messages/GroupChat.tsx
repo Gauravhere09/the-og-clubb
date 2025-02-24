@@ -1,9 +1,9 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, Mic, Square, Image as ImageIcon, X } from "lucide-react";
+import { Send, Mic, Square, Image as ImageIcon, X, ArrowLeft, Phone, Video, Search, MoreVertical } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { GroupMessage } from "@/hooks/use-group-messages";
 import { uploadProfileImage } from "@/lib/api/profile";
