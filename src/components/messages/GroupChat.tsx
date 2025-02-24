@@ -110,8 +110,8 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
                 >
                   {message.type === 'audio' ? (
                     <audio src={message.media_url || undefined} controls className="max-w-[200px]" />
-                  ) : message.type === 'image' ? (
-                    <img src={message.media_url || undefined} alt="Imagen enviada" className="max-w-[200px] rounded" />
+                  ) : message.media_url ? (
+                    <img src={message.media_url} alt="Imagen enviada" className="max-w-[200px] rounded" />
                   ) : (
                     <p>{message.content}</p>
                   )}
