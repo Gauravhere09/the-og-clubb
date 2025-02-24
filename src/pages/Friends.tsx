@@ -7,9 +7,23 @@ import { useFriends } from "@/hooks/use-friends";
 import { FriendRequestsList } from "@/components/friends/FriendRequestsList";
 import { FriendSuggestionsList } from "@/components/friends/FriendSuggestionsList";
 import { AllFriendsList } from "@/components/friends/AllFriendsList";
+import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+
+interface SentRequest {
+  id: string;
+  friend: {
+    id: string;
+    username: string | null;
+    avatar_url: string | null;
+  };
+  status: string;
+}
 
 export default function Friends() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [sentRequests, setSentRequests] = useState<SentRequest[]>([]);
   const { friends, friendRequests, suggestions, loading, sendFriendRequest, respondToFriendRequest } = useFriends(currentUserId);
 
   useEffect(() => {
@@ -19,6 +33,45 @@ export default function Friends() {
     };
     getCurrentUser();
   }, []);
+
+  useEffect(() => {
+    if (currentUserId) {
+      loadSentRequests();
+    }
+  }, [currentUserId]);
+
+  const loadSentRequests = async () => {
+    if (!currentUserId) return;
+
+    const { data, error } = await supabase
+      .from('friendships')
+      .select(`
+        id,
+        friend:profiles!friendships_friend_id_fkey (
+          id,
+          username,
+          avatar_url
+        ),
+        status
+      `)
+      .eq('user_id', currentUserId)
+      .eq('status', 'pending');
+
+    if (!error && data) {
+      setSentRequests(data);
+    }
+  };
+
+  const handleCancelRequest = async (requestId: string) => {
+    const { error } = await supabase
+      .from('friendships')
+      .delete()
+      .eq('id', requestId);
+
+    if (!error) {
+      await loadSentRequests();
+    }
+  };
 
   if (!currentUserId) {
     return (
@@ -49,6 +102,7 @@ export default function Friends() {
             </TabsTrigger>
             <TabsTrigger value="suggestions">Sugerencias</TabsTrigger>
             <TabsTrigger value="all">Todos los amigos</TabsTrigger>
+            <TabsTrigger value="sent">Enviadas</TabsTrigger>
           </TabsList>
 
           <TabsContent value="requests">
@@ -67,6 +121,45 @@ export default function Friends() {
 
           <TabsContent value="all">
             <AllFriendsList friends={friends} />
+          </TabsContent>
+
+          <TabsContent value="sent">
+            <Card className="p-6">
+              <h2 className="text-2xl font-bold mb-6">Solicitudes enviadas</h2>
+              {sentRequests.length === 0 ? (
+                <p className="text-center text-muted-foreground">
+                  No has enviado ninguna solicitud de amistad
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {sentRequests.map((request) => (
+                    <div
+                      key={request.id}
+                      className="flex items-center justify-between p-4 rounded-lg border"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={request.friend.avatar_url || undefined} />
+                          <AvatarFallback>
+                            {request.friend.username?.[0]?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-medium">{request.friend.username}</div>
+                          <div className="text-sm text-muted-foreground">Pendiente</div>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleCancelRequest(request.id)}
+                      >
+                        Cancelar solicitud
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
           </TabsContent>
         </Tabs>
       </main>
