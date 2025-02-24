@@ -1,20 +1,14 @@
+
 import { useEffect, useState } from "react";
-import { Navigation } from "@/components/Navigation";
-import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { FriendList } from "@/components/messages/FriendList";
-import { ChatHeader } from "@/components/messages/ChatHeader";
-import { MessageList } from "@/components/messages/MessageList";
-import { MessageInput } from "@/components/messages/MessageInput";
-import { GroupChat } from "@/components/messages/GroupChat";
-import { SearchBar } from "@/components/messages/SearchBar";
-import { ArchivedChats } from "@/components/messages/ArchivedChats";
-import { GroupChatButton } from "@/components/messages/GroupChatButton";
 import { useFriends, Friend } from "@/hooks/use-friends";
 import { useGroupMessages } from "@/hooks/use-group-messages";
 import { usePrivateMessages } from "@/hooks/use-private-messages";
 import { useArchivedChats } from "@/hooks/use-archived-chats";
 import { useMessageNotifications } from "@/components/messages/MessageNotification";
+import { MessagesLayout } from "@/components/messages/MessagesLayout";
+import { SidebarContent } from "@/components/messages/SidebarContent";
+import { ChatContainer } from "@/components/messages/ChatContainer";
 
 const Messages = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -118,91 +112,46 @@ const Messages = () => {
   const showChat = selectedFriend || showGroupChat;
 
   return (
-    <div className="min-h-screen flex bg-white dark:bg-black text-gray-900 dark:text-white">
-      <Navigation />
-      <main className="flex-1">
-        <div className="h-[calc(100vh-64px)] flex">
-          {showSidebar && (
-            <Card className="w-full md:w-[380px] md:block rounded-none bg-gray-50 dark:bg-black border-r border-gray-200 dark:border-neutral-800">
-              <SearchBar 
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-              />
-              <div className="overflow-y-auto h-[calc(100%-73px)]">
-                <GroupChatButton 
-                  onClick={() => {
-                    setShowGroupChat(true);
-                    setSelectedFriend(null);
-                  }}
-                />
-                <FriendList 
-                  friends={filteredFriends}
-                  selectedFriend={selectedFriend}
-                  onSelectFriend={(friend) => {
-                    setSelectedFriend(friend);
-                    setShowGroupChat(false);
-                  }}
-                  onLongPress={handleChatLongPress}
-                  onPressEnd={handleChatPressEnd}
-                />
-                <ArchivedChats 
-                  archivedFriends={archivedFriends}
-                  onUnarchive={handleUnarchiveChat}
-                />
-              </div>
-            </Card>
-          )}
-
-          <div className={`flex-1 bg-gray-50 dark:bg-black flex flex-col ${!showSidebar ? 'fixed inset-0 z-50' : ''}`}>
-            {showChat ? (
-              showGroupChat ? (
-                currentUserId && (
-                  <GroupChat
-                    messages={groupMessages}
-                    currentUserId={currentUserId}
-                    onSendMessage={async (content, type, audioBlob) => {}}
-                    onClose={() => {
-                      setShowGroupChat(false);
-                      const nav = document.querySelector('nav');
-                      if (nav) nav.style.display = 'flex';
-                    }}
-                  />
-                )
-              ) : selectedFriend ? (
-                <>
-                  <ChatHeader 
-                    friend={selectedFriend} 
-                    onBack={() => {
-                      setSelectedFriend(null);
-                      const nav = document.querySelector('nav');
-                      if (nav) nav.style.display = 'flex';
-                    }}
-                    isTyping={isTyping}
-                  />
-                  {currentUserId && (
-                    <>
-                      <MessageList 
-                        messages={messages}
-                        currentUserId={currentUserId}
-                      />
-                      <MessageInput 
-                        newMessage={newMessage}
-                        onMessageChange={handleMessageChange}
-                        onSendMessage={handleSendMessage}
-                      />
-                    </>
-                  )}
-                </>
-              ) : null
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-                Selecciona un chat para comenzar
-              </div>
-            )}
-          </div>
+    <MessagesLayout
+      showSidebar={showSidebar}
+      sidebar={
+        <SidebarContent
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          onGroupChatClick={() => {
+            setShowGroupChat(true);
+            setSelectedFriend(null);
+          }}
+          filteredFriends={filteredFriends}
+          selectedFriend={selectedFriend}
+          onSelectFriend={(friend) => {
+            setSelectedFriend(friend);
+            setShowGroupChat(false);
+          }}
+          onLongPress={handleChatLongPress}
+          onPressEnd={handleChatPressEnd}
+          archivedFriends={archivedFriends}
+          onUnarchive={handleUnarchiveChat}
+        />
+      }
+      content={
+        <div className={`flex-1 bg-gray-50 dark:bg-black flex flex-col ${!showSidebar ? 'fixed inset-0 z-50' : ''}`}>
+          <ChatContainer
+            showChat={showChat}
+            showGroupChat={showGroupChat}
+            selectedFriend={selectedFriend}
+            currentUserId={currentUserId}
+            messages={messages}
+            groupMessages={groupMessages}
+            newMessage={newMessage}
+            isTyping={isTyping}
+            onBack={handleBack}
+            onMessageChange={handleMessageChange}
+            onSendMessage={handleSendMessage}
+          />
         </div>
-      </main>
-    </div>
+      }
+    />
   );
 };
 
