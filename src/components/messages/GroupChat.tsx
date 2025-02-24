@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
@@ -71,20 +70,56 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
     }
   };
 
+  useEffect(() => {
+    const nav = document.querySelector('nav');
+    if (nav && window.innerWidth < 768) {
+      nav.style.display = 'none';
+    }
+
+    return () => {
+      const nav = document.querySelector('nav');
+      if (nav) {
+        nav.style.display = 'flex';
+      }
+    };
+  }, []);
+
   return (
-    <div className="flex flex-col h-[100dvh] md:h-[600px]">
+    <div className="fixed inset-0 z-50 flex flex-col bg-background md:static md:h-[600px]">
       <div className="p-4 border-b flex items-center justify-between">
-        <h2 className="text-lg font-semibold flex items-center gap-3">
+        <div className="flex items-center gap-3">
+          {onClose && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={onClose}
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          )}
           <div className="w-8 h-8 rounded-full bg-[#9b87f5] dark:bg-black border border-[#7E69AB] dark:border-neutral-800 flex items-center justify-center">
             <span className="text-sm font-semibold text-white">H</span>
           </div>
-          Red H
-        </h2>
-        {onClose && (
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
-            <X className="h-5 w-5" />
-          </button>
-        )}
+          <div>
+            <div className="font-medium">Red H</div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">Chat grupal</div>
+          </div>
+        </div>
+        <div className="hidden md:flex items-center gap-2">
+          <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
+            <Video className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
+            <Phone className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
+            <Search className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
+            <MoreVertical className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
       <ScrollArea className="flex-1 p-4">

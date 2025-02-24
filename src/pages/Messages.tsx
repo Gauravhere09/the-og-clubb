@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
@@ -115,7 +114,7 @@ const Messages = () => {
     archivedChats.has(friend.friend_id)
   );
 
-  const showSidebar = !selectedFriend || window.innerWidth >= 768;
+  const showSidebar = (!selectedFriend && !showGroupChat) || window.innerWidth >= 768;
   const showChat = selectedFriend || showGroupChat;
 
   return (
@@ -124,7 +123,7 @@ const Messages = () => {
       <main className="flex-1">
         <div className="h-[calc(100vh-64px)] flex">
           {showSidebar && (
-            <Card className="w-[380px] md:block rounded-none bg-gray-50 dark:bg-black border-r border-gray-200 dark:border-neutral-800">
+            <Card className="w-full md:w-[380px] md:block rounded-none bg-gray-50 dark:bg-black border-r border-gray-200 dark:border-neutral-800">
               <SearchBar 
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
@@ -154,7 +153,7 @@ const Messages = () => {
             </Card>
           )}
 
-          <div className={`flex-1 bg-gray-50 dark:bg-black flex flex-col ${!showSidebar ? 'w-full' : ''}`}>
+          <div className={`flex-1 bg-gray-50 dark:bg-black flex flex-col ${!showSidebar ? 'fixed inset-0 z-50' : ''}`}>
             {showChat ? (
               showGroupChat ? (
                 currentUserId && (
@@ -162,13 +161,22 @@ const Messages = () => {
                     messages={groupMessages}
                     currentUserId={currentUserId}
                     onSendMessage={async (content, type, audioBlob) => {}}
+                    onClose={() => {
+                      setShowGroupChat(false);
+                      const nav = document.querySelector('nav');
+                      if (nav) nav.style.display = 'flex';
+                    }}
                   />
                 )
               ) : selectedFriend ? (
                 <>
                   <ChatHeader 
                     friend={selectedFriend} 
-                    onBack={handleBack}
+                    onBack={() => {
+                      setSelectedFriend(null);
+                      const nav = document.querySelector('nav');
+                      if (nav) nav.style.display = 'flex';
+                    }}
                     isTyping={isTyping}
                   />
                   {currentUserId && (
