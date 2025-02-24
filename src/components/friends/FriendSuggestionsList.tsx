@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FriendSuggestion } from "@/hooks/use-friends";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,24 @@ export function FriendSuggestionsList({ suggestions, onSendRequest }: FriendSugg
 
     return data !== null;
   };
+
+  useEffect(() => {
+    const loadExistingRequests = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const requests = {};
+      for (const suggestion of suggestions) {
+        const hasRequest = await checkExistingRequest(suggestion.id);
+        if (hasRequest) {
+          requests[suggestion.id] = true;
+        }
+      }
+      setRequestedFriends(requests);
+    };
+
+    loadExistingRequests();
+  }, [suggestions]);
 
   const handleSendRequest = async (friendId: string) => {
     try {
