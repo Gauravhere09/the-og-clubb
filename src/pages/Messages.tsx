@@ -108,8 +108,8 @@ const Messages = () => {
     archivedChats.has(friend.friend_id)
   );
 
-  const showSidebar = (!selectedFriend && !showGroupChat) || window.innerWidth >= 768;
-  const showChat = selectedFriend || showGroupChat;
+  const showSidebar = (!Boolean(selectedFriend) && !showGroupChat) || window.innerWidth >= 768;
+  const showChat = Boolean(selectedFriend) || showGroupChat;
 
   return (
     <MessagesLayout
