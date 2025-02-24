@@ -16,8 +16,30 @@ interface FriendSuggestionsListProps {
 export function FriendSuggestionsList({ suggestions, onSendRequest }: FriendSuggestionsListProps) {
   const [requestedFriends, setRequestedFriends] = useState<Record<string, boolean>>({});
 
+  const checkExistingRequest = async (friendId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+
+    const { data, error } = await supabase
+      .from('friendships')
+      .select('status')
+      .eq('user_id', user.id)
+      .eq('friend_id', friendId)
+      .eq('status', 'pending')
+      .maybeSingle();
+
+    return data !== null;
+  };
+
   const handleSendRequest = async (friendId: string) => {
     try {
+      // Verificar si ya existe una solicitud pendiente
+      const hasExistingRequest = await checkExistingRequest(friendId);
+      if (hasExistingRequest) {
+        setRequestedFriends(prev => ({ ...prev, [friendId]: true }));
+        return;
+      }
+
       await onSendRequest(friendId);
       setRequestedFriends(prev => ({ ...prev, [friendId]: true }));
     } catch (error) {
