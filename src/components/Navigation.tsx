@@ -51,7 +51,7 @@ export function Navigation() {
   return (
     <nav className="fixed bottom-0 left-0 w-full bg-background border-t md:relative md:border-t-0 md:border-r md:w-[70px] md:h-screen z-50">
       <Logo />
-      <div className="flex justify-around md:flex-col md:h-full md:justify-start md:pt-6 md:gap-8">
+      <div className="grid grid-cols-5 md:grid-cols-1 w-full md:h-[calc(100%-60px)] md:pt-6">
         {links.map((link) => (
           <NavigationItem
             key={link.label}
