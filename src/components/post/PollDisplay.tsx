@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Poll } from "@/types/post";
 import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 interface PollDisplayProps {
   poll: Poll;
@@ -27,9 +28,11 @@ export function PollDisplay({ poll, onVote }: PollDisplayProps) {
   };
 
   return (
-    <div className="space-y-4 mt-4">
-      <h3 className="font-medium text-lg">{poll.question}</h3>
-      <div className="space-y-2">
+    <div className="space-y-4 mt-4 bg-muted/30 p-4 rounded-lg">
+      <h3 className="font-semibold text-lg border-b pb-2">
+        {poll.question}
+      </h3>
+      <div className="space-y-3">
         {poll.options.map((option) => {
           const percentage = getPercentage(option.votes);
           const isSelected = option.id === selectedOption;
@@ -38,31 +41,52 @@ export function PollDisplay({ poll, onVote }: PollDisplayProps) {
           return (
             <div
               key={option.id}
-              className={`relative ${!hasVoted && 'hover:bg-accent'} rounded-lg transition-colors`}
+              className="relative"
             >
-              <Button
-                variant={isSelected ? "secondary" : "outline"}
-                className="w-full justify-start"
-                onClick={() => handleVote(option.id)}
-                disabled={hasVoted || isVoting}
+              <div
+                className={cn(
+                  "relative z-10",
+                  hasVoted && "pointer-events-none"
+                )}
               >
-                {option.content}
-              </Button>
-              {hasVoted && (
-                <div className="mt-1">
-                  <Progress value={percentage} className="h-2" />
-                  <span className="text-sm text-muted-foreground">
-                    {percentage}% ({option.votes} votos)
-                  </span>
-                </div>
-              )}
+                <button
+                  onClick={() => handleVote(option.id)}
+                  disabled={hasVoted || isVoting}
+                  className={cn(
+                    "w-full text-left px-4 py-3 rounded-lg transition-all",
+                    "relative z-10 bg-transparent",
+                    !hasVoted && "hover:bg-accent",
+                    isSelected && "font-semibold"
+                  )}
+                >
+                  <div className="relative z-10 flex justify-between items-center">
+                    <span>{option.content}</span>
+                    {hasVoted && (
+                      <span className="text-sm font-medium">
+                        {percentage}%
+                      </span>
+                    )}
+                  </div>
+                </button>
+                {hasVoted && (
+                  <div 
+                    className={cn(
+                      "absolute inset-0 rounded-lg",
+                      isSelected ? "bg-primary/20" : "bg-muted",
+                      "transition-all duration-500 ease-out"
+                    )}
+                    style={{ width: `${percentage}%` }}
+                  />
+                )}
+              </div>
             </div>
           );
         })}
       </div>
-      <p className="text-sm text-muted-foreground">
-        {poll.total_votes} votos totales
-      </p>
+      <div className="text-sm text-muted-foreground pt-2 border-t">
+        {poll.total_votes} {poll.total_votes === 1 ? "voto" : "votos"}
+        {poll.user_vote && " • Ya has votado"}
+      </div>
     </div>
   );
 }
