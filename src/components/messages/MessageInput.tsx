@@ -1,22 +1,50 @@
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, Paperclip, Smile, Mic } from "lucide-react";
+import { Send, Paperclip, Smile, Mic, Image } from "lucide-react";
+import { useRef } from "react";
 
 interface MessageInputProps {
   newMessage: string;
   onMessageChange: (message: string) => void;
   onSendMessage: () => void;
+  onImageUpload?: (file: File) => void;
 }
 
-export const MessageInput = ({ newMessage, onMessageChange, onSendMessage }: MessageInputProps) => {
+export const MessageInput = ({ 
+  newMessage, 
+  onMessageChange, 
+  onSendMessage,
+  onImageUpload 
+}: MessageInputProps) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onImageUpload) {
+      onImageUpload(file);
+    }
+  };
+
   return (
     <div className="p-4 bg-white dark:bg-[#111B21] border-t border-gray-200 dark:border-[#313D45] flex items-center gap-2">
       <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
         <Smile className="h-6 w-6" />
       </Button>
-      <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
-        <Paperclip className="h-6 w-6" />
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        accept="image/*"
+        className="hidden"
+      />
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white"
+        onClick={() => fileInputRef.current?.click()}
+      >
+        <Image className="h-6 w-6" />
       </Button>
       <form 
         className="flex-1 flex items-center gap-2"

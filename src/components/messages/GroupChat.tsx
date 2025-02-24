@@ -3,21 +3,24 @@ import { useState, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, Mic, Square } from "lucide-react";
+import { Send, Mic, Square, Image as ImageIcon, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { GroupMessage } from "@/hooks/use-group-messages";
+import { uploadProfileImage } from "@/lib/api/profile";
 
 interface GroupChatProps {
   messages: GroupMessage[];
   currentUserId: string;
-  onSendMessage: (content: string, type: 'text' | 'audio', audioBlob?: Blob) => Promise<void>;
+  onSendMessage: (content: string, type: 'text' | 'audio' | 'image', audioBlob?: Blob) => Promise<void>;
+  onClose?: () => void;
 }
 
-export const GroupChat = ({ messages, currentUserId, onSendMessage }: GroupChatProps) => {
+export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: GroupChatProps) => {
   const [newMessage, setNewMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<BlobPart[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const startRecording = async () => {
     try {
@@ -57,10 +60,31 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage }: GroupChatP
     setNewMessage("");
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        await onSendMessage(file.name, 'image', file);
+      } catch (error) {
+        console.error('Error uploading image:', error);
+      }
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold">Chat grupal "h"</h2>
+    <div className="flex flex-col h-[100dvh] md:h-[600px]">
+      <div className="p-4 border-b flex items-center justify-between">
+        <h2 className="text-lg font-semibold flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-[#9b87f5] dark:bg-black border border-[#7E69AB] dark:border-neutral-800 flex items-center justify-center">
+            <span className="text-sm font-semibold text-white">H</span>
+          </div>
+          Red H
+        </h2>
+        {onClose && (
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       <ScrollArea className="flex-1 p-4">
@@ -86,6 +110,8 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage }: GroupChatP
                 >
                   {message.type === 'audio' ? (
                     <audio src={message.media_url || undefined} controls className="max-w-[200px]" />
+                  ) : message.type === 'image' ? (
+                    <img src={message.media_url || undefined} alt="Imagen enviada" className="max-w-[200px] rounded" />
                   ) : (
                     <p>{message.content}</p>
                   )}
@@ -107,6 +133,22 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage }: GroupChatP
 
       <div className="p-4 border-t">
         <form onSubmit={handleSendMessage} className="flex gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleImageUpload}
+            accept="image/*"
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => fileInputRef.current?.click()}
+            className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white"
+          >
+            <ImageIcon className="h-5 w-5" />
+          </Button>
           <Input 
             placeholder="Escribe un mensaje..." 
             value={newMessage}
