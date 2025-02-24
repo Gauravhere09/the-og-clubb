@@ -12,9 +12,17 @@ interface FriendListProps {
   friends: Friend[];
   selectedFriend: Friend | null;
   onSelectFriend: (friend: Friend) => void;
+  onLongPress?: (friendId: string) => void;
+  onPressEnd?: () => void;
 }
 
-export const FriendList = ({ friends, selectedFriend, onSelectFriend }: FriendListProps) => {
+export const FriendList = ({ 
+  friends, 
+  selectedFriend, 
+  onSelectFriend,
+  onLongPress,
+  onPressEnd 
+}: FriendListProps) => {
   return (
     <div className="border-r">
       <ScrollArea className="h-full">
@@ -25,6 +33,11 @@ export const FriendList = ({ friends, selectedFriend, onSelectFriend }: FriendLi
               selectedFriend?.friend_id === friend.friend_id ? 'bg-[#2A3942]' : ''
             }`}
             onClick={() => onSelectFriend(friend)}
+            onMouseDown={() => onLongPress?.(friend.friend_id)}
+            onMouseUp={onPressEnd}
+            onMouseLeave={onPressEnd}
+            onTouchStart={() => onLongPress?.(friend.friend_id)}
+            onTouchEnd={onPressEnd}
           >
             <Avatar>
               <AvatarImage src={friend.friend_avatar_url || undefined} />

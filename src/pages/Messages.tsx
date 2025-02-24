@@ -11,7 +11,14 @@ import { GroupChat } from "@/components/messages/GroupChat";
 import { useFriends, Friend } from "@/hooks/use-friends";
 import { useGroupMessages } from "@/hooks/use-group-messages";
 import { usePrivateMessages } from "@/hooks/use-private-messages";
-import { Search } from "lucide-react";
+import { useMessageNotifications } from "@/components/messages/MessageNotification";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Search, MoreVertical } from "lucide-react";
 
 const Messages = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -19,10 +26,14 @@ const Messages = () => {
   const [newMessage, setNewMessage] = useState("");
   const [showGroupChat, setShowGroupChat] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-
+  const [archivedChats, setArchivedChats] = useState<Set<string>>(new Set());
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  
   const { friends } = useFriends(currentUserId);
   const { messages, loadMessages, sendMessage } = usePrivateMessages();
   const { groupMessages } = useGroupMessages(currentUserId, showGroupChat);
+  
+  useMessageNotifications(currentUserId);
 
   useEffect(() => {
     const loadCurrentUser = async () => {
@@ -49,8 +60,39 @@ const Messages = () => {
     }
   };
 
+  const handleChatLongPress = (friendId: string) => {
+    const timer = setTimeout(() => {
+      setArchivedChats(prev => {
+        const newSet = new Set(prev);
+        newSet.add(friendId);
+        return newSet;
+      });
+    }, 500);
+    setLongPressTimer(timer);
+  };
+
+  const handleChatPressEnd = () => {
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+  };
+
+  const handleUnarchiveChat = (friendId: string) => {
+    setArchivedChats(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(friendId);
+      return newSet;
+    });
+  };
+
   const filteredFriends = friends.filter(friend =>
-    friend.friend_username.toLowerCase().includes(searchQuery.toLowerCase())
+    friend.friend_username.toLowerCase().includes(searchQuery.toLowerCase()) &&
+    !archivedChats.has(friend.friend_id)
+  );
+
+  const archivedFriends = friends.filter(friend =>
+    archivedChats.has(friend.friend_id)
   );
 
   return (
@@ -97,7 +139,36 @@ const Messages = () => {
                   setSelectedFriend(friend);
                   setShowGroupChat(false);
                 }}
+                onLongPress={handleChatLongPress}
+                onPressEnd={handleChatPressEnd}
               />
+              {archivedFriends.length > 0 && (
+                <>
+                  <div className="p-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Chats archivados
+                  </div>
+                  {archivedFriends.map(friend => (
+                    <div key={friend.friend_id} className="relative">
+                      <div className="w-full p-4 flex items-center gap-3 bg-gray-100 dark:bg-neutral-900">
+                        <div className="flex-1">
+                          <div className="font-medium">{friend.friend_username}</div>
+                          <div className="text-sm text-gray-500">Archivado</div>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger>
+                            <MoreVertical className="h-5 w-5" />
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => handleUnarchiveChat(friend.friend_id)}>
+                              Desarchivar chat
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           </Card>
 
