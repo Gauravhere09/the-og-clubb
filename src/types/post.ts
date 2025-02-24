@@ -1,4 +1,17 @@
 
+export interface PollOption {
+  id: string;
+  content: string;
+  votes: number;
+}
+
+export interface Poll {
+  question: string;
+  options: PollOption[];
+  total_votes: number;
+  user_vote?: string | null;
+}
+
 export interface Post {
   id: string;
   content: string;
@@ -8,6 +21,7 @@ export interface Post {
   visibility: 'public' | 'friends' | 'private';
   created_at: string;
   updated_at: string;
+  poll: Poll | null;
   profiles?: {
     username: string | null;
     avatar_url: string | null;

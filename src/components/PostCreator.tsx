@@ -5,14 +5,16 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AudioRecorder } from "./AudioRecorder";
 import { useToast } from "@/hooks/use-toast";
-import { Image, Video } from "lucide-react";
+import { Image, Video, BarChart } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPost } from "@/lib/api";
+import { PollCreator } from "./post/PollCreator";
 
 export function PostCreator() {
   const [content, setContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [showPollCreator, setShowPollCreator] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -27,6 +29,7 @@ export function PostCreator() {
     onSuccess: () => {
       setContent("");
       setFile(null);
+      setShowPollCreator(false);
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       toast({
         title: "¡Publicación creada!",
@@ -57,6 +60,12 @@ export function PostCreator() {
     }
   };
 
+  const handlePollCreate = (pollData: { question: string; options: string[] }) => {
+    // Here we would update the content to include the poll data
+    setContent(`${content}\n\nEncuesta: ${pollData.question}\nOpciones:\n${pollData.options.join('\n')}`);
+    setShowPollCreator(false);
+  };
+
   return (
     <Card className="p-4 space-y-4">
       <Textarea
@@ -65,6 +74,12 @@ export function PostCreator() {
         onChange={(e) => setContent(e.target.value)}
         className="resize-none"
       />
+      {showPollCreator && (
+        <PollCreator
+          onPollCreate={handlePollCreate}
+          onCancel={() => setShowPollCreator(false)}
+        />
+      )}
       {file && (
         <div className="relative">
           {file.type.startsWith('image/') && (
@@ -124,6 +139,14 @@ export function PostCreator() {
             <Video className="h-4 w-4" />
           </Button>
           <AudioRecorder onRecordingComplete={(blob) => setFile(new File([blob], "audio.webm", { type: "audio/webm" }))} />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowPollCreator(true)}
+            disabled={isPending}
+          >
+            <BarChart className="h-4 w-4" />
+          </Button>
         </div>
         <Button 
           onClick={() => submitPost()}

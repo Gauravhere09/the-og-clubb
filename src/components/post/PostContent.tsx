@@ -2,6 +2,7 @@
 import { Globe, Users, Lock, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Post } from "@/types/post";
+import { PollDisplay } from "./PollDisplay";
 
 interface PostContentProps {
   post: Post;
@@ -33,6 +34,16 @@ export function PostContent({ post }: PostContentProps) {
             </span>
           </div>
         </div>
+      )}
+
+      {post.poll && (
+        <PollDisplay 
+          poll={post.poll}
+          onVote={async (optionId) => {
+            // Handle vote submission
+            console.log("Vote submitted for option:", optionId);
+          }}
+        />
       )}
 
       {post.media_url && (
