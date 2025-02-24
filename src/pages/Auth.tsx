@@ -15,6 +15,28 @@ export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const sendVerificationEmail = async (email: string, username: string) => {
+    try {
+      const response = await fetch(
+        "https://wgbbaxvuuinubkgffpiq.supabase.co/functions/v1/send-verification",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ email, username }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Error al enviar el correo de verificación");
+      }
+    } catch (error) {
+      console.error("Error sending verification email:", error);
+    }
+  };
+
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -28,7 +50,7 @@ export default function Auth() {
         if (error) throw error;
         navigate("/");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { error, data } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -38,9 +60,13 @@ export default function Auth() {
           },
         });
         if (error) throw error;
+
+        // Enviar correo de verificación personalizado
+        await sendVerificationEmail(email, username);
+
         toast({
           title: "¡Registro exitoso!",
-          description: "Por favor verifica tu email para continuar.",
+          description: "Por favor revisa tu correo electrónico para verificar tu cuenta. Te hemos enviado instrucciones detalladas sobre los siguientes pasos.",
         });
       }
     } catch (error: any) {
