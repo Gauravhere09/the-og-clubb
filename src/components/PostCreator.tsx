@@ -64,6 +64,10 @@ export function PostCreator() {
     submitPost(pollData);
   };
 
+  const handleSubmitPost = () => {
+    submitPost(undefined); // Pasamos undefined cuando no hay datos de encuesta
+  };
+
   return (
     <Card className="p-4 space-y-4">
       <Textarea
@@ -147,7 +151,7 @@ export function PostCreator() {
           </Button>
         </div>
         <Button 
-          onClick={() => submitPost()}
+          onClick={handleSubmitPost}
           disabled={isPending || (!content && !file)}
         >
           Publicar
