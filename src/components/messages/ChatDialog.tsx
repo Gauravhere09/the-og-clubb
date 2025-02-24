@@ -33,6 +33,24 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
       };
       loadMessages(currentUserId, friend);
     }
+
+    // Ocultar la navegación cuando el chat está abierto en móvil
+    const nav = document.querySelector('nav');
+    if (nav) {
+      if (isOpen && window.innerWidth < 768) {
+        nav.style.display = 'none';
+      } else {
+        nav.style.display = 'flex';
+      }
+    }
+
+    return () => {
+      // Restaurar la navegación cuando se cierra el chat
+      const nav = document.querySelector('nav');
+      if (nav) {
+        nav.style.display = 'flex';
+      }
+    };
   }, [isOpen, currentUserId, targetUser]);
 
   const handleSendMessage = async () => {
@@ -53,7 +71,7 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md p-0 gap-0 h-[600px] flex flex-col bg-background">
+      <DialogContent className="max-w-md p-0 gap-0 h-[100dvh] md:h-[600px] flex flex-col bg-background">
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar>
