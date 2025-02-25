@@ -21,6 +21,7 @@ export interface Post {
   visibility: 'public' | 'friends' | 'private';
   created_at: string;
   updated_at: string;
+  poll?: Poll | null;
   profiles?: {
     username: string | null;
     avatar_url: string | null;
