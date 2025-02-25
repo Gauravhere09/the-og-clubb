@@ -59,8 +59,19 @@ export async function createPost(
         visibility: 'public'
       } as Tables['posts']['Insert'])
       .select(`
-        *,
-        profiles(username, avatar_url),
+        id,
+        content,
+        media_url,
+        media_type,
+        visibility,
+        poll,
+        created_at,
+        updated_at,
+        user_id,
+        profiles (
+          username,
+          avatar_url
+        ),
         (
           SELECT COUNT(*)::integer
           FROM comments
@@ -74,18 +85,9 @@ export async function createPost(
           FROM reactions
           WHERE post_id = posts.id
           GROUP BY post_id
-        ) as reactions,
-        (
-          SELECT reaction_type
-          FROM reactions
-          WHERE post_id = posts.id AND user_id = $1
-          LIMIT 1
-        ) as user_reaction
+        ) as reactions
       `)
-      .single({
-        count: 'exact'
-      })
-      .eq('user_id', user.id);
+      .single();
 
     if (error) throw error;
 
@@ -123,8 +125,19 @@ export async function getPosts(userId?: string) {
   let query = supabase
     .from('posts')
     .select(`
-      *,
-      profiles(username, avatar_url),
+      id,
+      content,
+      media_url,
+      media_type,
+      visibility,
+      poll,
+      created_at,
+      updated_at,
+      user_id,
+      profiles (
+        username,
+        avatar_url
+      ),
       (
         SELECT COUNT(*)::integer
         FROM comments
@@ -139,24 +152,23 @@ export async function getPosts(userId?: string) {
         WHERE post_id = posts.id
         GROUP BY post_id
       ) as reactions
-    `)
-    .order('created_at', { ascending: false });
+    `);
 
   if (userId) {
     query = query.eq('user_id', userId);
   }
 
-  const { data: postsData, error: postsError } = await query;
+  const { data: postsData, error: postsError } = await query.order('created_at', { ascending: false });
 
   if (postsError) throw postsError;
 
   // Get user's reactions if logged in
   let userReactionsMap = {};
-  if (user?.user) {
+  if (user) {
     const { data: userReactions } = await supabase
       .from('reactions')
       .select('post_id, reaction_type')
-      .eq('user_id', user.user.id);
+      .eq('user_id', user.id);
 
     userReactionsMap = (userReactions || []).reduce((acc, reaction) => {
       acc[reaction.post_id] = reaction.reaction_type;
@@ -164,11 +176,17 @@ export async function getPosts(userId?: string) {
     }, {} as Record<string, string>);
   }
 
-  // Transform posts data
-  return (postsData || []).map((post) => ({
-    ...post,
+  // Transform posts data with proper typing
+  return (postsData || []).map((post: any) => ({
+    id: post.id,
+    content: post.content,
+    user_id: post.user_id,
+    media_url: post.media_url,
     media_type: post.media_type as 'image' | 'video' | 'audio' | null,
     visibility: post.visibility as 'public' | 'friends' | 'private',
+    created_at: post.created_at,
+    updated_at: post.updated_at,
+    profiles: post.profiles,
     poll: post.poll ? {
       question: post.poll.question,
       options: post.poll.options.map((opt: any) => ({
