@@ -40,6 +40,7 @@ export function PostActions({
   const userReaction = post.user_reaction as ReactionType | undefined;
   const totalReactions = Object.values(reactionsByType).reduce((sum, count) => sum + count, 0);
   const commentCount = post.comments_count || 0;
+  const [showShareOptions, setShowShareOptions] = React.useState(false);
 
   const handleCopyLink = async () => {
     const url = `${window.location.origin}/post/${post.id}`;
@@ -48,6 +49,7 @@ export function PostActions({
       title: "Enlace copiado",
       description: "El enlace ha sido copiado al portapapeles",
     });
+    setShowShareOptions(false);
   };
 
   const handleShare = async () => {
@@ -114,7 +116,7 @@ export function PostActions({
           Comentar
         </Button>
 
-        <DropdownMenu>
+        <DropdownMenu open={showShareOptions} onOpenChange={setShowShareOptions}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="flex-1">
               <Share className="h-4 w-4 mr-2" />

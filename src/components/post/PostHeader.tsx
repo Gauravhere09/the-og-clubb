@@ -1,7 +1,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { MoreVertical } from "lucide-react";
+import { MoreVertical, Flag, EyeOff } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Link } from "react-router-dom";
@@ -16,9 +16,10 @@ import type { Post } from "@/types/post";
 interface PostHeaderProps {
   post: Post;
   onDelete: () => void;
+  isAuthor: boolean;
 }
 
-export function PostHeader({ post, onDelete }: PostHeaderProps) {
+export function PostHeader({ post, onDelete, isAuthor }: PostHeaderProps) {
   return (
     <div className="flex items-start gap-3 mb-4">
       <div className="flex-1 flex items-start gap-3">
@@ -51,12 +52,25 @@ export function PostHeader({ post, onDelete }: PostHeaderProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[200px]">
-          <DropdownMenuItem 
-            onClick={onDelete}
-            className="text-red-600 hover:text-red-600 hover:bg-red-50"
-          >
-            Eliminar publicación
-          </DropdownMenuItem>
+          {isAuthor ? (
+            <DropdownMenuItem 
+              onClick={onDelete}
+              className="text-red-600 hover:text-red-600 hover:bg-red-50"
+            >
+              Eliminar publicación
+            </DropdownMenuItem>
+          ) : (
+            <>
+              <DropdownMenuItem>
+                <EyeOff className="h-4 w-4 mr-2" />
+                Ocultar publicación
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Flag className="h-4 w-4 mr-2" />
+                Reportar publicación
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

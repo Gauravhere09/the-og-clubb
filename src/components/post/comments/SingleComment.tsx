@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
@@ -34,6 +35,7 @@ export function SingleComment({
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(comment.content);
   const { editComment } = useCommentMutations(comment.post_id);
+  const isAuthor = session?.user?.id === comment.user_id;
 
   const isAudioComment = comment.content.startsWith('[Audio]');
   const audioUrl = isAudioComment ? comment.content.replace('[Audio] ', '') : null;
@@ -62,36 +64,38 @@ export function SingleComment({
           <div className="bg-muted p-2 rounded-lg">
             <div className="flex justify-between items-start gap-2">
               <p className="font-medium text-sm">{comment.profiles?.username}</p>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-6 w-6 p-0 hover:bg-accent rounded-full"
+              {isAuthor && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 w-6 p-0 hover:bg-accent rounded-full"
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent 
+                    align="end" 
+                    className="w-48"
                   >
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent 
-                  align="end" 
-                  className="w-48 bg-background"
-                >
-                  <DropdownMenuItem 
-                    className="cursor-pointer"
-                    onClick={() => setIsEditing(true)}
-                  >
-                    <Pencil className="h-4 w-4 mr-2" />
-                    <span>Editar</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="cursor-pointer text-destructive focus:text-destructive"
-                    onClick={() => onDeleteComment(comment.id)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    <span>Eliminar</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <DropdownMenuItem 
+                      className="cursor-pointer"
+                      onClick={() => setIsEditing(true)}
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
+                      <span>Editar</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      className="cursor-pointer text-destructive focus:text-destructive"
+                      onClick={() => onDeleteComment(comment.id)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      <span>Eliminar</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
             {isEditing ? (
               <div className="mt-2 flex gap-2">

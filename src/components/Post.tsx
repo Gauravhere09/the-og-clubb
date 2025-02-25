@@ -10,15 +10,18 @@ import { type ReactionType } from "@/types/database/social.types";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getComments } from "@/lib/api/comments";
+import { useSession } from "@supabase/auth-helpers-react";
 
 interface PostProps {
   post: PostType;
 }
 
 export function Post({ post }: PostProps) {
-  const { handleReaction, handleDeletePost, toggleCommentReaction } = usePostMutations(post.id);
+  const session = useSession();
+  const { handleReaction, handleDeletePost, toggleCommentReaction, submitComment } = usePostMutations(post.id);
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(false);
+  const [replyTo, setReplyTo] = useState<{ id: string; username: string } | null>(null);
 
   const { data: comments = [] } = useQuery({
     queryKey: ["comments", post.id],
@@ -35,11 +38,24 @@ export function Post({ post }: PostProps) {
   };
 
   const handleSubmitComment = () => {
-    // Handle submit comment
+    if (newComment.trim()) {
+      submitComment(
+        { 
+          content: newComment, 
+          replyToId: replyTo?.id 
+        },
+        {
+          onSuccess: () => {
+            setNewComment("");
+            setReplyTo(null);
+          }
+        }
+      );
+    }
   };
 
   const handleReply = (id: string, username: string) => {
-    // Handle reply
+    setReplyTo({ id, username });
   };
 
   const handleDeleteComment = (commentId: string) => {
@@ -47,17 +63,19 @@ export function Post({ post }: PostProps) {
   };
 
   const handleCancelReply = () => {
-    // Handle cancel reply
+    setReplyTo(null);
   };
 
   const handleCommentsClick = () => {
     setShowComments(true);
   };
 
+  const isAuthor = session?.user?.id === post.user_id;
+
   return (
     <Card className="overflow-hidden">
       <div className="p-4">
-        <PostHeader post={post} onDelete={handleDeletePost} />
+        <PostHeader post={post} onDelete={handleDeletePost} isAuthor={isAuthor} />
         <PostContent post={post} postId={post.id} />
         <PostActions
           post={post}
@@ -69,15 +87,15 @@ export function Post({ post }: PostProps) {
       {showComments && (
         <Comments
           postId={post.id}
+          comments={comments}
           onReaction={handleCommentReaction}
           onReply={handleReply}
           onSubmitComment={handleSubmitComment}
           onDeleteComment={handleDeleteComment}
           newComment={newComment}
           onNewCommentChange={setNewComment}
-          replyTo={null}
+          replyTo={replyTo}
           onCancelReply={handleCancelReply}
-          comments={comments}
         />
       )}
     </Card>
