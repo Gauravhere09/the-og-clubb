@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import React from "react";
+import React, { useState } from "react";
 import type { Post } from "@/types/post";
 import { ReactionSummary } from "./reactions/ReactionSummary";
 import { ReactionDetails } from "./reactions/ReactionDetails";
@@ -30,10 +30,16 @@ interface PostActionsProps {
 
 export function PostActions({ post, onReaction, onToggleComments }: PostActionsProps) {
   const { toast } = useToast();
+  const [showComments, setShowComments] = useState(false);
   const reactionsByType = post.reactions?.by_type || {};
   const userReaction = post.user_reaction as ReactionType | undefined;
   const totalReactions = Object.values(reactionsByType).reduce((sum, count) => sum + count, 0);
   const commentCount = post.comments_count || 0;
+
+  const handleCommentClick = () => {
+    setShowComments(!showComments);
+    onToggleComments();
+  };
 
   const handleCopyLink = async () => {
     const url = `${window.location.origin}/post/${post.id}`;
@@ -48,12 +54,12 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Compartir publicación',
+          title: "Compartir publicación",
           text: post.content,
           url: `${window.location.origin}/post/${post.id}`,
         });
       } catch (error) {
-        console.error('Error sharing:', error);
+        console.error("Error sharing:", error);
       }
     }
   };
@@ -86,12 +92,12 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
         <Button
           variant="ghost"
           size="sm"
-          onClick={onToggleComments}
+          onClick={handleCommentClick}
           className="relative"
         >
           {commentCount > 0 && (
             <span className="absolute -top-4 text-xs text-muted-foreground">
-              {commentCount} {commentCount === 1 ? 'comentario' : 'comentarios'}
+              {commentCount} {commentCount === 1 ? "comentario" : "comentarios"}
             </span>
           )}
           <MessagesSquare className="h-4 w-4 mr-2" />

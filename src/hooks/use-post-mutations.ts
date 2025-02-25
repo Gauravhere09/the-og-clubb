@@ -1,4 +1,3 @@
-
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deletePost } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -8,7 +7,7 @@ import { Tables } from "@/types/database";
 import { toggleReaction, ReactionType } from "@/lib/api/likes";
 import type { Database } from "@/types/database";
 
-type Reaction = Database['public']['Tables']['reactions']['Row'];
+type Reaction = Database["public"]["Tables"]["reactions"]["Row"];
 
 export function usePostMutations(postId: string) {
   const queryClient = useQueryClient();
@@ -16,13 +15,56 @@ export function usePostMutations(postId: string) {
   const session = useSession();
 
   const { mutate: handleReaction } = useMutation({
-    mutationFn: (type: ReactionType) => 
-      toggleReaction(postId, type),
+    mutationFn: async (type: ReactionType) => {
+      if (!session?.user?.id) {
+        throw new Error("Debes iniciar sesión para reaccionar");
+      }
+
+      const { data: existingReaction } = await supabase
+        .from("reactions")
+        .select()
+        .eq("user_id", session.user.id)
+        .eq("post_id", postId)
+        .single<Reaction>();
+
+      if (existingReaction) {
+        if (existingReaction.reaction_type === type) {
+          const { error } = await supabase
+            .from("reactions")
+            .delete()
+            .eq("id", existingReaction.id);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from("reactions")
+            .update({ reaction_type: type })
+            .eq("id", existingReaction.id);
+          if (error) throw error;
+        }
+      } else {
+        const { error } = await supabase
+          .from("reactions")
+          .insert({
+            user_id: session.user.id,
+            post_id: postId,
+            reaction_type: type
+          });
+        if (error) throw error;
+      }
+      
+      await queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
       toast({
         title: "Reacción actualizada",
         description: "Tu reacción se ha actualizado correctamente",
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo actualizar la reacción",
       });
     },
   });

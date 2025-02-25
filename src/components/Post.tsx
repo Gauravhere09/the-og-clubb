@@ -16,9 +16,10 @@ interface PostProps {
 export function Post({ post }: PostProps) {
   const { handleReaction, handleDeletePost, toggleCommentReaction } = usePostMutations(post.id);
   const [newComment, setNewComment] = useState("");
+  const [showComments, setShowComments] = useState(false);
 
   const handleToggleComments = () => {
-    // Handle toggle comments visibility if needed
+    setShowComments(!showComments);
   };
 
   const handleCommentReaction = (commentId: string, type: ReactionType) => {
@@ -52,18 +53,20 @@ export function Post({ post }: PostProps) {
           onToggleComments={handleToggleComments}
         />
       </div>
-      <Comments
-        postId={post.id}
-        onReaction={handleCommentReaction}
-        onReply={handleReply}
-        onSubmitComment={handleSubmitComment}
-        onDeleteComment={handleDeleteComment}
-        newComment={newComment}
-        onNewCommentChange={setNewComment}
-        replyTo={null}
-        onCancelReply={handleCancelReply}
-        comments={[]}
-      />
+      {showComments && (
+        <Comments
+          postId={post.id}
+          onReaction={handleCommentReaction}
+          onReply={handleReply}
+          onSubmitComment={handleSubmitComment}
+          onDeleteComment={handleDeleteComment}
+          newComment={newComment}
+          onNewCommentChange={setNewComment}
+          replyTo={null}
+          onCancelReply={handleCancelReply}
+          comments={[]}
+        />
+      )}
     </Card>
   );
 }
