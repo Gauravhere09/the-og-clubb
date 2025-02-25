@@ -5,6 +5,7 @@ import { Poll } from "@/types/post";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { Check, Eye } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -21,10 +22,20 @@ interface PollDisplayProps {
   onVote: (optionId: string) => Promise<void>;
 }
 
+interface VoteWithUser {
+  option_id: string;
+  profiles: {
+    username: string;
+    avatar_url: string | null;
+  };
+  created_at: string;
+}
+
 export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(poll.user_vote);
   const [isVoting, setIsVoting] = useState(false);
   const [showVotesDialog, setShowVotesDialog] = useState(false);
+  const [votes, setVotes] = useState<VoteWithUser[]>([]);
   const { toast } = useToast();
 
   const handleVote = async (optionId: string) => {
@@ -32,20 +43,6 @@ export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
     
     setIsVoting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Debes iniciar sesión para votar");
-
-      // Insertar el voto en la tabla poll_votes
-      const { error: voteError } = await supabase
-        .from('poll_votes')
-        .insert({
-          post_id: postId,
-          user_id: user.id,
-          option_id: optionId
-        });
-
-      if (voteError) throw voteError;
-
       await onVote(optionId);
       setSelectedOption(optionId);
       
@@ -53,9 +50,7 @@ export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
         title: "Voto registrado",
         description: "Tu voto ha sido registrado correctamente",
       });
-
     } catch (error: any) {
-      console.error('Error al votar:', error);
       toast({
         variant: "destructive",
         title: "Error al votar",
@@ -69,6 +64,32 @@ export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
   const getPercentage = (votes: number) => {
     if (poll.total_votes === 0) return 0;
     return Math.round((votes / poll.total_votes) * 100);
+  };
+
+  const loadVotes = async () => {
+    try {
+      const { data: votesData, error } = await supabase
+        .from('poll_votes')
+        .select(`
+          option_id,
+          profiles (
+            username,
+            avatar_url
+          ),
+          created_at
+        `)
+        .eq('post_id', postId);
+
+      if (error) throw error;
+      setVotes(votesData as VoteWithUser[]);
+    } catch (error) {
+      console.error('Error loading votes:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudieron cargar los votos",
+      });
+    }
   };
 
   return (
@@ -89,6 +110,7 @@ export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
           const percentage = getPercentage(option.votes);
           const isSelected = option.id === selectedOption;
           const hasVoted = poll.user_vote !== null;
+          const optionVotes = votes.filter(v => v.option_id === option.id);
 
           return (
             <div
@@ -142,7 +164,10 @@ export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
       {poll.user_vote && (
         <div className="flex items-center justify-between text-sm text-muted-foreground pt-2">
           <span>{poll.total_votes} {poll.total_votes === 1 ? "voto" : "votos"}</span>
-          <Dialog open={showVotesDialog} onOpenChange={setShowVotesDialog}>
+          <Dialog open={showVotesDialog} onOpenChange={(open) => {
+            setShowVotesDialog(open);
+            if (open) loadVotes();
+          }}>
             <DialogTrigger asChild>
               <Button
                 variant="ghost"
@@ -155,23 +180,41 @@ export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle>Detalle de votos</DialogTitle>
+                <DialogTitle>Votos de la encuesta</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4">
-                {poll.options.map((option) => (
-                  <div key={option.id} className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>{option.content}</span>
-                      <span className="font-medium">
-                        {option.votes} {option.votes === 1 ? "voto" : "votos"} ({getPercentage(option.votes)}%)
-                      </span>
+              <div className="space-y-6">
+                {poll.options.map((option) => {
+                  const optionVotes = votes.filter(v => v.option_id === option.id);
+                  return (
+                    <div key={option.id} className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="font-medium">{option.content}</span>
+                        <span>
+                          {option.votes} {option.votes === 1 ? "voto" : "votos"} ({getPercentage(option.votes)}%)
+                        </span>
+                      </div>
+                      <Progress value={getPercentage(option.votes)} className="h-2" />
+                      {optionVotes.length > 0 && (
+                        <div className="pt-2 space-y-2">
+                          {optionVotes.map((vote) => (
+                            <div key={`${vote.option_id}-${vote.profiles.username}`} className="flex items-center gap-2">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={vote.profiles.avatar_url || undefined} />
+                                <AvatarFallback>{vote.profiles.username?.[0].toUpperCase()}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="text-sm font-medium">{vote.profiles.username}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(vote.created_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <Progress value={getPercentage(option.votes)} className="h-2" />
-                  </div>
-                ))}
-                <p className="text-sm text-muted-foreground pt-2">
-                  Total: {poll.total_votes} {poll.total_votes === 1 ? "voto" : "votos"}
-                </p>
+                  );
+                })}
               </div>
             </DialogContent>
           </Dialog>
