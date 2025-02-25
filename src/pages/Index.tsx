@@ -1,4 +1,3 @@
-
 import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/Feed";
@@ -127,7 +126,7 @@ const Index = () => {
         </div>
 
         {currentUserId && (
-          <StoryViewer stories={[]} currentUserId={currentUserId} />
+          <StoryViewer currentUserId={currentUserId} />
         )}
         
         <div className="space-y-6">
