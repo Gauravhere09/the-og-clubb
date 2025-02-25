@@ -8,21 +8,27 @@ import { StoryView } from "./StoryView";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-// Define las interfaces de manera separada para evitar referencias circulares
-interface StoryUser {
+type StoryMediaType = 'image' | 'audio' | null;
+
+// Definimos los tipos en el orden correcto para evitar referencias circulares
+type StoryUser = {
   id: string;
   username: string;
   avatar_url: string | null;
-}
+};
 
-interface Story {
+type Story = {
   id: string;
-  user: StoryUser;
   content: string;
   media_url: string | null;
-  media_type: 'image' | 'audio' | null;
+  media_type: StoryMediaType;
   created_at: string;
-}
+  user: {
+    id: string;
+    username: string;
+    avatar_url: string | null;
+  };
+};
 
 interface StoryViewerProps {
   currentUserId: string;
@@ -61,14 +67,14 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         id: story.id,
         content: story.content,
         media_url: story.media_url,
-        media_type: story.media_type as 'image' | 'audio' | null,
+        media_type: story.media_type as StoryMediaType,
         created_at: story.created_at,
         user: {
           id: story.user_id,
           username: story.profiles.username,
           avatar_url: story.profiles.avatar_url
         }
-      })) as Story[];
+      }));
     }
   });
 
