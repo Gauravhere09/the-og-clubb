@@ -6,7 +6,7 @@ import { PostContent } from "./post/PostContent";
 import { PostActions } from "./post/PostActions";
 import { Comments } from "./post/Comments";
 import { usePostMutations } from "@/hooks/use-post-mutations";
-import { type ReactionType } from "./post/reactions/ReactionIcons";
+import { type ReactionType } from "./reactions/ReactionIcons";
 
 interface PostProps {
   post: PostType;
@@ -35,7 +35,7 @@ export function Post({ post }: PostProps) {
         />
       </div>
       <Comments
-        id={post.id}
+        postId={post.id}
         onReaction={handleCommentReaction}
       />
     </Card>

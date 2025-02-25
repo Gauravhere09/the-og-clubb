@@ -61,21 +61,22 @@ export function ProfileContent({ profileId }: ProfileContentProps) {
       }, {} as Record<string, { count: number, by_type: Record<string, number> }>);
 
       // Transform poll data
-      const transformPoll = (pollData: any): Poll | null => {
-        if (!pollData) return null;
-        if (typeof pollData === 'object') {
-          return {
-            question: pollData.question,
-            options: pollData.options.map((opt: any) => ({
-              id: opt.id,
-              content: opt.content,
-              votes: Number(opt.votes)
-            })),
-            total_votes: Number(pollData.total_votes),
-            user_vote: pollData.user_vote
-          };
-        }
-        return null;
+      const transformPoll = (pollData: unknown): Poll | null => {
+        if (!pollData || typeof pollData !== 'object') return null;
+        
+        const poll = pollData as Record<string, unknown>;
+        if (!poll.question || !poll.options || !Array.isArray(poll.options)) return null;
+
+        return {
+          question: String(poll.question),
+          options: poll.options.map((opt: any) => ({
+            id: String(opt.id),
+            content: String(opt.content),
+            votes: Number(opt.votes) || 0
+          })),
+          total_votes: Number(poll.total_votes) || 0,
+          user_vote: poll.user_vote ? String(poll.user_vote) : null
+        };
       };
 
       // Combine all data

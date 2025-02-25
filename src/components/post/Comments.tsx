@@ -1,11 +1,10 @@
-
 import type { Comment } from "@/types/post";
 import { SingleComment } from "./comments/SingleComment";
 import { CommentInput } from "./comments/CommentInput";
-import type { ReactionType } from "@/lib/api/likes";
+import type { ReactionType } from "./reactions/ReactionIcons";
 
 interface CommentsProps {
-  comments: Comment[];
+  postId: string;
   onReaction: (commentId: string, type: ReactionType) => void;
   onReply: (id: string, username: string) => void;
   onSubmitComment: () => void;

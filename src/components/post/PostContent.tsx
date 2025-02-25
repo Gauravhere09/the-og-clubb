@@ -1,4 +1,3 @@
-
 import { Globe, Users, Lock, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Post, Poll } from "@/types/post";
@@ -65,12 +64,12 @@ export function PostContent({ post, postId }: PostContentProps) {
         .eq('id', postId)
         .single();
 
-      if (postError) throw postError;
+      if (postError || !postData?.poll) throw new Error('Could not fetch poll data');
 
-      // Ensure postData.poll is of type Poll before using it
+      // Transform the poll data safely
       const currentPoll = postData.poll as unknown as Poll;
-      if (!currentPoll || typeof currentPoll !== 'object') {
-        throw new Error('Invalid poll data');
+      if (!currentPoll.options || !Array.isArray(currentPoll.options)) {
+        throw new Error('Invalid poll data format');
       }
 
       const updatedPoll = {
@@ -79,7 +78,7 @@ export function PostContent({ post, postId }: PostContentProps) {
           ...opt,
           votes: opt.id === optionId ? opt.votes + 1 : opt.votes
         })),
-        total_votes: currentPoll.total_votes + 1
+        total_votes: (currentPoll.total_votes || 0) + 1
       };
 
       const { error: updateError } = await supabase
@@ -88,6 +87,17 @@ export function PostContent({ post, postId }: PostContentProps) {
         .eq('id', postId);
 
       if (updateError) throw updateError;
+
+      // Register the vote in poll_votes table
+      const { error: voteError } = await supabase
+        .from('poll_votes')
+        .insert({
+          post_id: postId,
+          user_id: user.id,
+          option_id: optionId
+        });
+
+      if (voteError) throw voteError;
 
       // Invalidar la consulta para obtener los datos actualizados
       queryClient.invalidateQueries({ queryKey: ['posts'] });
