@@ -28,6 +28,17 @@ export function useNavigation() {
 
         setUnreadNotifications(count || 0);
 
+        // Obtener cantidad de posts nuevos (últimas 24 horas)
+        const twentyFourHoursAgo = new Date();
+        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+
+        const { count: newPostsCount } = await supabase
+          .from('posts')
+          .select('*', { count: 'exact', head: true })
+          .gt('created_at', twentyFourHoursAgo.toISOString());
+
+        setNewPosts(newPostsCount || 0);
+
         const notificationsChannel = supabase.channel('notifications')
           .on(
             'postgres_changes',
@@ -78,7 +89,6 @@ export function useNavigation() {
           postsChannel.unsubscribe();
         };
       } else {
-        // If no user is found, redirect to auth page
         navigate('/auth');
       }
     };
@@ -87,11 +97,11 @@ export function useNavigation() {
   }, [location.pathname, toast, navigate]);
 
   useEffect(() => {
-    if (location.pathname === '/') {
+    if (location.pathname === '/' && location.search.includes('new=true')) {
       setNewPosts(0);
       setLatestPostId(null);
     }
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
 
   const handleLogout = async () => {
     try {
@@ -102,7 +112,6 @@ export function useNavigation() {
         description: "Has cerrado sesión correctamente"
       });
       
-      // First navigate to auth page, then clear the user ID
       navigate('/auth');
       setCurrentUserId(null);
     } catch (error) {
@@ -115,8 +124,8 @@ export function useNavigation() {
   };
 
   const handleHomeClick = () => {
-    if (newPosts > 0 && latestPostId) {
-      navigate(`/post/${latestPostId}`);
+    if (newPosts > 0) {
+      navigate('/?new=true');
       setNewPosts(0);
       setLatestPostId(null);
     } else {
@@ -144,4 +153,3 @@ export function useNavigation() {
     location
   };
 }
-
