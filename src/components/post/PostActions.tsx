@@ -79,7 +79,8 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
       <div className="flex gap-4 border-t pt-2">
         <ReactionButton 
           userReaction={userReaction} 
-          onReactionClick={onReaction} 
+          onReactionClick={onReaction}
+          postId={post.id}
         />
 
         <Button
