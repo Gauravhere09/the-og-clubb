@@ -8,7 +8,7 @@ import { StoryView } from "./StoryView";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-interface Story {
+type Story = {
   id: string;
   user: {
     id: string;
@@ -19,7 +19,7 @@ interface Story {
   media_url: string | null;
   media_type: 'image' | 'audio' | null;
   created_at: string;
-}
+};
 
 interface StoryViewerProps {
   currentUserId: string;
@@ -54,7 +54,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
 
       if (error) throw error;
 
-      return data.map(story => ({
+      return (data || []).map(story => ({
         id: story.id,
         content: story.content,
         media_url: story.media_url,

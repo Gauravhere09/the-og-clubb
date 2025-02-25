@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -75,8 +74,7 @@ export function StoryView({ stories, initialStoryIndex, isOpen, onClose }: Story
       await supabase.from('reactions').insert({
         post_id: currentStory.id,
         user_id: user.id,
-        type: emoji,
-        is_story_reaction: true
+        reaction_type: emoji
       });
 
       toast({
