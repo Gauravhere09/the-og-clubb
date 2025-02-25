@@ -14,6 +14,14 @@ interface PostProps {
 export function Post({ post }: PostProps) {
   const { handleReaction, handleDeletePost, toggleCommentReaction } = usePostMutations(post.id);
 
+  const handleToggleComments = () => {
+    // Handle toggle comments visibility if needed
+  };
+
+  const handleCommentReaction = (commentId: string, type: string) => {
+    toggleCommentReaction({ commentId, type });
+  };
+
   return (
     <Card className="overflow-hidden">
       <div className="p-4">
@@ -22,11 +30,12 @@ export function Post({ post }: PostProps) {
         <PostActions
           post={post}
           onReaction={handleReaction}
+          onToggleComments={handleToggleComments}
         />
       </div>
       <Comments
         postId={post.id}
-        onReaction={toggleCommentReaction}
+        onReaction={handleCommentReaction}
       />
     </Card>
   );

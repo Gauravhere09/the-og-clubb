@@ -199,21 +199,24 @@ export async function getPosts(userId?: string) {
     }
 
     // Get user's poll votes
-    const { data: userVotes } = await supabase
-      .from('poll_votes')
-      .select('post_id, option_id')
-      .eq('user_id', user.id)
-      .in('post_id', (rawPosts || []).map(p => p.id));
+    if (rawPosts?.some(post => post.poll)) {
+      const { data: votesData, error: votesError } = await supabase
+        .from('poll_votes')
+        .select('post_id, option_id')
+        .eq('user_id', user.id);
 
-    if (userVotes) {
-      rawPosts?.forEach(post => {
-        if (post.poll) {
-          const userVote = userVotes.find(vote => vote.post_id === post.id);
-          if (userVote) {
-            post.poll.user_vote = userVote.option_id;
+      if (!votesError && votesData) {
+        const votesMap = votesData.reduce((acc, vote) => {
+          acc[vote.post_id] = vote.option_id;
+          return acc;
+        }, {} as Record<string, string>);
+
+        rawPosts.forEach(post => {
+          if (post.poll && typeof post.poll === 'object') {
+            post.poll.user_vote = votesMap[post.id] || null;
           }
-        }
-      });
+        });
+      }
     }
   }
 
@@ -238,7 +241,7 @@ export async function getPosts(userId?: string) {
   const transformedPosts = (rawPosts || []).map((post: any): Post => {
     // Transform poll data if it exists
     let transformedPoll = null;
-    if (post.poll) {
+    if (post.poll && typeof post.poll === 'object') {
       transformedPoll = {
         question: post.poll.question,
         options: post.poll.options.map((opt: any) => ({
@@ -262,7 +265,7 @@ export async function getPosts(userId?: string) {
       updated_at: post.updated_at,
       profiles: post.profiles,
       poll: transformedPoll,
-      user_reaction: userReactionsMap[post.id] || null,
+      user_reaction: userReactionsMap[post.id] as Post['user_reaction'],
       reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
       reactions_count: reactionsMap[post.id]?.count || 0,
       comments_count: commentsCountMap[post.id] || 0

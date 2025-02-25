@@ -1,7 +1,7 @@
 
 import { Globe, Users, Lock, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { Post } from "@/types/post";
+import type { Post, Poll } from "@/types/post";
 import { PollDisplay } from "./PollDisplay";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -37,15 +37,16 @@ export function PostContent({ post, postId }: PostContentProps) {
       votes: opt.id === optionId ? opt.votes + 1 : opt.votes
     }));
 
-    queryClient.setQueryData(['posts'], (old: any) => {
-      return old.map((p: Post) => {
-        if (p.id === postId) {
+    queryClient.setQueryData(['posts'], (old: Post[] | undefined) => {
+      if (!old) return old;
+      return old.map((p) => {
+        if (p.id === postId && p.poll) {
           return {
             ...p,
             poll: {
-              ...p.poll!,
+              ...p.poll,
               options: newOptions,
-              total_votes: p.poll!.total_votes + 1,
+              total_votes: p.poll.total_votes + 1,
               user_vote: optionId
             }
           };
@@ -55,11 +56,11 @@ export function PostContent({ post, postId }: PostContentProps) {
     });
 
     try {
-      // Actualizar el post en la base de datos
+      // Actualizar el voto en la base de datos
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Debes iniciar sesión para votar");
 
-      const { data: post, error: postError } = await supabase
+      const { data: postData, error: postError } = await supabase
         .from('posts')
         .select('poll')
         .eq('id', postId)
@@ -67,13 +68,14 @@ export function PostContent({ post, postId }: PostContentProps) {
 
       if (postError) throw postError;
 
+      const currentPoll = postData.poll as Poll;
       const updatedPoll = {
-        ...post.poll,
-        options: post.poll.options.map((opt: any) => ({
+        ...currentPoll,
+        options: currentPoll.options.map((opt) => ({
           ...opt,
           votes: opt.id === optionId ? opt.votes + 1 : opt.votes
         })),
-        total_votes: post.poll.total_votes + 1
+        total_votes: currentPoll.total_votes + 1
       };
 
       const { error: updateError } = await supabase
@@ -84,13 +86,14 @@ export function PostContent({ post, postId }: PostContentProps) {
       if (updateError) throw updateError;
 
       // Invalidar la consulta para obtener los datos actualizados
-      queryClient.invalidateQueries(['posts']);
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
 
     } catch (error) {
       console.error('Error al actualizar la votación:', error);
       // Revertir el cambio optimista en caso de error
-      queryClient.setQueryData(['posts'], (old: any) => {
-        return old.map((p: Post) => {
+      queryClient.setQueryData(['posts'], (old: Post[] | undefined) => {
+        if (!old) return old;
+        return old.map((p) => {
           if (p.id === postId) {
             return {
               ...p,
