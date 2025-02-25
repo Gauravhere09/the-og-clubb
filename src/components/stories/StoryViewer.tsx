@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus } from "lucide-react";
 import { useState } from "react";
@@ -12,8 +13,8 @@ interface StoryViewerProps {
   currentUserId: string;
 }
 
-// Explicit type for database story
-interface DBStory {
+// Explicit interface for Supabase response
+interface SupabaseStory {
   id: string;
   content: string;
   media_url: string | null;
@@ -26,53 +27,53 @@ interface DBStory {
   } | null;
 }
 
-// Separate transformation function
-function transformDBStoryToStory(dbStory: DBStory): Story {
-  return {
-    id: dbStory.id,
-    content: dbStory.content,
-    media_url: dbStory.media_url,
-    media_type: dbStory.media_type as Story['media_type'],
-    created_at: dbStory.created_at,
-    user: {
-      id: dbStory.user_id,
-      username: dbStory.profiles?.username ?? '',
-      avatar_url: dbStory.profiles?.avatar_url
-    }
-  };
-}
-
 export function StoryViewer({ currentUserId }: StoryViewerProps) {
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number>(-1);
   const queryClient = useQueryClient();
 
+  // Define the query function outside useQuery for better type inference
+  const fetchStories = async (): Promise<Story[]> => {
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from('posts')
+      .select(`
+        id,
+        content,
+        media_url,
+        media_type,
+        created_at,
+        user_id,
+        profiles:user_id (
+          username,
+          avatar_url
+        )
+      `)
+      .eq('is_story', true)
+      .gt('expires_at', now)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    
+    // Explicitly type the data and transform it
+    const supabaseData = data as SupabaseStory[];
+    return supabaseData.map((story): Story => ({
+      id: story.id,
+      content: story.content,
+      media_url: story.media_url,
+      media_type: story.media_type as Story['media_type'],
+      created_at: story.created_at,
+      user: {
+        id: story.user_id,
+        username: story.profiles?.username ?? '',
+        avatar_url: story.profiles?.avatar_url
+      }
+    }));
+  };
+
   const { data: stories = [] } = useQuery({
     queryKey: ["stories"],
-    queryFn: async () => {
-      const now = new Date().toISOString();
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          id,
-          content,
-          media_url,
-          media_type,
-          created_at,
-          user_id,
-          profiles:user_id (
-            username,
-            avatar_url
-          )
-        `)
-        .eq('is_story', true)
-        .gt('expires_at', now)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      return (data as DBStory[]).map(transformDBStoryToStory);
-    }
+    queryFn: fetchStories
   });
 
   const handleStoryCreated = () => {
