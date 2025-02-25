@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus } from "lucide-react";
 import { useState } from "react";
@@ -26,48 +27,50 @@ interface DatabaseStory {
   } | null;
 }
 
+async function fetchStories(): Promise<Story[]> {
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from('posts')
+    .select(`
+      id,
+      content,
+      media_url,
+      media_type,
+      created_at,
+      user_id,
+      profiles:user_id (
+        username,
+        avatar_url
+      )
+    `)
+    .eq('is_story', true)
+    .gt('expires_at', now)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+
+  return (data as DatabaseStory[]).map((story) => ({
+    id: story.id,
+    content: story.content,
+    media_url: story.media_url,
+    media_type: story.media_type,
+    created_at: story.created_at,
+    user: {
+      id: story.user_id,
+      username: story.profiles?.username ?? '',
+      avatar_url: story.profiles?.avatar_url
+    }
+  }));
+}
+
 export function StoryViewer({ currentUserId }: StoryViewerProps) {
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number>(-1);
   const queryClient = useQueryClient();
 
   const { data: stories = [] } = useQuery({
-    queryKey: ['stories'] as const,
-    queryFn: async () => {
-      const now = new Date().toISOString();
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          id,
-          content,
-          media_url,
-          media_type,
-          created_at,
-          user_id,
-          profiles:user_id (
-            username,
-            avatar_url
-          )
-        `)
-        .eq('is_story', true)
-        .gt('expires_at', now)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      return (data as DatabaseStory[]).map((story): Story => ({
-        id: story.id,
-        content: story.content,
-        media_url: story.media_url,
-        media_type: story.media_type,
-        created_at: story.created_at,
-        user: {
-          id: story.user_id,
-          username: story.profiles?.username ?? '',
-          avatar_url: story.profiles?.avatar_url
-        }
-      }));
-    }
+    queryKey: ['stories'],
+    queryFn: fetchStories
   });
 
   const handleStoryCreated = () => {
