@@ -350,6 +350,7 @@ export type Database = {
           id: string
           media_type: string | null
           media_url: string | null
+          poll: Json | null
           updated_at: string
           user_id: string
           visibility: Database["public"]["Enums"]["post_visibility"]
@@ -360,6 +361,7 @@ export type Database = {
           id?: string
           media_type?: string | null
           media_url?: string | null
+          poll?: Json | null
           updated_at?: string
           user_id: string
           visibility?: Database["public"]["Enums"]["post_visibility"]
@@ -370,6 +372,7 @@ export type Database = {
           id?: string
           media_type?: string | null
           media_url?: string | null
+          poll?: Json | null
           updated_at?: string
           user_id?: string
           visibility?: Database["public"]["Enums"]["post_visibility"]
