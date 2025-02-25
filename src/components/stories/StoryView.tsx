@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { ChevronLeft, ChevronRight, Smile, Send, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Story {
   id: string;
@@ -31,7 +33,9 @@ export function StoryView({ stories, initialStoryIndex, isOpen, onClose }: Story
   const [currentIndex, setCurrentIndex] = useState(initialStoryIndex);
   const [message, setMessage] = useState("");
   const [progress, setProgress] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const currentStory = stories[currentIndex];
 
   useEffect(() => {
@@ -49,6 +53,10 @@ export function StoryView({ stories, initialStoryIndex, isOpen, onClose }: Story
       return () => clearInterval(timer);
     }
   }, [isOpen, currentIndex]);
+
+  useEffect(() => {
+    setCurrentIndex(initialStoryIndex);
+  }, [initialStoryIndex]);
 
   const handlePrevious = () => {
     if (currentIndex > 0) {
@@ -68,14 +76,27 @@ export function StoryView({ stories, initialStoryIndex, isOpen, onClose }: Story
 
   const handleReaction = async (emoji: string) => {
     try {
+      setIsSubmitting(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No autenticado");
 
-      await supabase.from('reactions').insert({
-        post_id: currentStory.id,
-        user_id: user.id,
-        reaction_type: emoji
-      });
+      // Primero eliminamos cualquier reacción existente
+      await supabase
+        .from('reactions')
+        .delete()
+        .eq('post_id', currentStory.id)
+        .eq('user_id', user.id);
+
+      // Luego insertamos la nueva reacción
+      await supabase
+        .from('reactions')
+        .insert({
+          post_id: currentStory.id,
+          user_id: user.id,
+          reaction_type: emoji
+        });
+
+      await queryClient.invalidateQueries({ queryKey: ["stories"] });
 
       toast({
         title: "Reacción enviada",
@@ -88,36 +109,42 @@ export function StoryView({ stories, initialStoryIndex, isOpen, onClose }: Story
         title: "Error",
         description: "No se pudo enviar la reacción",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleSendMessage = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() || isSubmitting) return;
 
     try {
+      setIsSubmitting(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No autenticado");
 
-      await supabase.from('messages').insert({
+      await supabase.from('comments').insert({
         content: message.trim(),
-        from_user_id: user.id,
-        to_user_id: currentStory.user.id,
-        is_story_reply: true,
-        story_id: currentStory.id
+        user_id: user.id,
+        post_id: currentStory.id,
+        is_story_reply: true
       });
 
       setMessage("");
+      await queryClient.invalidateQueries({ queryKey: ["stories"] });
+
       toast({
-        title: "Mensaje enviado",
-        description: "Tu mensaje se ha enviado correctamente",
+        title: "Comentario enviado",
+        description: "Tu comentario se ha enviado correctamente",
       });
     } catch (error) {
-      console.error('Error al enviar mensaje:', error);
+      console.error('Error al enviar comentario:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo enviar el mensaje",
+        description: "No se pudo enviar el comentario",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -209,22 +236,24 @@ export function StoryView({ stories, initialStoryIndex, isOpen, onClose }: Story
               size="icon"
               className="text-white hover:bg-white/20"
               onClick={() => handleReaction('❤️')}
+              disabled={isSubmitting}
             >
               <Smile className="h-6 w-6" />
             </Button>
             <Input
               className="bg-white/10 border-white/20 text-white placeholder:text-white/50"
-              placeholder="Enviar mensaje..."
+              placeholder="Enviar comentario..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              disabled={isSubmitting}
             />
             <Button
               variant="ghost"
               size="icon"
               className="text-white hover:bg-white/20"
               onClick={handleSendMessage}
-              disabled={!message.trim()}
+              disabled={!message.trim() || isSubmitting}
             >
               <Send className="h-6 w-6" />
             </Button>
