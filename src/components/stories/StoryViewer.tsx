@@ -10,15 +10,30 @@ import { supabase } from "@/integrations/supabase/client";
 
 type StoryMediaType = 'image' | 'audio' | null;
 
+interface StoryUser {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+}
+
 interface Story {
   id: string;
   content: string;
   media_url: string | null;
   media_type: StoryMediaType;
   created_at: string;
-  user: {
-    id: string;
-    username: string;
+  user: StoryUser;
+}
+
+interface DatabaseStory {
+  id: string;
+  content: string;
+  media_url: string | null;
+  media_type: string | null;
+  created_at: string;
+  user_id: string;
+  profiles: {
+    username: string | null;
     avatar_url: string | null;
   };
 }
@@ -34,7 +49,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
 
   const { data: stories = [] } = useQuery({
     queryKey: ["stories"],
-    queryFn: async (): Promise<Story[]> => {
+    queryFn: async () => {
       const now = new Date().toISOString();
       const { data, error } = await supabase
         .from('posts')
@@ -56,18 +71,22 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
 
       if (error) throw error;
 
-      return (data || []).map(story => ({
+      const dbStories = data as DatabaseStory[];
+      
+      const transformedStories: Story[] = dbStories.map(story => ({
         id: story.id,
         content: story.content,
         media_url: story.media_url,
-        media_type: story.media_type,
+        media_type: story.media_type as StoryMediaType,
         created_at: story.created_at,
         user: {
           id: story.user_id,
-          username: story.profiles.username,
+          username: story.profiles.username ?? '',
           avatar_url: story.profiles.avatar_url
         }
       }));
+
+      return transformedStories;
     }
   });
 
