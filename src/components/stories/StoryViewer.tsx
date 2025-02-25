@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 type StoryMediaType = 'image' | 'audio' | null;
 
-type Story = {
+interface Story {
   id: string;
   content: string;
   media_url: string | null;
@@ -21,20 +21,7 @@ type Story = {
     username: string;
     avatar_url: string | null;
   };
-};
-
-type RawStoryData = {
-  id: string;
-  content: string;
-  media_url: string | null;
-  media_type: StoryMediaType;
-  created_at: string;
-  user_id: string;
-  profiles: {
-    username: string;
-    avatar_url: string | null;
-  };
-};
+}
 
 interface StoryViewerProps {
   currentUserId: string;
@@ -45,9 +32,9 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number>(-1);
   const queryClient = useQueryClient();
 
-  const { data: stories = [] } = useQuery<Story[]>({
+  const { data: stories = [] } = useQuery({
     queryKey: ["stories"],
-    queryFn: async () => {
+    queryFn: async (): Promise<Story[]> => {
       const now = new Date().toISOString();
       const { data, error } = await supabase
         .from('posts')
@@ -69,8 +56,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
 
       if (error) throw error;
 
-      const rawStories = data as RawStoryData[];
-      return rawStories.map(story => ({
+      return (data || []).map(story => ({
         id: story.id,
         content: story.content,
         media_url: story.media_url,
