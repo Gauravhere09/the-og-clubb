@@ -7,15 +7,37 @@ import { getFriends } from "@/lib/api/friends";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Poll } from "@/types/post";
 
 interface ProfileContentProps {
   profileId: string;
 }
 
+function transformPoll(pollData: any): Poll | null {
+  if (!pollData) return null;
+  
+  return {
+    question: pollData.question,
+    options: (pollData.options || []).map((opt: any) => ({
+      id: opt.id,
+      content: opt.content,
+      votes: opt.votes
+    })),
+    total_votes: pollData.total_votes,
+    user_vote: pollData.user_vote
+  };
+}
+
 export function ProfileContent({ profileId }: ProfileContentProps) {
   const { data: friends = [], isLoading: isLoadingFriends } = useQuery({
     queryKey: ['friends', profileId],
-    queryFn: () => getFriends()
+    queryFn: () => getFriends(),
+    select: (data) => {
+      return data.map(friend => ({
+        ...friend,
+        poll: transformPoll(friend.poll)
+      }));
+    }
   });
 
   return (
