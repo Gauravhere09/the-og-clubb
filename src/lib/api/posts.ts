@@ -57,13 +57,35 @@ export async function createPost(
       visibility: 'public'
     } as Tables['posts']['Insert'];
 
-    const { data: rawPost, error } = await supabase
+    // First insert the post
+    const { data: rawPost, error: insertError } = await supabase
       .from('posts')
       .insert(insertData)
-      .select()
+      .select(`
+        id,
+        content,
+        user_id,
+        media_url,
+        media_type,
+        visibility,
+        poll,
+        created_at,
+        updated_at
+      `)
       .single();
 
-    if (error) throw error;
+    if (insertError) throw insertError;
+
+    // Then get the profile data
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('username, avatar_url')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError) throw profileError;
+
+    if (!rawPost) throw new Error('Failed to create post');
 
     const { data: friendships } = await supabase
       .from('friendships')
@@ -96,16 +118,16 @@ export async function createPost(
       visibility: rawPost.visibility as 'public' | 'friends' | 'private',
       created_at: rawPost.created_at,
       updated_at: rawPost.updated_at,
-      profiles: rawPost.profiles,
+      profiles: profileData,
       poll: rawPost.poll ? {
-        question: rawPost.poll.question,
-        options: rawPost.poll.options.map((opt: any) => ({
-          id: opt.id,
-          content: opt.content,
-          votes: opt.votes
+        question: (rawPost.poll as any).question as string,
+        options: ((rawPost.poll as any).options || []).map((opt: any) => ({
+          id: opt.id as string,
+          content: opt.content as string,
+          votes: opt.votes as number
         })),
-        total_votes: rawPost.poll.total_votes,
-        user_vote: rawPost.poll.user_vote
+        total_votes: (rawPost.poll as any).total_votes as number,
+        user_vote: (rawPost.poll as any).user_vote as string | null
       } : null,
       reactions: { count: 0, by_type: {} },
       reactions_count: 0,
@@ -196,7 +218,7 @@ export async function getPosts(userId?: string) {
   }, {} as Record<string, number>);
 
   // Transform posts data with proper typing
-  return (rawPosts || []).map(post => ({
+  return (rawPosts || []).map((post: any) => ({
     id: post.id,
     content: post.content,
     user_id: post.user_id,
@@ -207,14 +229,14 @@ export async function getPosts(userId?: string) {
     updated_at: post.updated_at,
     profiles: post.profiles,
     poll: post.poll ? {
-      question: (post.poll as any).question,
-      options: (post.poll as any).options.map((opt: any) => ({
-        id: opt.id,
-        content: opt.content,
-        votes: opt.votes
+      question: (post.poll as any).question as string,
+      options: ((post.poll as any).options || []).map((opt: any) => ({
+        id: opt.id as string,
+        content: opt.content as string,
+        votes: opt.votes as number
       })),
-      total_votes: (post.poll as any).total_votes,
-      user_vote: (post.poll as any).user_vote
+      total_votes: (post.poll as any).total_votes as number,
+      user_vote: (post.poll as any).user_vote as string | null
     } : null,
     user_reaction: userReactionsMap[post.id] || null,
     reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
