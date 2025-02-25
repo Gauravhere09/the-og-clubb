@@ -8,21 +8,60 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { reactionIcons, type ReactionType } from "./ReactionIcons";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ReactionButtonProps {
   userReaction?: ReactionType;
   onReactionClick: (type: ReactionType) => void;
+  postId: string;
 }
 
-export function ReactionButton({ userReaction, onReactionClick }: ReactionButtonProps) {
-  const handleReactionClick = (type: ReactionType) => {
-    if (userReaction === type) {
-      // Si el usuario hace clic en la misma reacción, llama a onReactionClick con la misma reacción
-      // para activar el proceso de eliminación
-      onReactionClick(type);
-    } else {
-      // Si es una reacción diferente, actualiza a la nueva reacción
-      onReactionClick(type);
+export function ReactionButton({ userReaction, onReactionClick, postId }: ReactionButtonProps) {
+  const { toast } = useToast();
+
+  const handleReactionClick = async (type: ReactionType) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Debes iniciar sesión para reaccionar");
+
+      if (userReaction === type) {
+        // Si el usuario hace clic en su reacción actual, la eliminamos
+        const { error } = await supabase
+          .from('reactions')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+        onReactionClick(type); // Llamamos a onReactionClick para actualizar el estado
+      } else {
+        // Si es una reacción diferente o nueva, primero eliminamos cualquier reacción existente
+        await supabase
+          .from('reactions')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+
+        // Luego insertamos la nueva reacción
+        const { error } = await supabase
+          .from('reactions')
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+            reaction_type: type
+          });
+
+        if (error) throw error;
+        onReactionClick(type);
+      }
+    } catch (error) {
+      console.error('Error al gestionar la reacción:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo procesar tu reacción",
+      });
     }
   };
 
