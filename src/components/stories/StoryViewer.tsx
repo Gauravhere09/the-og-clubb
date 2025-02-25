@@ -27,12 +27,25 @@ interface StoryViewerProps {
   currentUserId: string;
 }
 
+type RawStoryData = {
+  id: string;
+  content: string;
+  media_url: string | null;
+  media_type: string | null;
+  created_at: string;
+  user_id: string;
+  profiles: {
+    username: string | null;
+    avatar_url: string | null;
+  };
+};
+
 export function StoryViewer({ currentUserId }: StoryViewerProps) {
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number>(-1);
   const queryClient = useQueryClient();
 
-  const fetchStories = async (): Promise<Story[]> => {
+  const fetchStories = async () => {
     const now = new Date().toISOString();
     const { data, error } = await supabase
       .from('posts')
@@ -54,7 +67,9 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
 
     if (error) throw error;
     
-    return (data || []).map(story => ({
+    const rawStories = data as RawStoryData[];
+    
+    const stories: Story[] = rawStories.map(story => ({
       id: story.id,
       content: story.content,
       media_url: story.media_url,
@@ -66,6 +81,8 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         avatar_url: story.profiles.avatar_url
       }
     }));
+
+    return stories;
   };
 
   const { data: stories = [] } = useQuery({
