@@ -10,30 +10,15 @@ import { supabase } from "@/integrations/supabase/client";
 
 type StoryMediaType = 'image' | 'audio' | null;
 
-interface StoryUser {
-  id: string;
-  username: string;
-  avatar_url: string | null;
-}
-
 interface Story {
   id: string;
   content: string;
   media_url: string | null;
   media_type: StoryMediaType;
   created_at: string;
-  user: StoryUser;
-}
-
-interface DatabaseStory {
-  id: string;
-  content: string;
-  media_url: string | null;
-  media_type: string | null;
-  created_at: string;
-  user_id: string;
-  profiles: {
-    username: string | null;
+  user: {
+    id: string;
+    username: string;
     avatar_url: string | null;
   };
 }
@@ -47,47 +32,45 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number>(-1);
   const queryClient = useQueryClient();
 
+  const fetchStories = async (): Promise<Story[]> => {
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from('posts')
+      .select(`
+        id,
+        content,
+        media_url,
+        media_type,
+        created_at,
+        user_id,
+        profiles:user_id (
+          username,
+          avatar_url
+        )
+      `)
+      .eq('is_story', true)
+      .gt('expires_at', now)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    
+    return (data || []).map(story => ({
+      id: story.id,
+      content: story.content,
+      media_url: story.media_url,
+      media_type: story.media_type as StoryMediaType,
+      created_at: story.created_at,
+      user: {
+        id: story.user_id,
+        username: story.profiles.username ?? '',
+        avatar_url: story.profiles.avatar_url
+      }
+    }));
+  };
+
   const { data: stories = [] } = useQuery({
     queryKey: ["stories"],
-    queryFn: async () => {
-      const now = new Date().toISOString();
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          id,
-          content,
-          media_url,
-          media_type,
-          created_at,
-          user_id,
-          profiles:user_id (
-            username,
-            avatar_url
-          )
-        `)
-        .eq('is_story', true)
-        .gt('expires_at', now)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const dbStories = data as DatabaseStory[];
-      
-      const transformedStories: Story[] = dbStories.map(story => ({
-        id: story.id,
-        content: story.content,
-        media_url: story.media_url,
-        media_type: story.media_type as StoryMediaType,
-        created_at: story.created_at,
-        user: {
-          id: story.user_id,
-          username: story.profiles.username ?? '',
-          avatar_url: story.profiles.avatar_url
-        }
-      }));
-
-      return transformedStories;
-    }
+    queryFn: fetchStories
   });
 
   const handleStoryCreated = () => {
