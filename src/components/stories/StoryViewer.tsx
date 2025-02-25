@@ -58,14 +58,14 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         id: story.id,
         content: story.content,
         media_url: story.media_url,
-        media_type: story.media_type,
+        media_type: story.media_type as 'image' | 'audio' | null,
         created_at: story.created_at,
         user: {
           id: story.user_id,
           username: story.profiles.username,
           avatar_url: story.profiles.avatar_url
         }
-      }));
+      })) as Story[];
     }
   });
 

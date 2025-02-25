@@ -72,10 +72,11 @@ export function StoryView({ stories, initialStoryIndex, isOpen, onClose }: Story
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No autenticado");
 
-      await supabase.from('story_reactions').insert({
-        story_id: currentStory.id,
+      await supabase.from('reactions').insert({
+        post_id: currentStory.id,
         user_id: user.id,
-        reaction: emoji
+        type: emoji,
+        is_story_reaction: true
       });
 
       toast({
@@ -99,10 +100,12 @@ export function StoryView({ stories, initialStoryIndex, isOpen, onClose }: Story
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No autenticado");
 
-      await supabase.from('story_replies').insert({
-        story_id: currentStory.id,
-        user_id: user.id,
-        message: message.trim()
+      await supabase.from('messages').insert({
+        content: message.trim(),
+        from_user_id: user.id,
+        to_user_id: currentStory.user.id,
+        is_story_reply: true,
+        story_id: currentStory.id
       });
 
       setMessage("");
