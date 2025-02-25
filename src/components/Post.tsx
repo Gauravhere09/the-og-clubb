@@ -42,6 +42,10 @@ export function Post({ post }: PostProps) {
     // Handle cancel reply
   };
 
+  const handleCommentsClick = () => {
+    setShowComments(true);
+  };
+
   return (
     <Card className="overflow-hidden">
       <div className="p-4">
@@ -51,7 +55,7 @@ export function Post({ post }: PostProps) {
           post={post}
           onReaction={handleReaction}
           onToggleComments={handleToggleComments}
-          onCommentsClick={handleToggleComments}
+          onCommentsClick={handleCommentsClick}
         />
       </div>
       {showComments && (
@@ -65,7 +69,7 @@ export function Post({ post }: PostProps) {
           onNewCommentChange={setNewComment}
           replyTo={null}
           onCancelReply={handleCancelReply}
-          comments={[]}
+          comments={post.comments || []}
         />
       )}
     </Card>

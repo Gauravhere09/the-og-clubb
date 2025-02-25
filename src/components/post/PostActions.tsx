@@ -36,16 +36,10 @@ export function PostActions({
   onCommentsClick 
 }: PostActionsProps) {
   const { toast } = useToast();
-  const [showComments, setShowComments] = useState(false);
   const reactionsByType = post.reactions?.by_type || {};
   const userReaction = post.user_reaction as ReactionType | undefined;
   const totalReactions = Object.values(reactionsByType).reduce((sum, count) => sum + count, 0);
   const commentCount = post.comments_count || 0;
-
-  const handleCommentClick = () => {
-    setShowComments(!showComments);
-    onToggleComments();
-  };
 
   const handleCopyLink = async () => {
     const url = `${window.location.origin}/post/${post.id}`;
@@ -95,26 +89,25 @@ export function PostActions({
           postId={post.id}
         />
 
-        <div className="flex items-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleCommentClick}
-            className="relative"
-          >
-            <MessagesSquare className="h-4 w-4 mr-2" />
-            Comentar
-          </Button>
+        <div className="flex flex-col items-center">
           {commentCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              className="text-xs text-muted-foreground px-2"
+              className="text-xs text-muted-foreground px-2 -mb-1"
               onClick={onCommentsClick}
             >
               {commentCount} {commentCount === 1 ? "comentario" : "comentarios"}
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleComments}
+          >
+            <MessagesSquare className="h-4 w-4 mr-2" />
+            Comentar
+          </Button>
         </div>
 
         <DropdownMenu>
