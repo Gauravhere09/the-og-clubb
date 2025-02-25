@@ -20,7 +20,16 @@ export type RawPost = {
   media_url: string | null;
   media_type: string | null;
   visibility: string;
-  poll: any;
+  poll: {
+    question: string;
+    options: Array<{
+      id: string;
+      content: string;
+      votes: number;
+    }>;
+    total_votes: number;
+    user_vote: string | null;
+  } | null;
   created_at: string;
   updated_at: string;
   profiles?: {
@@ -28,3 +37,5 @@ export type RawPost = {
     avatar_url: string | null;
   };
 };
+
+export type ReactionType = 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry';

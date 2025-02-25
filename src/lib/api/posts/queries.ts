@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "@/types/post";
 import { Tables } from "@/types/database";
-import { RawPost } from "./types";
+import { RawPost, ReactionType } from "./types";
 import { transformRawPost } from "./utils";
 
 export async function getPostsReactions(postIds: string[]) {
@@ -11,7 +11,10 @@ export async function getPostsReactions(postIds: string[]) {
     .select('post_id, reaction_type')
     .in('post_id', postIds);
 
-  return reactionsData || [];
+  return (reactionsData || []).map(r => ({
+    ...r,
+    reaction_type: r.reaction_type as ReactionType
+  }));
 }
 
 export async function getPostsComments(postIds: string[]) {
@@ -30,7 +33,10 @@ export async function getUserReactions(userId: string, postIds: string[]) {
     .eq('user_id', userId)
     .in('post_id', postIds);
 
-  return userReactions || [];
+  return (userReactions || []).map(r => ({
+    ...r,
+    reaction_type: r.reaction_type as ReactionType
+  }));
 }
 
 export async function getProfileData(userId: string) {

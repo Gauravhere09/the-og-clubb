@@ -1,6 +1,6 @@
 
 import { Post, Poll } from "@/types/post";
-import { RawPost } from "./types";
+import { RawPost, ReactionType } from "./types";
 
 export function transformPollData(pollData: any): Poll | null {
   if (!pollData) return null;
@@ -42,7 +42,7 @@ export function transformRawPost(
   rawPost: RawPost,
   profiles?: { username: string | null; avatar_url: string | null },
   reactionsMap: Record<string, { count: number; by_type: Record<string, number> }> = {},
-  userReactionsMap: Record<string, string> = {},
+  userReactionsMap: Record<string, ReactionType> = {},
   commentsCountMap: Record<string, number> = {}
 ): Post {
   return {

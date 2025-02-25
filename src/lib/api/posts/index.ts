@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "@/types/post";
 import { Tables } from "@/types/database";
-import { CreatePostInput, RawPost } from "./types";
+import { CreatePostInput, RawPost, ReactionType } from "./types";
 import { createPollData, processMediaFile, transformRawPost } from "./utils";
 import { uploadMedia } from "./storage";
 import { notifyFriendsAboutPost } from "./notifications";
@@ -106,7 +106,7 @@ export async function getPosts(userId?: string) {
   const userReactionsMap = userReactions.reduce((acc, reaction) => {
     acc[reaction.post_id] = reaction.reaction_type;
     return acc;
-  }, {} as Record<string, string>);
+  }, {} as Record<string, ReactionType>);
 
   // Count comments
   const commentsCountMap = commentsData.reduce((acc, comment) => {
