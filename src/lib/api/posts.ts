@@ -48,45 +48,19 @@ export async function createPost(
       };
     }
 
-    const { data: post, error } = await supabase
+    const insertData = {
+      content,
+      media_url,
+      media_type,
+      poll,
+      user_id: user.id,
+      visibility: 'public'
+    } as Tables['posts']['Insert'];
+
+    const { data: rawPost, error } = await supabase
       .from('posts')
-      .insert({
-        content,
-        media_url,
-        media_type,
-        poll,
-        user_id: user.id,
-        visibility: 'public'
-      } as Tables['posts']['Insert'])
-      .select(`
-        id,
-        content,
-        media_url,
-        media_type,
-        visibility,
-        poll,
-        created_at,
-        updated_at,
-        user_id,
-        profiles (
-          username,
-          avatar_url
-        ),
-        (
-          SELECT COUNT(*)::integer
-          FROM comments
-          WHERE post_id = posts.id
-        ) as comments_count,
-        (
-          SELECT json_build_object(
-            'count', COUNT(*)::integer,
-            'by_type', json_object_agg(reaction_type, COUNT(*))
-          )
-          FROM reactions
-          WHERE post_id = posts.id
-          GROUP BY post_id
-        ) as reactions
-      `)
+      .insert(insertData)
+      .select()
       .single();
 
     if (error) throw error;
@@ -102,7 +76,7 @@ export async function createPost(
         type: 'new_post',
         sender_id: user.id,
         receiver_id: friendship.friend_id,
-        post_id: post.id,
+        post_id: rawPost.id,
         message: 'Ha realizado una nueva publicación',
         read: false
       }));
@@ -112,7 +86,33 @@ export async function createPost(
         .insert(notifications);
     }
 
-    return post as unknown as Post;
+    // Transform the raw post to match Post type
+    const post: Post = {
+      id: rawPost.id,
+      content: rawPost.content,
+      user_id: rawPost.user_id,
+      media_url: rawPost.media_url,
+      media_type: rawPost.media_type as 'image' | 'video' | 'audio' | null,
+      visibility: rawPost.visibility as 'public' | 'friends' | 'private',
+      created_at: rawPost.created_at,
+      updated_at: rawPost.updated_at,
+      profiles: rawPost.profiles,
+      poll: rawPost.poll ? {
+        question: rawPost.poll.question,
+        options: rawPost.poll.options.map((opt: any) => ({
+          id: opt.id,
+          content: opt.content,
+          votes: opt.votes
+        })),
+        total_votes: rawPost.poll.total_votes,
+        user_vote: rawPost.poll.user_vote
+      } : null,
+      reactions: { count: 0, by_type: {} },
+      reactions_count: 0,
+      comments_count: 0
+    };
+
+    return post;
   } catch (error) {
     console.error('Error creating post:', error);
     throw error;
@@ -122,62 +122,81 @@ export async function createPost(
 export async function getPosts(userId?: string) {
   const { data: { user } } = await supabase.auth.getUser();
   
-  let query = supabase
+  const query = supabase
     .from('posts')
     .select(`
       id,
       content,
+      user_id,
       media_url,
       media_type,
       visibility,
       poll,
       created_at,
       updated_at,
-      user_id,
       profiles (
         username,
         avatar_url
-      ),
-      (
-        SELECT COUNT(*)::integer
-        FROM comments
-        WHERE post_id = posts.id
-      ) as comments_count,
-      (
-        SELECT json_build_object(
-          'count', COUNT(*)::integer,
-          'by_type', json_object_agg(reaction_type, COUNT(*))
-        )
-        FROM reactions
-        WHERE post_id = posts.id
-        GROUP BY post_id
-      ) as reactions
+      )
     `);
 
   if (userId) {
-    query = query.eq('user_id', userId);
+    query.eq('user_id', userId);
   }
 
-  const { data: postsData, error: postsError } = await query.order('created_at', { ascending: false });
+  const { data: rawPosts, error: postsError } = await query
+    .order('created_at', { ascending: false });
 
   if (postsError) throw postsError;
 
-  // Get user's reactions if logged in
-  let userReactionsMap = {};
+  // Get reactions data
+  const { data: reactionsData } = await supabase
+    .from('reactions')
+    .select('post_id, reaction_type')
+    .in('post_id', (rawPosts || []).map(p => p.id));
+
+  // Get comments count
+  const { data: commentsData } = await supabase
+    .from('comments')
+    .select('post_id')
+    .in('post_id', (rawPosts || []).map(p => p.id));
+
+  // Get user reactions if logged in
+  let userReactionsMap: Record<string, string> = {};
   if (user) {
     const { data: userReactions } = await supabase
       .from('reactions')
       .select('post_id, reaction_type')
-      .eq('user_id', user.id);
+      .eq('user_id', user.id)
+      .in('post_id', (rawPosts || []).map(p => p.id));
 
-    userReactionsMap = (userReactions || []).reduce((acc, reaction) => {
-      acc[reaction.post_id] = reaction.reaction_type;
-      return acc;
-    }, {} as Record<string, string>);
+    if (userReactions) {
+      userReactionsMap = userReactions.reduce((acc, reaction) => {
+        acc[reaction.post_id] = reaction.reaction_type;
+        return acc;
+      }, {} as Record<string, string>);
+    }
   }
 
+  // Process reactions data
+  const reactionsMap = (reactionsData || []).reduce((acc, reaction) => {
+    if (!acc[reaction.post_id]) {
+      acc[reaction.post_id] = { count: 0, by_type: {} };
+    }
+    acc[reaction.post_id].count++;
+    acc[reaction.post_id].by_type[reaction.reaction_type] = 
+      (acc[reaction.post_id].by_type[reaction.reaction_type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, { count: number; by_type: Record<string, number> }>);
+
+  // Count comments
+  const commentsCountMap = (commentsData || []).reduce((acc, comment) => {
+    acc[comment.post_id] = (acc[comment.post_id] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   // Transform posts data with proper typing
-  return (postsData || []).map((post: any) => ({
+  return (rawPosts || []).map(post => ({
     id: post.id,
     content: post.content,
     user_id: post.user_id,
@@ -188,19 +207,19 @@ export async function getPosts(userId?: string) {
     updated_at: post.updated_at,
     profiles: post.profiles,
     poll: post.poll ? {
-      question: post.poll.question,
-      options: post.poll.options.map((opt: any) => ({
+      question: (post.poll as any).question,
+      options: (post.poll as any).options.map((opt: any) => ({
         id: opt.id,
         content: opt.content,
         votes: opt.votes
       })),
-      total_votes: post.poll.total_votes,
-      user_vote: post.poll.user_vote
+      total_votes: (post.poll as any).total_votes,
+      user_vote: (post.poll as any).user_vote
     } : null,
     user_reaction: userReactionsMap[post.id] || null,
-    reactions: post.reactions || { count: 0, by_type: {} },
-    reactions_count: post.reactions?.count || 0,
-    comments_count: post.comments_count || 0
+    reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
+    reactions_count: reactionsMap[post.id]?.count || 0,
+    comments_count: commentsCountMap[post.id] || 0
   })) as Post[];
 }
 
