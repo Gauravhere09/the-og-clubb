@@ -6,7 +6,8 @@ import { PostContent } from "./post/PostContent";
 import { PostActions } from "./post/PostActions";
 import { Comments } from "./post/Comments";
 import { usePostMutations } from "@/hooks/use-post-mutations";
-import { type ReactionType } from "./reactions/ReactionIcons";
+import { type ReactionType } from "@/types/database/social.types";
+import { useState } from "react";
 
 interface PostProps {
   post: PostType;
@@ -14,6 +15,7 @@ interface PostProps {
 
 export function Post({ post }: PostProps) {
   const { handleReaction, handleDeletePost, toggleCommentReaction } = usePostMutations(post.id);
+  const [newComment, setNewComment] = useState("");
 
   const handleToggleComments = () => {
     // Handle toggle comments visibility if needed
@@ -21,6 +23,22 @@ export function Post({ post }: PostProps) {
 
   const handleCommentReaction = (commentId: string, type: ReactionType) => {
     toggleCommentReaction({ commentId, type });
+  };
+
+  const handleSubmitComment = () => {
+    // Handle submit comment
+  };
+
+  const handleReply = (id: string, username: string) => {
+    // Handle reply
+  };
+
+  const handleDeleteComment = (commentId: string) => {
+    // Handle delete comment
+  };
+
+  const handleCancelReply = () => {
+    // Handle cancel reply
   };
 
   return (
@@ -37,6 +55,14 @@ export function Post({ post }: PostProps) {
       <Comments
         postId={post.id}
         onReaction={handleCommentReaction}
+        onReply={handleReply}
+        onSubmitComment={handleSubmitComment}
+        onDeleteComment={handleDeleteComment}
+        newComment={newComment}
+        onNewCommentChange={setNewComment}
+        replyTo={null}
+        onCancelReply={handleCancelReply}
+        comments={[]}
       />
     </Card>
   );
