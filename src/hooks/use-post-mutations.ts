@@ -1,3 +1,4 @@
+
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deletePost } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
@@ -16,14 +17,16 @@ export function usePostMutations(postId: string) {
 
   const { mutate: handleReaction } = useMutation({
     mutationFn: async (type: ReactionType) => {
-      if (!session?.user?.id) {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      
+      if (!currentSession?.user) {
         throw new Error("Debes iniciar sesión para reaccionar");
       }
 
       const { data: existingReaction } = await supabase
         .from("reactions")
         .select()
-        .eq("user_id", session.user.id)
+        .eq("user_id", currentSession.user.id)
         .eq("post_id", postId)
         .single<Reaction>();
 
@@ -45,7 +48,7 @@ export function usePostMutations(postId: string) {
         const { error } = await supabase
           .from("reactions")
           .insert({
-            user_id: session.user.id,
+            user_id: currentSession.user.id,
             post_id: postId,
             reaction_type: type
           });
@@ -82,14 +85,16 @@ export function usePostMutations(postId: string) {
 
   const { mutate: toggleCommentReaction } = useMutation({
     mutationFn: async ({ commentId, type }: { commentId: string; type: ReactionType }) => {
-      if (!session?.user?.id) {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      
+      if (!currentSession?.user) {
         throw new Error("Debes iniciar sesión para reaccionar");
       }
       
       const { data: existingReaction } = await supabase
         .from('reactions')
         .select()
-        .eq('user_id', session.user.id)
+        .eq('user_id', currentSession.user.id)
         .eq('comment_id', commentId)
         .single<Reaction>();
 
@@ -103,7 +108,7 @@ export function usePostMutations(postId: string) {
         const { error } = await supabase
           .from('reactions')
           .insert({
-            user_id: session.user.id,
+            user_id: currentSession.user.id,
             comment_id: commentId,
             post_id: null,
             reaction_type: type
