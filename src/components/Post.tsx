@@ -8,6 +8,8 @@ import { Comments } from "./post/Comments";
 import { usePostMutations } from "@/hooks/use-post-mutations";
 import { type ReactionType } from "@/types/database/social.types";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { getComments } from "@/lib/api/comments";
 
 interface PostProps {
   post: PostType;
@@ -17,6 +19,12 @@ export function Post({ post }: PostProps) {
   const { handleReaction, handleDeletePost, toggleCommentReaction } = usePostMutations(post.id);
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(false);
+
+  const { data: comments = [] } = useQuery({
+    queryKey: ["comments", post.id],
+    queryFn: () => getComments(post.id),
+    enabled: showComments, // Only fetch when comments are visible
+  });
 
   const handleToggleComments = () => {
     setShowComments(!showComments);
@@ -69,7 +77,7 @@ export function Post({ post }: PostProps) {
           onNewCommentChange={setNewComment}
           replyTo={null}
           onCancelReply={handleCancelReply}
-          comments={post.comments || []}
+          comments={comments}
         />
       )}
     </Card>
