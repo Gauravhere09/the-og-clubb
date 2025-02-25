@@ -26,7 +26,7 @@ export function Post({ post }: PostProps) {
   const { data: comments = [] } = useQuery({
     queryKey: ["comments", post.id],
     queryFn: () => getComments(post.id),
-    enabled: showComments, // Only fetch when comments are visible
+    enabled: showComments,
   });
 
   const handleToggleComments = () => {
@@ -72,6 +72,10 @@ export function Post({ post }: PostProps) {
 
   // Verificamos si el usuario actual es el autor del post
   const isAuthor = session?.user?.id === post.user_id;
+  
+  console.log('Session user ID:', session?.user?.id);
+  console.log('Post user ID:', post.user_id);
+  console.log('Is author?:', isAuthor);
 
   return (
     <Card className="overflow-hidden">
