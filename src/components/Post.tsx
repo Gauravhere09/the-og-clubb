@@ -70,12 +70,17 @@ export function Post({ post }: PostProps) {
     setShowComments(true);
   };
 
+  // Verificamos si el usuario actual es el autor del post
   const isAuthor = session?.user?.id === post.user_id;
 
   return (
     <Card className="overflow-hidden">
       <div className="p-4">
-        <PostHeader post={post} onDelete={handleDeletePost} isAuthor={isAuthor} />
+        <PostHeader 
+          post={post} 
+          onDelete={handleDeletePost} 
+          isAuthor={isAuthor} 
+        />
         <PostContent post={post} postId={post.id} />
         <PostActions
           post={post}
