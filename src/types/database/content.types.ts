@@ -7,16 +7,6 @@ export interface PostTable {
     media_url: string | null;
     media_type: 'image' | 'video' | 'audio' | null;
     visibility: 'public' | 'friends' | 'private';
-    poll: {
-      question: string;
-      options: Array<{
-        id: string;
-        content: string;
-        votes: number;
-      }>;
-      total_votes: number;
-      user_vote: string | null;
-    } | null;
     created_at: string;
     updated_at: string;
   };
@@ -26,16 +16,6 @@ export interface PostTable {
     user_id: string;
     media_url?: string | null;
     media_type?: 'image' | 'video' | 'audio' | null;
-    poll?: {
-      question: string;
-      options: Array<{
-        id: string;
-        content: string;
-        votes: number;
-      }>;
-      total_votes: number;
-      user_vote: string | null;
-    } | null;
     visibility?: 'public' | 'friends' | 'private';
     created_at?: string;
     updated_at?: string;
@@ -46,16 +26,6 @@ export interface PostTable {
     user_id?: string;
     media_url?: string | null;
     media_type?: 'image' | 'video' | 'audio' | null;
-    poll?: {
-      question: string;
-      options: Array<{
-        id: string;
-        content: string;
-        votes: number;
-      }>;
-      total_votes: number;
-      user_vote: string | null;
-    } | null;
     visibility?: 'public' | 'friends' | 'private';
     created_at?: string;
     updated_at?: string;
