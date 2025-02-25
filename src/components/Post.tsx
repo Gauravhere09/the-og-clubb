@@ -10,18 +10,32 @@ import { type ReactionType } from "@/types/database/social.types";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getComments } from "@/lib/api/comments";
-import { useSession } from "@supabase/auth-helpers-react";
+import { useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { User } from "@supabase/supabase-js";
 
 interface PostProps {
   post: PostType;
 }
 
 export function Post({ post }: PostProps) {
-  const session = useSession();
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { handleReaction, handleDeletePost, toggleCommentReaction, submitComment } = usePostMutations(post.id);
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(false);
   const [replyTo, setReplyTo] = useState<{ id: string; username: string } | null>(null);
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUser(user);
+      console.log('Current user:', user?.id);
+      console.log('Post user:', post.user_id);
+      console.log('Are they the same?', user?.id === post.user_id);
+    };
+
+    getUser();
+  }, [post.user_id]);
 
   const { data: comments = [] } = useQuery({
     queryKey: ["comments", post.id],
@@ -69,13 +83,9 @@ export function Post({ post }: PostProps) {
   const handleCommentsClick = () => {
     setShowComments(true);
   };
-
-  // Verificamos si el usuario actual es el autor del post
-  const isAuthor = session?.user?.id === post.user_id;
   
-  console.log('Session user ID:', session?.user?.id);
-  console.log('Post user ID:', post.user_id);
-  console.log('Is author?:', isAuthor);
+  // Verificamos si el usuario actual es el autor del post
+  const isAuthor = currentUser?.id === post.user_id;
 
   return (
     <Card className="overflow-hidden">
