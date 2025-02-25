@@ -51,6 +51,7 @@ export function Post({ post }: PostProps) {
           post={post}
           onReaction={handleReaction}
           onToggleComments={handleToggleComments}
+          onCommentsClick={handleToggleComments}
         />
       </div>
       {showComments && (

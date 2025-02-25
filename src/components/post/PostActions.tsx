@@ -26,9 +26,15 @@ interface PostActionsProps {
   post: Post;
   onReaction: (type: ReactionType) => void;
   onToggleComments: () => void;
+  onCommentsClick: () => void;
 }
 
-export function PostActions({ post, onReaction, onToggleComments }: PostActionsProps) {
+export function PostActions({ 
+  post, 
+  onReaction, 
+  onToggleComments,
+  onCommentsClick 
+}: PostActionsProps) {
   const { toast } = useToast();
   const [showComments, setShowComments] = useState(false);
   const reactionsByType = post.reactions?.by_type || {};
@@ -89,20 +95,27 @@ export function PostActions({ post, onReaction, onToggleComments }: PostActionsP
           postId={post.id}
         />
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleCommentClick}
-          className="relative"
-        >
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCommentClick}
+            className="relative"
+          >
+            <MessagesSquare className="h-4 w-4 mr-2" />
+            Comentar
+          </Button>
           {commentCount > 0 && (
-            <span className="absolute -top-4 text-xs text-muted-foreground">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-xs text-muted-foreground px-2"
+              onClick={onCommentsClick}
+            >
               {commentCount} {commentCount === 1 ? "comentario" : "comentarios"}
-            </span>
+            </Button>
           )}
-          <MessagesSquare className="h-4 w-4 mr-2" />
-          Comentar
-        </Button>
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
