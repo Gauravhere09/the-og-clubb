@@ -8,7 +8,7 @@ import { StoryView } from "./StoryView";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-type Story = {
+export type Story = {
   id: string;
   user: {
     id: string;

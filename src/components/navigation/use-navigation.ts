@@ -96,41 +96,19 @@ export function useNavigation() {
     getCurrentUser();
   }, [location.pathname, toast, navigate]);
 
+  // Limpiar contador de nuevos posts cuando el usuario está en el feed
   useEffect(() => {
-    if (location.pathname === '/' && location.search.includes('new=true')) {
+    if (location.pathname === '/') {
       setNewPosts(0);
       setLatestPostId(null);
     }
-  }, [location.pathname, location.search]);
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      
-      toast({
-        title: "Sesión cerrada",
-        description: "Has cerrado sesión correctamente"
-      });
-      
-      navigate('/auth');
-      setCurrentUserId(null);
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se pudo cerrar la sesión"
-      });
-    }
-  };
+  }, [location.pathname]);
 
   const handleHomeClick = () => {
-    if (newPosts > 0) {
-      navigate('/?new=true');
-      setNewPosts(0);
-      setLatestPostId(null);
-    } else {
-      navigate('/');
-    }
+    navigate('/');
+    // Limpiar contador inmediatamente al hacer clic
+    setNewPosts(0);
+    setLatestPostId(null);
   };
 
   const handleNotificationClick = async () => {
@@ -147,7 +125,23 @@ export function useNavigation() {
     currentUserId,
     unreadNotifications,
     newPosts,
-    handleLogout,
+    handleLogout: async () => {
+      try {
+        await supabase.auth.signOut();
+        toast({
+          title: "Sesión cerrada",
+          description: "Has cerrado sesión correctamente"
+        });
+        navigate('/auth');
+        setCurrentUserId(null);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No se pudo cerrar la sesión"
+        });
+      }
+    },
     handleHomeClick,
     handleNotificationClick,
     location
