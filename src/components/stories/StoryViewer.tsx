@@ -13,8 +13,7 @@ interface StoryViewerProps {
   currentUserId: string;
 }
 
-// Definimos un tipo específico para los datos crudos de Supabase
-interface RawStoryData {
+type DBStory = {
   id: string;
   content: string;
   media_url: string | null;
@@ -24,7 +23,7 @@ interface RawStoryData {
   profiles: {
     username: string | null;
     avatar_url: string | null;
-  };
+  } | null;
 }
 
 export function StoryViewer({ currentUserId }: StoryViewerProps) {
@@ -54,9 +53,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
 
     if (error) throw error;
     
-    const rawStories = data as RawStoryData[];
-    
-    return rawStories.map(story => ({
+    const stories = (data as DBStory[]).map(story => ({
       id: story.id,
       content: story.content,
       media_url: story.media_url,
@@ -64,10 +61,12 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
       created_at: story.created_at,
       user: {
         id: story.user_id,
-        username: story.profiles.username ?? '',
-        avatar_url: story.profiles.avatar_url
+        username: story.profiles?.username ?? '',
+        avatar_url: story.profiles?.avatar_url
       }
     }));
+
+    return stories;
   };
 
   const { data: stories = [] } = useQuery({
