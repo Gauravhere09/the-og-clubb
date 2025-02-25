@@ -1,6 +1,12 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+interface Friend {
+  friend_id: string;
+  friend_username: string;
+  friend_avatar_url: string | null;
+}
+
 export async function getFriends() {
   try {
     const { data: { user } } = await supabase.auth.getUser();
