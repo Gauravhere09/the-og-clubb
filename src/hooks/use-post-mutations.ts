@@ -28,28 +28,43 @@ export function usePostMutations(postId: string) {
         throw new Error("Debes iniciar sesión para reaccionar");
       }
 
-      const { data: existingReaction } = await supabase
+      // Obtener reacción existente
+      const { data: existingReactions, error: fetchError } = await supabase
         .from("reactions")
         .select()
         .eq("user_id", currentSession.user.id)
-        .eq("post_id", postId)
-        .single<Reaction>();
+        .eq("post_id", postId);
 
-      if (existingReaction) {
-        if (existingReaction.reaction_type === type) {
+      if (fetchError) throw fetchError;
+
+      // Si ya existe una reacción del mismo tipo, la eliminamos
+      if (existingReactions && existingReactions.length > 0) {
+        if (existingReactions[0].reaction_type === type) {
           const { error } = await supabase
             .from("reactions")
             .delete()
-            .eq("id", existingReaction.id);
+            .eq("id", existingReactions[0].id);
           if (error) throw error;
         } else {
+          // Si existe una reacción diferente, la actualizamos
           const { error } = await supabase
             .from("reactions")
-            .update({ reaction_type: type })
-            .eq("id", existingReaction.id);
+            .delete()
+            .eq("id", existingReactions[0].id);
           if (error) throw error;
+
+          // Crear nueva reacción
+          const { error: insertError } = await supabase
+            .from("reactions")
+            .insert({
+              user_id: currentSession.user.id,
+              post_id: postId,
+              reaction_type: type
+            });
+          if (insertError) throw insertError;
         }
       } else {
+        // Si no existe ninguna reacción, creamos una nueva
         const { error } = await supabase
           .from("reactions")
           .insert({
@@ -60,13 +75,8 @@ export function usePostMutations(postId: string) {
         if (error) throw error;
       }
       
+      // Invalidar la cache inmediatamente para forzar una actualización
       await queryClient.invalidateQueries({ queryKey: ["posts"] });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Reacción actualizada",
-        description: "Tu reacción se ha actualizado correctamente",
-      });
     },
     onError: (error) => {
       toast({
@@ -175,4 +185,3 @@ export function usePostMutations(postId: string) {
     submitComment
   };
 }
-
