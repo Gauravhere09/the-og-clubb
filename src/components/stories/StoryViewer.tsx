@@ -4,6 +4,8 @@ import { Plus } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useState } from "react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { StoryCreatorModal } from "./StoryCreatorModal";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Story {
   id: string;
@@ -23,10 +25,11 @@ interface StoryViewerProps {
 
 export function StoryViewer({ stories, currentUserId }: StoryViewerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isCreatorOpen, setIsCreatorOpen] = useState(false);
+  const queryClient = useQueryClient();
 
-  const handleCreateStory = () => {
-    // Implementar la creación de historias
-    console.log("Crear historia");
+  const handleStoryCreated = () => {
+    queryClient.invalidateQueries({ queryKey: ["stories"] });
   };
 
   return (
@@ -36,7 +39,7 @@ export function StoryViewer({ stories, currentUserId }: StoryViewerProps) {
           {/* Create Story Button */}
           <div className="flex flex-col items-center space-y-1">
             <div 
-              onClick={handleCreateStory}
+              onClick={() => setIsCreatorOpen(true)}
               className="relative cursor-pointer group"
             >
               <Avatar className="w-16 h-16 border-2 border-muted p-1">
@@ -81,6 +84,12 @@ export function StoryViewer({ stories, currentUserId }: StoryViewerProps) {
           </div>
         </DialogContent>
       </Dialog>
+
+      <StoryCreatorModal 
+        isOpen={isCreatorOpen}
+        onClose={() => setIsCreatorOpen(false)}
+        onSuccess={handleStoryCreated}
+      />
     </div>
   );
 }
