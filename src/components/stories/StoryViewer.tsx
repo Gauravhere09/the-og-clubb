@@ -8,18 +8,21 @@ import { StoryView } from "./StoryView";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type Story = {
+// Define las interfaces de manera separada para evitar referencias circulares
+interface StoryUser {
   id: string;
-  user: {
-    id: string;
-    username: string;
-    avatar_url: string | null;
-  };
+  username: string;
+  avatar_url: string | null;
+}
+
+interface Story {
+  id: string;
+  user: StoryUser;
   content: string;
   media_url: string | null;
   media_type: 'image' | 'audio' | null;
   created_at: string;
-};
+}
 
 interface StoryViewerProps {
   currentUserId: string;
