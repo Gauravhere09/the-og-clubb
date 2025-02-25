@@ -56,7 +56,7 @@ export function PostContent({ post, postId }: PostContentProps) {
     });
 
     try {
-      // Actualizar el voto en la base de datos
+      // Actualizar el post en la base de datos
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Debes iniciar sesión para votar");
 
