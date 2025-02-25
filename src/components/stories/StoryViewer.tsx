@@ -10,13 +10,6 @@ import { supabase } from "@/integrations/supabase/client";
 
 type StoryMediaType = 'image' | 'audio' | null;
 
-// Definimos los tipos en el orden correcto para evitar referencias circulares
-type StoryUser = {
-  id: string;
-  username: string;
-  avatar_url: string | null;
-};
-
 type Story = {
   id: string;
   content: string;
@@ -25,6 +18,19 @@ type Story = {
   created_at: string;
   user: {
     id: string;
+    username: string;
+    avatar_url: string | null;
+  };
+};
+
+type RawStoryData = {
+  id: string;
+  content: string;
+  media_url: string | null;
+  media_type: StoryMediaType;
+  created_at: string;
+  user_id: string;
+  profiles: {
     username: string;
     avatar_url: string | null;
   };
@@ -39,7 +45,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number>(-1);
   const queryClient = useQueryClient();
 
-  const { data: stories = [] } = useQuery({
+  const { data: stories = [] } = useQuery<Story[]>({
     queryKey: ["stories"],
     queryFn: async () => {
       const now = new Date().toISOString();
@@ -63,11 +69,12 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
 
       if (error) throw error;
 
-      return (data || []).map(story => ({
+      const rawStories = data as RawStoryData[];
+      return rawStories.map(story => ({
         id: story.id,
         content: story.content,
         media_url: story.media_url,
-        media_type: story.media_type as StoryMediaType,
+        media_type: story.media_type,
         created_at: story.created_at,
         user: {
           id: story.user_id,
