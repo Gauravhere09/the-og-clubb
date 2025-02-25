@@ -1,9 +1,10 @@
+
 import { Globe, Users, Lock, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Post, Poll } from "@/types/post";
 import { PollDisplay } from "./PollDisplay";
-import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useRef } from "react";
+import { useInView } from "react-intersection-observer";
 
 interface PostContentProps {
   post: Post;
@@ -11,7 +12,10 @@ interface PostContentProps {
 }
 
 export function PostContent({ post, postId }: PostContentProps) {
-  const queryClient = useQueryClient();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const { ref: inViewRef, inView } = useInView({
+    threshold: 0.5,
+  });
 
   const getVisibilityIcon = (visibility: string) => {
     switch (visibility) {
@@ -26,99 +30,31 @@ export function PostContent({ post, postId }: PostContentProps) {
     }
   };
 
-  const handleVote = async (optionId: string) => {
-    if (!post.poll) return;
-
-    // Actualizar la UI optimistamente
-    const oldPoll = post.poll;
-    const newOptions = post.poll.options.map(opt => ({
-      ...opt,
-      votes: opt.id === optionId ? opt.votes + 1 : opt.votes
-    }));
-
-    queryClient.setQueryData(['posts'], (old: Post[] | undefined) => {
-      if (!old) return old;
-      return old.map((p) => {
-        if (p.id === postId && p.poll) {
-          return {
-            ...p,
-            poll: {
-              ...p.poll,
-              options: newOptions,
-              total_votes: p.poll.total_votes + 1,
-              user_vote: optionId
-            }
-          };
-        }
-        return p;
-      });
-    });
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Debes iniciar sesión para votar");
-
-      const { data: postData, error: postError } = await supabase
-        .from('posts')
-        .select('poll')
-        .eq('id', postId)
-        .single();
-
-      if (postError || !postData?.poll) throw new Error('Could not fetch poll data');
-
-      // Transform the poll data safely
-      const currentPoll = postData.poll as unknown as Poll;
-      if (!currentPoll.options || !Array.isArray(currentPoll.options)) {
-        throw new Error('Invalid poll data format');
+  // Efecto para pausar videos cuando no están visibles o cuando se reproduce otro
+  useEffect(() => {
+    const currentVideo = videoRef.current;
+    
+    if (currentVideo) {
+      // Pausar el video cuando no está en vista
+      if (!inView && !currentVideo.paused) {
+        currentVideo.pause();
       }
 
-      const updatedPoll = {
-        ...currentPoll,
-        options: currentPoll.options.map((opt) => ({
-          ...opt,
-          votes: opt.id === optionId ? opt.votes + 1 : opt.votes
-        })),
-        total_votes: (currentPoll.total_votes || 0) + 1
+      // Event listener para pausar otros videos cuando este comienza a reproducirse
+      const handlePlay = () => {
+        document.querySelectorAll('video').forEach(video => {
+          if (video !== currentVideo && !video.paused) {
+            video.pause();
+          }
+        });
       };
 
-      const { error: updateError } = await supabase
-        .from('posts')
-        .update({ poll: updatedPoll })
-        .eq('id', postId);
-
-      if (updateError) throw updateError;
-
-      // Register the vote in poll_votes table
-      const { error: voteError } = await supabase
-        .from('poll_votes')
-        .insert({
-          post_id: postId,
-          user_id: user.id,
-          option_id: optionId
-        });
-
-      if (voteError) throw voteError;
-
-      // Invalidar la consulta para obtener los datos actualizados
-      queryClient.invalidateQueries({ queryKey: ['posts'] });
-
-    } catch (error) {
-      console.error('Error al actualizar la votación:', error);
-      // Revertir el cambio optimista en caso de error
-      queryClient.setQueryData(['posts'], (old: Post[] | undefined) => {
-        if (!old) return old;
-        return old.map((p) => {
-          if (p.id === postId) {
-            return {
-              ...p,
-              poll: oldPoll
-            };
-          }
-          return p;
-        });
-      });
+      currentVideo.addEventListener('play', handlePlay);
+      return () => {
+        currentVideo.removeEventListener('play', handlePlay);
+      };
     }
-  };
+  }, [inView]);
 
   return (
     <>
@@ -138,12 +74,12 @@ export function PostContent({ post, postId }: PostContentProps) {
         <PollDisplay 
           poll={post.poll}
           postId={postId}
-          onVote={handleVote}
+          onVote={() => {}}
         />
       )}
 
       {post.media_url && (
-        <div className="mb-4">
+        <div className="mb-4" ref={inViewRef}>
           {post.media_type === 'image' && (
             <img
               src={post.media_url}
@@ -153,6 +89,7 @@ export function PostContent({ post, postId }: PostContentProps) {
           )}
           {post.media_type === 'video' && (
             <video
+              ref={videoRef}
               src={post.media_url}
               controls
               className="w-full rounded-lg"

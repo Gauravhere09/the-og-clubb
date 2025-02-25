@@ -39,28 +39,24 @@ export function Feed({ userId }: FeedProps) {
       }));
 
       if (showNew) {
-        // Si estamos mostrando nuevos posts, ordenamos por fecha de creación descendente
-        // y filtramos los posts de las últimas 24 horas
         const twentyFourHoursAgo = new Date();
-        twentyFourHoursAgo.setHours(twentyFourHoursAgo.setHours() - 24);
+        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-        transformedPosts = transformedPosts.filter(post => {
-          const postDate = new Date(post.created_at);
-          return postDate > twentyFourHoursAgo;
-        });
+        transformedPosts = transformedPosts
+          .filter(post => {
+            const postDate = new Date(post.created_at);
+            return postDate > twentyFourHoursAgo;
+          })
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       }
 
       return transformedPosts;
     }
   });
 
-  // Limpiar el parámetro "new" después de mostrar los nuevos posts
   useEffect(() => {
     if (showNew) {
-      const timer = setTimeout(() => {
-        setSearchParams({});
-      }, 1000);
-      return () => clearTimeout(timer);
+      setSearchParams({});
     }
   }, [showNew, setSearchParams]);
 
