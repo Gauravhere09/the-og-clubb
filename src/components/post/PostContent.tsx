@@ -3,12 +3,17 @@ import { Globe, Users, Lock, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Post } from "@/types/post";
 import { PollDisplay } from "./PollDisplay";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PostContentProps {
   post: Post;
+  postId: string;
 }
 
-export function PostContent({ post }: PostContentProps) {
+export function PostContent({ post, postId }: PostContentProps) {
+  const queryClient = useQueryClient();
+
   const getVisibilityIcon = (visibility: string) => {
     switch (visibility) {
       case 'public':
@@ -19,6 +24,82 @@ export function PostContent({ post }: PostContentProps) {
         return <Lock className="h-4 w-4" />;
       default:
         return <Globe className="h-4 w-4" />;
+    }
+  };
+
+  const handleVote = async (optionId: string) => {
+    if (!post.poll) return;
+
+    // Actualizar la UI optimistamente
+    const oldPoll = post.poll;
+    const newOptions = post.poll.options.map(opt => ({
+      ...opt,
+      votes: opt.id === optionId ? opt.votes + 1 : opt.votes
+    }));
+
+    queryClient.setQueryData(['posts'], (old: any) => {
+      return old.map((p: Post) => {
+        if (p.id === postId) {
+          return {
+            ...p,
+            poll: {
+              ...p.poll!,
+              options: newOptions,
+              total_votes: p.poll!.total_votes + 1,
+              user_vote: optionId
+            }
+          };
+        }
+        return p;
+      });
+    });
+
+    try {
+      // Actualizar el post en la base de datos
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Debes iniciar sesión para votar");
+
+      const { data: post, error: postError } = await supabase
+        .from('posts')
+        .select('poll')
+        .eq('id', postId)
+        .single();
+
+      if (postError) throw postError;
+
+      const updatedPoll = {
+        ...post.poll,
+        options: post.poll.options.map((opt: any) => ({
+          ...opt,
+          votes: opt.id === optionId ? opt.votes + 1 : opt.votes
+        })),
+        total_votes: post.poll.total_votes + 1
+      };
+
+      const { error: updateError } = await supabase
+        .from('posts')
+        .update({ poll: updatedPoll })
+        .eq('id', postId);
+
+      if (updateError) throw updateError;
+
+      // Invalidar la consulta para obtener los datos actualizados
+      queryClient.invalidateQueries(['posts']);
+
+    } catch (error) {
+      console.error('Error al actualizar la votación:', error);
+      // Revertir el cambio optimista en caso de error
+      queryClient.setQueryData(['posts'], (old: any) => {
+        return old.map((p: Post) => {
+          if (p.id === postId) {
+            return {
+              ...p,
+              poll: oldPoll
+            };
+          }
+          return p;
+        });
+      });
     }
   };
 
@@ -39,10 +120,8 @@ export function PostContent({ post }: PostContentProps) {
       {post.poll && (
         <PollDisplay 
           poll={post.poll}
-          onVote={async (optionId) => {
-            // Handle vote submission
-            console.log("Vote submitted for option:", optionId);
-          }}
+          postId={postId}
+          onVote={handleVote}
         />
       )}
 

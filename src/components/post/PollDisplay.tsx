@@ -12,23 +12,58 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PollDisplayProps {
+  postId: string;
   poll: Poll;
-  onVote: (optionId: string) => void;
+  onVote: (optionId: string) => Promise<void>;
 }
 
-export function PollDisplay({ poll, onVote }: PollDisplayProps) {
+export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(poll.user_vote);
   const [isVoting, setIsVoting] = useState(false);
   const [showVotesDialog, setShowVotesDialog] = useState(false);
+  const { toast } = useToast();
 
   const handleVote = async (optionId: string) => {
     if (poll.user_vote || isVoting) return;
+    
     setIsVoting(true);
-    await onVote(optionId);
-    setSelectedOption(optionId);
-    setIsVoting(false);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Debes iniciar sesión para votar");
+
+      // Insertar el voto en la tabla poll_votes
+      const { error: voteError } = await supabase
+        .from('poll_votes')
+        .insert({
+          post_id: postId,
+          user_id: user.id,
+          option_id: optionId
+        });
+
+      if (voteError) throw voteError;
+
+      await onVote(optionId);
+      setSelectedOption(optionId);
+      
+      toast({
+        title: "Voto registrado",
+        description: "Tu voto ha sido registrado correctamente",
+      });
+
+    } catch (error: any) {
+      console.error('Error al votar:', error);
+      toast({
+        variant: "destructive",
+        title: "Error al votar",
+        description: error.message || "No se pudo registrar tu voto",
+      });
+    } finally {
+      setIsVoting(false);
+    }
   };
 
   const getPercentage = (votes: number) => {

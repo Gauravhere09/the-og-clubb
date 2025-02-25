@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "@/types/post";
 import { Tables } from "@/types/database";
@@ -198,6 +197,24 @@ export async function getPosts(userId?: string) {
         return acc;
       }, {} as Record<string, string>);
     }
+
+    // Get user's poll votes
+    const { data: userVotes } = await supabase
+      .from('poll_votes')
+      .select('post_id, option_id')
+      .eq('user_id', user.id)
+      .in('post_id', (rawPosts || []).map(p => p.id));
+
+    if (userVotes) {
+      rawPosts?.forEach(post => {
+        if (post.poll) {
+          const userVote = userVotes.find(vote => vote.post_id === post.id);
+          if (userVote) {
+            post.poll.user_vote = userVote.option_id;
+          }
+        }
+      });
+    }
   }
 
   // Process reactions data
@@ -217,32 +234,42 @@ export async function getPosts(userId?: string) {
     return acc;
   }, {} as Record<string, number>);
 
-  // Transform posts data with proper typing
-  return (rawPosts || []).map((post: any) => ({
-    id: post.id,
-    content: post.content,
-    user_id: post.user_id,
-    media_url: post.media_url,
-    media_type: post.media_type as 'image' | 'video' | 'audio' | null,
-    visibility: post.visibility as 'public' | 'friends' | 'private',
-    created_at: post.created_at,
-    updated_at: post.updated_at,
-    profiles: post.profiles,
-    poll: post.poll ? {
-      question: (post.poll as any).question as string,
-      options: ((post.poll as any).options || []).map((opt: any) => ({
-        id: opt.id as string,
-        content: opt.content as string,
-        votes: opt.votes as number
-      })),
-      total_votes: (post.poll as any).total_votes as number,
-      user_vote: (post.poll as any).user_vote as string | null
-    } : null,
-    user_reaction: userReactionsMap[post.id] || null,
-    reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
-    reactions_count: reactionsMap[post.id]?.count || 0,
-    comments_count: commentsCountMap[post.id] || 0
-  })) as Post[];
+  // Transform posts data
+  const transformedPosts = (rawPosts || []).map((post: any): Post => {
+    // Transform poll data if it exists
+    let transformedPoll = null;
+    if (post.poll) {
+      transformedPoll = {
+        question: post.poll.question,
+        options: post.poll.options.map((opt: any) => ({
+          id: opt.id,
+          content: opt.content,
+          votes: Number(opt.votes)
+        })),
+        total_votes: Number(post.poll.total_votes),
+        user_vote: post.poll.user_vote
+      };
+    }
+
+    return {
+      id: post.id,
+      content: post.content,
+      user_id: post.user_id,
+      media_url: post.media_url,
+      media_type: post.media_type,
+      visibility: post.visibility,
+      created_at: post.created_at,
+      updated_at: post.updated_at,
+      profiles: post.profiles,
+      poll: transformedPoll,
+      user_reaction: userReactionsMap[post.id] || null,
+      reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
+      reactions_count: reactionsMap[post.id]?.count || 0,
+      comments_count: commentsCountMap[post.id] || 0
+    };
+  });
+
+  return transformedPosts;
 }
 
 export async function deletePost(postId: string) {
