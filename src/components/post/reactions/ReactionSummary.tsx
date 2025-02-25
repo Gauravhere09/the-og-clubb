@@ -22,7 +22,7 @@ export function ReactionSummary({ reactions }: ReactionSummaryProps) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="flex items-center gap-1 cursor-pointer">
+          <div className="flex items-center gap-1.5">
             <div className="flex -space-x-1">
               {sortedReactions.map(([type]) => {
                 const Icon = reactionIcons[type as keyof typeof reactionIcons]?.icon;
@@ -31,14 +31,14 @@ export function ReactionSummary({ reactions }: ReactionSummaryProps) {
                 return (
                   <div 
                     key={type}
-                    className={`${reactionIcons[type as keyof typeof reactionIcons].color} w-4 h-4 rounded-full shadow-sm flex items-center justify-center bg-background border border-background`}
+                    className={`${reactionIcons[type as keyof typeof reactionIcons].color} w-[18px] h-[18px] rounded-full flex items-center justify-center bg-background border border-background`}
                   >
                     <Icon className="w-3 h-3" />
                   </div>
                 );
               })}
             </div>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm">
               {totalReactions}
             </span>
           </div>

@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import React, { useState } from "react";
+import React from "react";
 import type { Post } from "@/types/post";
 import { ReactionSummary } from "./reactions/ReactionSummary";
 import { ReactionDetails } from "./reactions/ReactionDetails";
@@ -66,58 +66,62 @@ export function PostActions({
 
   return (
     <div className="space-y-2">
-      {totalReactions > 0 && (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="ghost" size="sm" className="px-2">
-              <ReactionSummary reactions={reactionsByType} />
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Reacciones</DialogTitle>
-            </DialogHeader>
-            <ReactionDetails post={post} />
-          </DialogContent>
-        </Dialog>
-      )}
+      {/* Interactions Summary */}
+      <div className="flex items-center justify-between text-sm text-muted-foreground px-1">
+        {totalReactions > 0 && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-auto p-0">
+                <ReactionSummary reactions={reactionsByType} />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Reacciones</DialogTitle>
+              </DialogHeader>
+              <ReactionDetails post={post} />
+            </DialogContent>
+          </Dialog>
+        )}
+        
+        {commentCount > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-auto p-0"
+            onClick={onCommentsClick}
+          >
+            {commentCount} {commentCount === 1 ? "comentario" : "comentarios"}
+          </Button>
+        )}
+      </div>
 
-      <div className="flex gap-4 border-t pt-2">
+      {/* Action Buttons */}
+      <div className="flex gap-1 border-t border-b py-1">
         <ReactionButton 
           userReaction={userReaction} 
           onReactionClick={onReaction}
           postId={post.id}
         />
 
-        <div className="flex flex-col items-center">
-          {commentCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-muted-foreground px-2 -mb-1"
-              onClick={onCommentsClick}
-            >
-              {commentCount} {commentCount === 1 ? "comentario" : "comentarios"}
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggleComments}
-          >
-            <MessagesSquare className="h-4 w-4 mr-2" />
-            Comentar
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex-1"
+          onClick={onToggleComments}
+        >
+          <MessagesSquare className="h-4 w-4 mr-2" />
+          Comentar
+        </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="flex-1">
               <Share className="h-4 w-4 mr-2" />
               Compartir
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent>
+          <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem onClick={handleCopyLink}>
               <Link2 className="h-4 w-4 mr-2" />
               Copiar enlace
