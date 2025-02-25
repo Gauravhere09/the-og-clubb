@@ -13,8 +13,8 @@ interface StoryViewerProps {
   currentUserId: string;
 }
 
-// Explicit interface for Supabase response
-interface SupabaseStory {
+// Define the raw database response type
+type DatabaseStory = {
   id: string;
   content: string;
   media_url: string | null;
@@ -25,15 +25,15 @@ interface SupabaseStory {
     username: string | null;
     avatar_url: string | null;
   } | null;
-}
+};
 
 export function StoryViewer({ currentUserId }: StoryViewerProps) {
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number>(-1);
   const queryClient = useQueryClient();
 
-  // Define the query function outside useQuery for better type inference
-  const fetchStories = async (): Promise<Story[]> => {
+  // Define the fetch function with explicit typing
+  const fetchStories = async () => {
     const now = new Date().toISOString();
     const { data, error } = await supabase
       .from('posts')
@@ -54,10 +54,9 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
       .order('created_at', { ascending: false });
 
     if (error) throw error;
-    
-    // Explicitly type the data and transform it
-    const supabaseData = data as SupabaseStory[];
-    return supabaseData.map((story): Story => ({
+
+    // Transform the data with explicit typing
+    const stories = (data as DatabaseStory[]).map((story): Story => ({
       id: story.id,
       content: story.content,
       media_url: story.media_url,
@@ -69,15 +68,17 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         avatar_url: story.profiles?.avatar_url
       }
     }));
+
+    return stories;
   };
 
   const { data: stories = [] } = useQuery({
-    queryKey: ["stories"],
+    queryKey: ['stories'] as const,
     queryFn: fetchStories
   });
 
   const handleStoryCreated = () => {
-    queryClient.invalidateQueries({ queryKey: ["stories"] });
+    queryClient.invalidateQueries({ queryKey: ['stories'] });
   };
 
   const userStories = stories.filter(s => s.user.id === currentUserId);
