@@ -52,24 +52,21 @@ export function PostHeader({ post, onDelete, isAuthor }: PostHeaderProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[200px]">
-          {isAuthor ? (
+          <DropdownMenuItem className="cursor-pointer">
+            <EyeOff className="h-4 w-4 mr-2" />
+            Ocultar publicación
+          </DropdownMenuItem>
+          <DropdownMenuItem className="cursor-pointer">
+            <Flag className="h-4 w-4 mr-2" />
+            Reportar publicación
+          </DropdownMenuItem>
+          {isAuthor && (
             <DropdownMenuItem 
               onClick={onDelete}
               className="text-red-600 hover:text-red-600 hover:bg-red-50 cursor-pointer"
             >
               Eliminar publicación
             </DropdownMenuItem>
-          ) : (
-            <>
-              <DropdownMenuItem className="cursor-pointer">
-                <EyeOff className="h-4 w-4 mr-2" />
-                Ocultar publicación
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <Flag className="h-4 w-4 mr-2" />
-                Reportar publicación
-              </DropdownMenuItem>
-            </>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
