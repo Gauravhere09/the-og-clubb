@@ -7,27 +7,14 @@ import { StoryCreatorModal } from "./StoryCreatorModal";
 import { StoryView } from "./StoryView";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-
-type StoryMediaType = 'image' | 'audio' | null;
-
-interface Story {
-  id: string;
-  content: string;
-  media_url: string | null;
-  media_type: StoryMediaType;
-  created_at: string;
-  user: {
-    id: string;
-    username: string;
-    avatar_url: string | null;
-  };
-}
+import { Story } from "./types";
 
 interface StoryViewerProps {
   currentUserId: string;
 }
 
-type RawStoryData = {
+// Definimos un tipo específico para los datos crudos de Supabase
+interface RawStoryData {
   id: string;
   content: string;
   media_url: string | null;
@@ -38,14 +25,14 @@ type RawStoryData = {
     username: string | null;
     avatar_url: string | null;
   };
-};
+}
 
 export function StoryViewer({ currentUserId }: StoryViewerProps) {
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   const [selectedStoryIndex, setSelectedStoryIndex] = useState<number>(-1);
   const queryClient = useQueryClient();
 
-  const fetchStories = async () => {
+  const fetchStories = async (): Promise<Story[]> => {
     const now = new Date().toISOString();
     const { data, error } = await supabase
       .from('posts')
@@ -69,11 +56,11 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
     
     const rawStories = data as RawStoryData[];
     
-    const stories: Story[] = rawStories.map(story => ({
+    return rawStories.map(story => ({
       id: story.id,
       content: story.content,
       media_url: story.media_url,
-      media_type: story.media_type as StoryMediaType,
+      media_type: story.media_type as Story['media_type'],
       created_at: story.created_at,
       user: {
         id: story.user_id,
@@ -81,8 +68,6 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         avatar_url: story.profiles.avatar_url
       }
     }));
-
-    return stories;
   };
 
   const { data: stories = [] } = useQuery({
