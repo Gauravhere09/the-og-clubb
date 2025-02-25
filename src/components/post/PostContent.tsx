@@ -56,7 +56,6 @@ export function PostContent({ post, postId }: PostContentProps) {
     });
 
     try {
-      // Actualizar el post en la base de datos
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Debes iniciar sesión para votar");
 
@@ -68,7 +67,12 @@ export function PostContent({ post, postId }: PostContentProps) {
 
       if (postError) throw postError;
 
-      const currentPoll = postData.poll as Poll;
+      // Ensure postData.poll is of type Poll before using it
+      const currentPoll = postData.poll as unknown as Poll;
+      if (!currentPoll || typeof currentPoll !== 'object') {
+        throw new Error('Invalid poll data');
+      }
+
       const updatedPoll = {
         ...currentPoll,
         options: currentPoll.options.map((opt) => ({

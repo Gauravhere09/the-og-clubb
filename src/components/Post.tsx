@@ -6,6 +6,7 @@ import { PostContent } from "./post/PostContent";
 import { PostActions } from "./post/PostActions";
 import { Comments } from "./post/Comments";
 import { usePostMutations } from "@/hooks/use-post-mutations";
+import { type ReactionType } from "./post/reactions/ReactionIcons";
 
 interface PostProps {
   post: PostType;
@@ -18,7 +19,7 @@ export function Post({ post }: PostProps) {
     // Handle toggle comments visibility if needed
   };
 
-  const handleCommentReaction = (commentId: string, type: string) => {
+  const handleCommentReaction = (commentId: string, type: ReactionType) => {
     toggleCommentReaction({ commentId, type });
   };
 
@@ -34,7 +35,7 @@ export function Post({ post }: PostProps) {
         />
       </div>
       <Comments
-        postId={post.id}
+        id={post.id}
         onReaction={handleCommentReaction}
       />
     </Card>

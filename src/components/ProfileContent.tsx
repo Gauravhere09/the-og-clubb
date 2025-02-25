@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Post } from "@/components/Post";
-import type { Post as PostType } from "@/types/post";
+import type { Post as PostType, Poll } from "@/types/post";
 
 interface ProfileContentProps {
   profileId: string;
@@ -60,11 +60,30 @@ export function ProfileContent({ profileId }: ProfileContentProps) {
         return acc;
       }, {} as Record<string, { count: number, by_type: Record<string, number> }>);
 
+      // Transform poll data
+      const transformPoll = (pollData: any): Poll | null => {
+        if (!pollData) return null;
+        if (typeof pollData === 'object') {
+          return {
+            question: pollData.question,
+            options: pollData.options.map((opt: any) => ({
+              id: opt.id,
+              content: opt.content,
+              votes: Number(opt.votes)
+            })),
+            total_votes: Number(pollData.total_votes),
+            user_vote: pollData.user_vote
+          };
+        }
+        return null;
+      };
+
       // Combine all data
       return (postsData || []).map((post): PostType => ({
         ...post,
         media_type: post.media_type as 'image' | 'video' | 'audio' | null,
         visibility: post.visibility as 'public' | 'friends' | 'private',
+        poll: transformPoll(post.poll),
         reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
         reactions_count: reactionsMap[post.id]?.count || 0,
         comments_count: commentsMap[post.id] || 0
