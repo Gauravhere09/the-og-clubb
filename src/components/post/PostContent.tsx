@@ -5,6 +5,7 @@ import type { Post, Poll } from "@/types/post";
 import { PollDisplay } from "./PollDisplay";
 import { useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PostContentProps {
   post: Post;
@@ -56,6 +57,22 @@ export function PostContent({ post, postId }: PostContentProps) {
     }
   }, [inView]);
 
+  const handleVote = async (optionId: string): Promise<void> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Usuario no autenticado');
+
+      await supabase.from('poll_votes').insert({
+        post_id: postId,
+        option_id: optionId,
+        user_id: user.id
+      });
+    } catch (error) {
+      console.error('Error al votar:', error);
+      throw error;
+    }
+  };
+
   return (
     <>
       {post.content && (
@@ -74,7 +91,7 @@ export function PostContent({ post, postId }: PostContentProps) {
         <PollDisplay 
           poll={post.poll}
           postId={postId}
-          onVote={() => {}}
+          onVote={handleVote}
         />
       )}
 
