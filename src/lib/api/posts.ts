@@ -31,7 +31,7 @@ export async function createPost(
       media_url = publicUrl;
       media_type = file.type.startsWith('image/') ? 'image' :
                    file.type.startsWith('video/') ? 'video' :
-                   file.type.startsWith('audio/') || file.type === 'audio/webm' ? 'audio' : null;
+                   file.type.startsWith('audio/') ? 'audio' : null;
     }
 
     let poll = null;
@@ -58,8 +58,34 @@ export async function createPost(
         user_id: user.id,
         visibility: 'public'
       } as Tables['posts']['Insert'])
-      .select('*, profiles(username, avatar_url)')
-      .single();
+      .select(`
+        *,
+        profiles(username, avatar_url),
+        (
+          SELECT COUNT(*)::integer
+          FROM comments
+          WHERE post_id = posts.id
+        ) as comments_count,
+        (
+          SELECT json_build_object(
+            'count', COUNT(*)::integer,
+            'by_type', json_object_agg(reaction_type, COUNT(*))
+          )
+          FROM reactions
+          WHERE post_id = posts.id
+          GROUP BY post_id
+        ) as reactions,
+        (
+          SELECT reaction_type
+          FROM reactions
+          WHERE post_id = posts.id AND user_id = $1
+          LIMIT 1
+        ) as user_reaction
+      `)
+      .single({
+        count: 'exact'
+      })
+      .eq('user_id', user.id);
 
     if (error) throw error;
 
@@ -92,13 +118,27 @@ export async function createPost(
 }
 
 export async function getPosts(userId?: string) {
-  const { data: user } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   
   let query = supabase
     .from('posts')
     .select(`
       *,
-      profiles(username, avatar_url)
+      profiles(username, avatar_url),
+      (
+        SELECT COUNT(*)::integer
+        FROM comments
+        WHERE post_id = posts.id
+      ) as comments_count,
+      (
+        SELECT json_build_object(
+          'count', COUNT(*)::integer,
+          'by_type', json_object_agg(reaction_type, COUNT(*))
+        )
+        FROM reactions
+        WHERE post_id = posts.id
+        GROUP BY post_id
+      ) as reactions
     `)
     .order('created_at', { ascending: false });
 
@@ -109,42 +149,6 @@ export async function getPosts(userId?: string) {
   const { data: postsData, error: postsError } = await query;
 
   if (postsError) throw postsError;
-
-  // Fetch all comments
-  const { data: commentsData, error: commentsError } = await supabase
-    .from("comments")
-    .select("post_id")
-    .in("post_id", (postsData || []).map(p => p.id));
-
-  if (commentsError) throw commentsError;
-
-  // Fetch all reactions
-  const { data: reactionsData, error: reactionsError } = await supabase
-    .from("reactions")
-    .select("post_id, reaction_type")
-    .in("post_id", (postsData || []).map(p => p.id));
-
-  if (reactionsError) throw reactionsError;
-
-  // Count comments manually
-  const commentsMap = (commentsData || []).reduce((acc, comment) => {
-    acc[comment.post_id] = (acc[comment.post_id] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-
-  // Count reactions manually
-  const reactionsMap = (reactionsData || []).reduce((acc, reaction) => {
-    if (!acc[reaction.post_id]) {
-      acc[reaction.post_id] = {
-        count: 0,
-        by_type: {}
-      };
-    }
-    acc[reaction.post_id].count += 1;
-    acc[reaction.post_id].by_type[reaction.reaction_type] = 
-      (acc[reaction.post_id].by_type[reaction.reaction_type] || 0) + 1;
-    return acc;
-  }, {} as Record<string, { count: number, by_type: Record<string, number> }>);
 
   // Get user's reactions if logged in
   let userReactionsMap = {};
@@ -160,16 +164,26 @@ export async function getPosts(userId?: string) {
     }, {} as Record<string, string>);
   }
 
-  // Combine all data
+  // Transform posts data
   return (postsData || []).map((post) => ({
     ...post,
     media_type: post.media_type as 'image' | 'video' | 'audio' | null,
     visibility: post.visibility as 'public' | 'friends' | 'private',
+    poll: post.poll ? {
+      question: post.poll.question,
+      options: post.poll.options.map((opt: any) => ({
+        id: opt.id,
+        content: opt.content,
+        votes: opt.votes
+      })),
+      total_votes: post.poll.total_votes,
+      user_vote: post.poll.user_vote
+    } : null,
     user_reaction: userReactionsMap[post.id] || null,
-    reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
-    reactions_count: reactionsMap[post.id]?.count || 0,
-    comments_count: commentsMap[post.id] || 0
-  }));
+    reactions: post.reactions || { count: 0, by_type: {} },
+    reactions_count: post.reactions?.count || 0,
+    comments_count: post.comments_count || 0
+  })) as Post[];
 }
 
 export async function deletePost(postId: string) {

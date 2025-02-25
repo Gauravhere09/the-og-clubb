@@ -4,7 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Poll } from "@/types/post";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
+import { Check, Eye } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface PollDisplayProps {
   poll: Poll;
@@ -14,6 +21,7 @@ interface PollDisplayProps {
 export function PollDisplay({ poll, onVote }: PollDisplayProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(poll.user_vote);
   const [isVoting, setIsVoting] = useState(false);
+  const [showVotesDialog, setShowVotesDialog] = useState(false);
 
   const handleVote = async (optionId: string) => {
     if (poll.user_vote || isVoting) return;
@@ -78,7 +86,7 @@ export function PollDisplay({ poll, onVote }: PollDisplayProps) {
                 </div>
                 {hasVoted && (
                   <span className="text-sm font-medium z-10">
-                    {option.votes || 0}
+                    {percentage}% ({option.votes || 0})
                   </span>
                 )}
                 {hasVoted && (
@@ -99,13 +107,39 @@ export function PollDisplay({ poll, onVote }: PollDisplayProps) {
       {poll.user_vote && (
         <div className="flex items-center justify-between text-sm text-muted-foreground pt-2">
           <span>{poll.total_votes} {poll.total_votes === 1 ? "voto" : "votos"}</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-primary hover:text-primary/90"
-          >
-            Ver votos
-          </Button>
+          <Dialog open={showVotesDialog} onOpenChange={setShowVotesDialog}>
+            <DialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-primary hover:text-primary/90 flex items-center gap-2"
+              >
+                <Eye className="h-4 w-4" />
+                Ver votos
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Detalle de votos</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                {poll.options.map((option) => (
+                  <div key={option.id} className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>{option.content}</span>
+                      <span className="font-medium">
+                        {option.votes} {option.votes === 1 ? "voto" : "votos"} ({getPercentage(option.votes)}%)
+                      </span>
+                    </div>
+                    <Progress value={getPercentage(option.votes)} className="h-2" />
+                  </div>
+                ))}
+                <p className="text-sm text-muted-foreground pt-2">
+                  Total: {poll.total_votes} {poll.total_votes === 1 ? "voto" : "votos"}
+                </p>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       )}
     </div>
