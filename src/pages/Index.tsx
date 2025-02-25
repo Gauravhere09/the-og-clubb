@@ -1,8 +1,8 @@
+
 import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/Feed";
 import { StoryViewer } from "@/components/stories/StoryViewer";
-import { useStoryCreator } from "@/components/stories/StoryCreator";
 import { Home, Plus, Menu, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -17,15 +17,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 
 const Index = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { setTheme, theme } = useTheme();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { handleFile } = useStoryCreator();
 
   useEffect(() => {
     const loadCurrentUser = async () => {
@@ -50,21 +48,6 @@ const Index = () => {
     }
   };
 
-  const handleCreateStory = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      // Restablecer el input para permitir seleccionar el mismo archivo nuevamente
-      e.target.value = '';
-      await handleFile(file);
-    }
-  };
-
   return (
     <div className="min-h-screen flex bg-background">
       <Navigation />
@@ -75,21 +58,6 @@ const Index = () => {
             <h1 className="text-2xl font-semibold">Feed</h1>
           </div>
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full"
-              onClick={handleCreateStory}
-            >
-              <Plus className="h-5 w-5" />
-            </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              accept="image/*,video/*"
-              onChange={handleFileChange}
-            />
             <FriendSearch />
             <NotificationDropdown />
             <DropdownMenu>
