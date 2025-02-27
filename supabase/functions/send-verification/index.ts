@@ -10,6 +10,7 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,8 +18,12 @@ serve(async (req) => {
   try {
     const { email, username } = await req.json();
 
+    // Log the request for debugging
+    console.log("Received request:", { email, username });
+
     // Verificar que se reciban los datos correctos
     if (!email || !username) {
+      console.error("Missing required fields:", { email, username });
       return new Response(
         JSON.stringify({ error: "Email y username son requeridos" }),
         {
@@ -41,7 +46,7 @@ serve(async (req) => {
             Hola ${username},
           </p>
           <p style="color: #666; font-size: 16px; line-height: 1.5;">
-            Gracias por registrarte en H1Z. Para completar tu registro, por favor verifica tu correo electrónico haciendo clic en el enlace que recibiste en un correo separado.
+            Gracias por registrarte en H1Z. Para completar tu registro, por favor verifica tu correo electrónico haciendo clic en el enlace que recibiste en un correo separado de Supabase.
           </p>
           <p style="color: #666; font-size: 16px; line-height: 1.5;">
             <strong>Importante:</strong>
@@ -78,7 +83,7 @@ serve(async (req) => {
     console.error("Error en la función:", error);
     
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || "Error interno del servidor" }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
