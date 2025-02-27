@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Edit2, ImagePlus, MessageCircle } from "lucide-react";
 import { FriendRequestButton } from "@/components/FriendRequestButton";
+import { FollowButton } from "@/components/FollowButton";
 import { ProfileEditDialog } from "@/components/profile/ProfileEditDialog";
 import { ChatDialog } from "@/components/messages/ChatDialog";
 import type { Profile } from "@/pages/Profile";
@@ -118,6 +119,7 @@ export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfile
                 </Button>
               ) : (
                 <div className="flex gap-2">
+                  <FollowButton targetUserId={profile.id} />
                   <FriendRequestButton targetUserId={profile.id} />
                   <Button variant="outline" onClick={handleMessageClick}>
                     <MessageCircle className="h-4 w-4 mr-2" />

@@ -1,33 +1,87 @@
 
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { uploadProfileImage } from "@/lib/api/profile";
 
 export function useProfileImage() {
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleImageUpload = async (type: 'avatar' | 'cover', e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (
+    type: "avatar" | "cover",
+    e: React.ChangeEvent<HTMLInputElement>
+  ): Promise<string> => {
+    if (!e.target.files || e.target.files.length === 0) {
+      return "";
+    }
+
+    const file = e.target.files[0];
+    setLoading(true);
+
     try {
-      if (!e.target.files || !e.target.files[0]) return '';
+      // Validaciones
+      if (file.size > 5 * 1024 * 1024) {
+        // 5MB max
+        throw new Error("La imagen no puede ser mayor a 5MB");
+      }
 
-      const file = e.target.files[0];
-      const publicUrl = await uploadProfileImage(file, type);
+      if (!file.type.startsWith("image/")) {
+        throw new Error("Solo se permiten archivos de imagen");
+      }
 
-      toast({
-        title: "Imagen actualizada",
-        description: "La imagen se ha actualizado correctamente",
-      });
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Debes iniciar sesión para subir imágenes");
+
+      // Crear un nombre único para el archivo
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user.id}_${type}_${Date.now()}.${fileExt}`;
+
+      // Subir archivo a Storage
+      const { error: uploadError, data } = await supabase.storage
+        .from("profiles")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Obtener URL pública
+      const { data: { publicUrl } } = supabase.storage
+        .from("profiles")
+        .getPublicUrl(fileName);
+
+      // Actualizar perfil en la base de datos
+      const updateData =
+        type === "avatar"
+          ? { avatar_url: publicUrl }
+          : { cover_url: publicUrl };
+
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          ...updateData,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", user.id);
+
+      if (updateError) throw updateError;
 
       return publicUrl;
     } catch (error: any) {
-      console.error('Error uploading image:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || "No se pudo actualizar la imagen",
+        title: "Error al subir imagen",
+        description: error.message,
       });
-      return '';
+      return "";
+    } finally {
+      setLoading(false);
     }
   };
 
-  return { handleImageUpload };
+  return {
+    loading,
+    handleImageUpload,
+  };
 }

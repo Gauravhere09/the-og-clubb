@@ -70,14 +70,16 @@ export function ProfileEditDialog({
       if (error) throw error;
 
       if (data) {
+        // Crear un objeto actualizado con todos los campos originales más los actualizados
         const updatedProfile: Profile = {
           ...profile,
           username: data.username,
           bio: data.bio,
-          career: data.career,
-          semester: data.semester,
+          career: data.career || null,
+          semester: data.semester || null,
           updated_at: data.updated_at,
         };
+        
         onUpdate(updatedProfile);
         toast({
           title: "Perfil actualizado",

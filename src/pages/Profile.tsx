@@ -56,7 +56,7 @@ export default function Profile() {
         // Primero obtenemos los datos básicos del perfil
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('id, username, bio, avatar_url, cover_url, career, semester, created_at, updated_at')
+          .select('*')
           .eq('id', id)
           .single();
 
@@ -68,10 +68,9 @@ export default function Profile() {
 
         // Get followers count
         const { count: followersCount, error: followersError } = await supabase
-          .from('friendships')
+          .from('followers')
           .select('*', { count: 'exact', head: true })
-          .eq('friend_id', id)
-          .eq('status', 'accepted');
+          .eq('following_id', id);
 
         if (followersError) {
           console.error('Error fetching followers:', followersError);
