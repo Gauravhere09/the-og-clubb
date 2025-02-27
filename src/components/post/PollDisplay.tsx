@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { usePollVoteMutation } from "@/hooks/post-mutations/use-poll-vote-mutation";
 
 interface PollDisplayProps {
   postId: string;
@@ -37,6 +38,7 @@ export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
   const [showVotesDialog, setShowVotesDialog] = useState(false);
   const [votes, setVotes] = useState<VoteWithUser[]>([]);
   const { toast } = useToast();
+  const { submitVote } = usePollVoteMutation(postId);
 
   const handleVote = async (optionId: string) => {
     if (poll.user_vote || isVoting) return;
@@ -47,52 +49,10 @@ export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
         await onVote(optionId);
       } else {
         // Default voting behavior
-        const { data: { user } } = await supabase.auth.getUser();
-        
-        if (!user) {
-          throw new Error("Debes iniciar sesión para votar");
-        }
-        
-        // Insert vote
-        const { error: voteError } = await supabase
-          .from('poll_votes')
-          .insert({
-            post_id: postId,
-            option_id: optionId,
-            user_id: user.id
-          });
-          
-        if (voteError) throw voteError;
-        
-        // Update poll in the post
-        const { data: postData } = await supabase
-          .from('posts')
-          .select('poll')
-          .eq('id', postId)
-          .single();
-          
-        if (postData && postData.poll) {
-          const updatedPoll = { ...postData.poll };
-          updatedPoll.total_votes = (updatedPoll.total_votes || 0) + 1;
-          
-          const optionIndex = updatedPoll.options.findIndex((opt: any) => opt.id === optionId);
-          if (optionIndex >= 0) {
-            updatedPoll.options[optionIndex].votes = (updatedPoll.options[optionIndex].votes || 0) + 1;
-          }
-          
-          await supabase
-            .from('posts')
-            .update({ poll: updatedPoll })
-            .eq('id', postId);
-        }
+        await submitVote(optionId);
       }
       
       setSelectedOption(optionId);
-      
-      toast({
-        title: "Voto registrado",
-        description: "Tu voto ha sido registrado correctamente",
-      });
     } catch (error: any) {
       toast({
         variant: "destructive",

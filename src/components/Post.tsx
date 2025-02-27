@@ -20,7 +20,7 @@ interface PostProps {
 
 export function Post({ post }: PostProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const { handleReaction, handleDeletePost, toggleCommentReaction, submitComment } = usePostMutations(post.id);
+  const { handleReaction, handleDeletePost, toggleCommentReaction, submitComment, submitVote } = usePostMutations(post.id);
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(false);
   const [replyTo, setReplyTo] = useState<{ id: string; username: string } | null>(null);
@@ -108,6 +108,10 @@ export function Post({ post }: PostProps) {
     }
   };
 
+  const handleVoteOnPoll = async (optionId: string) => {
+    return submitVote(optionId);
+  };
+
   return (
     <Card className="overflow-hidden">
       <div className="p-4">
@@ -116,7 +120,7 @@ export function Post({ post }: PostProps) {
           onDelete={onDeletePost} 
           isAuthor={isAuthor} 
         />
-        <PostContent post={post} postId={post.id} />
+        <PostContent post={post} postId={post.id} onVote={handleVoteOnPoll} />
         <PostActions
           post={post}
           onReaction={handleReaction}

@@ -1,98 +1,48 @@
 
-import { type Post, type Poll } from "@/types/post";
-import { useState } from "react";
-import { PollDisplay } from "@/components/post/PollDisplay";
+import { Post, Poll } from "@/types/post";
 import { cn } from "@/lib/utils";
-import { Card, CardContent } from "@/components/ui/card";
-import { Share } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link } from "react-router-dom";
+import { PollDisplay } from "./PollDisplay";
 
 interface PostContentProps {
   post: Post;
   postId: string;
+  onVote?: (optionId: string) => Promise<void>;
 }
 
-export function PostContent({ post, postId }: PostContentProps) {
-  const [showFullContent, setShowFullContent] = useState(false);
-  
-  const content = post.content;
-  const isLongText = content.length > 280;
-  const displayedContent = showFullContent ? content : content.slice(0, 280);
-  
-  // Function to get first name from full name
-  const getFirstName = (fullName: string) => {
-    return fullName?.split(' ')[0] || 'Usuario';
-  };
-
+export function PostContent({ post, postId, onVote }: PostContentProps) {
   return (
-    <div className="space-y-3 py-2">
-      {/* If this is a shared post, show the original poster */}
-      {post.shared_from && post.profiles && (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-          <Share className="h-4 w-4" />
-          <span>Compartido por {post.profiles.username}</span>
+    <div className="space-y-3 pt-2 pb-3">
+      <div className={cn("whitespace-pre-wrap", !post.media_url && "mb-1")}>
+        {post.content}
+      </div>
+
+      {post.media_url && (
+        <div>
+          {post.media_type === "image" && (
+            <img
+              src={post.media_url}
+              alt="Post image"
+              className="rounded-lg w-full object-cover max-h-[500px]"
+            />
+          )}
+          {post.media_type === "video" && (
+            <video
+              src={post.media_url}
+              className="rounded-lg w-full"
+              controls
+            />
+          )}
+          {post.media_type === "audio" && (
+            <audio
+              src={post.media_url}
+              className="w-full mt-2"
+              controls
+            />
+          )}
         </div>
       )}
       
-      <div>
-        {isLongText && !showFullContent ? (
-          <>
-            <p>{displayedContent}...</p>
-            <button
-              onClick={() => setShowFullContent(true)}
-              className="text-sm text-primary hover:underline mt-1"
-            >
-              Ver más
-            </button>
-          </>
-        ) : (
-          <p className="whitespace-pre-line">{displayedContent}</p>
-        )}
-        
-        {showFullContent && isLongText && (
-          <button
-            onClick={() => setShowFullContent(false)}
-            className="text-sm text-primary hover:underline mt-1"
-          >
-            Ver menos
-          </button>
-        )}
-      </div>
-
-      {post.media_url && post.media_type === "image" && (
-        <div className="rounded-lg overflow-hidden">
-          <img
-            src={post.media_url}
-            alt="Post media"
-            className="w-full max-h-96 object-cover"
-          />
-        </div>
-      )}
-
-      {post.media_url && post.media_type === "video" && (
-        <div className="rounded-lg overflow-hidden">
-          <video
-            src={post.media_url}
-            controls
-            className="w-full max-h-96"
-          />
-        </div>
-      )}
-
-      {post.media_url && post.media_type === "audio" && (
-        <div className="rounded-lg overflow-hidden bg-muted p-2">
-          <audio
-            src={post.media_url}
-            controls
-            className="w-full"
-          />
-        </div>
-      )}
-
-      {post.poll && (
-        <PollDisplay poll={post.poll} postId={postId} />
-      )}
+      {post.poll && <PollDisplay postId={postId} poll={post.poll} onVote={onVote} />}
     </div>
   );
 }
