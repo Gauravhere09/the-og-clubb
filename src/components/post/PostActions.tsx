@@ -22,6 +22,7 @@ import { ReactionButton } from "./reactions/ReactionButton";
 import { type ReactionType } from "./reactions/ReactionIcons";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface PostActionsProps {
   post: Post;
@@ -37,6 +38,7 @@ export function PostActions({
   onCommentsClick 
 }: PostActionsProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const reactionsByType = post.reactions?.by_type || {};
   const userReaction = post.user_reaction as ReactionType | undefined;
   const totalReactions = Object.values(reactionsByType).reduce((sum, count) => sum + count, 0);
@@ -82,12 +84,10 @@ export function PostActions({
       }
 
       // Crear una nueva publicación que hace referencia a la original
-      const sharedContent = `Compartido: ${post.content}`;
-      
       const { data, error } = await supabase
         .from('posts')
         .insert({
-          content: sharedContent,
+          content: `Compartido: ${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}`,
           user_id: userId,
           media_url: post.media_url,
           media_type: post.media_type,
@@ -103,6 +103,9 @@ export function PostActions({
           description: "No se pudo compartir la publicación",
         });
       } else {
+        // Invalidate the posts query to refresh the feed
+        queryClient.invalidateQueries({ queryKey: ['posts'] });
+        
         toast({
           title: "¡Publicación compartida!",
           description: "La publicación ha sido compartida en tu perfil",

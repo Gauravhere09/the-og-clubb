@@ -23,6 +23,7 @@ export interface Post {
   updated_at: string;
   poll?: Poll | null;
   shared_from?: string | null;
+  shared_post?: Post | null; // Add this to store the original post when fetching
   profiles?: {
     username: string | null;
     avatar_url: string | null;
