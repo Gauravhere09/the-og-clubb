@@ -1,5 +1,5 @@
 
-export interface FreiendshipRow {
+export interface FriendshipRow {
   id: string;
   created_at: string;
   user_id: string;
