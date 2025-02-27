@@ -20,23 +20,39 @@ export default function Auth() {
 
   const sendVerificationEmail = async (email: string, username: string) => {
     try {
-      const response = await fetch(
-        "https://wgbbaxvuuinubkgffpiq.supabase.co/functions/v1/send-verification",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${process.env.SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({ email, username }),
-        }
-      );
-
+      console.log("Enviando correo de verificación a:", email);
+      
+      // Obtenemos la URL de la API de funciones de Supabase
+      const supabaseUrl = supabase.supabaseUrl;
+      const functionsUrl = `${supabaseUrl}/functions/v1/send-verification`;
+      
+      console.log("URL de la función:", functionsUrl);
+      
+      // Obtenemos el token de la sesión actual para autorización
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || '';
+      
+      const response = await fetch(functionsUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email, username }),
+      });
+      
+      const data = await response.json();
+      
       if (!response.ok) {
-        throw new Error("Error al enviar el correo de verificación");
+        console.error("Error en la respuesta:", data);
+        throw new Error(data.error || "Error al enviar el correo de verificación");
       }
+      
+      console.log("Respuesta del servidor:", data);
+      return data;
     } catch (error) {
       console.error("Error sending verification email:", error);
+      throw error;
     }
   };
 
@@ -61,6 +77,7 @@ export default function Auth() {
           throw new Error("Por favor selecciona un semestre");
         }
 
+        // Primero registramos al usuario
         const { error, data } = await supabase.auth.signUp({
           email,
           password,
@@ -70,8 +87,10 @@ export default function Auth() {
               career,
               semester,
             },
+            emailRedirectTo: window.location.origin,
           },
         });
+        
         if (error) throw error;
 
         // También actualizamos la tabla de perfiles con los nuevos campos
@@ -86,10 +105,16 @@ export default function Auth() {
           if (profileError) {
             console.error("Error updating profile:", profileError);
           }
+          
+          // Enviar correo de verificación personalizado
+          try {
+            await sendVerificationEmail(email, username);
+            console.log("Correo de verificación enviado exitosamente");
+          } catch (emailError) {
+            console.error("Error al enviar correo personalizado:", emailError);
+            // Continuamos con el proceso aunque falle el envío del correo personalizado
+          }
         }
-
-        // Enviar correo de verificación personalizado
-        await sendVerificationEmail(email, username);
 
         toast({
           title: "¡Registro exitoso!",

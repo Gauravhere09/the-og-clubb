@@ -17,6 +17,19 @@ serve(async (req) => {
   try {
     const { email, username } = await req.json();
 
+    // Verificar que se reciban los datos correctos
+    if (!email || !username) {
+      return new Response(
+        JSON.stringify({ error: "Email y username son requeridos" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 400,
+        }
+      );
+    }
+
+    console.log(`Enviando correo a ${email} para el usuario ${username}`);
+
     const { data, error } = await resend.emails.send({
       from: "H1Z <onboarding@resend.dev>",
       to: [email],
@@ -51,14 +64,19 @@ serve(async (req) => {
     });
 
     if (error) {
+      console.error("Error al enviar correo:", error);
       throw error;
     }
 
-    return new Response(JSON.stringify({ success: true }), {
+    console.log("Correo enviado exitosamente:", data);
+
+    return new Response(JSON.stringify({ success: true, data }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
+    console.error("Error en la función:", error);
+    
     return new Response(
       JSON.stringify({ error: error.message }),
       {
