@@ -1,7 +1,9 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export async function uploadMedia(file: File): Promise<string | null> {
+export async function uploadMediaFile(file: File): Promise<string | null> {
+  if (!file) return null;
+
   const fileExt = file.name.split('.').pop();
   const fileName = `${crypto.randomUUID()}.${fileExt}`;
   
@@ -16,4 +18,14 @@ export async function uploadMedia(file: File): Promise<string | null> {
     .getPublicUrl(fileName);
 
   return publicUrl;
+}
+
+export function getMediaType(file: File): 'image' | 'video' | 'audio' | null {
+  if (!file) return null;
+  
+  if (file.type.startsWith('image/')) return 'image';
+  if (file.type.startsWith('video/')) return 'video';
+  if (file.type.startsWith('audio/')) return 'audio';
+  
+  return null;
 }

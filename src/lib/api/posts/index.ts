@@ -2,13 +2,23 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "@/types/post";
 import { Tables } from "@/types/database";
-import { CreatePostInput, RawPost, ReactionType } from "./types";
-import { createPollData, processMediaFile, transformRawPost } from "./utils";
-import { uploadMedia } from "./storage";
-import { notifyFriendsAboutPost } from "./notifications";
-import { getPostsReactions, getPostsComments, getUserReactions, getProfileData } from "./queries";
+import { transformPoll } from "./utils";
+import { uploadMediaFile, getMediaType } from "./storage";
+import { sendNewPostNotifications } from "./notifications";
+import { 
+  fetchSharedPosts, 
+  fetchPostsReactions, 
+  fetchPostsComments, 
+  fetchUserReactions,
+  fetchUserPollVotes 
+} from "./queries";
+import { CreatePostParams } from "./types";
 
-export async function createPost(content: string, file: File | null = null, pollData?: { question: string; options: string[] }) {
+export async function createPost({
+  content, 
+  file = null,
+  pollData
+}: CreatePostParams) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Usuario no autenticado");
@@ -17,12 +27,23 @@ export async function createPost(content: string, file: File | null = null, poll
     let media_type = null;
 
     if (file) {
-      media_url = await uploadMedia(file);
-      const mediaInfo = processMediaFile(file);
-      media_type = mediaInfo.media_type;
+      media_url = await uploadMediaFile(file);
+      media_type = getMediaType(file);
     }
 
-    const poll = pollData ? createPollData(pollData.question, pollData.options) : null;
+    let poll = null;
+    if (pollData) {
+      poll = {
+        question: pollData.question,
+        options: pollData.options.map((content, index) => ({
+          id: crypto.randomUUID(),
+          content,
+          votes: 0
+        })),
+        total_votes: 0,
+        user_vote: null
+      };
+    }
 
     const insertData = {
       content,
@@ -33,18 +54,58 @@ export async function createPost(content: string, file: File | null = null, poll
       visibility: 'public'
     } as Tables['posts']['Insert'];
 
+    // First insert the post
     const { data: rawPost, error: insertError } = await supabase
       .from('posts')
       .insert(insertData)
-      .select()
+      .select(`
+        id,
+        content,
+        user_id,
+        media_url,
+        media_type,
+        visibility,
+        poll,
+        created_at,
+        updated_at,
+        shared_from
+      `)
       .single();
 
-    if (insertError || !rawPost) throw insertError || new Error('Failed to create post');
+    if (insertError) throw insertError;
+    if (!rawPost) throw new Error('Failed to create post');
 
-    const profileData = await getProfileData(user.id);
-    await notifyFriendsAboutPost(user.id, rawPost.id);
+    // Then get the profile data
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('username, avatar_url')
+      .eq('id', user.id)
+      .single();
 
-    return transformRawPost(rawPost as RawPost, profileData);
+    if (profileError) throw profileError;
+
+    // Send notifications to friends
+    await sendNewPostNotifications(user.id, rawPost.id);
+
+    // Transform the raw post to match Post type
+    const post: Post = {
+      id: rawPost.id,
+      content: rawPost.content || '',
+      user_id: rawPost.user_id,
+      media_url: rawPost.media_url,
+      media_type: rawPost.media_type as 'image' | 'video' | 'audio' | null,
+      visibility: rawPost.visibility as 'public' | 'friends' | 'private',
+      created_at: rawPost.created_at,
+      updated_at: rawPost.updated_at,
+      shared_from: rawPost.shared_from,
+      profiles: profileData,
+      poll: transformPoll(rawPost.poll),
+      reactions: { count: 0, by_type: {} },
+      reactions_count: 0,
+      comments_count: 0
+    };
+
+    return post;
   } catch (error) {
     console.error('Error creating post:', error);
     throw error;
@@ -52,78 +113,112 @@ export async function createPost(content: string, file: File | null = null, poll
 }
 
 export async function getPosts(userId?: string) {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  const query = supabase
-    .from('posts')
-    .select(`
-      id,
-      content,
-      user_id,
-      media_url,
-      media_type,
-      visibility,
-      poll,
-      created_at,
-      updated_at,
-      profiles (
-        username,
-        avatar_url
-      )
-    `);
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const query = supabase
+      .from('posts')
+      .select(`
+        id,
+        content,
+        user_id,
+        media_url,
+        media_type,
+        visibility,
+        poll,
+        created_at,
+        updated_at,
+        shared_from,
+        profiles (
+          username,
+          avatar_url
+        )
+      `);
 
-  if (userId) {
-    query.eq('user_id', userId);
-  }
-
-  const { data: rawPosts, error: postsError } = await query
-    .order('created_at', { ascending: false });
-
-  if (postsError) throw postsError;
-  if (!rawPosts) return [];
-
-  const postIds = rawPosts.map(p => p.id);
-
-  // Get all related data
-  const [reactionsData, commentsData, userReactions] = await Promise.all([
-    getPostsReactions(postIds),
-    getPostsComments(postIds),
-    user ? getUserReactions(user.id, postIds) : Promise.resolve([])
-  ]);
-
-  // Process reactions data
-  const reactionsMap = reactionsData.reduce((acc, reaction) => {
-    if (!acc[reaction.post_id]) {
-      acc[reaction.post_id] = { count: 0, by_type: {} };
+    if (userId) {
+      query.eq('user_id', userId);
     }
-    acc[reaction.post_id].count++;
-    acc[reaction.post_id].by_type[reaction.reaction_type] = 
-      (acc[reaction.post_id].by_type[reaction.reaction_type] || 0) + 1;
-    return acc;
-  }, {} as Record<string, { count: number; by_type: Record<string, number> }>);
 
-  // Process user reactions
-  const userReactionsMap = userReactions.reduce((acc, reaction) => {
-    acc[reaction.post_id] = reaction.reaction_type;
-    return acc;
-  }, {} as Record<string, ReactionType>);
+    const { data: rawPosts, error: postsError } = await query
+      .order('created_at', { ascending: false });
 
-  // Count comments
-  const commentsCountMap = commentsData.reduce((acc, comment) => {
-    acc[comment.post_id] = (acc[comment.post_id] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+    if (postsError) throw postsError;
+    if (!rawPosts) return [];
 
-  // Transform posts data
-  return rawPosts.map((post) => 
-    transformRawPost(
-      post as RawPost,
-      undefined,
-      reactionsMap,
-      userReactionsMap,
-      commentsCountMap
-    )
-  );
+    // Get shared posts information
+    const sharedPostIds = rawPosts
+      .filter(post => post.shared_from)
+      .map(post => post.shared_from)
+      .filter(Boolean) as string[];
+
+    const sharedPostsMap = await fetchSharedPosts(sharedPostIds);
+    
+    // Get reactions data
+    const reactionsData = await fetchPostsReactions(rawPosts.map(p => p.id));
+
+    // Get comments count
+    const commentsData = await fetchPostsComments(rawPosts.map(p => p.id));
+
+    // Get user reactions if logged in
+    let userReactionsMap: Record<string, string> = {};
+    let votesMap: Record<string, string> = {};
+    
+    if (user) {
+      userReactionsMap = await fetchUserReactions(user.id, rawPosts.map(p => p.id));
+
+      // Get user's poll votes
+      if (rawPosts.some(post => post.poll)) {
+        votesMap = await fetchUserPollVotes(user.id);
+        
+        // Update poll data with user votes
+        rawPosts.forEach(post => {
+          if (post.poll && typeof post.poll === 'object') {
+            post.poll.user_vote = votesMap[post.id] || null;
+          }
+        });
+      }
+    }
+
+    // Process reactions data
+    const reactionsMap = reactionsData.reduce((acc, reaction) => {
+      if (!acc[reaction.post_id]) {
+        acc[reaction.post_id] = { count: 0, by_type: {} };
+      }
+      acc[reaction.post_id].count++;
+      acc[reaction.post_id].by_type[reaction.reaction_type] = 
+        (acc[reaction.post_id].by_type[reaction.reaction_type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, { count: number; by_type: Record<string, number> }>);
+
+    // Count comments
+    const commentsCountMap = commentsData.reduce((acc, comment) => {
+      acc[comment.post_id] = (acc[comment.post_id] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Transform posts data
+    return rawPosts.map((post): Post => ({
+      id: post.id,
+      content: post.content || '',
+      user_id: post.user_id,
+      media_url: post.media_url,
+      media_type: post.media_type as Post['media_type'],
+      visibility: post.visibility as Post['visibility'],
+      created_at: post.created_at,
+      updated_at: post.updated_at,
+      profiles: post.profiles,
+      poll: transformPoll(post.poll),
+      shared_from: post.shared_from,
+      shared_post: post.shared_from ? sharedPostsMap[post.shared_from] : null,
+      user_reaction: userReactionsMap[post.id] as Post['user_reaction'],
+      reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
+      reactions_count: reactionsMap[post.id]?.count || 0,
+      comments_count: commentsCountMap[post.id] || 0
+    }));
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    throw error;
+  }
 }
 
 export async function deletePost(postId: string) {
@@ -143,3 +238,10 @@ export async function updatePostVisibility(postId: string, visibility: 'public' 
 
   if (error) throw error;
 }
+
+// Re-export functions from other files for backward compatibility
+export * from "./types";
+export * from "./utils";
+export * from "./storage";
+export * from "./notifications";
+export * from "./queries";

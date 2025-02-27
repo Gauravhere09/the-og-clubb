@@ -19,7 +19,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface PollDisplayProps {
   postId: string;
   poll: Poll;
-  onVote: (optionId: string) => Promise<void>;
+  onVote?: (optionId: string) => Promise<void>;
 }
 
 interface VoteWithUser {
@@ -43,7 +43,50 @@ export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
     
     setIsVoting(true);
     try {
-      await onVote(optionId);
+      if (onVote) {
+        await onVote(optionId);
+      } else {
+        // Default voting behavior
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          throw new Error("Debes iniciar sesión para votar");
+        }
+        
+        // Insert vote
+        const { error: voteError } = await supabase
+          .from('poll_votes')
+          .insert({
+            post_id: postId,
+            option_id: optionId,
+            user_id: user.id
+          });
+          
+        if (voteError) throw voteError;
+        
+        // Update poll in the post
+        const { data: postData } = await supabase
+          .from('posts')
+          .select('poll')
+          .eq('id', postId)
+          .single();
+          
+        if (postData && postData.poll) {
+          const updatedPoll = { ...postData.poll };
+          updatedPoll.total_votes = (updatedPoll.total_votes || 0) + 1;
+          
+          const optionIndex = updatedPoll.options.findIndex((opt: any) => opt.id === optionId);
+          if (optionIndex >= 0) {
+            updatedPoll.options[optionIndex].votes = (updatedPoll.options[optionIndex].votes || 0) + 1;
+          }
+          
+          await supabase
+            .from('posts')
+            .update({ poll: updatedPoll })
+            .eq('id', postId);
+        }
+      }
+      
       setSelectedOption(optionId);
       
       toast({

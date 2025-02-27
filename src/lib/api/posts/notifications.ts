@@ -1,7 +1,8 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-export async function notifyFriendsAboutPost(userId: string, postId: string) {
+export async function sendNewPostNotifications(userId: string, postId: string) {
+  // Get all friends to notify about new post
   const { data: friendships } = await supabase
     .from('friendships')
     .select('friend_id')
@@ -18,6 +19,8 @@ export async function notifyFriendsAboutPost(userId: string, postId: string) {
       read: false
     }));
 
-    await supabase.from('notifications').insert(notifications);
+    await supabase
+      .from('notifications')
+      .insert(notifications);
   }
 }
