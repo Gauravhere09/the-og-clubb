@@ -60,6 +60,8 @@ export function useCommentMutations(postId: string) {
         .eq('id', commentId);
         
       if (error) throw error;
+      
+      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", postId] });
@@ -69,6 +71,7 @@ export function useCommentMutations(postId: string) {
       });
     },
     onError: (error) => {
+      console.error("Error deleting comment:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -107,6 +110,8 @@ export function useCommentMutations(postId: string) {
         .eq('id', commentId);
         
       if (error) throw error;
+      
+      return { success: true };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", postId] });

@@ -12,9 +12,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { useCommentMutations } from "@/hooks/use-comment-mutations";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SingleCommentProps {
   comment: Comment;
@@ -35,7 +37,30 @@ export function SingleComment({
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(comment.content);
   const { editComment } = useCommentMutations(comment.post_id);
-  const isAuthor = session?.user?.id === comment.user_id;
+  const [isAuthor, setIsAuthor] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Check if the current user is the author of this comment
+  useEffect(() => {
+    const checkAuthor = async () => {
+      setIsLoading(true);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const isCurrentUserAuthor = user && user.id === comment.user_id;
+        console.log('Comment user ID:', comment.user_id);
+        console.log('Current user ID:', user?.id);
+        console.log('Is author of comment:', isCurrentUserAuthor);
+        setIsAuthor(isCurrentUserAuthor || false);
+      } catch (error) {
+        console.error('Error checking comment author:', error);
+        setIsAuthor(false);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkAuthor();
+  }, [comment.user_id]);
 
   const isAudioComment = comment.content.startsWith('[Audio]');
   const audioUrl = isAudioComment ? comment.content.replace('[Audio] ', '') : null;
@@ -68,37 +93,46 @@ export function SingleComment({
           <div className="bg-muted p-1.5 rounded-lg">
             <div className="flex justify-between items-start">
               <p className="font-medium text-xs">{comment.profiles?.username}</p>
-              {isAuthor && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-5 w-5 p-0 hover:bg-accent rounded-full ml-1"
-                    >
-                      <MoreVertical className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent 
-                    align="end" 
-                    className="w-40 bg-background"
-                  >
-                    <DropdownMenuItem 
-                      className="cursor-pointer text-xs py-1"
-                      onClick={() => setIsEditing(true)}
-                    >
-                      <Pencil className="h-3 w-3 mr-2" />
-                      <span>Editar</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      className="cursor-pointer text-destructive focus:text-destructive text-xs py-1"
-                      onClick={handleDeleteComment}
-                    >
-                      <Trash2 className="h-3 w-3 mr-2" />
-                      <span>Eliminar</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              {!isLoading && isAuthor && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-5 w-5 p-0 hover:bg-accent rounded-full ml-1"
+                          >
+                            <MoreVertical className="h-3 w-3" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent 
+                          align="end" 
+                          className="w-40 bg-background"
+                        >
+                          <DropdownMenuItem 
+                            className="cursor-pointer text-xs py-1"
+                            onClick={() => setIsEditing(true)}
+                          >
+                            <Pencil className="h-3 w-3 mr-2" />
+                            <span>Editar</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="cursor-pointer text-destructive focus:text-destructive text-xs py-1"
+                            onClick={handleDeleteComment}
+                          >
+                            <Trash2 className="h-3 w-3 mr-2" />
+                            <span>Eliminar</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Opciones</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
             {isEditing ? (

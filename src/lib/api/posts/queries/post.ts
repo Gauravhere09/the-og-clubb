@@ -81,7 +81,7 @@ export async function fetchPostById(postId: string): Promise<Post | null> {
       updated_at: post.updated_at,
       profiles: post.profiles,
       poll: transformPoll(post.poll),
-      shared_from: hasSharedFromColumn ? post.shared_from : null,
+      shared_from: hasSharedFromColumn && post.shared_from ? post.shared_from : null,
       shared_post: null,
       reactions: { count: 0, by_type: {} },
       reactions_count: 0,
