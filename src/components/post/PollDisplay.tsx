@@ -2,34 +2,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Poll } from "@/types/post";
-import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
-import { Check, Eye } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 import { usePollVoteMutation } from "@/hooks/post-mutations/use-poll-vote-mutation";
+import { PollOption } from "./poll/PollOption";
+import { VotesDialog } from "./poll/VotesDialog";
+import { VoteWithUser } from "./poll/VotersList";
 
 interface PollDisplayProps {
   postId: string;
   poll: Poll;
   onVote?: (optionId: string) => Promise<void>;
-}
-
-interface VoteWithUser {
-  option_id: string;
-  profiles: {
-    username: string;
-    avatar_url: string | null;
-  };
-  created_at: string;
 }
 
 export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
@@ -109,118 +92,32 @@ export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
       </div>
 
       <div className="space-y-3">
-        {poll.options.map((option) => {
-          const percentage = getPercentage(option.votes);
-          const isSelected = option.id === selectedOption;
-          const hasVoted = poll.user_vote !== null;
-          const optionVotes = votes.filter(v => v.option_id === option.id);
-
-          return (
-            <div
-              key={option.id}
-              className="relative"
-            >
-              <button
-                onClick={() => handleVote(option.id)}
-                disabled={hasVoted || isVoting}
-                className={cn(
-                  "w-full text-left p-4 rounded-lg transition-all relative overflow-hidden",
-                  "group flex items-center justify-between",
-                  hasVoted ? "bg-primary/10" : "hover:bg-primary/5",
-                  isSelected && "bg-primary/20"
-                )}
-              >
-                <div className="flex items-center gap-3 z-10">
-                  <div className={cn(
-                    "w-5 h-5 rounded-full border-2 flex items-center justify-center",
-                    isSelected ? "border-primary bg-primary" : "border-muted-foreground"
-                  )}>
-                    {isSelected && <Check className="h-3 w-3 text-white" />}
-                  </div>
-                  <span className={cn(
-                    "font-medium",
-                    isSelected && "text-primary"
-                  )}>
-                    {option.content}
-                  </span>
-                </div>
-                {hasVoted && (
-                  <span className="text-sm font-medium z-10">
-                    {percentage}% ({option.votes || 0})
-                  </span>
-                )}
-                {hasVoted && (
-                  <div 
-                    className={cn(
-                      "absolute inset-0 rounded-lg bg-primary/5",
-                      isSelected && "bg-primary/10"
-                    )}
-                    style={{ width: `${percentage}%` }}
-                  />
-                )}
-              </button>
-            </div>
-          );
-        })}
+        {poll.options.map((option) => (
+          <PollOption
+            key={option.id}
+            id={option.id}
+            content={option.content}
+            votes={option.votes}
+            percentage={getPercentage(option.votes)}
+            isSelected={option.id === selectedOption}
+            hasVoted={poll.user_vote !== null}
+            isVoting={isVoting}
+            onVote={handleVote}
+          />
+        ))}
       </div>
 
       {poll.user_vote && (
         <div className="flex items-center justify-between text-sm text-muted-foreground pt-2">
           <span>{poll.total_votes} {poll.total_votes === 1 ? "voto" : "votos"}</span>
-          <Dialog open={showVotesDialog} onOpenChange={(open) => {
-            setShowVotesDialog(open);
-            if (open) loadVotes();
-          }}>
-            <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-primary hover:text-primary/90 flex items-center gap-2"
-              >
-                <Eye className="h-4 w-4" />
-                Ver votos
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Votos de la encuesta</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-6">
-                {poll.options.map((option) => {
-                  const optionVotes = votes.filter(v => v.option_id === option.id);
-                  return (
-                    <div key={option.id} className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="font-medium">{option.content}</span>
-                        <span>
-                          {option.votes} {option.votes === 1 ? "voto" : "votos"} ({getPercentage(option.votes)}%)
-                        </span>
-                      </div>
-                      <Progress value={getPercentage(option.votes)} className="h-2" />
-                      {optionVotes.length > 0 && (
-                        <div className="pt-2 space-y-2">
-                          {optionVotes.map((vote) => (
-                            <div key={`${vote.option_id}-${vote.profiles.username}`} className="flex items-center gap-2">
-                              <Avatar className="h-8 w-8">
-                                <AvatarImage src={vote.profiles.avatar_url || undefined} />
-                                <AvatarFallback>{vote.profiles.username?.[0].toUpperCase()}</AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="text-sm font-medium">{vote.profiles.username}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {new Date(vote.created_at).toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </DialogContent>
-          </Dialog>
+          <VotesDialog
+            poll={poll}
+            votes={votes}
+            open={showVotesDialog}
+            onOpenChange={setShowVotesDialog}
+            onLoadVotes={loadVotes}
+            getPercentage={getPercentage}
+          />
         </div>
       )}
     </div>
