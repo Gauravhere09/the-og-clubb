@@ -26,7 +26,7 @@ export default function Popularity() {
         // Primero obtenemos todos los usuarios con sus datos básicos
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('id, username, avatar_url');
+          .select('*');
 
         if (profilesError) {
           console.error('Error al obtener perfiles:', profilesError);
@@ -40,6 +40,8 @@ export default function Popularity() {
           return;
         }
 
+        console.log('Perfiles obtenidos:', profiles);
+
         // Para cada usuario, obtenemos su conteo de seguidores
         const usersWithFollowers = await Promise.all(
           profiles.map(async (profile) => {
@@ -49,14 +51,13 @@ export default function Popularity() {
               .eq('friend_id', profile.id)
               .eq('status', 'accepted');
 
-            // Dado que no tenemos career y semester en la tabla profiles,
-            // los establecemos como null por ahora
+            // Extraemos la información del perfil
             return {
               id: profile.id,
               username: profile.username,
               avatar_url: profile.avatar_url,
-              career: null, // Como no existe esta columna, lo dejamos como null
-              semester: null, // Como no existe esta columna, lo dejamos como null
+              career: profile.career || null,
+              semester: profile.semester || null,
               followers_count: count || 0
             } as PopularUserProfile;
           })
@@ -66,10 +67,17 @@ export default function Popularity() {
         const sortedUsers = usersWithFollowers
           .sort((a, b) => b.followers_count - a.followers_count);
 
+        console.log('Usuarios ordenados:', sortedUsers);
         setPopularUsers(sortedUsers);
 
-        // Como no tenemos carreras reales, no podemos filtrar por ellas
-        setCareerFilters([]);
+        // Extraer carreras únicas para filtros (si existen)
+        const careers = sortedUsers
+          .map(user => user.career)
+          .filter((career): career is string => career !== null && career !== undefined);
+        
+        const uniqueCareers = [...new Set(careers)];
+        console.log('Carreras únicas:', uniqueCareers);
+        setCareerFilters(uniqueCareers);
       } catch (error) {
         console.error('Error al cargar usuarios populares:', error);
       } finally {
