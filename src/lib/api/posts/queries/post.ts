@@ -132,13 +132,15 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
       
     if (error || !sharedPosts?.length) return {};
     
-    return sharedPosts.reduce((acc, post) => {
-      // Check if post is null before accessing its properties
-      if (post && typeof post === 'object' && 'id' in post) {
-        acc[post.id] = post;
-      }
-      return acc;
-    }, {} as Record<string, any>);
+    // Fix: Filter out null posts before reducing
+    return sharedPosts
+      .filter((post): post is NonNullable<typeof post> => post !== null)
+      .reduce((acc, post) => {
+        if (typeof post === 'object' && 'id' in post) {
+          acc[post.id] = post;
+        }
+        return acc;
+      }, {} as Record<string, any>);
   }
   catch (error) {
     console.error("Error fetching shared posts:", error);
