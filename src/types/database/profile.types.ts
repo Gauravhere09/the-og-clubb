@@ -34,3 +34,4 @@ export interface ProfileTable {
     updated_at?: string;
   };
 }
+
