@@ -53,6 +53,43 @@ serve(async (req) => {
                 <a href="#" style="display: inline-block; background-color: #4a6cf7; color: white; text-decoration: none; padding: 12px 25px; border-radius: 5px; font-weight: bold;">Confirmar mi cuenta</a>
               </div>
               
+              <!-- Sección de beneficios -->
+              <div style="background-color: #f5f8ff; padding: 20px; border-radius: 8px; margin: 30px 0;">
+                <h2 style="color: #4a6cf7; margin-top: 0; font-size: 18px;">Beneficios de verificar tu cuenta</h2>
+                <ul style="padding-left: 20px; color: #555;">
+                  <li style="margin-bottom: 10px;">Acceso completo a todas las funcionalidades de la plataforma</li>
+                  <li style="margin-bottom: 10px;">Conecta con estudiantes de tu misma carrera y semestre</li>
+                  <li style="margin-bottom: 10px;">Comparte recursos educativos y experiencias académicas</li>
+                  <li style="margin-bottom: 10px;">Recibe notificaciones sobre eventos y actividades relevantes</li>
+                  <li style="margin-bottom: 10px;">Perfil verificado que genera mayor confianza en la comunidad</li>
+                </ul>
+              </div>
+              
+              <!-- Sección de preguntas frecuentes -->
+              <div style="border-top: 1px solid #eee; padding-top: 25px; margin-top: 25px;">
+                <h2 style="color: #333; font-size: 18px;">Preguntas frecuentes</h2>
+                
+                <div style="margin-bottom: 15px;">
+                  <p style="font-weight: bold; margin-bottom: 5px; color: #444;">¿Qué pasa si no verifico mi cuenta?</p>
+                  <p style="margin-top: 0;">Las funcionalidades de tu cuenta estarán limitadas hasta que completes la verificación.</p>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                  <p style="font-weight: bold; margin-bottom: 5px; color: #444;">¿Cuánto tiempo tengo para verificar mi cuenta?</p>
+                  <p style="margin-top: 0;">El enlace de verificación es válido por 7 días. Después de este período, deberás solicitar uno nuevo.</p>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                  <p style="font-weight: bold; margin-bottom: 5px; color: #444;">¿No recibiste el correo de verificación?</p>
+                  <p style="margin-top: 0;">Revisa tu carpeta de spam o solicita un nuevo enlace de verificación desde tu perfil.</p>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                  <p style="font-weight: bold; margin-bottom: 5px; color: #444;">¿Necesitas ayuda adicional?</p>
+                  <p style="margin-top: 0;">Contacta a nuestro equipo de soporte en <a href="mailto:soporte@h1z.com" style="color: #4a6cf7; text-decoration: none;">soporte@h1z.com</a></p>
+                </div>
+              </div>
+              
               <p>Si no has sido tú quien realizó este registro, por favor ignora este mensaje.</p>
               
               <p>¡Te esperamos en la Red Social H1Z!</p>
