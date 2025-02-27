@@ -107,19 +107,21 @@ export default function Auth() {
     }
   };
 
-  // Lista de carreras para el selector
+  // Lista de carreras actualizada según la imagen
   const careers = [
-    "Ingeniería Informática",
-    "Ingeniería Civil",
-    "Ingeniería Industrial",
-    "Medicina",
     "Derecho",
-    "Administración de Empresas",
+    "Música",
+    "Teología",
     "Psicología",
-    "Arquitectura",
-    "Diseño Gráfico",
-    "Comunicación",
-    "Otra"
+    "Licenciatura en Bilingüismo: Español e Inglés",
+    "Contaduría Pública",
+    "Administración de Empresas",
+    "Administración de Negocios Internacionales",
+    "Administración Marítima y Portuaria",
+    "Ingeniería Industrial - Tecnología en Logística Empresarial",
+    "Ingeniería Informática - Tecnología en Gestión de Redes Informáticas",
+    "Ingeniería Biomédica - Tecnología en Mantenimiento de Equipo Biomédico",
+    "Ingeniería Ambiental - Tecnología en Desarrollo Ambiental y Sostenible"
   ];
 
   // Lista de semestres para el selector
