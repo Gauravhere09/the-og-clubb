@@ -30,7 +30,7 @@ export default function Popularity() {
     const fetchPopularUsers = async () => {
       setLoading(true);
       try {
-        // Obtener usuarios con más seguidores
+        // Obtener usuarios
         const { data, error } = await supabase
           .from('profiles')
           .select('id, username, avatar_url, career, semester');
@@ -40,7 +40,7 @@ export default function Popularity() {
         // Para cada usuario, obtener el conteo de seguidores
         if (data) {
           const usersWithFollowers = await Promise.all(
-            data.map(async (user) => {
+            data.map(async (user: any) => {
               const { count, error: followerError } = await supabase
                 .from('friendships')
                 .select('*', { count: 'exact', head: true })

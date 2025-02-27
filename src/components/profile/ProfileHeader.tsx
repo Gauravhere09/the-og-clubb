@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Edit2, ImagePlus, MessageCircle } from "lucide-react";
-import { FriendRequestButton } from "@/components/FriendRequestButton";
 import { FollowButton } from "@/components/FollowButton";
 import { ProfileEditDialog } from "@/components/profile/ProfileEditDialog";
 import { ChatDialog } from "@/components/messages/ChatDialog";
@@ -109,7 +108,7 @@ export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfile
                   {profile.username || "Usuario sin nombre"}
                 </h1>
                 <p className="text-muted-foreground">
-                  {profile.followers_count} amigos
+                  {profile.followers_count} seguidores
                 </p>
               </div>
               {currentUserId === profile.id ? (
@@ -120,7 +119,6 @@ export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfile
               ) : (
                 <div className="flex gap-2">
                   <FollowButton targetUserId={profile.id} />
-                  <FriendRequestButton targetUserId={profile.id} />
                   <Button variant="outline" onClick={handleMessageClick}>
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Mensaje

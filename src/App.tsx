@@ -12,8 +12,6 @@ import Index from "./pages/Index";
 import Messages from "./pages/Messages";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
-import FriendRequests from "./pages/FriendRequests";
-import Friends from "./pages/Friends";
 import Popularity from "./pages/Popularity";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
@@ -55,14 +53,6 @@ const App = () => {
               <Route 
                 path="/profile/:id" 
                 element={session ? <Profile /> : <Auth />} 
-              />
-              <Route 
-                path="/friends" 
-                element={session ? <Friends /> : <Auth />} 
-              />
-              <Route 
-                path="/friend-requests" 
-                element={session ? <FriendRequests /> : <Auth />} 
               />
               <Route 
                 path="/popularity" 
