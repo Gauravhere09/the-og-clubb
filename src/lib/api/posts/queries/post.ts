@@ -15,7 +15,7 @@ export async function fetchPostById(postId: string): Promise<Post | null> {
     // If shared_from column doesn't exist, use a query without it
     const hasSharedFromColumn = !columnCheckError;
     
-    let post;
+    let post = null;
     
     if (hasSharedFromColumn) {
       const { data, error } = await supabase
@@ -65,6 +65,9 @@ export async function fetchPostById(postId: string): Promise<Post | null> {
       if (error || !data) return null;
       post = data;
     }
+
+    // Ensure post exists before accessing its properties
+    if (!post) return null;
 
     // Transform to Post type
     return {
