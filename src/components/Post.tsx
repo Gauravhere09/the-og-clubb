@@ -24,17 +24,34 @@ export function Post({ post }: PostProps) {
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(false);
   const [replyTo, setReplyTo] = useState<{ id: string; username: string } | null>(null);
+  const [isAuthor, setIsAuthor] = useState(false);
 
+  // Get current user and check if they're the author
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUser(user);
-      console.log('Current user:', user?.id);
-      console.log('Post user:', post.user_id);
-      console.log('Are they the same?', user?.id === post.user_id);
+    const checkAuthStatus = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const { data: userData } = await supabase.auth.getUser();
+        
+        if (userData.user) {
+          setCurrentUser(userData.user);
+          const authorCheck = userData.user.id === post.user_id;
+          setIsAuthor(authorCheck);
+          
+          console.log('Current user ID:', userData.user.id);
+          console.log('Post user ID:', post.user_id);
+          console.log('Is user the author?', authorCheck);
+        } else {
+          console.log('No user logged in');
+          setIsAuthor(false);
+        }
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        setIsAuthor(false);
+      }
     };
 
-    getUser();
+    checkAuthStatus();
   }, [post.user_id]);
 
   const { data: comments = [] } = useQuery({
@@ -84,15 +101,19 @@ export function Post({ post }: PostProps) {
     setShowComments(true);
   };
   
-  // Verificamos si el usuario actual es el autor del post
-  const isAuthor = currentUser?.id === post.user_id;
+  const onDeletePost = () => {
+    console.log('Delete post requested. Is author?', isAuthor);
+    if (isAuthor) {
+      handleDeletePost();
+    }
+  };
 
   return (
     <Card className="overflow-hidden">
       <div className="p-4">
         <PostHeader 
           post={post} 
-          onDelete={handleDeletePost} 
+          onDelete={onDeletePost} 
           isAuthor={isAuthor} 
         />
         <PostContent post={post} postId={post.id} />
