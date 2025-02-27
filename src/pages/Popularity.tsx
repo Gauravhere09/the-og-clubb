@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FollowButton } from "@/components/FollowButton";
-import { GraduationCap, BookOpen, Users, Heart, Award, Medal } from "lucide-react";
+import { GraduationCap, BookOpen, Heart, Award, Medal } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { PopularUserProfile } from "@/types/database/follow.types";
 
@@ -23,49 +23,57 @@ export default function Popularity() {
     const fetchPopularUsers = async () => {
       setLoading(true);
       try {
-        // Primero obtenemos todos los usuarios
+        // Primero obtenemos todos los usuarios con sus datos básicos
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
           .select('id, username, avatar_url, career, semester');
 
-        if (profilesError) throw profilesError;
+        if (profilesError) {
+          console.error('Error al obtener perfiles:', profilesError);
+          throw profilesError;
+        }
+
+        if (!profiles) {
+          console.log('No se encontraron perfiles');
+          setPopularUsers([]);
+          setLoading(false);
+          return;
+        }
 
         // Para cada usuario, obtenemos su conteo de seguidores
-        if (profiles) {
-          const usersWithFollowers = await Promise.all(
-            profiles.map(async (profile) => {
-              const { count } = await supabase
-                .from('friendships')
-                .select('*', { count: 'exact', head: true })
-                .eq('friend_id', profile.id)
-                .eq('status', 'accepted');
+        const usersWithFollowers = await Promise.all(
+          profiles.map(async (profile) => {
+            const { count } = await supabase
+              .from('friendships')
+              .select('*', { count: 'exact', head: true })
+              .eq('friend_id', profile.id)
+              .eq('status', 'accepted');
 
-              return {
-                ...profile,
-                followers_count: count || 0
-              };
-            })
-          );
+            return {
+              id: profile.id,
+              username: profile.username,
+              avatar_url: profile.avatar_url,
+              career: profile.career,
+              semester: profile.semester,
+              followers_count: count || 0
+            } as PopularUserProfile;
+          })
+        );
 
-          // Ordenar por número de seguidores (de mayor a menor)
-          const sortedUsers = usersWithFollowers
-            .sort((a, b) => b.followers_count - a.followers_count)
-            .map((user, index) => ({
-              ...user,
-              rank: index + 1
-            }));
+        // Ordenar por número de seguidores (de mayor a menor)
+        const sortedUsers = usersWithFollowers
+          .sort((a, b) => b.followers_count - a.followers_count);
 
-          setPopularUsers(sortedUsers);
+        setPopularUsers(sortedUsers);
 
-          // Extraer carreras únicas para filtros
-          const uniqueCareers = [...new Set(
-            sortedUsers
-              .map(user => user.career)
-              .filter(Boolean)
-          )] as string[];
+        // Extraer carreras únicas para filtros
+        const uniqueCareers = [...new Set(
+          sortedUsers
+            .map(user => user.career)
+            .filter(Boolean)
+        )] as string[];
 
-          setCareerFilters(uniqueCareers);
-        }
+        setCareerFilters(uniqueCareers);
       } catch (error) {
         console.error('Error al cargar usuarios populares:', error);
       } finally {
