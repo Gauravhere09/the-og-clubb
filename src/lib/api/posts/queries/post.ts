@@ -140,19 +140,23 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
       for (let i = 0; i < sharedPosts.length; i++) {
         const post = sharedPosts[i];
         if (post && typeof post === 'object' && 'id' in post) {
-          postsMap[post.id] = {
-            id: post.id,
-            content: post.content ?? '',
-            user_id: post.user_id,
-            media_url: post.media_url,
-            media_type: post.media_type,
-            visibility: post.visibility,
-            poll: post.poll,
-            created_at: post.created_at,
-            updated_at: post.updated_at,
-            shared_from: post.shared_from,
-            profiles: post.profiles
-          };
+          const postId = post.id;
+          // Asegurarnos de que post sea un objeto válido y tenga las propiedades necesarias
+          if (postId) {
+            postsMap[postId] = {
+              id: postId,
+              content: post.content ?? '',
+              user_id: post.user_id ?? null,
+              media_url: post.media_url ?? null,
+              media_type: post.media_type ?? null,
+              visibility: post.visibility ?? 'public',
+              poll: post.poll ?? null,
+              created_at: post.created_at ?? new Date().toISOString(),
+              updated_at: post.updated_at ?? new Date().toISOString(),
+              shared_from: post.shared_from ?? null,
+              profiles: post.profiles ?? null
+            };
+          }
         }
       }
     }
