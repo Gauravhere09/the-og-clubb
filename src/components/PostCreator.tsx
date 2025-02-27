@@ -5,16 +5,24 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AudioRecorder } from "./AudioRecorder";
 import { useToast } from "@/hooks/use-toast";
-import { Image, Video, BarChart } from "lucide-react";
+import { Image, Video, BarChart, Globe, Users } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPost } from "@/lib/api";
 import { PollCreator } from "./post/PollCreator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function PostCreator() {
   const [content, setContent] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [showPollCreator, setShowPollCreator] = useState(false);
+  const [visibility, setVisibility] = useState<'public' | 'friends' | 'private'>('public');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -27,7 +35,8 @@ export function PostCreator() {
       return createPost({
         content,
         file,
-        pollData
+        pollData,
+        visibility
       });
     },
     onSuccess: () => {
@@ -72,6 +81,15 @@ export function PostCreator() {
     submitPost(undefined); // Pasamos undefined cuando no hay datos de encuesta
   };
 
+  const getVisibilityIcon = () => {
+    switch(visibility) {
+      case 'public': return <Globe className="h-4 w-4 mr-2" />;
+      case 'friends': return <Users className="h-4 w-4 mr-2" />;
+      case 'private': return <span className="mr-2">🔒</span>;
+      default: return <Globe className="h-4 w-4 mr-2" />;
+    }
+  };
+
   return (
     <Card className="p-4 space-y-4">
       <Textarea
@@ -80,6 +98,42 @@ export function PostCreator() {
         onChange={(e) => setContent(e.target.value)}
         className="resize-none"
       />
+      
+      {/* Selector de visibilidad */}
+      <div className="flex items-center">
+        <Select
+          value={visibility}
+          onValueChange={(val) => setVisibility(val as 'public' | 'friends' | 'private')}
+        >
+          <SelectTrigger className="w-40">
+            <div className="flex items-center">
+              {getVisibilityIcon()}
+              <SelectValue />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="public">
+              <div className="flex items-center">
+                <Globe className="h-4 w-4 mr-2" />
+                <span>Público</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="friends">
+              <div className="flex items-center">
+                <Users className="h-4 w-4 mr-2" />
+                <span>Seguidores</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="private">
+              <div className="flex items-center">
+                <span className="mr-2">🔒</span>
+                <span>Privado</span>
+              </div>
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
       {showPollCreator && (
         <PollCreator
           onPollCreate={handlePollCreate}

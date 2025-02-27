@@ -10,6 +10,7 @@ export interface CreatePostParams {
   content: string;
   file?: File | null;
   pollData?: PollData;
+  visibility?: 'public' | 'friends' | 'private';
 }
 
 export interface TransformedPoll {

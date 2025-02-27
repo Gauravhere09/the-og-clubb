@@ -10,7 +10,8 @@ import { CreatePostParams } from "./types";
 export async function createPost({
   content, 
   file = null,
-  pollData
+  pollData,
+  visibility = 'public'
 }: CreatePostParams) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -44,7 +45,7 @@ export async function createPost({
       media_type,
       poll,
       user_id: user.id,
-      visibility: 'public'
+      visibility
     } as Tables['posts']['Insert'];
 
     // First insert the post
