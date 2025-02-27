@@ -77,7 +77,7 @@ export function SingleComment({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
                     align="end" 
-                    className="w-40"
+                    className="w-40 bg-background"
                   >
                     <DropdownMenuItem 
                       className="cursor-pointer text-xs py-1"
