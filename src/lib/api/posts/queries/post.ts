@@ -132,11 +132,12 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
       
     if (error || !sharedPosts?.length) return {};
     
-    // Fix: Filter out null posts before reducing
+    // First filter out null posts, then ensure each post has an id before adding to accumulator
     return sharedPosts
       .filter((post): post is NonNullable<typeof post> => post !== null)
       .reduce((acc, post) => {
-        if (typeof post === 'object' && 'id' in post) {
+        // We know post isn't null due to the filter, but TypeScript still needs an explicit check
+        if (post && typeof post === 'object' && 'id' in post) {
           acc[post.id] = post;
         }
         return acc;
