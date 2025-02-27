@@ -40,6 +40,10 @@ export function SingleComment({
   const isAudioComment = comment.content.startsWith('[Audio]');
   const audioUrl = isAudioComment ? comment.content.replace('[Audio] ', '') : null;
 
+  const handleDeleteComment = () => {
+    onDeleteComment(comment.id);
+  };
+
   const handleSaveEdit = () => {
     if (editedContent.trim() === '') return;
     
@@ -88,7 +92,7 @@ export function SingleComment({
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       className="cursor-pointer text-destructive focus:text-destructive text-xs py-1"
-                      onClick={() => onDeleteComment(comment.id)}
+                      onClick={handleDeleteComment}
                     >
                       <Trash2 className="h-3 w-3 mr-2" />
                       <span>Eliminar</span>

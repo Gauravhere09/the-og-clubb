@@ -31,10 +31,34 @@ export function useCommentMutations(postId: string) {
 
   const { mutate: deleteComment } = useMutation({
     mutationFn: async (commentId: string) => {
+      // Comprobar que el usuario es el dueño del comentario
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Debes iniciar sesión para eliminar un comentario");
+      }
+      
+      // Obtener el comentario para verificar la propiedad
+      const { data: comment } = await supabase
+        .from('comments')
+        .select('user_id')
+        .eq('id', commentId)
+        .single();
+      
+      if (!comment) {
+        throw new Error("Comentario no encontrado");
+      }
+      
+      if (comment.user_id !== user.id) {
+        throw new Error("No tienes permiso para eliminar este comentario");
+      }
+      
+      // Eliminar el comentario
       const { error } = await supabase
         .from('comments')
         .delete()
         .eq('id', commentId);
+        
       if (error) throw error;
     },
     onSuccess: () => {
@@ -44,21 +68,44 @@ export function useCommentMutations(postId: string) {
         description: "El comentario se ha eliminado correctamente",
       });
     },
-    onError: () => {
+    onError: (error) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo eliminar el comentario",
+        description: error instanceof Error ? error.message : "No se pudo eliminar el comentario",
       });
     },
   });
 
   const { mutate: editComment } = useMutation({
     mutationFn: async ({ commentId, content }: { commentId: string; content: string }) => {
+      // Comprobar que el usuario es el dueño del comentario
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Debes iniciar sesión para editar un comentario");
+      }
+      
+      // Obtener el comentario para verificar la propiedad
+      const { data: comment } = await supabase
+        .from('comments')
+        .select('user_id')
+        .eq('id', commentId)
+        .single();
+      
+      if (!comment) {
+        throw new Error("Comentario no encontrado");
+      }
+      
+      if (comment.user_id !== user.id) {
+        throw new Error("No tienes permiso para editar este comentario");
+      }
+      
       const { error } = await supabase
         .from('comments')
         .update({ content })
         .eq('id', commentId);
+        
       if (error) throw error;
     },
     onSuccess: () => {
@@ -68,11 +115,11 @@ export function useCommentMutations(postId: string) {
         description: "El comentario se ha actualizado correctamente",
       });
     },
-    onError: () => {
+    onError: (error) => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo actualizar el comentario",
+        description: error instanceof Error ? error.message : "No se pudo actualizar el comentario",
       });
     },
   });

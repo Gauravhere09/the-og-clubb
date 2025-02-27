@@ -13,6 +13,7 @@ import { getComments } from "@/lib/api/comments";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+import { useCommentMutations } from "@/hooks/use-comment-mutations";
 
 interface PostProps {
   post: PostType;
@@ -21,6 +22,7 @@ interface PostProps {
 export function Post({ post }: PostProps) {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const { handleReaction, handleDeletePost, toggleCommentReaction, submitComment, submitVote } = usePostMutations(post.id);
+  const { deleteComment } = useCommentMutations(post.id);
   const [newComment, setNewComment] = useState("");
   const [showComments, setShowComments] = useState(false);
   const [replyTo, setReplyTo] = useState<{ id: string; username: string } | null>(null);
@@ -90,7 +92,7 @@ export function Post({ post }: PostProps) {
   };
 
   const handleDeleteComment = (commentId: string) => {
-    // Handle delete comment
+    deleteComment(commentId);
   };
 
   const handleCancelReply = () => {
