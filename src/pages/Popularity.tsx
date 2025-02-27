@@ -21,6 +21,7 @@ export default function Popularity() {
     const fetchPopularUsers = async () => {
       setLoading(true);
       try {
+        // Fetching all profiles from the database
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
           .select('*') as { data: ProfileTable['Row'][] | null; error: Error | null };
@@ -39,6 +40,7 @@ export default function Popularity() {
 
         console.log('Perfiles obtenidos:', profiles);
 
+        // For each profile, count their followers
         const usersWithFollowers = await Promise.all(
           profiles.map(async (profile) => {
             const { count } = await supabase
@@ -58,12 +60,14 @@ export default function Popularity() {
           })
         );
 
+        // Sort users by follower count
         const sortedUsers = usersWithFollowers
           .sort((a, b) => b.followers_count - a.followers_count);
 
         console.log('Usuarios ordenados:', sortedUsers);
         setPopularUsers(sortedUsers);
 
+        // Extract unique careers for filtering
         const careers = sortedUsers
           .map(user => user.career)
           .filter((career): career is string => career !== null && career !== undefined);
