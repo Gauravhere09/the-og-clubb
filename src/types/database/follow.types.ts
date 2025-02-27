@@ -1,28 +1,18 @@
 
-export interface FollowersTable {
-  Row: {
-    id: string;
-    follower_id: string;
-    following_id: string;
-    created_at: string;
-  };
-  Insert: {
-    id?: string;
-    follower_id: string;
-    following_id: string;
-    created_at?: string;
-  };
-  Update: {
-    id?: string;
-    follower_id?: string;
-    following_id?: string;
-    created_at?: string;
-  };
+export interface FreiendshipRow {
+  id: string;
+  created_at: string;
+  user_id: string;
+  friend_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
 }
 
-export interface FollowStats {
-  followers_count: number;
-  following_count: number;
+export interface FriendProfile {
+  id: string;
+  username: string | null;
+  avatar_url: string | null;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
 }
 
 export interface PopularUserProfile {
