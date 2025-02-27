@@ -38,7 +38,7 @@ serve(async (req) => {
     const { data, error } = await resend.emails.send({
       from: "H1Z <onboarding@resend.dev>",
       to: [email],
-      subject: "Confirma tu registro en H1Z - Tu Red Social Académica",
+      subject: "Confirma tu registro en H1Z",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
           <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -47,20 +47,15 @@ serve(async (req) => {
             </div>
             
             <div style="color: #666; font-size: 16px; line-height: 1.6;">
-              <p>Gracias por registrarte en H1Z, tu red social académica. Para activar tu cuenta y comenzar a conectar con otros estudiantes, por favor confirma tu correo electrónico haciendo clic en el enlace que recibirás en un correo separado.</p>
+              <p>Gracias por registrarte en H1Z. Para activar tu cuenta y comenzar a disfrutar de todos los beneficios de nuestra plataforma, por favor confirma tu correo electrónico haciendo clic en el siguiente enlace:</p>
               
-              <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-                <p style="margin: 0; color: #444;"><strong>Importante:</strong></p>
-                <ul style="margin: 10px 0; padding-left: 20px;">
-                  <li>El enlace de verificación expirará en 24 horas.</li>
-                  <li>Si no encuentras el correo, revisa tu carpeta de spam.</li>
-                  <li>Una vez verificado tu correo, podrás acceder a todas las funcionalidades de H1Z.</li>
-                </ul>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="#" style="display: inline-block; background-color: #4a6cf7; color: white; text-decoration: none; padding: 12px 25px; border-radius: 5px; font-weight: bold;">Confirmar mi cuenta</a>
               </div>
-
+              
               <p>Si no has sido tú quien realizó este registro, por favor ignora este mensaje.</p>
               
-              <p style="margin-top: 30px;">¡Te esperamos en H1Z!</p>
+              <p>¡Te esperamos en la Red Social H1Z!</p>
               
               <p style="margin-bottom: 0;">Atentamente,<br>El equipo de H1Z</p>
             </div>
