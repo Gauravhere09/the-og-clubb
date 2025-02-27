@@ -77,6 +77,10 @@ export default function Profile() {
           console.error('Error fetching followers:', followersError);
         }
 
+        // Verificar si los campos existen en la tabla
+        const hasCareerField = 'career' in profileData;
+        const hasSemesterField = 'semester' in profileData;
+
         // Crear el objeto Profile con los datos obtenidos
         const newProfile: Profile = {
           id: profileData.id,
@@ -86,8 +90,8 @@ export default function Profile() {
           cover_url: profileData.cover_url,
           location: null,
           education: null,
-          career: profileData.career || null,
-          semester: profileData.semester || null,
+          career: hasCareerField ? profileData.career : null,
+          semester: hasSemesterField ? profileData.semester : null,
           relationship_status: null,
           followers_count: followersCount || 0,
           created_at: profileData.created_at,

@@ -29,7 +29,7 @@ export function Feed({ userId }: FeedProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const showNew = searchParams.get("new") === "true";
 
-  const { data: posts = [], isLoading } = useQuery({
+  const { data: posts = [], isLoading, refetch } = useQuery({
     queryKey: ["posts", userId],
     queryFn: () => getPosts(userId),
     select: (data) => {
@@ -38,7 +38,12 @@ export function Feed({ userId }: FeedProps) {
         poll: transformPoll(post.poll)
       }));
 
+      // Siempre ordenar por fecha más reciente
+      transformedPosts = transformedPosts
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
       if (showNew) {
+        // Si se solicita mostrar solo publicaciones nuevas, filtramos por las últimas 24 horas
         const twentyFourHoursAgo = new Date();
         twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
@@ -46,19 +51,22 @@ export function Feed({ userId }: FeedProps) {
           .filter(post => {
             const postDate = new Date(post.created_at);
             return postDate > twentyFourHoursAgo;
-          })
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          });
       }
 
       return transformedPosts;
     }
   });
 
+  // Cuando se detecta el parámetro 'new', recargar los posts y luego limpiar el parámetro
   useEffect(() => {
     if (showNew) {
-      setSearchParams({});
+      refetch().then(() => {
+        // Limpiar el parámetro de la URL después de cargar
+        setSearchParams({});
+      });
     }
-  }, [showNew, setSearchParams]);
+  }, [showNew, refetch, setSearchParams]);
 
   if (isLoading) {
     return (

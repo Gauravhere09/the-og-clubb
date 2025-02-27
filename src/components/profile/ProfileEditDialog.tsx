@@ -54,15 +54,29 @@ export function ProfileEditDialog({
     setIsLoading(true);
 
     try {
+      // Solo actualizar los campos que existen en la tabla de perfiles de Supabase
+      const updateData: Record<string, any> = {
+        username: formData.username,
+        bio: formData.bio,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Verificar si la tabla soporta estos campos
+      const { data: tableInfo } = await supabase.rpc('check_column_exists', { 
+        table_name: 'profiles', 
+        column_name: 'career' 
+      });
+
+      const careerExists = tableInfo;
+      
+      if (careerExists) {
+        updateData.career = formData.career;
+        updateData.semester = formData.semester;
+      }
+
       const { data, error } = await supabase
         .from("profiles")
-        .update({
-          username: formData.username,
-          bio: formData.bio,
-          career: formData.career,
-          semester: formData.semester,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq("id", profile.id)
         .select()
         .single();
@@ -75,10 +89,14 @@ export function ProfileEditDialog({
           ...profile,
           username: data.username,
           bio: data.bio,
-          career: data.career || null,
-          semester: data.semester || null,
           updated_at: data.updated_at,
         };
+
+        // Solo actualizar estos campos si existen en la tabla
+        if (careerExists) {
+          updatedProfile.career = data.career;
+          updatedProfile.semester = data.semester;
+        }
         
         onUpdate(updatedProfile);
         toast({
