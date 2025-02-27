@@ -60,7 +60,7 @@ export function SingleComment({
           <AvatarImage src={comment.profiles?.avatar_url} />
           <AvatarFallback>{comment.profiles?.username?.[0]}</AvatarFallback>
         </Avatar>
-        <div className="flex-1 max-w-[90%]">
+        <div className="flex-1 max-w-[70%]">
           <div className="bg-muted p-1.5 rounded-lg">
             <div className="flex justify-between items-start gap-1">
               <p className="font-medium text-xs">{comment.profiles?.username}</p>
