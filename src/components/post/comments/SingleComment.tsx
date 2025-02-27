@@ -4,8 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import type { Comment } from "@/types/post";
 import { CommentReactions } from "./CommentReactions";
-import { useSession } from "@supabase/auth-helpers-react";
-import type { ReactionType } from "@/types/database/social.types";
+import { type ReactionType } from "@/types/database/social.types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,7 +32,6 @@ export function SingleComment({
   onDeleteComment,
   isReply = false 
 }: SingleCommentProps) {
-  const session = useSession();
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(comment.content);
   const { editComment } = useCommentMutations(comment.post_id);
@@ -45,12 +43,9 @@ export function SingleComment({
     const checkAuthor = async () => {
       setIsLoading(true);
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        const isCurrentUserAuthor = user && user.id === comment.user_id;
-        console.log('Comment user ID:', comment.user_id);
-        console.log('Current user ID:', user?.id);
-        console.log('Is author of comment:', isCurrentUserAuthor);
-        setIsAuthor(isCurrentUserAuthor || false);
+        const { data } = await supabase.auth.getUser();
+        const isCurrentUserAuthor = data.user && data.user.id === comment.user_id;
+        setIsAuthor(!!isCurrentUserAuthor);
       } catch (error) {
         console.error('Error checking comment author:', error);
         setIsAuthor(false);

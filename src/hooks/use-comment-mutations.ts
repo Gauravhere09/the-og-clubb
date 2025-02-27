@@ -1,6 +1,6 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createComment } from "@/lib/api";
+import { createComment } from "@/lib/api/comments";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -31,7 +31,7 @@ export function useCommentMutations(postId: string) {
 
   const { mutate: deleteComment } = useMutation({
     mutationFn: async (commentId: string) => {
-      // Comprobar que el usuario es el dueño del comentario
+      // Verificar que el usuario está autenticado
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -82,7 +82,7 @@ export function useCommentMutations(postId: string) {
 
   const { mutate: editComment } = useMutation({
     mutationFn: async ({ commentId, content }: { commentId: string; content: string }) => {
-      // Comprobar que el usuario es el dueño del comentario
+      // Verificar que el usuario está autenticado
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {

@@ -78,32 +78,43 @@ export function useReactionMutations(postId: string) {
 
   const { mutate: toggleCommentReaction } = useMutation({
     mutationFn: async ({ commentId, type }: CommentReactionParams) => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      const { data: { user } } = await supabase.auth.getUser();
       
-      if (!currentSession?.user) {
+      if (!user) {
         throw new Error("Debes iniciar sesión para reaccionar");
       }
       
+      // Buscar si existe una reacción previa del usuario en este comentario
       const { data: existingReaction } = await supabase
         .from('reactions')
         .select()
-        .eq('user_id', currentSession.user.id)
+        .eq('user_id', user.id)
         .eq('comment_id', commentId)
-        .single();
+        .maybeSingle();
 
       if (existingReaction) {
-        const { error } = await supabase
-          .from('reactions')
-          .delete()
-          .eq('id', existingReaction.id);
-        if (error) throw error;
+        // Si es la misma reacción, la eliminamos (toggle)
+        if (existingReaction.reaction_type === type) {
+          const { error } = await supabase
+            .from('reactions')
+            .delete()
+            .eq('id', existingReaction.id);
+          if (error) throw error;
+        } else {
+          // Si es una reacción diferente, la actualizamos
+          const { error } = await supabase
+            .from('reactions')
+            .update({ reaction_type: type })
+            .eq('id', existingReaction.id);
+          if (error) throw error;
+        }
       } else {
+        // Si no existe reacción previa, creamos una nueva
         const { error } = await supabase
           .from('reactions')
           .insert({
-            user_id: currentSession.user.id,
+            user_id: user.id,
             comment_id: commentId,
-            post_id: null,
             reaction_type: type
           });
         if (error) throw error;

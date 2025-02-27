@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ThumbsUp, Heart, Laugh, Angry } from "lucide-react";
-import { type ReactionType } from "@/lib/api/likes";
+import { type ReactionType } from "@/types/database/social.types";
 
 const reactionIcons = {
   'like': <ThumbsUp className="h-3 w-3" />,
@@ -44,7 +44,7 @@ export function CommentReactions({
           size="sm"
           className={`h-auto p-0 text-xs ${userReaction ? 'text-primary' : ''}`}
         >
-          {reactionIcons[userReaction || 'like']}
+          {userReaction ? reactionIcons[userReaction] : reactionIcons['like']}
           <span className="ml-1">{reactionsCount}</span>
         </Button>
       </PopoverTrigger>
@@ -55,7 +55,7 @@ export function CommentReactions({
               key={type}
               variant="ghost"
               size="sm"
-              className="h-8 w-8 p-0"
+              className={`h-8 w-8 p-0 ${userReaction === type ? 'text-primary' : ''}`}
               onClick={() => onReaction(commentId, type as ReactionType)}
             >
               {icon}
