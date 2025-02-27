@@ -24,7 +24,7 @@ export default function Popularity() {
         // Fetching all profiles from the database
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('*') as { data: ProfileTable['Row'][] | null; error: Error | null };
+          .select('id, username, avatar_url, career, semester') as { data: ProfileTable['Row'][] | null; error: Error | null };
 
         if (profilesError) {
           console.error('Error al obtener perfiles:', profilesError);
@@ -70,7 +70,7 @@ export default function Popularity() {
         // Extract unique careers for filtering
         const careers = sortedUsers
           .map(user => user.career)
-          .filter((career): career is string => career !== null && career !== undefined);
+          .filter((career): career is string => career !== null && career !== undefined && career !== '');
         
         const uniqueCareers = [...new Set(careers)];
         console.log('Carreras únicas:', uniqueCareers);
