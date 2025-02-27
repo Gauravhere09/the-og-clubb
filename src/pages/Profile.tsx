@@ -18,6 +18,8 @@ export type Profile = {
   cover_url: string | null;
   location: string | null;
   education: string | null;
+  career: string | null;
+  semester: string | null;
   relationship_status: string | null;
   followers_count: number;
   created_at: string;
@@ -54,7 +56,7 @@ export default function Profile() {
         // Primero obtenemos los datos básicos del perfil
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
-          .select('id, username, bio, avatar_url, cover_url, created_at, updated_at')
+          .select('id, username, bio, avatar_url, cover_url, career, semester, created_at, updated_at')
           .eq('id', id)
           .single();
 
@@ -84,6 +86,8 @@ export default function Profile() {
           cover_url: profileData.cover_url,
           location: null,
           education: null,
+          career: profileData.career,
+          semester: profileData.semester,
           relationship_status: null,
           followers_count: followersCount || 0,
           created_at: profileData.created_at,

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/pages/Profile";
 import { useToast } from "@/hooks/use-toast";
@@ -24,9 +25,29 @@ export function ProfileEditDialog({
   const [formData, setFormData] = useState({
     username: profile.username || "",
     bio: profile.bio || "",
+    career: profile.career || "",
+    semester: profile.semester || "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  // Lista de carreras para el selector
+  const careers = [
+    "Ingeniería Informática",
+    "Ingeniería Civil",
+    "Ingeniería Industrial",
+    "Medicina",
+    "Derecho",
+    "Administración de Empresas",
+    "Psicología",
+    "Arquitectura",
+    "Diseño Gráfico",
+    "Comunicación",
+    "Otra"
+  ];
+
+  // Lista de semestres para el selector
+  const semesters = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Egresado"];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +59,8 @@ export function ProfileEditDialog({
         .update({
           username: formData.username,
           bio: formData.bio,
+          career: formData.career,
+          semester: formData.semester,
           updated_at: new Date().toISOString(),
         })
         .eq("id", profile.id)
@@ -51,6 +74,8 @@ export function ProfileEditDialog({
           ...profile,
           username: data.username,
           bio: data.bio,
+          career: data.career,
+          semester: data.semester,
           updated_at: data.updated_at,
         };
         onUpdate(updatedProfile);
@@ -74,7 +99,7 @@ export function ProfileEditDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Editar perfil</DialogTitle>
         </DialogHeader>
@@ -103,6 +128,46 @@ export function ProfileEditDialog({
               }
               rows={4}
             />
+          </div>
+          <div>
+            <label htmlFor="career" className="text-sm font-medium">
+              Carrera
+            </label>
+            <Select 
+              value={formData.career} 
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, career: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona tu carrera" />
+              </SelectTrigger>
+              <SelectContent>
+                {careers.map((careerOption) => (
+                  <SelectItem key={careerOption} value={careerOption}>
+                    {careerOption}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label htmlFor="semester" className="text-sm font-medium">
+              Semestre
+            </label>
+            <Select 
+              value={formData.semester} 
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, semester: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona tu semestre" />
+              </SelectTrigger>
+              <SelectContent>
+                {semesters.map((semesterOption) => (
+                  <SelectItem key={semesterOption} value={semesterOption}>
+                    {semesterOption}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex justify-end gap-4">
             <Button variant="outline" onClick={onClose} type="button">

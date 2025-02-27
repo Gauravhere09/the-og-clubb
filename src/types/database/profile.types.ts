@@ -6,6 +6,8 @@ export interface ProfileTable {
     bio: string | null;
     avatar_url: string | null;
     cover_url: string | null;
+    career: string | null;
+    semester: string | null;
     created_at: string;
     updated_at: string;
   };
@@ -15,6 +17,8 @@ export interface ProfileTable {
     bio?: string | null;
     avatar_url?: string | null;
     cover_url?: string | null;
+    career?: string | null;
+    semester?: string | null;
     created_at?: string;
     updated_at?: string;
   };
@@ -24,6 +28,8 @@ export interface ProfileTable {
     bio?: string | null;
     avatar_url?: string | null;
     cover_url?: string | null;
+    career?: string | null;
+    semester?: string | null;
     created_at?: string;
     updated_at?: string;
   };

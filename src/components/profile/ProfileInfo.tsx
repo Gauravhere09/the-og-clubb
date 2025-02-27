@@ -1,6 +1,6 @@
 
 import { Card } from "@/components/ui/card";
-import { Home, School, MapPin, Heart } from "lucide-react";
+import { Home, School, MapPin, Heart, GraduationCap, BookOpen } from "lucide-react";
 import type { Profile } from "@/pages/Profile";
 
 interface ProfileInfoProps {
@@ -25,6 +25,18 @@ export function ProfileInfo({ profile }: ProfileInfoProps) {
           <div className="flex items-center gap-2 text-sm">
             <School className="h-4 w-4 text-muted-foreground" />
             <span>Estudió en {profile.education}</span>
+          </div>
+        )}
+        {profile.career && (
+          <div className="flex items-center gap-2 text-sm">
+            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+            <span>Carrera: {profile.career}</span>
+          </div>
+        )}
+        {profile.semester && (
+          <div className="flex items-center gap-2 text-sm">
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <span>Semestre: {profile.semester}</span>
           </div>
         )}
         {profile.location && (

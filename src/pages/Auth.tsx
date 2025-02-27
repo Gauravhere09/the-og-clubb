@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
@@ -12,6 +13,8 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
+  const [career, setCareer] = useState("");
+  const [semester, setSemester] = useState("");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -50,16 +53,40 @@ export default function Auth() {
         if (error) throw error;
         navigate("/");
       } else {
+        // Validar que los campos obligatorios estén completos (solo para registro)
+        if (!career && !isLogin) {
+          throw new Error("Por favor selecciona una carrera");
+        }
+        if (!semester && !isLogin) {
+          throw new Error("Por favor selecciona un semestre");
+        }
+
         const { error, data } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: {
               username,
+              career,
+              semester,
             },
           },
         });
         if (error) throw error;
+
+        // También actualizamos la tabla de perfiles con los nuevos campos
+        if (data.user) {
+          const { error: profileError } = await supabase.from('profiles').upsert({
+            id: data.user.id,
+            username,
+            career,
+            semester,
+          });
+          
+          if (profileError) {
+            console.error("Error updating profile:", profileError);
+          }
+        }
 
         // Enviar correo de verificación personalizado
         await sendVerificationEmail(email, username);
@@ -80,6 +107,24 @@ export default function Auth() {
     }
   };
 
+  // Lista de carreras para el selector
+  const careers = [
+    "Ingeniería Informática",
+    "Ingeniería Civil",
+    "Ingeniería Industrial",
+    "Medicina",
+    "Derecho",
+    "Administración de Empresas",
+    "Psicología",
+    "Arquitectura",
+    "Diseño Gráfico",
+    "Comunicación",
+    "Otra"
+  ];
+
+  // Lista de semestres para el selector
+  const semesters = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Egresado"];
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
       <div className="w-full max-w-md space-y-8">
@@ -95,19 +140,57 @@ export default function Auth() {
 
         <form onSubmit={handleAuth} className="space-y-4">
           {!isLogin && (
-            <div>
-              <label htmlFor="username" className="block text-sm font-medium mb-1">
-                Nombre de usuario
-              </label>
-              <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required={!isLogin}
-                disabled={loading}
-              />
-            </div>
+            <>
+              <div>
+                <label htmlFor="username" className="block text-sm font-medium mb-1">
+                  Nombre de usuario
+                </label>
+                <Input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required={!isLogin}
+                  disabled={loading}
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="career" className="block text-sm font-medium mb-1">
+                  Carrera estudiada
+                </label>
+                <Select value={career} onValueChange={setCareer} disabled={loading}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona tu carrera" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {careers.map((careerOption) => (
+                      <SelectItem key={careerOption} value={careerOption}>
+                        {careerOption}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <label htmlFor="semester" className="block text-sm font-medium mb-1">
+                  Semestre actual
+                </label>
+                <Select value={semester} onValueChange={setSemester} disabled={loading}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona tu semestre" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {semesters.map((semesterOption) => (
+                      <SelectItem key={semesterOption} value={semesterOption}>
+                        {semesterOption}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </>
           )}
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-1">
