@@ -1,32 +1,40 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "@/types/post";
-import { transformPoll } from "./utils";
 import { 
   fetchPostsReactions, 
   fetchPostsComments, 
   fetchUserReactions,
   fetchUserPollVotes,
   fetchSharedPosts
-} from "./queries";
+} from "../queries";
+import { transformPoll } from "../utils";
 
-export async function getPosts(userId?: string) {
+/**
+ * Checks if the 'shared_from' column exists in the posts table
+ */
+export async function checkSharedFromColumn(): Promise<boolean> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    // Check if shared_from column exists
     const { error: columnCheckError } = await supabase
       .from('posts')
       .select('shared_from')
       .limit(1)
       .maybeSingle();
     
-    // Determine if shared_from column exists
-    const hasSharedFromColumn = !columnCheckError;
-    
-    // Execute the appropriate query based on column existence
-    let rawPosts;
-    
+    // If no error, the column exists
+    return !columnCheckError;
+  } catch (error) {
+    console.error('Error checking shared_from column:', error);
+    return false;
+  }
+}
+
+/**
+ * Fetches raw posts data from the database
+ */
+export async function fetchRawPosts(userId?: string, hasSharedFromColumn: boolean) {
+  try {
+    // Determine query based on shared_from column existence
     if (hasSharedFromColumn) {
       // Query with shared_from
       const query = supabase
@@ -56,9 +64,7 @@ export async function getPosts(userId?: string) {
         .order('created_at', { ascending: false });
         
       if (error) throw error;
-      if (!data) return [];
-      
-      rawPosts = data;
+      return data || [];
     } else {
       // Query without shared_from
       const query = supabase
@@ -87,11 +93,24 @@ export async function getPosts(userId?: string) {
         .order('created_at', { ascending: false });
         
       if (error) throw error;
-      if (!data) return [];
-      
-      rawPosts = data;
+      return data || [];
     }
+  } catch (error) {
+    console.error('Error fetching raw posts:', error);
+    throw error;
+  }
+}
 
+/**
+ * Transforms raw posts data into Post objects with all needed data
+ */
+export async function transformPostsData(
+  rawPosts: any[], 
+  hasSharedFromColumn: boolean
+): Promise<Post[]> {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
     // Collect IDs of shared posts to fetch their details
     // Only proceed if shared_from column exists
     let sharedPostIds: string[] = [];
@@ -194,7 +213,7 @@ export async function getPosts(userId?: string) {
       };
     });
   } catch (error) {
-    console.error('Error fetching posts:', error);
+    console.error('Error transforming posts data:', error);
     throw error;
   }
 }
