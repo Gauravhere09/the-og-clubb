@@ -8,6 +8,7 @@ import { UserList } from "@/components/popularity/UserList";
 import { FilterButtons } from "@/components/popularity/FilterButtons";
 import { LoadingState } from "@/components/popularity/LoadingState";
 import type { PopularUserProfile } from "@/types/database/follow.types";
+import type { ProfileTable } from "@/types/database/profile.types";
 
 export default function Popularity() {
   const [popularUsers, setPopularUsers] = useState<PopularUserProfile[]>([]);
@@ -22,7 +23,7 @@ export default function Popularity() {
       try {
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('*');
+          .select('*') as { data: ProfileTable['Row'][] | null; error: Error | null };
 
         if (profilesError) {
           console.error('Error al obtener perfiles:', profilesError);
