@@ -26,14 +26,14 @@ export default function Popularity() {
         // Primero obtenemos todos los usuarios con sus datos básicos
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('id, username, avatar_url, career, semester');
+          .select('id, username, avatar_url');
 
         if (profilesError) {
           console.error('Error al obtener perfiles:', profilesError);
           throw profilesError;
         }
 
-        if (!profiles) {
+        if (!profiles || profiles.length === 0) {
           console.log('No se encontraron perfiles');
           setPopularUsers([]);
           setLoading(false);
@@ -49,12 +49,14 @@ export default function Popularity() {
               .eq('friend_id', profile.id)
               .eq('status', 'accepted');
 
+            // Dado que no tenemos career y semester en la tabla profiles,
+            // los establecemos como null por ahora
             return {
               id: profile.id,
               username: profile.username,
               avatar_url: profile.avatar_url,
-              career: profile.career,
-              semester: profile.semester,
+              career: null, // Como no existe esta columna, lo dejamos como null
+              semester: null, // Como no existe esta columna, lo dejamos como null
               followers_count: count || 0
             } as PopularUserProfile;
           })
@@ -66,14 +68,8 @@ export default function Popularity() {
 
         setPopularUsers(sortedUsers);
 
-        // Extraer carreras únicas para filtros
-        const uniqueCareers = [...new Set(
-          sortedUsers
-            .map(user => user.career)
-            .filter(Boolean)
-        )] as string[];
-
-        setCareerFilters(uniqueCareers);
+        // Como no tenemos carreras reales, no podemos filtrar por ellas
+        setCareerFilters([]);
       } catch (error) {
         console.error('Error al cargar usuarios populares:', error);
       } finally {
@@ -125,25 +121,27 @@ export default function Popularity() {
               Los usuarios con más corazones (seguidores) ocupan los primeros lugares. ¡Sigue a otros usuarios para ganar popularidad!
             </p>
 
-            <div className="flex flex-wrap gap-2 mb-6">
-              <Button 
-                variant={filter === null ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilter(null)}
-              >
-                Todos
-              </Button>
-              {careerFilters.map((career) => (
-                <Button
-                  key={career}
-                  variant={filter === career ? "default" : "outline"}
+            {careerFilters.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-6">
+                <Button 
+                  variant={filter === null ? "default" : "outline"}
                   size="sm"
-                  onClick={() => setFilter(career)}
+                  onClick={() => setFilter(null)}
                 >
-                  {career}
+                  Todos
                 </Button>
-              ))}
-            </div>
+                {careerFilters.map((career) => (
+                  <Button
+                    key={career}
+                    variant={filter === career ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setFilter(career)}
+                  >
+                    {career}
+                  </Button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="space-y-4">
