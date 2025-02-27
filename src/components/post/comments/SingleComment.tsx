@@ -62,7 +62,7 @@ export function SingleComment({
         </Avatar>
         <div className="flex-1 max-w-[70%]">
           <div className="bg-muted p-1.5 rounded-lg">
-            <div className="flex justify-between items-start gap-1">
+            <div className="flex justify-between items-start">
               <p className="font-medium text-xs">{comment.profiles?.username}</p>
               {isAuthor && (
                 <DropdownMenu>
@@ -70,7 +70,7 @@ export function SingleComment({
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="h-5 w-5 p-0 hover:bg-accent rounded-full -mt-0.5"
+                      className="h-5 w-5 p-0 hover:bg-accent rounded-full ml-1"
                     >
                       <MoreVertical className="h-3 w-3" />
                     </Button>

@@ -22,6 +22,7 @@ export interface Post {
   created_at: string;
   updated_at: string;
   poll?: Poll | null;
+  shared_from?: string | null;
   profiles?: {
     username: string | null;
     avatar_url: string | null;

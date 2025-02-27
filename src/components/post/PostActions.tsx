@@ -21,6 +21,7 @@ import { ReactionDetails } from "./reactions/ReactionDetails";
 import { ReactionButton } from "./reactions/ReactionButton";
 import { type ReactionType } from "./reactions/ReactionIcons";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PostActionsProps {
   post: Post;
@@ -63,6 +64,58 @@ export function PostActions({
       } catch (error) {
         console.error("Error sharing:", error);
       }
+    }
+  };
+
+  const handleShareToProfile = async () => {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user.id;
+      
+      if (!userId) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Debes iniciar sesión para compartir",
+        });
+        return;
+      }
+
+      // Crear una nueva publicación que hace referencia a la original
+      const sharedContent = `Compartido: ${post.content}`;
+      
+      const { data, error } = await supabase
+        .from('posts')
+        .insert({
+          content: sharedContent,
+          user_id: userId,
+          media_url: post.media_url,
+          media_type: post.media_type,
+          visibility: 'public',
+          shared_from: post.id
+        });
+
+      if (error) {
+        console.error("Error sharing post:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No se pudo compartir la publicación",
+        });
+      } else {
+        toast({
+          title: "¡Publicación compartida!",
+          description: "La publicación ha sido compartida en tu perfil",
+        });
+        setShowShareOptions(false);
+      }
+    } catch (error) {
+      console.error("Error in share function:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Ocurrió un error al compartir la publicación",
+      });
     }
   };
 
@@ -124,6 +177,10 @@ export function PostActions({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={handleShareToProfile}>
+              <Share className="h-4 w-4 mr-2" />
+              Compartir en mi perfil
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleCopyLink}>
               <Link2 className="h-4 w-4 mr-2" />
               Copiar enlace
