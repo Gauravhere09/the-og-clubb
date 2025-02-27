@@ -2,7 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, BookOpen, Heart, Award, Medal } from "lucide-react";
+import { GraduationCap, BookOpen, Heart, Award, Medal, Trophy } from "lucide-react";
 import { FollowButton } from "@/components/FollowButton";
 import type { PopularUserProfile } from "@/types/database/follow.types";
 
@@ -28,11 +28,11 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
           <div className="p-6 relative">
             <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground w-10 h-10 rounded-full flex items-center justify-center">
               {index === 0 ? (
-                <Award className="h-6 w-6" />
+                <Trophy className="h-6 w-6" />
               ) : index === 1 ? (
-                <Medal className="h-6 w-6" />
+                <Medal className="h-6 w-6 fill-gray-200" />
               ) : (
-                <span className="text-lg font-bold">3</span>
+                <Medal className="h-6 w-6 fill-amber-800" />
               )}
             </div>
             
