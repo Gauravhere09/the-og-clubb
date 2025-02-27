@@ -139,14 +139,19 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
     if (Array.isArray(sharedPosts)) {
       for (let i = 0; i < sharedPosts.length; i++) {
         const post = sharedPosts[i];
-        // Make sure post is not null and has a valid id
-        if (post && typeof post === 'object' && 'id' in post && post.id) {
+        if (post && typeof post === 'object' && 'id' in post) {
           postsMap[post.id] = {
-            ...post,
-            // Safely access post.id to avoid TS errors
             id: post.id,
-            // Safely access other properties as needed
-            content: post.content ?? ''
+            content: post.content ?? '',
+            user_id: post.user_id,
+            media_url: post.media_url,
+            media_type: post.media_type,
+            visibility: post.visibility,
+            poll: post.poll,
+            created_at: post.created_at,
+            updated_at: post.updated_at,
+            shared_from: post.shared_from,
+            profiles: post.profiles
           };
         }
       }

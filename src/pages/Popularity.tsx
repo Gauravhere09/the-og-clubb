@@ -9,6 +9,7 @@ import { FilterButtons } from "@/components/popularity/FilterButtons";
 import { LoadingState } from "@/components/popularity/LoadingState";
 import type { PopularUserProfile } from "@/types/database/follow.types";
 import type { ProfileTable } from "@/types/database/profile.types";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Popularity() {
   const [popularUsers, setPopularUsers] = useState<PopularUserProfile[]>([]);
@@ -16,18 +17,24 @@ export default function Popularity() {
   const [filter, setFilter] = useState<string | null>(null);
   const [careerFilters, setCareerFilters] = useState<string[]>([]);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchPopularUsers = async () => {
       setLoading(true);
       try {
-        // Fetching all profiles from the database
+        // Fetching all profiles from the database with career and semester
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('id, username, avatar_url, career, semester') as { data: ProfileTable['Row'][] | null; error: Error | null };
+          .select('id, username, avatar_url, career, semester');
 
         if (profilesError) {
           console.error('Error al obtener perfiles:', profilesError);
+          toast({
+            title: "Error",
+            description: "No se pudieron cargar los perfiles de usuarios",
+            variant: "destructive"
+          });
           throw profilesError;
         }
 
@@ -39,6 +46,11 @@ export default function Popularity() {
         }
 
         console.log('Perfiles obtenidos:', profiles);
+        
+        // Log each profile's career and semester to debug
+        profiles.forEach(profile => {
+          console.log(`Usuario: ${profile.username}, Carrera: ${profile.career || 'No definida'}, Semestre: ${profile.semester || 'No definido'}`);
+        });
 
         // For each profile, count their followers
         const usersWithFollowers = await Promise.all(
@@ -64,7 +76,7 @@ export default function Popularity() {
         const sortedUsers = usersWithFollowers
           .sort((a, b) => b.followers_count - a.followers_count);
 
-        console.log('Usuarios ordenados:', sortedUsers);
+        console.log('Usuarios ordenados con carrera y semestre:', sortedUsers);
         setPopularUsers(sortedUsers);
 
         // Extract unique careers for filtering
@@ -77,13 +89,18 @@ export default function Popularity() {
         setCareerFilters(uniqueCareers);
       } catch (error) {
         console.error('Error al cargar usuarios populares:', error);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los usuarios populares",
+          variant: "destructive"
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchPopularUsers();
-  }, []);
+  }, [toast]);
 
   const handleProfileClick = (userId: string) => {
     navigate(`/profile/${userId}`);
