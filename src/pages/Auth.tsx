@@ -22,9 +22,8 @@ export default function Auth() {
     try {
       console.log("Enviando correo de verificación a:", email);
       
-      // Obtenemos la URL de la API de funciones de Supabase
-      const supabaseUrl = supabase.supabaseUrl;
-      const functionsUrl = `${supabaseUrl}/functions/v1/send-verification`;
+      // Definir la URL de la función directamente
+      const functionsUrl = "https://wgbbaxvuuinubkgffpiq.supabase.co/functions/v1/send-verification";
       
       console.log("URL de la función:", functionsUrl);
       
