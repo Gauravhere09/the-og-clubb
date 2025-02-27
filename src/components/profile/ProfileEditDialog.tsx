@@ -61,18 +61,11 @@ export function ProfileEditDialog({
         updated_at: new Date().toISOString(),
       };
 
-      // Verificar si la tabla soporta estos campos
-      const { data: tableInfo } = await supabase.rpc('check_column_exists', { 
-        table_name: 'profiles', 
-        column_name: 'career' 
-      });
-
-      const careerExists = tableInfo;
-      
-      if (careerExists) {
-        updateData.career = formData.career;
-        updateData.semester = formData.semester;
-      }
+      // Verificamos si los campos career y semester están en la tabla
+      // Sin usar la RPC ya que causa problemas de tipos
+      // Simplemente vamos a intentar actualizar todos los campos
+      updateData.career = formData.career;
+      updateData.semester = formData.semester;
 
       const { data, error } = await supabase
         .from("profiles")
@@ -90,13 +83,10 @@ export function ProfileEditDialog({
           username: data.username,
           bio: data.bio,
           updated_at: data.updated_at,
+          // Mantener los campos originales si no están en la respuesta
+          career: data.career !== undefined ? data.career : profile.career,
+          semester: data.semester !== undefined ? data.semester : profile.semester
         };
-
-        // Solo actualizar estos campos si existen en la tabla
-        if (careerExists) {
-          updatedProfile.career = data.career;
-          updatedProfile.semester = data.semester;
-        }
         
         onUpdate(updatedProfile);
         toast({
