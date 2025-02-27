@@ -21,61 +21,86 @@ export async function getPosts(userId?: string) {
       .limit(1)
       .maybeSingle();
     
-    // Determine the columns to select based on column existence
-    const columnsToSelect = columnCheckError ? `
-      id,
-      content,
-      user_id,
-      media_url,
-      media_type,
-      visibility,
-      poll,
-      created_at,
-      updated_at,
-      profiles (
-        username,
-        avatar_url
-      )
-    ` : `
-      id,
-      content,
-      user_id,
-      media_url,
-      media_type,
-      visibility,
-      poll,
-      created_at,
-      updated_at,
-      shared_from,
-      profiles (
-        username,
-        avatar_url
-      )
-    `;
+    // Determine if shared_from column exists
+    const hasSharedFromColumn = !columnCheckError;
+    
+    // Execute the appropriate query based on column existence
+    let rawPosts;
+    
+    if (hasSharedFromColumn) {
+      // Query with shared_from
+      const query = supabase
+        .from('posts')
+        .select(`
+          id,
+          content,
+          user_id,
+          media_url,
+          media_type,
+          visibility,
+          poll,
+          created_at,
+          updated_at,
+          shared_from,
+          profiles (
+            username,
+            avatar_url
+          )
+        `);
 
-    const query = supabase
-      .from('posts')
-      .select(columnsToSelect);
+      if (userId) {
+        query.eq('user_id', userId);
+      }
 
-    if (userId) {
-      query.eq('user_id', userId);
+      const { data, error } = await query
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      if (!data) return [];
+      
+      rawPosts = data;
+    } else {
+      // Query without shared_from
+      const query = supabase
+        .from('posts')
+        .select(`
+          id,
+          content,
+          user_id,
+          media_url,
+          media_type,
+          visibility,
+          poll,
+          created_at,
+          updated_at,
+          profiles (
+            username,
+            avatar_url
+          )
+        `);
+
+      if (userId) {
+        query.eq('user_id', userId);
+      }
+
+      const { data, error } = await query
+        .order('created_at', { ascending: false });
+        
+      if (error) throw error;
+      if (!data) return [];
+      
+      rawPosts = data;
     }
-
-    const { data: rawPosts, error: postsError } = await query
-      .order('created_at', { ascending: false });
-
-    if (postsError) throw postsError;
-    if (!rawPosts) return [];
 
     // Collect IDs of shared posts to fetch their details
     // Only proceed if shared_from column exists
     let sharedPostIds: string[] = [];
     let sharedPostsMap = {};
     
-    if (!columnCheckError) {
+    if (hasSharedFromColumn) {
       sharedPostIds = rawPosts
-        .filter(post => 'shared_from' in post && post.shared_from)
-        .map(post => post.shared_from!)
+        .filter(post => post.shared_from)
+        .map(post => post.shared_from)
         .filter(Boolean) as string[];
 
       // Get shared posts data if there are any
@@ -98,12 +123,12 @@ export async function getPosts(userId?: string) {
       userReactionsMap = await fetchUserReactions(user.id, rawPosts.map(p => p.id));
 
       // Get user's poll votes
-      if (rawPosts.some(post => 'poll' in post && post.poll)) {
+      if (rawPosts.some(post => post.poll)) {
         votesMap = await fetchUserPollVotes(user.id);
         
         // Update poll data with user votes
         rawPosts.forEach(post => {
-          if ('poll' in post && post.poll && typeof post.poll === 'object') {
+          if (post.poll && typeof post.poll === 'object') {
             // Safely update the poll object with typechecking
             const pollObj = post.poll as Record<string, any>;
             pollObj.user_vote = votesMap[post.id] || null;
@@ -133,7 +158,7 @@ export async function getPosts(userId?: string) {
     return rawPosts.map((post): Post => {
       // If this post is sharing another post, include the shared post details
       // Only if shared_from exists in the database
-      const sharedPost = !columnCheckError && 'shared_from' in post && post.shared_from && 
+      const sharedPost = hasSharedFromColumn && post.shared_from && 
                          sharedPostsMap[post.shared_from as string] 
         ? {
             id: sharedPostsMap[post.shared_from as string].id,
@@ -160,7 +185,7 @@ export async function getPosts(userId?: string) {
         updated_at: post.updated_at,
         profiles: post.profiles,
         poll: transformPoll(post.poll),
-        shared_from: !columnCheckError && 'shared_from' in post ? post.shared_from : null,
+        shared_from: hasSharedFromColumn ? post.shared_from : null,
         shared_post: sharedPost,
         user_reaction: userReactionsMap[post.id] as Post['user_reaction'],
         reactions: reactionsMap[post.id] || { count: 0, by_type: {} },

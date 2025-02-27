@@ -13,44 +13,58 @@ export async function fetchPostById(postId: string): Promise<Post | null> {
       .maybeSingle();
     
     // If shared_from column doesn't exist, use a query without it
-    const columnsToSelect = columnCheckError ? `
-      id,
-      content,
-      user_id,
-      media_url,
-      media_type,
-      visibility,
-      poll,
-      created_at,
-      updated_at,
-      profiles (
-        username,
-        avatar_url
-      )
-    ` : `
-      id,
-      content,
-      user_id,
-      media_url,
-      media_type,
-      visibility,
-      poll,
-      created_at,
-      updated_at,
-      shared_from,
-      profiles (
-        username,
-        avatar_url
-      )
-    `;
-
-    const { data: post, error } = await supabase
-      .from('posts')
-      .select(columnsToSelect)
-      .eq('id', postId)
-      .single();
-
-    if (error || !post) return null;
+    const hasSharedFromColumn = !columnCheckError;
+    
+    let post;
+    
+    if (hasSharedFromColumn) {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          id,
+          content,
+          user_id,
+          media_url,
+          media_type,
+          visibility,
+          poll,
+          created_at,
+          updated_at,
+          shared_from,
+          profiles (
+            username,
+            avatar_url
+          )
+        `)
+        .eq('id', postId)
+        .single();
+        
+      if (error || !data) return null;
+      post = data;
+    } else {
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          id,
+          content,
+          user_id,
+          media_url,
+          media_type,
+          visibility,
+          poll,
+          created_at,
+          updated_at,
+          profiles (
+            username,
+            avatar_url
+          )
+        `)
+        .eq('id', postId)
+        .single();
+        
+      if (error || !data) return null;
+      post = data;
+    }
 
     // Transform to Post type
     return {
@@ -64,7 +78,7 @@ export async function fetchPostById(postId: string): Promise<Post | null> {
       updated_at: post.updated_at,
       profiles: post.profiles,
       poll: transformPoll(post.poll),
-      shared_from: 'shared_from' in post ? post.shared_from : null,
+      shared_from: hasSharedFromColumn ? post.shared_from : null,
       shared_post: null,
       reactions: { count: 0, by_type: {} },
       reactions_count: 0,
@@ -116,7 +130,9 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
     if (error || !sharedPosts?.length) return {};
     
     return sharedPosts.reduce((acc, post) => {
-      acc[post.id] = post;
+      if (post && typeof post === 'object' && 'id' in post) {
+        acc[post.id] = post;
+      }
       return acc;
     }, {} as Record<string, any>);
   }
