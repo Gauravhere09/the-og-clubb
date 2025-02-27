@@ -54,43 +54,43 @@ export function SingleComment({
   };
 
   return (
-    <div className={`${isReply ? "ml-12" : ""} space-y-2`}>
+    <div className={`${isReply ? "ml-12" : ""} space-y-1`}>
       <div className="flex items-start gap-2">
-        <Avatar className="h-7 w-7">
+        <Avatar className="h-6 w-6">
           <AvatarImage src={comment.profiles?.avatar_url} />
           <AvatarFallback>{comment.profiles?.username?.[0]}</AvatarFallback>
         </Avatar>
         <div className="flex-1">
-          <div className="bg-muted p-2 rounded-lg">
-            <div className="flex justify-between items-start gap-2">
-              <p className="font-medium text-sm">{comment.profiles?.username}</p>
+          <div className="bg-muted p-1.5 rounded-lg">
+            <div className="flex justify-between items-start gap-1">
+              <p className="font-medium text-xs">{comment.profiles?.username}</p>
               {isAuthor && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      className="h-6 w-6 p-0 hover:bg-accent rounded-full"
+                      className="h-5 w-5 p-0 hover:bg-accent rounded-full -mt-0.5"
                     >
-                      <MoreVertical className="h-4 w-4" />
+                      <MoreVertical className="h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent 
                     align="end" 
-                    className="w-48"
+                    className="w-40"
                   >
                     <DropdownMenuItem 
-                      className="cursor-pointer"
+                      className="cursor-pointer text-xs py-1"
                       onClick={() => setIsEditing(true)}
                     >
-                      <Pencil className="h-4 w-4 mr-2" />
+                      <Pencil className="h-3 w-3 mr-2" />
                       <span>Editar</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem 
-                      className="cursor-pointer text-destructive focus:text-destructive"
+                      className="cursor-pointer text-destructive focus:text-destructive text-xs py-1"
                       onClick={() => onDeleteComment(comment.id)}
                     >
-                      <Trash2 className="h-4 w-4 mr-2" />
+                      <Trash2 className="h-3 w-3 mr-2" />
                       <span>Eliminar</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -98,25 +98,25 @@ export function SingleComment({
               )}
             </div>
             {isEditing ? (
-              <div className="mt-2 flex gap-2">
+              <div className="mt-1 flex gap-2">
                 <Input
                   value={editedContent}
                   onChange={(e) => setEditedContent(e.target.value)}
-                  className="flex-1"
+                  className="flex-1 h-7 text-xs"
                 />
-                <Button size="sm" onClick={handleSaveEdit}>Guardar</Button>
+                <Button size="sm" className="h-7 text-xs py-0" onClick={handleSaveEdit}>Guardar</Button>
               </div>
             ) : (
               <>
                 {isAudioComment ? (
-                  <audio src={audioUrl || undefined} controls className="mt-2 max-w-[200px]" />
+                  <audio src={audioUrl || undefined} controls className="mt-1 max-w-[180px] h-8" />
                 ) : (
-                  <p className="text-sm whitespace-pre-wrap">{comment.content}</p>
+                  <p className="text-xs whitespace-pre-wrap">{comment.content}</p>
                 )}
               </>
             )}
           </div>
-          <div className="flex items-center gap-4 mt-1">
+          <div className="flex items-center gap-3 mt-0.5">
             <CommentReactions
               commentId={comment.id}
               userReaction={comment.user_reaction as ReactionType | null}
