@@ -6,7 +6,8 @@ import {
   fetchPostsReactions, 
   fetchPostsComments, 
   fetchUserReactions,
-  fetchUserPollVotes 
+  fetchUserPollVotes,
+  fetchSharedPosts
 } from "./queries";
 
 export async function getPosts(userId?: string) {
@@ -25,6 +26,7 @@ export async function getPosts(userId?: string) {
         poll,
         created_at,
         updated_at,
+        shared_from,
         profiles (
           username,
           avatar_url
@@ -41,8 +43,16 @@ export async function getPosts(userId?: string) {
     if (postsError) throw postsError;
     if (!rawPosts) return [];
 
-    // Since shared_from doesn't exist in the DB, we'll ignore it for now
-    const sharedPostIds: string[] = [];
+    // Collect IDs of shared posts to fetch their details
+    const sharedPostIds: string[] = rawPosts
+      .filter(post => post.shared_from)
+      .map(post => post.shared_from)
+      .filter(Boolean) as string[];
+
+    // Get shared posts data if there are any
+    const sharedPostsMap = sharedPostIds.length 
+      ? await fetchSharedPosts(sharedPostIds)
+      : {};
     
     // Get reactions data
     const reactionsData = await fetchPostsReactions(rawPosts.map(p => p.id));
@@ -90,24 +100,42 @@ export async function getPosts(userId?: string) {
     }, {} as Record<string, number>);
 
     // Transform posts data
-    return rawPosts.map((post): Post => ({
-      id: post.id,
-      content: post.content || '',
-      user_id: post.user_id,
-      media_url: post.media_url,
-      media_type: post.media_type as Post['media_type'],
-      visibility: post.visibility as Post['visibility'],
-      created_at: post.created_at,
-      updated_at: post.updated_at,
-      profiles: post.profiles,
-      poll: transformPoll(post.poll),
-      shared_from: null,
-      shared_post: null,
-      user_reaction: userReactionsMap[post.id] as Post['user_reaction'],
-      reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
-      reactions_count: reactionsMap[post.id]?.count || 0,
-      comments_count: commentsCountMap[post.id] || 0
-    }));
+    return rawPosts.map((post): Post => {
+      // If this post is sharing another post, include the shared post details
+      const sharedPost = post.shared_from && sharedPostsMap[post.shared_from] 
+        ? {
+            id: sharedPostsMap[post.shared_from].id,
+            content: sharedPostsMap[post.shared_from].content || '',
+            user_id: sharedPostsMap[post.shared_from].user_id,
+            media_url: sharedPostsMap[post.shared_from].media_url,
+            media_type: sharedPostsMap[post.shared_from].media_type,
+            visibility: sharedPostsMap[post.shared_from].visibility,
+            created_at: sharedPostsMap[post.shared_from].created_at,
+            updated_at: sharedPostsMap[post.shared_from].updated_at,
+            profiles: sharedPostsMap[post.shared_from].profiles,
+            poll: transformPoll(sharedPostsMap[post.shared_from].poll),
+          } as Post
+        : null;
+
+      return {
+        id: post.id,
+        content: post.content || '',
+        user_id: post.user_id,
+        media_url: post.media_url,
+        media_type: post.media_type as Post['media_type'],
+        visibility: post.visibility as Post['visibility'],
+        created_at: post.created_at,
+        updated_at: post.updated_at,
+        profiles: post.profiles,
+        poll: transformPoll(post.poll),
+        shared_from: post.shared_from,
+        shared_post: sharedPost,
+        user_reaction: userReactionsMap[post.id] as Post['user_reaction'],
+        reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
+        reactions_count: reactionsMap[post.id]?.count || 0,
+        comments_count: commentsCountMap[post.id] || 0
+      };
+    });
   } catch (error) {
     console.error('Error fetching posts:', error);
     throw error;

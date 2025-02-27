@@ -1,5 +1,6 @@
 
-// Re-export all query functions
+// This file re-exports the query functions
+// from the new more focused files for backward compatibility
 export * from './post';
 export * from './reactions';
 export * from './comments';

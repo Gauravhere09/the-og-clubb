@@ -17,6 +17,7 @@ export async function fetchPostById(postId: string): Promise<Post | null> {
         poll,
         created_at,
         updated_at,
+        shared_from,
         profiles (
           username,
           avatar_url
@@ -39,7 +40,7 @@ export async function fetchPostById(postId: string): Promise<Post | null> {
       updated_at: post.updated_at,
       profiles: post.profiles,
       poll: transformPoll(post.poll),
-      shared_from: null,
+      shared_from: post.shared_from,
       shared_post: null,
       reactions: { count: 0, by_type: {} },
       reactions_count: 0,
@@ -67,6 +68,7 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
         poll,
         created_at,
         updated_at,
+        shared_from,
         profiles (
           username,
           avatar_url
@@ -80,7 +82,8 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
       acc[post.id] = post;
       return acc;
     }, {} as Record<string, any>);
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching shared posts:", error);
     return {};
   }
