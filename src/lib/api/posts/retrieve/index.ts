@@ -1,6 +1,10 @@
 
 import { Post } from "@/types/post";
-import { checkSharedFromColumn, fetchRawPosts, transformPostsData } from "./fetch-posts";
+import { 
+  checkSharedFromColumn, 
+  fetchRawPosts, 
+  transformPostsData 
+} from "./utils";
 
 /**
  * Main function to get posts, optionally filtered by user ID
