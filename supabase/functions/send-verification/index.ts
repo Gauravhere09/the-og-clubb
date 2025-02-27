@@ -38,28 +38,35 @@ serve(async (req) => {
     const { data, error } = await resend.emails.send({
       from: "H1Z <onboarding@resend.dev>",
       to: [email],
-      subject: "Verifica tu correo electrónico - H1Z",
+      subject: "Confirma tu registro en H1Z - Tu Red Social Académica",
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h1 style="color: #333; text-align: center;">¡Bienvenido a H1Z!</h1>
-          <p style="color: #666; font-size: 16px; line-height: 1.5;">
-            Hola ${username},
-          </p>
-          <p style="color: #666; font-size: 16px; line-height: 1.5;">
-            Gracias por registrarte en H1Z. Para completar tu registro, por favor verifica tu correo electrónico haciendo clic en el enlace que recibiste en un correo separado de Supabase.
-          </p>
-          <p style="color: #666; font-size: 16px; line-height: 1.5;">
-            <strong>Importante:</strong>
-          </p>
-          <ul style="color: #666; font-size: 16px; line-height: 1.5;">
-            <li>Después de verificar tu correo, podrás iniciar sesión en tu cuenta.</li>
-            <li>Si no recibes el correo de verificación, revisa tu carpeta de spam.</li>
-            <li>El enlace de verificación expirará en 24 horas.</li>
-          </ul>
-          <p style="color: #666; font-size: 16px; line-height: 1.5;">
-            Si tienes algún problema, no dudes en contactarnos.
-          </p>
-          <div style="text-align: center; margin-top: 30px;">
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+          <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #333; margin: 0;">¡Hola ${username}!</h1>
+            </div>
+            
+            <div style="color: #666; font-size: 16px; line-height: 1.6;">
+              <p>Gracias por registrarte en H1Z, tu red social académica. Para activar tu cuenta y comenzar a conectar con otros estudiantes, por favor confirma tu correo electrónico haciendo clic en el enlace que recibirás en un correo separado.</p>
+              
+              <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <p style="margin: 0; color: #444;"><strong>Importante:</strong></p>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                  <li>El enlace de verificación expirará en 24 horas.</li>
+                  <li>Si no encuentras el correo, revisa tu carpeta de spam.</li>
+                  <li>Una vez verificado tu correo, podrás acceder a todas las funcionalidades de H1Z.</li>
+                </ul>
+              </div>
+
+              <p>Si no has sido tú quien realizó este registro, por favor ignora este mensaje.</p>
+              
+              <p style="margin-top: 30px;">¡Te esperamos en H1Z!</p>
+              
+              <p style="margin-bottom: 0;">Atentamente,<br>El equipo de H1Z</p>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin-top: 20px;">
             <p style="color: #999; font-size: 14px;">
               Este es un correo automático, por favor no respondas a este mensaje.
             </p>
