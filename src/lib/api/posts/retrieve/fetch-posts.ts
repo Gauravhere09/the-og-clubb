@@ -209,7 +209,7 @@ export async function transformPostsData(
         user_reaction: userReactionsMap[post.id] as Post['user_reaction'],
         reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
         reactions_count: reactionsMap[post.id]?.count || 0,
-        comments_count: commentsMap[post.id] || 0
+        comments_count: commentsCountMap[post.id] || 0
       };
     });
   } catch (error) {

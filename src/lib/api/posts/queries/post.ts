@@ -132,15 +132,19 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
       
     if (error || !sharedPosts?.length) return {};
     
-    // First filter out null posts, then create a map of post IDs to posts
-    return sharedPosts
-      .filter((post): post is NonNullable<typeof post> => post !== null)
-      .reduce((acc, post) => {
-        if (post && post.id) {  // Extra null check for TypeScript
-          acc[post.id] = post;
+    // Create a map of post IDs to posts with explicit type checking
+    const postsMap: Record<string, any> = {};
+    
+    // Manually iterate through the posts to verify each one has an id
+    if (Array.isArray(sharedPosts)) {
+      sharedPosts.forEach(post => {
+        if (post && typeof post === 'object' && 'id' in post && post.id) {
+          postsMap[post.id] = post;
         }
-        return acc;
-      }, {} as Record<string, any>);
+      });
+    }
+    
+    return postsMap;
   }
   catch (error) {
     console.error("Error fetching shared posts:", error);
