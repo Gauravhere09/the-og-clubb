@@ -5,28 +5,52 @@ import { transformPoll } from "../utils";
 
 export async function fetchPostById(postId: string): Promise<Post | null> {
   try {
+    // Check if shared_from column exists
+    const { error: columnCheckError } = await supabase
+      .from('posts')
+      .select('shared_from')
+      .limit(1)
+      .maybeSingle();
+    
+    // If shared_from column doesn't exist, use a query without it
+    const columnsToSelect = columnCheckError ? `
+      id,
+      content,
+      user_id,
+      media_url,
+      media_type,
+      visibility,
+      poll,
+      created_at,
+      updated_at,
+      profiles (
+        username,
+        avatar_url
+      )
+    ` : `
+      id,
+      content,
+      user_id,
+      media_url,
+      media_type,
+      visibility,
+      poll,
+      created_at,
+      updated_at,
+      shared_from,
+      profiles (
+        username,
+        avatar_url
+      )
+    `;
+
     const { data: post, error } = await supabase
       .from('posts')
-      .select(`
-        id,
-        content,
-        user_id,
-        media_url,
-        media_type,
-        visibility,
-        poll,
-        created_at,
-        updated_at,
-        shared_from,
-        profiles (
-          username,
-          avatar_url
-        )
-      `)
+      .select(columnsToSelect)
       .eq('id', postId)
       .single();
 
-    if (error) return null;
+    if (error || !post) return null;
 
     // Transform to Post type
     return {
@@ -40,7 +64,7 @@ export async function fetchPostById(postId: string): Promise<Post | null> {
       updated_at: post.updated_at,
       profiles: post.profiles,
       poll: transformPoll(post.poll),
-      shared_from: post.shared_from,
+      shared_from: 'shared_from' in post ? post.shared_from : null,
       shared_post: null,
       reactions: { count: 0, by_type: {} },
       reactions_count: 0,
@@ -56,6 +80,19 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
   if (!sharedPostIds.length) return {};
   
   try {
+    // Check if shared_from column exists
+    const { error: columnCheckError } = await supabase
+      .from('posts')
+      .select('shared_from')
+      .limit(1)
+      .maybeSingle();
+    
+    // If shared_from column doesn't exist, return empty object
+    if (columnCheckError) {
+      console.warn("shared_from column doesn't exist in posts table");
+      return {};
+    }
+    
     const { data: sharedPosts, error } = await supabase
       .from('posts')
       .select(`
