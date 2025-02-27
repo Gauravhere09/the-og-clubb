@@ -66,6 +66,8 @@ export default function Profile() {
           return;
         }
 
+        const typedProfileData = profileData as ProfileTable['Row'];
+
         // Get followers count
         const { count: followersCount, error: followersError } = await supabase
           .from('friendships')
@@ -79,20 +81,19 @@ export default function Profile() {
 
         // Crear el objeto Profile con los datos obtenidos
         const newProfile: Profile = {
-          id: profileData.id,
-          username: profileData.username,
-          bio: profileData.bio,
-          avatar_url: profileData.avatar_url,
-          cover_url: profileData.cover_url,
+          id: typedProfileData.id,
+          username: typedProfileData.username,
+          bio: typedProfileData.bio,
+          avatar_url: typedProfileData.avatar_url,
+          cover_url: typedProfileData.cover_url,
           location: null,
           education: null,
-          // Usar type assertion para manejar campos que podrían no existir
-          career: profileData.career as string | null || null,
-          semester: profileData.semester as string | null || null,
+          career: typedProfileData.career,
+          semester: typedProfileData.semester,
           relationship_status: null,
           followers_count: followersCount || 0,
-          created_at: profileData.created_at,
-          updated_at: profileData.updated_at
+          created_at: typedProfileData.created_at,
+          updated_at: typedProfileData.updated_at
         };
 
         setProfile(newProfile);

@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/pages/Profile";
+import type { ProfileTable } from "@/types/database/profile.types";
 import { useToast } from "@/hooks/use-toast";
 
 interface ProfileEditDialogProps {
@@ -54,18 +55,13 @@ export function ProfileEditDialog({
     setIsLoading(true);
 
     try {
-      // Solo actualizar los campos que existen en la tabla de perfiles de Supabase
-      const updateData: Record<string, any> = {
+      const updateData: ProfileTable['Update'] = {
         username: formData.username,
         bio: formData.bio,
+        career: formData.career,
+        semester: formData.semester,
         updated_at: new Date().toISOString(),
       };
-
-      // Verificamos si los campos career y semester están en la tabla
-      // Sin usar la RPC ya que causa problemas de tipos
-      // Simplemente vamos a intentar actualizar todos los campos
-      updateData.career = formData.career;
-      updateData.semester = formData.semester;
 
       const { data, error } = await supabase
         .from("profiles")
@@ -77,15 +73,14 @@ export function ProfileEditDialog({
       if (error) throw error;
 
       if (data) {
-        // Crear un objeto actualizado con todos los campos originales más los actualizados
+        const profileData = data as ProfileTable['Row'];
         const updatedProfile: Profile = {
           ...profile,
-          username: data.username,
-          bio: data.bio,
-          updated_at: data.updated_at,
-          // Mantener los campos originales si no están en la respuesta
-          career: data.career !== undefined ? data.career : profile.career,
-          semester: data.semester !== undefined ? data.semester : profile.semester
+          username: profileData.username,
+          bio: profileData.bio,
+          updated_at: profileData.updated_at,
+          career: profileData.career,
+          semester: profileData.semester
         };
         
         onUpdate(updatedProfile);
