@@ -19,7 +19,6 @@ export interface PostTable {
     } | null;
     created_at: string;
     updated_at: string;
-    shared_from: string | null;
   };
   Insert: {
     id?: string;
@@ -40,7 +39,6 @@ export interface PostTable {
     visibility?: 'public' | 'friends' | 'private';
     created_at?: string;
     updated_at?: string;
-    shared_from?: string | null;
   };
   Update: {
     id?: string;
@@ -61,7 +59,6 @@ export interface PostTable {
     visibility?: 'public' | 'friends' | 'private';
     created_at?: string;
     updated_at?: string;
-    shared_from?: string | null;
   };
 }
 

@@ -34,7 +34,7 @@ export function usePollVoteMutation(postId: string) {
         .single();
         
       if (postData && postData.poll) {
-        const updatedPoll = { ...postData.poll };
+        const updatedPoll = JSON.parse(JSON.stringify(postData.poll));
         updatedPoll.total_votes = (updatedPoll.total_votes || 0) + 1;
         
         const optionIndex = updatedPoll.options.findIndex((opt: any) => opt.id === optionId);

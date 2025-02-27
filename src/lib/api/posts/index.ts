@@ -55,57 +55,61 @@ export async function createPost({
     } as Tables['posts']['Insert'];
 
     // First insert the post
-    const { data: rawPost, error: insertError } = await supabase
-      .from('posts')
-      .insert(insertData)
-      .select(`
-        id,
-        content,
-        user_id,
-        media_url,
-        media_type,
-        visibility,
-        poll,
-        created_at,
-        updated_at,
-        shared_from
-      `)
-      .single();
+    try {
+      const { data: rawPost, error: insertError } = await supabase
+        .from('posts')
+        .insert(insertData)
+        .select(`
+          id,
+          content,
+          user_id,
+          media_url,
+          media_type,
+          visibility,
+          poll,
+          created_at,
+          updated_at
+        `)
+        .single();
 
-    if (insertError) throw insertError;
-    if (!rawPost) throw new Error('Failed to create post');
+      if (insertError) throw insertError;
+      if (!rawPost) throw new Error('Failed to create post');
 
-    // Then get the profile data
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('username, avatar_url')
-      .eq('id', user.id)
-      .single();
+      // Then get the profile data
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', user.id)
+        .single();
 
-    if (profileError) throw profileError;
+      if (profileError) throw profileError;
 
-    // Send notifications to friends
-    await sendNewPostNotifications(user.id, rawPost.id);
+      // Send notifications to friends
+      await sendNewPostNotifications(user.id, rawPost.id);
 
-    // Transform the raw post to match Post type
-    const post: Post = {
-      id: rawPost.id,
-      content: rawPost.content || '',
-      user_id: rawPost.user_id,
-      media_url: rawPost.media_url,
-      media_type: rawPost.media_type as 'image' | 'video' | 'audio' | null,
-      visibility: rawPost.visibility as 'public' | 'friends' | 'private',
-      created_at: rawPost.created_at,
-      updated_at: rawPost.updated_at,
-      shared_from: rawPost.shared_from,
-      profiles: profileData,
-      poll: transformPoll(rawPost.poll),
-      reactions: { count: 0, by_type: {} },
-      reactions_count: 0,
-      comments_count: 0
-    };
+      // Transform the raw post to match Post type
+      const post: Post = {
+        id: rawPost.id,
+        content: rawPost.content || '',
+        user_id: rawPost.user_id,
+        media_url: rawPost.media_url,
+        media_type: rawPost.media_type as 'image' | 'video' | 'audio' | null,
+        visibility: rawPost.visibility as 'public' | 'friends' | 'private',
+        created_at: rawPost.created_at,
+        updated_at: rawPost.updated_at,
+        shared_from: null,
+        profiles: profileData,
+        poll: transformPoll(rawPost.poll),
+        reactions: { count: 0, by_type: {} },
+        reactions_count: 0,
+        comments_count: 0
+      };
 
-    return post;
+      return post;
+    } catch (err) {
+      console.error("Error in post creation:", err);
+      throw err;
+    }
   } catch (error) {
     console.error('Error creating post:', error);
     throw error;
@@ -128,7 +132,6 @@ export async function getPosts(userId?: string) {
         poll,
         created_at,
         updated_at,
-        shared_from,
         profiles (
           username,
           avatar_url
@@ -145,13 +148,8 @@ export async function getPosts(userId?: string) {
     if (postsError) throw postsError;
     if (!rawPosts) return [];
 
-    // Get shared posts information
-    const sharedPostIds = rawPosts
-      .filter(post => post.shared_from)
-      .map(post => post.shared_from)
-      .filter(Boolean) as string[];
-
-    const sharedPostsMap = await fetchSharedPosts(sharedPostIds);
+    // Since shared_from doesn't exist in the DB, we'll ignore it for now
+    const sharedPostIds: string[] = [];
     
     // Get reactions data
     const reactionsData = await fetchPostsReactions(rawPosts.map(p => p.id));
@@ -208,8 +206,8 @@ export async function getPosts(userId?: string) {
       updated_at: post.updated_at,
       profiles: post.profiles,
       poll: transformPoll(post.poll),
-      shared_from: post.shared_from,
-      shared_post: post.shared_from ? sharedPostsMap[post.shared_from] : null,
+      shared_from: null,
+      shared_post: null,
       user_reaction: userReactionsMap[post.id] as Post['user_reaction'],
       reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
       reactions_count: reactionsMap[post.id]?.count || 0,

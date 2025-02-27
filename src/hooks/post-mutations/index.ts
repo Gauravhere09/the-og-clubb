@@ -3,8 +3,8 @@ import { useReactionMutations } from "./use-reaction-mutations";
 import { usePostDeleteMutation } from "./use-post-delete-mutation";
 import { useCommentMutations } from "./use-comment-mutations";
 import { usePollVoteMutation } from "./use-poll-vote-mutation";
-import { ReactionType } from "@/types/database/social.types";
-import { CommentData } from "./types";
+import type { ReactionType } from "@/types/database/social.types";
+import type { CommentData } from "./types";
 
 export function usePostMutations(postId: string) {
   const { handleReaction, toggleCommentReaction } = useReactionMutations(postId);
@@ -21,5 +21,5 @@ export function usePostMutations(postId: string) {
   };
 }
 
-export type { CommentData };
-export { ReactionType };
+// Use 'export type' when re-exporting types with isolatedModules enabled
+export type { CommentData, ReactionType };

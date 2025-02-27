@@ -24,7 +24,11 @@ export function PostCreator() {
       if (!content && !file && !pollData) {
         throw new Error("Debes agregar texto, un archivo multimedia o una encuesta");
       }
-      return createPost(content, file, pollData);
+      return createPost({
+        content,
+        file,
+        pollData
+      });
     },
     onSuccess: () => {
       setContent("");
