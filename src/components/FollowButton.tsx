@@ -36,12 +36,13 @@ export function FollowButton({ targetUserId, size = "default" }: FollowButtonPro
           return;
         }
 
-        // Comprobar si ya sigue al usuario
+        // Comprobar si ya sigue al usuario (usando la tabla friendships)
         const { data, error } = await supabase
-          .from('followers')
+          .from('friendships')
           .select()
-          .eq('follower_id', user.id)
-          .eq('following_id', targetUserId)
+          .eq('user_id', user.id)
+          .eq('friend_id', targetUserId)
+          .eq('status', 'accepted')
           .single();
 
         if (error && error.code !== 'PGRST116') { // PGRST116 es "no se encontró ningún dato"
@@ -85,10 +86,10 @@ export function FollowButton({ targetUserId, size = "default" }: FollowButtonPro
       if (isFollowing) {
         // Dejar de seguir: eliminar registro
         const { error } = await supabase
-          .from('followers')
+          .from('friendships')
           .delete()
-          .eq('follower_id', currentUserId)
-          .eq('following_id', targetUserId);
+          .eq('user_id', currentUserId)
+          .eq('friend_id', targetUserId);
 
         if (error) throw error;
 
@@ -100,10 +101,11 @@ export function FollowButton({ targetUserId, size = "default" }: FollowButtonPro
       } else {
         // Seguir: crear registro
         const { error } = await supabase
-          .from('followers')
+          .from('friendships')
           .insert({
-            follower_id: currentUserId,
-            following_id: targetUserId
+            user_id: currentUserId,
+            friend_id: targetUserId,
+            status: 'accepted'
           });
 
         if (error) throw error;

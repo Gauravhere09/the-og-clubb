@@ -68,9 +68,10 @@ export default function Profile() {
 
         // Get followers count
         const { count: followersCount, error: followersError } = await supabase
-          .from('followers')
+          .from('friendships')
           .select('*', { count: 'exact', head: true })
-          .eq('following_id', id);
+          .eq('friend_id', id)
+          .eq('status', 'accepted');
 
         if (followersError) {
           console.error('Error fetching followers:', followersError);
@@ -85,8 +86,8 @@ export default function Profile() {
           cover_url: profileData.cover_url,
           location: null,
           education: null,
-          career: profileData.career,
-          semester: profileData.semester,
+          career: profileData.career || null,
+          semester: profileData.semester || null,
           relationship_status: null,
           followers_count: followersCount || 0,
           created_at: profileData.created_at,

@@ -42,9 +42,10 @@ export default function Popularity() {
           const usersWithFollowers = await Promise.all(
             data.map(async (user) => {
               const { count, error: followerError } = await supabase
-                .from('followers')
+                .from('friendships')
                 .select('*', { count: 'exact', head: true })
-                .eq('following_id', user.id);
+                .eq('friend_id', user.id)
+                .eq('status', 'accepted');
 
               if (followerError) {
                 console.error('Error al obtener seguidores:', followerError);
