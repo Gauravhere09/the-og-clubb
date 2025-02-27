@@ -140,7 +140,12 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
       for (let i = 0; i < sharedPosts.length; i++) {
         const post = sharedPosts[i];
         // Ensure post is not null and has an id property
-        if (post && typeof post === 'object' && 'id' in post && post.id) {
+        if (post && 
+            typeof post === 'object' && 
+            post !== null && 
+            'id' in post && 
+            post.id !== null && 
+            post.id !== undefined) {
           postsMap[post.id] = post;
         }
       }
