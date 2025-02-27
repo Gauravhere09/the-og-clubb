@@ -135,13 +135,21 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
     // Create a map of post IDs to posts with explicit type checking
     const postsMap: Record<string, any> = {};
     
-    // Manually iterate through the posts to verify each one has an id
+    // Safely iterate through the posts to verify each one has an id
     if (Array.isArray(sharedPosts)) {
-      sharedPosts.forEach(post => {
+      for (let i = 0; i < sharedPosts.length; i++) {
+        const post = sharedPosts[i];
+        // Make sure post is not null and has a valid id
         if (post && typeof post === 'object' && 'id' in post && post.id) {
-          postsMap[post.id] = post;
+          postsMap[post.id] = {
+            ...post,
+            // Safely access post.id to avoid TS errors
+            id: post.id,
+            // Safely access other properties as needed
+            content: post.content ?? ''
+          };
         }
-      });
+      }
     }
     
     return postsMap;
