@@ -60,7 +60,7 @@ export function SingleComment({
           <AvatarImage src={comment.profiles?.avatar_url} />
           <AvatarFallback>{comment.profiles?.username?.[0]}</AvatarFallback>
         </Avatar>
-        <div className="flex-1">
+        <div className="flex-1 max-w-[90%]">
           <div className="bg-muted p-1.5 rounded-lg">
             <div className="flex justify-between items-start gap-1">
               <p className="font-medium text-xs">{comment.profiles?.username}</p>
@@ -111,7 +111,7 @@ export function SingleComment({
                 {isAudioComment ? (
                   <audio src={audioUrl || undefined} controls className="mt-1 max-w-[180px] h-8" />
                 ) : (
-                  <p className="text-xs whitespace-pre-wrap">{comment.content}</p>
+                  <p className="text-xs whitespace-pre-wrap break-words">{comment.content}</p>
                 )}
               </>
             )}
