@@ -171,7 +171,9 @@ export async function getPosts(userId?: string) {
         // Update poll data with user votes
         rawPosts.forEach(post => {
           if (post.poll && typeof post.poll === 'object') {
-            post.poll.user_vote = votesMap[post.id] || null;
+            // Safely update the poll object with typechecking
+            const pollObj = post.poll as Record<string, any>;
+            pollObj.user_vote = votesMap[post.id] || null;
           }
         });
       }
