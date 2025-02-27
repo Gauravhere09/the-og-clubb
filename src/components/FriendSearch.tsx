@@ -42,12 +42,12 @@ export function FriendSearch() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // Buscar por nombre de usuario, bio o carrera
+        // Solo buscar por nombre de usuario y bio (eliminar career de la búsqueda)
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .neq('id', user.id)
-          .or(`username.ilike.%${debouncedSearch}%,bio.ilike.%${debouncedSearch}%,career.ilike.%${debouncedSearch}%`)
+          .or(`username.ilike.%${debouncedSearch}%,bio.ilike.%${debouncedSearch}%`)
           .limit(5);
 
         if (error) throw error;
@@ -82,7 +82,7 @@ export function FriendSearch() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar usuarios o carreras..."
+          placeholder="Buscar usuarios..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-9 pr-4"
@@ -104,12 +104,7 @@ export function FriendSearch() {
                   </Avatar>
                   <div>
                     <div className="font-medium">{getFirstName(user.username || 'Usuario')}</div>
-                    {user.career && (
-                      <div className="text-sm text-muted-foreground line-clamp-1">
-                        {user.career}
-                      </div>
-                    )}
-                    {user.bio && !user.career && (
+                    {user.bio && (
                       <div className="text-sm text-muted-foreground line-clamp-1">
                         {user.bio}
                       </div>
