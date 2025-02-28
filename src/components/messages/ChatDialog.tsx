@@ -42,7 +42,7 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
         status: 'accepted'
       };
       
-      // Aquí está el error - loadMessages requiere dos argumentos
+      // Corrigiendo el problema - pasando ambos argumentos a loadMessages
       loadMessages(currentUserId, friend);
       setLastActivity(new Date());
 
