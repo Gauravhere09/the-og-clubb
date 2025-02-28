@@ -26,8 +26,8 @@ type PostData = {
  */
 export async function fetchRawPosts(userId: string | undefined, hasSharedFromColumn: boolean) {
   try {
-    // Base query fields that don't depend on shared_from
-    const baseSelectFields = `
+    // Since we know shared_from doesn't exist, always use the basic select fields
+    const selectFields = `
       id,
       content,
       user_id,
@@ -43,11 +43,6 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
       )
     `;
     
-    // Add shared_from to the query if the column exists
-    const selectFields = hasSharedFromColumn 
-      ? `${baseSelectFields}, shared_from`
-      : baseSelectFields;
-      
     // Create and execute query
     const query = supabase
       .from('posts')
@@ -67,75 +62,7 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
       return [];
     }
     
-    // If there are shared posts and the shared_from column exists, fetch the original posts
-    let sharedPostIds: string[] = [];
-    
-    if (hasSharedFromColumn && Array.isArray(data)) {
-      // Extract the shared_from IDs from posts that have them
-      sharedPostIds = data
-        .filter((post): post is any => {
-          if (post === null) return false;
-          if (typeof post !== 'object') return false;
-          if (!hasSharedFromColumn) return false;
-          if (!('shared_from' in post)) return false;
-          return post.shared_from !== null;
-        })
-        .map(post => {
-          // At this point we know post is not null because of the filter
-          return post.shared_from;
-        })
-        .filter(Boolean);
-    }
-      
-    if (sharedPostIds.length > 0) {
-      // Fetch the original posts
-      const { data: sharedPosts, error: sharedError } = await supabase
-        .from('posts')
-        .select(`
-          id,
-          content,
-          user_id,
-          media_url,
-          media_type,
-          visibility,
-          poll,
-          created_at,
-          updated_at,
-          profiles (
-            username,
-            avatar_url
-          )
-        `)
-        .in('id', sharedPostIds);
-        
-      if (sharedError) throw sharedError;
-      
-      // Create a map of shared posts by ID for quick lookup
-      const sharedPostsMap = (sharedPosts || []).reduce((map, post) => {
-        if (post && typeof post === 'object' && 'id' in post) {
-          map[post.id] = post;
-        }
-        return map;
-      }, {} as Record<string, any>);
-      
-      // Add the shared posts to the original data
-      if (Array.isArray(data)) {
-        data.forEach((post) => {
-          if (post === null) return;
-          if (typeof post !== 'object') return;
-          if (!hasSharedFromColumn) return;
-          
-          // Only proceed if the post has a shared_from property and it's not null
-          if ('shared_from' in post && post.shared_from) {
-            const sharedPostId = post.shared_from as string;
-            if (sharedPostsMap[sharedPostId]) {
-              post.shared_post = sharedPostsMap[sharedPostId];
-            }
-          }
-        });
-      }
-    }
-    
+    // Skip shared posts processing since we know the columns don't exist
     return data || [];
   } catch (error) {
     console.error('Error fetching raw posts:', error);

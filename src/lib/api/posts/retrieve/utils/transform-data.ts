@@ -21,22 +21,8 @@ export async function transformPostsData(
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
-    // Initialize an empty shared posts map
-    let sharedPostsMap: Record<string, any> = {};
-    
-    // Only attempt to fetch shared posts if the column exists
-    if (hasSharedFromColumn) {
-      // Collect IDs of shared posts to fetch their details
-      const sharedPostIds = rawPosts
-        .filter(post => post && typeof post === 'object' && post.shared_from)
-        .map(post => post.shared_from)
-        .filter(Boolean) as string[];
-        
-      // Get shared posts data if there are any
-      if (sharedPostIds.length) {
-        sharedPostsMap = await fetchSharedPosts(sharedPostIds);
-      }
-    }
+    // Initialize an empty shared posts map - we know shared posts don't exist
+    const sharedPostsMap: Record<string, any> = {};
 
     // Get reactions and comments data
     const postIds = rawPosts.map(p => p.id);
@@ -52,22 +38,6 @@ export async function transformPostsData(
     return rawPosts.map((post): Post => {
       if (!post) return {} as Post;
 
-      // Process shared posts from legacy shared_from if applicable
-      const legacySharedPost = hasSharedFromColumn && post.shared_from && sharedPostsMap[post.shared_from]
-        ? {
-            id: sharedPostsMap[post.shared_from].id,
-            content: sharedPostsMap[post.shared_from].content || '',
-            user_id: sharedPostsMap[post.shared_from].user_id,
-            media_url: sharedPostsMap[post.shared_from].media_url,
-            media_type: sharedPostsMap[post.shared_from].media_type,
-            visibility: sharedPostsMap[post.shared_from].visibility,
-            created_at: sharedPostsMap[post.shared_from].created_at,
-            updated_at: sharedPostsMap[post.shared_from].updated_at,
-            profiles: sharedPostsMap[post.shared_from].profiles,
-            poll: transformPoll(sharedPostsMap[post.shared_from].poll),
-          } as Post
-        : null;
-
       return {
         id: post.id,
         content: post.content || '',
@@ -79,8 +49,8 @@ export async function transformPostsData(
         updated_at: post.updated_at,
         profiles: post.profiles,
         poll: transformPoll(post.poll),
-        shared_from: hasSharedFromColumn ? post.shared_from : null,
-        shared_post: post.shared_post || legacySharedPost,
+        shared_from: null, // Always null since the column doesn't exist
+        shared_post: null, // Always null since shared posts don't exist
         user_reaction: userReactionsMap[post.id] as Post['user_reaction'],
         reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
         reactions_count: reactionsMap[post.id]?.count || 0,
