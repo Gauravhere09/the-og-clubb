@@ -50,53 +50,60 @@ export const UserList = ({ users, onProfileClick }: UserListProps) => {
           <div className="col-span-2 text-right">Corazones</div>
         </div>
         <div className="space-y-2">
-          {users.length > 3 && users.slice(3).map((user, index) => (
-            <div 
-              key={user.id} 
-              className="p-2 hover:bg-muted/50 rounded-md grid grid-cols-12 gap-2 items-center"
-            >
-              <div className="col-span-1 font-medium text-muted-foreground">
-                {index + 4}
-              </div>
-              <div className="col-span-4">
-                <div className="flex items-center space-x-3">
-                  <Avatar 
-                    className="h-8 w-8 cursor-pointer" 
-                    onClick={() => onProfileClick(user.id)}
-                  >
-                    <AvatarImage src={user.avatar_url || undefined} />
-                    <AvatarFallback>
-                      {user.username?.[0]?.toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div 
-                    className="font-medium cursor-pointer hover:underline"
-                    onClick={() => onProfileClick(user.id)}
-                  >
-                    {user.username || "Usuario"}
+          {users.length > 3 && users.slice(3).map((user, index) => {
+            console.log(`Renderizando usuario ${user.username}:`, {
+              carrera: user.career,
+              semestre: user.semester
+            });
+            
+            return (
+              <div 
+                key={user.id} 
+                className="p-2 hover:bg-muted/50 rounded-md grid grid-cols-12 gap-2 items-center"
+              >
+                <div className="col-span-1 font-medium text-muted-foreground">
+                  {index + 4}
+                </div>
+                <div className="col-span-4">
+                  <div className="flex items-center space-x-3">
+                    <Avatar 
+                      className="h-8 w-8 cursor-pointer" 
+                      onClick={() => onProfileClick(user.id)}
+                    >
+                      <AvatarImage src={user.avatar_url || undefined} />
+                      <AvatarFallback>
+                        {user.username?.[0]?.toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div 
+                      className="font-medium cursor-pointer hover:underline"
+                      onClick={() => onProfileClick(user.id)}
+                    >
+                      {user.username || "Usuario"}
+                    </div>
                   </div>
                 </div>
+                <div className="col-span-3 truncate text-sm">
+                  {user.career ? (
+                    <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full">{user.career}</span>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">No especificada</span>
+                  )}
+                </div>
+                <div className="col-span-2 text-sm">
+                  {user.semester ? (
+                    <span className="px-2 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-full">Semestre {user.semester}</span>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">No especificado</span>
+                  )}
+                </div>
+                <div className="col-span-2 flex items-center justify-end gap-1">
+                  <Heart className="h-4 w-4 text-primary fill-primary" />
+                  <span className="font-semibold">{user.followers_count}</span>
+                </div>
               </div>
-              <div className="col-span-3 truncate text-sm">
-                {user.career ? (
-                  <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full">{user.career}</span>
-                ) : (
-                  <span className="text-muted-foreground text-xs">No especificada</span>
-                )}
-              </div>
-              <div className="col-span-2 text-sm">
-                {user.semester ? (
-                  <span className="px-2 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-full">Semestre {user.semester}</span>
-                ) : (
-                  <span className="text-muted-foreground text-xs">No especificado</span>
-                )}
-              </div>
-              <div className="col-span-2 flex items-center justify-end gap-1">
-                <Heart className="h-4 w-4 text-primary fill-primary" />
-                <span className="font-semibold">{user.followers_count}</span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </Card>

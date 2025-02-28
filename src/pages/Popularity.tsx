@@ -22,10 +22,11 @@ export default function Popularity() {
     const fetchPopularUsers = async () => {
       setLoading(true);
       try {
-        // Asegurarnos de seleccionar específicamente career y semester
+        // Usamos directamente la función RPC para obtener usuarios con la información completa
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('id, username, avatar_url, career, semester');
+          .select('id, username, avatar_url, career, semester')
+          .order('created_at', { ascending: false });
 
         if (profilesError) {
           console.error('Error al obtener perfiles:', profilesError);
@@ -44,11 +45,14 @@ export default function Popularity() {
           return;
         }
 
-        console.log('Perfiles obtenidos:', profiles);
-        
-        // Verificar explícitamente que cada perfil tenga los campos career y semester
+        // Verificación detallada de los datos para depuración
+        console.log('Perfiles obtenidos (total):', profiles.length);
         profiles.forEach(profile => {
-          console.log(`Usuario: ${profile.username}, Carrera: ${profile.career || 'No definida'}, Semestre: ${profile.semester || 'No definido'}`);
+          console.log(`Usuario: ${profile.username}`, {
+            id: profile.id,
+            carrera: profile.career || 'No definida',
+            semestre: profile.semester || 'No definido'
+          });
         });
 
         // Para cada perfil, contar sus seguidores
@@ -60,32 +64,56 @@ export default function Popularity() {
               .eq('friend_id', profile.id)
               .eq('status', 'accepted');
 
+            // Construimos el objeto con toda la información disponible
             return {
               id: profile.id,
               username: profile.username,
               avatar_url: profile.avatar_url,
-              career: profile.career, // Mantener null si no existe
-              semester: profile.semester, // Mantener null si no existe
+              career: profile.career, 
+              semester: profile.semester,
               followers_count: count || 0
             } as PopularUserProfile;
           })
         );
 
-        // Ordenar usuarios por número de seguidores
+        // Ordenar usuarios por número de seguidores (descendente)
         const sortedUsers = usersWithFollowers
           .sort((a, b) => b.followers_count - a.followers_count);
 
-        console.log('Usuarios ordenados con carrera y semestre:', sortedUsers);
+        console.log('Usuarios ordenados con toda la información:', sortedUsers);
+        
+        // Verificamos específicamente la información de los usuarios mencionados
+        const heimy = sortedUsers.find(user => user.username?.toLowerCase().includes('heimy'));
+        const isabel = sortedUsers.find(user => user.username?.toLowerCase().includes('isabel'));
+        
+        if (heimy) {
+          console.log('Información de Heimy:', {
+            nombre: heimy.username,
+            carrera: heimy.career,
+            semestre: heimy.semester,
+            seguidores: heimy.followers_count
+          });
+        }
+        
+        if (isabel) {
+          console.log('Información de Isabel:', {
+            nombre: isabel.username,
+            carrera: isabel.career,
+            semestre: isabel.semester,
+            seguidores: isabel.followers_count
+          });
+        }
+
         setPopularUsers(sortedUsers);
 
-        // Extraer carreras únicas para filtrado
+        // Extraer carreras únicas para filtrado (solo las no nulas)
         const careers = sortedUsers
           .map(user => user.career)
           .filter((career): career is string => 
             career !== null && career !== undefined && career !== '');
         
         const uniqueCareers = [...new Set(careers)];
-        console.log('Carreras únicas:', uniqueCareers);
+        console.log('Carreras únicas disponibles para filtrado:', uniqueCareers);
         setCareerFilters(uniqueCareers);
       } catch (error) {
         console.error('Error al cargar usuarios populares:', error);
@@ -134,16 +162,18 @@ export default function Popularity() {
               Los usuarios con más corazones (seguidores) ocupan los primeros lugares. ¡Sigue a otros usuarios para ganar popularidad!
             </p>
 
-            <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
-              <h3 className="font-medium mb-2">Información importante</h3>
-              <p className="text-sm">La mayoría de los usuarios aún no han establecido su carrera y semestre. Estos campos aparecerán cuando los usuarios actualicen sus perfiles.</p>
-            </div>
-
-            <FilterButtons 
-              careerFilters={careerFilters}
-              currentFilter={filter}
-              onFilterChange={setFilter}
-            />
+            {careerFilters.length > 0 ? (
+              <FilterButtons 
+                careerFilters={careerFilters}
+                currentFilter={filter}
+                onFilterChange={setFilter}
+              />
+            ) : (
+              <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+                <h3 className="font-medium mb-2">Información</h3>
+                <p className="text-sm">No hay carreras disponibles para filtrar. Los filtros aparecerán cuando los usuarios agreguen información académica.</p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-4">
