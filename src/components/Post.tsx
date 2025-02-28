@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { usePostMutations, type ReactionType } from "@/hooks/use-post-mutations";
 import { Comments } from "@/components/post/Comments";
@@ -21,6 +21,7 @@ export function Post({ post, hideComments = false }: PostProps) {
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState<{ id: string; username: string } | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { toast } = useToast();
   
   // Initialize usePostMutations with the post ID
@@ -30,6 +31,15 @@ export function Post({ post, hideComments = false }: PostProps) {
     toggleCommentReaction,
     submitComment
   } = usePostMutations(post.id);
+
+  // Fetch current user ID on component mount
+  useEffect(() => {
+    const getUserId = async () => {
+      const { data } = await supabase.auth.getUser();
+      setCurrentUserId(data.user?.id || null);
+    };
+    getUserId();
+  }, []);
 
   const onDeletePost = () => {
     handleDeletePost();
@@ -98,10 +108,8 @@ export function Post({ post, hideComments = false }: PostProps) {
     }
   };
 
-  // Fixed: Get current user using the synchronous method
-  const currentSession = supabase.auth.getSession();
-  const currentUser = supabase.auth.getUser();
-  const isCurrentUserAuthor = post.user_id === currentUser.data?.user?.id;
+  // Check if current user is the author of the post
+  const isCurrentUserAuthor = post.user_id === currentUserId;
 
   return (
     <Card className="overflow-hidden shadow-sm">
