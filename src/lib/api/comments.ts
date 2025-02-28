@@ -64,9 +64,10 @@ export async function createComment(postId: string, content: string, parentId?: 
 }
 
 export async function getComments(postId: string) {
-  const { data: user } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
   
-  let query = supabase
+  // Obtenemos los datos de comentarios
+  const { data: commentsData, error: commentsError } = await supabase
     .from('comments')
     .select(`
       *,
@@ -75,22 +76,21 @@ export async function getComments(postId: string) {
     .eq('post_id', postId)
     .order('created_at', { ascending: true });
 
-  // Obtenemos los datos de comentarios
-  const { data, error } = await query;
-  if (error) throw error;
+  if (commentsError) throw commentsError;
   
-  let comments = data as Comment[];
+  let comments = commentsData as Comment[];
   
   // Si hay un usuario autenticado, obtiene sus reacciones
-  if (user?.user) {
+  if (user) {
     // Obtener las reacciones del usuario a los comentarios
     const commentIds = comments.map(comment => comment.id);
     
     if (commentIds.length > 0) {
+      // Obtener las reacciones del usuario para estos comentarios
       const { data: userReactions } = await supabase
         .from('reactions')
         .select('comment_id, reaction_type')
-        .eq('user_id', user.user.id)
+        .eq('user_id', user.id)
         .in('comment_id', commentIds);
       
       // Crear un mapa de reacciones por id de comentario
@@ -102,17 +102,39 @@ export async function getComments(postId: string) {
       }
       
       // Obtener el conteo de reacciones para cada comentario
-      const { data: reactionCounts } = await supabase
-        .from('reactions')
-        .select('comment_id, count(*)')
-        .in('comment_id', commentIds)
-        .group('comment_id');
-        
+      // En lugar de usar group(), hacemos una consulta por cada comentario o usamos una función SQL
       const countByCommentId = new Map();
-      if (reactionCounts) {
-        reactionCounts.forEach(count => {
-          countByCommentId.set(count.comment_id, parseInt(count.count, 10));
+      
+      // Usamos una consulta SQL personalizada para contar reacciones
+      const { data: reactionCounts, error: countError } = await supabase
+        .rpc('count_reactions_by_comment', { comment_ids: commentIds });
+      
+      if (!countError && reactionCounts) {
+        reactionCounts.forEach((item: { comment_id: string, count: number }) => {
+          countByCommentId.set(item.comment_id, item.count);
         });
+      } else {
+        // Alternativa: contar manualmente si la función RPC no está disponible
+        const { data: allReactions } = await supabase
+          .from('reactions')
+          .select('comment_id')
+          .in('comment_id', commentIds);
+        
+        if (allReactions) {
+          // Contar manualmente las reacciones por comentario
+          const counts: Record<string, number> = {};
+          allReactions.forEach(reaction => {
+            if (!counts[reaction.comment_id]) {
+              counts[reaction.comment_id] = 0;
+            }
+            counts[reaction.comment_id]++;
+          });
+          
+          // Convertir a Map
+          Object.entries(counts).forEach(([commentId, count]) => {
+            countByCommentId.set(commentId, count);
+          });
+        }
       }
       
       // Añadir la reacción del usuario y el conteo a cada comentario
