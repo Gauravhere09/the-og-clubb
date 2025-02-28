@@ -8,12 +8,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 interface UserListProps {
   users: PopularUserProfile[];
   onProfileClick: (userId: string) => void;
+  startRank?: number;
 }
 
-export const UserList = ({ users, onProfileClick }: UserListProps) => {
-  // Filtramos para excluir los 3 primeros usuarios (ya mostrados en TopUsers)
-  const remainingUsers = users.length > 3 ? users.slice(3) : [];
-  
+export const UserList = ({ users, onProfileClick, startRank = 4 }: UserListProps) => {
   return (
     <Card className="overflow-hidden">
       <div className="p-4">
@@ -53,12 +51,12 @@ export const UserList = ({ users, onProfileClick }: UserListProps) => {
           <div className="col-span-2 text-right">Corazones</div>
         </div>
         <div className="space-y-2">
-          {remainingUsers.map((user, index) => {
+          {users.map((user, index) => {
             // Forzar los valores a string para depuración y visualización
             const careerValue = typeof user.career === 'string' ? user.career : null;
             const semesterValue = typeof user.semester === 'string' ? user.semester : null;
             
-            console.log(`Renderizando usuario en lista ${index + 4} (datos procesados):`, {
+            console.log(`Renderizando usuario en lista ${startRank + index} (datos procesados):`, {
               id: user.id,
               nombre: user.username,
               carrera: careerValue,
@@ -74,7 +72,7 @@ export const UserList = ({ users, onProfileClick }: UserListProps) => {
                 className="p-2 hover:bg-muted/50 rounded-md grid grid-cols-12 gap-2 items-center"
               >
                 <div className="col-span-1 font-medium text-muted-foreground">
-                  {index + 4}
+                  {startRank + index}
                 </div>
                 <div className="col-span-4">
                   <div className="flex items-center space-x-3">

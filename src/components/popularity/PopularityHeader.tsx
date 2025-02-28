@@ -1,5 +1,7 @@
 
-import { FilterButtons } from "@/components/popularity/FilterButtons";
+import { Button } from "@/components/ui/button";
+import { HelpCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PopularityHeaderProps {
   careerFilters: string[];
@@ -13,24 +15,43 @@ export const PopularityHeader = ({
   onFilterChange 
 }: PopularityHeaderProps) => {
   return (
-    <div className="mb-8">
-      <h1 className="text-2xl font-bold mb-4">Ranking de Popularidad</h1>
-      <p className="text-muted-foreground mb-6">
-        Los usuarios con más corazones (seguidores) ocupan los primeros lugares. ¡Sigue a otros usuarios para ganar popularidad!
-      </p>
-
-      {careerFilters.length > 0 ? (
-        <FilterButtons 
-          careerFilters={careerFilters}
-          currentFilter={currentFilter}
-          onFilterChange={onFilterChange}
-        />
-      ) : (
-        <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
-          <h3 className="font-medium mb-2">Información</h3>
-          <p className="text-sm">No hay carreras disponibles para filtrar. Los filtros aparecerán cuando los usuarios agreguen información académica.</p>
-        </div>
-      )}
+    <div className="mb-6">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Ranking de Popularidad</h1>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <HelpCircle className="h-5 w-5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="max-w-md">
+              <p>Este ranking muestra a los usuarios con mayor número de seguidores en la plataforma.</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+      
+      <div className="flex flex-wrap gap-2 mb-2">
+        <Button 
+          variant={currentFilter === null ? "default" : "outline"} 
+          size="sm"
+          onClick={() => onFilterChange(null)}
+        >
+          Todos
+        </Button>
+        
+        {careerFilters.map((filter) => (
+          <Button
+            key={filter}
+            variant={currentFilter === filter ? "default" : "outline"}
+            size="sm"
+            onClick={() => onFilterChange(filter)}
+          >
+            {filter}
+          </Button>
+        ))}
+      </div>
     </div>
   );
 };
