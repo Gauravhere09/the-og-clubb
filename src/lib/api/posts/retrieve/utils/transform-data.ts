@@ -21,9 +21,22 @@ export async function transformPostsData(
   try {
     const { data: { user } } = await supabase.auth.getUser();
     
-    // Collect IDs of shared posts to fetch their details
-    const sharedPostsData = await getSharedPostsData(rawPosts, hasSharedFromColumn);
-    const sharedPostsMap = sharedPostsData.sharedPostsMap;
+    // Initialize an empty shared posts map
+    let sharedPostsMap: Record<string, any> = {};
+    
+    // Only attempt to fetch shared posts if the column exists
+    if (hasSharedFromColumn) {
+      // Collect IDs of shared posts to fetch their details
+      const sharedPostIds = rawPosts
+        .filter(post => post.shared_from)
+        .map(post => post.shared_from)
+        .filter(Boolean) as string[];
+        
+      // Get shared posts data if there are any
+      if (sharedPostIds.length) {
+        sharedPostsMap = await fetchSharedPosts(sharedPostIds);
+      }
+    }
 
     // Get reactions and comments data
     const postIds = rawPosts.map(p => p.id);
@@ -38,7 +51,20 @@ export async function transformPostsData(
     // Transform posts data
     return rawPosts.map((post): Post => {
       // Process shared posts if applicable
-      const sharedPost = getSharedPostDetails(post, hasSharedFromColumn, sharedPostsMap);
+      const sharedPost = hasSharedFromColumn && post.shared_from && sharedPostsMap[post.shared_from]
+        ? {
+            id: sharedPostsMap[post.shared_from].id,
+            content: sharedPostsMap[post.shared_from].content || '',
+            user_id: sharedPostsMap[post.shared_from].user_id,
+            media_url: sharedPostsMap[post.shared_from].media_url,
+            media_type: sharedPostsMap[post.shared_from].media_type,
+            visibility: sharedPostsMap[post.shared_from].visibility,
+            created_at: sharedPostsMap[post.shared_from].created_at,
+            updated_at: sharedPostsMap[post.shared_from].updated_at,
+            profiles: sharedPostsMap[post.shared_from].profiles,
+            poll: transformPoll(sharedPostsMap[post.shared_from].poll),
+          } as Post
+        : null;
 
       return {
         id: post.id,
@@ -63,28 +89,6 @@ export async function transformPostsData(
     console.error('Error transforming posts data:', error);
     throw error;
   }
-}
-
-/**
- * Get shared posts data if applicable
- */
-async function getSharedPostsData(rawPosts: any[], hasSharedFromColumn: boolean) {
-  let sharedPostIds: string[] = [];
-  let sharedPostsMap = {};
-  
-  if (hasSharedFromColumn) {
-    sharedPostIds = rawPosts
-      .filter(post => post.shared_from)
-      .map(post => post.shared_from)
-      .filter(Boolean) as string[];
-
-    // Get shared posts data if there are any
-    if (sharedPostIds.length) {
-      sharedPostsMap = await fetchSharedPosts(sharedPostIds);
-    }
-  }
-  
-  return { sharedPostIds, sharedPostsMap };
 }
 
 /**
@@ -132,31 +136,4 @@ function updatePollsWithUserVotes(rawPosts: any[], votesMap: Record<string, stri
       pollObj.user_vote = votesMap[post.id] || null;
     }
   });
-}
-
-/**
- * Get shared post details if applicable
- */
-function getSharedPostDetails(
-  post: any, 
-  hasSharedFromColumn: boolean, 
-  sharedPostsMap: Record<string, any>
-): Post | null {
-  if (hasSharedFromColumn && post.shared_from && 
-      sharedPostsMap[post.shared_from as string]) {
-    const sharedPost = sharedPostsMap[post.shared_from as string];
-    return {
-      id: sharedPost.id,
-      content: sharedPost.content || '',
-      user_id: sharedPost.user_id,
-      media_url: sharedPost.media_url,
-      media_type: sharedPost.media_type,
-      visibility: sharedPost.visibility,
-      created_at: sharedPost.created_at,
-      updated_at: sharedPost.updated_at,
-      profiles: sharedPost.profiles,
-      poll: transformPoll(sharedPost.poll),
-    } as Post;
-  }
-  return null;
 }

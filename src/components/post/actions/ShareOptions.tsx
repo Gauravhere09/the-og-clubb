@@ -61,7 +61,7 @@ export function ShareOptions({ post, open, onOpenChange }: ShareOptionsProps) {
         return;
       }
 
-      // Crear una nueva publicación que hace referencia a la original
+      // Create a new post that references the original content without using shared_from column
       const { data, error } = await supabase
         .from('posts')
         .insert({
@@ -69,8 +69,7 @@ export function ShareOptions({ post, open, onOpenChange }: ShareOptionsProps) {
           user_id: userId,
           media_url: post.media_url,
           media_type: post.media_type,
-          visibility: 'public',
-          shared_from: post.id
+          visibility: 'public'
         });
 
       if (error) {
