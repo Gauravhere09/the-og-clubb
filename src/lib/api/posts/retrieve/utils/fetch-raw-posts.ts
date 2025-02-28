@@ -17,6 +17,8 @@ type PostData = {
   };
   shared_from?: string | null;
   shared_post?: any;
+  shared_post_id?: string | null;
+  shared_post_author?: string | null;
 };
 
 /**
@@ -79,7 +81,7 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
           return true;
         })
         .map((post) => {
-          // At this point, TypeScript knows post is not null, is an object, and has shared_from property
+          // At this point, we know post has shared_from property
           return post.shared_from as string;
         });
     }

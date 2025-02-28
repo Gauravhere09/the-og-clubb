@@ -2,33 +2,55 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Check if the 'shared_from' column exists in the 'posts' table
+ * Check if specific columns exist in the 'posts' table
  */
-export async function checkSharedFromColumn(): Promise<boolean> {
+export async function checkPostsColumns(): Promise<{
+  hasSharedFrom: boolean;
+  hasSharedPostId: boolean;
+  hasSharedPostAuthor: boolean;
+}> {
+  const result = {
+    hasSharedFrom: false,
+    hasSharedPostId: false,
+    hasSharedPostAuthor: false
+  };
+
   try {
-    // Try to select from the posts table with the shared_from column
-    const { data, error } = await supabase
+    // Check shared_from column
+    const { error: sharedFromError } = await supabase
       .from('posts')
       .select('shared_from')
       .limit(1);
       
-    if (error) {
-      // Check if the error mentions "column does not exist"
-      if (
-        error.message && 
-        (error.message.includes('column') && error.message.includes('does not exist'))
-      ) {
-        console.log('shared_from column does not exist in the posts table');
-        return false;
-      }
-      // For other errors, log them and assume the column doesn't exist
-      console.error('Error checking shared_from column:', error);
-      return false;
-    }
+    result.hasSharedFrom = !sharedFromError;
     
-    return true;
+    // Check shared_post_id column
+    const { error: sharedPostIdError } = await supabase
+      .from('posts')
+      .select('shared_post_id')
+      .limit(1);
+      
+    result.hasSharedPostId = !sharedPostIdError;
+    
+    // Check shared_post_author column
+    const { error: sharedPostAuthorError } = await supabase
+      .from('posts')
+      .select('shared_post_author')
+      .limit(1);
+      
+    result.hasSharedPostId = !sharedPostAuthorError;
+    
+    return result;
   } catch (error) {
-    console.error('Error checking shared_from column:', error);
-    return false;
+    console.error('Error checking posts columns:', error);
+    return result;
   }
+}
+
+/**
+ * Legacy function for backward compatibility
+ */
+export async function checkSharedFromColumn(): Promise<boolean> {
+  const { hasSharedFrom } = await checkPostsColumns();
+  return hasSharedFrom;
 }

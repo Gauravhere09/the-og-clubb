@@ -28,7 +28,7 @@ export async function transformPostsData(
     if (hasSharedFromColumn) {
       // Collect IDs of shared posts to fetch their details
       const sharedPostIds = rawPosts
-        .filter(post => post.shared_from)
+        .filter(post => post && typeof post === 'object' && post.shared_from)
         .map(post => post.shared_from)
         .filter(Boolean) as string[];
         
@@ -50,6 +50,8 @@ export async function transformPostsData(
 
     // Transform posts data
     return rawPosts.map((post): Post => {
+      if (!post) return {} as Post;
+
       // Process shared posts from legacy shared_from if applicable
       const legacySharedPost = hasSharedFromColumn && post.shared_from && sharedPostsMap[post.shared_from]
         ? {
@@ -117,7 +119,7 @@ async function getUserData(user: any, rawPosts: any[], postIds: string[]) {
     userReactionsMap = await fetchUserReactions(user.id, postIds);
 
     // Get user's poll votes if any posts have polls
-    if (rawPosts.some(post => post.poll)) {
+    if (rawPosts.some(post => post && post.poll)) {
       votesMap = await fetchUserPollVotes(user.id);
     }
   }
@@ -130,6 +132,8 @@ async function getUserData(user: any, rawPosts: any[], postIds: string[]) {
  */
 function updatePollsWithUserVotes(rawPosts: any[], votesMap: Record<string, string>) {
   rawPosts.forEach(post => {
+    if (!post) return;
+    
     if (post.poll && typeof post.poll === 'object') {
       // Safely update the poll object with typechecking
       const pollObj = post.poll as Record<string, any>;

@@ -64,17 +64,37 @@ export function ShareOptions({ post, open, onOpenChange }: ShareOptionsProps) {
       // Get author information to store in the content
       const authorUsername = post.profiles?.username || "Usuario";
       
-      // Create a new post that references the original content
-      const { data, error } = await supabase
+      // Check if the database has the necessary columns
+      const { data } = await supabase
         .from('posts')
-        .insert({
-          content: "",  // We'll set this as empty and show the original post as shared content
-          user_id: userId,
-          media_type: null,
-          visibility: 'public',
-          shared_post_id: post.id,  // Store the original post ID
-          shared_post_author: authorUsername // Store the original author username
-        });
+        .select('id')
+        .limit(1);
+        
+      // Create a new post that references the original content
+      const postData: Record<string, any> = {
+        content: `Compartido de ${authorUsername}: ${post.content?.substring(0, 50)}${post.content && post.content.length > 50 ? '...' : ''}`,
+        user_id: userId,
+        media_type: null,
+        visibility: 'public'
+      };
+      
+      // Try to add shared post ID - this might fail if column doesn't exist
+      try {
+        const { error: testError } = await supabase
+          .from('posts')
+          .select('shared_post_id')
+          .limit(1);
+          
+        if (!testError) {
+          postData.shared_post_id = post.id;
+        }
+      } catch (error) {
+        console.log('shared_post_id column not available');
+      }
+      
+      const { error } = await supabase
+        .from('posts')
+        .insert(postData);
 
       if (error) {
         console.error("Error sharing post:", error);
