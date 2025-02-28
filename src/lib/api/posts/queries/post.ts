@@ -93,6 +93,24 @@ export async function fetchPostById(postId: string): Promise<Post | null> {
   }
 }
 
+// Define an interface for the post data structure we expect from Supabase
+interface PostData {
+  id: string;
+  content?: string | null;
+  user_id?: string | null;
+  media_url?: string | null;
+  media_type?: string | null;
+  visibility?: string | null;
+  poll?: any;
+  created_at?: string | null;
+  updated_at?: string | null;
+  shared_from?: string | null;
+  profiles?: {
+    username?: string | null;
+    avatar_url?: string | null;
+  } | null;
+}
+
 export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<string, any>> {
   if (!sharedPostIds.length) return {};
   
@@ -132,43 +150,30 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
       
     if (error || !sharedPosts) return {};
     
-    // Create a map of post IDs to posts with explicit type checking
+    // Create a map of post IDs to posts
     const postsMap: Record<string, any> = {};
     
-    // Safely iterate through the posts
-    if (Array.isArray(sharedPosts)) {
-      for (let i = 0; i < sharedPosts.length; i++) {
-        const item = sharedPosts[i];
-        
-        // Skip null or undefined items
-        if (item === null || item === undefined) continue;
-        
-        // Safely access properties with type narrowing
-        if (
-          typeof item === 'object' && 
-          item !== null && 
-          'id' in item && 
-          typeof item.id === 'string' && 
-          item.id
-        ) {
-          const id: string = item.id;
-          
-          postsMap[id] = {
-            id: id,
-            content: typeof item.content === 'string' ? item.content : '',
-            user_id: typeof item.user_id === 'string' ? item.user_id : null,
-            media_url: item.media_url ?? null,
-            media_type: item.media_type ?? null,
-            visibility: typeof item.visibility === 'string' ? item.visibility : 'public',
-            poll: item.poll ?? null,
-            created_at: typeof item.created_at === 'string' ? item.created_at : new Date().toISOString(),
-            updated_at: typeof item.updated_at === 'string' ? item.updated_at : new Date().toISOString(),
-            shared_from: item.shared_from ?? null,
-            profiles: item.profiles ?? null
-          };
-        }
-      }
-    }
+    // Filter out any null items and ensure we have valid posts
+    const validPosts = (sharedPosts as any[]).filter((post): post is PostData => {
+      return post && typeof post === 'object' && 'id' in post && typeof post.id === 'string';
+    });
+    
+    // Now we can safely process each post
+    validPosts.forEach(post => {
+      postsMap[post.id] = {
+        id: post.id,
+        content: post.content ?? '',
+        user_id: post.user_id ?? null,
+        media_url: post.media_url ?? null,
+        media_type: post.media_type ?? null,
+        visibility: post.visibility ?? 'public',
+        poll: post.poll ?? null,
+        created_at: post.created_at ?? new Date().toISOString(),
+        updated_at: post.updated_at ?? new Date().toISOString(),
+        shared_from: post.shared_from ?? null,
+        profiles: post.profiles ?? null
+      };
+    });
     
     return postsMap;
   }
