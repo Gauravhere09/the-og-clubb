@@ -1,6 +1,7 @@
 
 import { ReactNode } from "react";
 import { Navigation } from "@/components/Navigation";
+import { Toaster } from "@/components/ui/toaster";
 
 interface PopularityLayoutProps {
   children: ReactNode;
@@ -15,6 +16,7 @@ export const PopularityLayout = ({ children }: PopularityLayoutProps) => {
           {children}
         </div>
       </main>
+      <Toaster />
     </div>
   );
 };
