@@ -41,8 +41,6 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
         friend_avatar_url: targetUser.avatar_url,
         status: 'accepted'
       };
-      
-      // Corrigiendo el problema - pasando ambos argumentos a loadMessages
       loadMessages(currentUserId, friend);
       setLastActivity(new Date());
 
