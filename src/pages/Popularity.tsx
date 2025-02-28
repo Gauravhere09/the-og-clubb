@@ -52,8 +52,10 @@ export default function Popularity() {
             console.log(`Perfil recuperado ${index + 1}:`, {
               id: profile.id,
               username: profile.username,
-              career: profile.career ? String(profile.career) : null,
-              semester: profile.semester ? String(profile.semester) : null,
+              career: profile.career,
+              careerType: typeof profile.career,
+              semester: profile.semester,
+              semesterType: typeof profile.semester,
               propiedades: Object.keys(profile)
             });
           }
@@ -75,8 +77,8 @@ export default function Popularity() {
                 id: profile.id,
                 username: profile.username,
                 avatar_url: profile.avatar_url,
-                career: profile.career ? String(profile.career) : null,
-                semester: profile.semester ? String(profile.semester) : null,
+                career: typeof profile.career === 'string' ? profile.career : null,
+                semester: typeof profile.semester === 'string' ? profile.semester : null,
                 followers_count: 0
               };
             }
@@ -86,8 +88,8 @@ export default function Popularity() {
               id: profile.id,
               username: profile.username,
               avatar_url: profile.avatar_url,
-              career: profile.career ? String(profile.career) : null,
-              semester: profile.semester ? String(profile.semester) : null,
+              career: typeof profile.career === 'string' ? profile.career : null,
+              semester: typeof profile.semester === 'string' ? profile.semester : null,
               followers_count: count || 0
             } as PopularUserProfile;
           })
@@ -112,7 +114,7 @@ export default function Popularity() {
         const careers = sortedUsers
           .map(user => user.career)
           .filter((career): career is string => 
-            career !== null && career !== undefined && career !== '');
+            typeof career === 'string' && career !== '');
         
         const uniqueCareers = [...new Set(careers)];
         setCareerFilters(uniqueCareers);

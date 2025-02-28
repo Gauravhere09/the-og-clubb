@@ -54,16 +54,18 @@ export const UserList = ({ users, onProfileClick }: UserListProps) => {
         </div>
         <div className="space-y-2">
           {remainingUsers.map((user, index) => {
-            // Convertimos a string para depuración y visualización
-            const careerValue = user.career ? String(user.career) : null;
-            const semesterValue = user.semester ? String(user.semester) : null;
+            // Forzar los valores a string para depuración y visualización
+            const careerValue = typeof user.career === 'string' ? user.career : null;
+            const semesterValue = typeof user.semester === 'string' ? user.semester : null;
             
             console.log(`Renderizando usuario en lista ${index + 4} (datos procesados):`, {
               id: user.id,
               nombre: user.username,
               carrera: careerValue,
               semestre: semesterValue,
-              seguidores: user.followers_count
+              seguidores: user.followers_count,
+              tipo_carrera: typeof user.career,
+              tipo_semestre: typeof user.semester
             });
             
             return (

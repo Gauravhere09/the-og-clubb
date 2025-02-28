@@ -21,16 +21,19 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
       {topUsers.map((user, index) => {
-        // Convertimos a string para depuración
-        const careerValue = user.career ? String(user.career) : null;
-        const semesterValue = user.semester ? String(user.semester) : null;
+        // Forzar los valores a string para depuración y visualización
+        const careerValue = typeof user.career === 'string' ? user.career : null;
+        const semesterValue = typeof user.semester === 'string' ? user.semester : null;
         
         console.log(`Renderizando usuario top ${index + 1} (datos procesados):`, {
           id: user.id,
           nombre: user.username,
           carrera: careerValue,
           semestre: semesterValue,
-          seguidores: user.followers_count
+          seguidores: user.followers_count,
+          tipo_carrera: typeof user.career,
+          tipo_semestre: typeof user.semester,
+          valor_carrera_raw: user.career
         });
         
         return (
