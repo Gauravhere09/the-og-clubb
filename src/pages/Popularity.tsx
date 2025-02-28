@@ -22,10 +22,25 @@ export default function Popularity() {
     const fetchPopularUsers = async () => {
       setLoading(true);
       try {
-        // Obtenemos primero todos los perfiles de usuarios
+        // Vamos a depurar la estructura de la tabla profiles primero
+        const { data: tableInfo, error: tableError } = await supabase
+          .from('profiles')
+          .select('*')
+          .limit(1);
+          
+        if (tableError) {
+          console.error('Error al obtener información de la tabla:', tableError);
+        } else {
+          console.log('Estructura de un perfil de ejemplo:', tableInfo[0]);
+          // Verificamos específicamente las columnas career y semester
+          console.log('Tiene columna career:', tableInfo[0].hasOwnProperty('career'));
+          console.log('Tiene columna semester:', tableInfo[0].hasOwnProperty('semester'));
+        }
+
+        // Ahora obtenemos todos los perfiles con sus datos
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('id, username, avatar_url, career, semester');
+          .select('*');
 
         if (profilesError) {
           console.error('Error al obtener perfiles:', profilesError);
@@ -46,14 +61,17 @@ export default function Popularity() {
         }
 
         // Depuración detallada de cada perfil
-        console.log('Perfiles obtenidos:', profiles.length);
-        profiles.forEach(profile => {
-          console.log('Perfil:', {
-            id: profile.id,
-            username: profile.username,
-            career: profile.career,
-            semester: profile.semester
-          });
+        console.log('Perfiles obtenidos (total):', profiles.length);
+        profiles.forEach((profile, index) => {
+          if (index < 5) { // Solo mostramos los primeros 5 para no saturar la consola
+            console.log(`Perfil ${index + 1}:`, {
+              id: profile.id,
+              username: profile.username,
+              career: profile.career,
+              semester: profile.semester,
+              todas_las_propiedades: Object.keys(profile)
+            });
+          }
         });
 
         // Para cada perfil, contar sus seguidores
@@ -72,8 +90,8 @@ export default function Popularity() {
                 id: profile.id,
                 username: profile.username,
                 avatar_url: profile.avatar_url,
-                career: profile.career,
-                semester: profile.semester,
+                career: profile.career || null,
+                semester: profile.semester || null,
                 followers_count: 0
               };
             }
@@ -83,25 +101,30 @@ export default function Popularity() {
               id: profile.id,
               username: profile.username,
               avatar_url: profile.avatar_url,
-              career: profile.career,
-              semester: profile.semester,
+              career: profile.career || null,
+              semester: profile.semester || null,
               followers_count: count || 0
             } as PopularUserProfile;
           })
         );
 
         // Depuración de los usuarios con sus seguidores
-        console.log('Usuarios con seguidores antes de ordenar:', usersWithFollowers);
+        usersWithFollowers.slice(0, 5).forEach((user, index) => {
+          console.log(`Usuario con seguidores ${index + 1}:`, {
+            id: user.id,
+            username: user.username,
+            career: user.career,
+            semester: user.semester,
+            followers_count: user.followers_count
+          });
+        });
         
         // Ordenar usuarios por número de seguidores (descendente)
         const sortedUsers = [...usersWithFollowers].sort((a, b) => 
           b.followers_count - a.followers_count
         );
 
-        // Depuración después del ordenamiento
-        console.log('Usuarios ordenados por seguidores:', sortedUsers);
-        
-        // Depuración final para algunos usuarios específicos
+        // Verificar específicamente usuarios con nombres similares a los mencionados
         const heimy = sortedUsers.find(user => 
           user.username?.toLowerCase()?.includes('heimy'));
         const isabel = sortedUsers.find(user => 
@@ -159,6 +182,20 @@ export default function Popularity() {
   const filteredUsers = filter 
     ? popularUsers.filter(user => user.career === filter)
     : popularUsers;
+
+  // Forzamos un re-render para verificar los datos
+  useEffect(() => {
+    console.log("Estado actual de popularUsers:", popularUsers);
+    popularUsers.slice(0, 5).forEach((user, index) => {
+      console.log(`Perfil en estado ${index + 1}:`, {
+        id: user.id,
+        username: user.username,
+        career: user.career,
+        semester: user.semester,
+        followers: user.followers_count
+      });
+    });
+  }, [popularUsers]);
 
   if (loading) {
     return (
