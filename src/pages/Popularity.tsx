@@ -8,7 +8,6 @@ import { UserList } from "@/components/popularity/UserList";
 import { FilterButtons } from "@/components/popularity/FilterButtons";
 import { LoadingState } from "@/components/popularity/LoadingState";
 import type { PopularUserProfile } from "@/types/database/follow.types";
-import type { ProfileTable } from "@/types/database/profile.types";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Popularity() {
@@ -23,7 +22,7 @@ export default function Popularity() {
     const fetchPopularUsers = async () => {
       setLoading(true);
       try {
-        // Fetching all profiles from the database with career and semester
+        // Asegurarnos de seleccionar específicamente career y semester
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
           .select('id, username, avatar_url, career, semester');
@@ -47,12 +46,12 @@ export default function Popularity() {
 
         console.log('Perfiles obtenidos:', profiles);
         
-        // Log each profile's career and semester to debug
+        // Verificar explícitamente que cada perfil tenga los campos career y semester
         profiles.forEach(profile => {
           console.log(`Usuario: ${profile.username}, Carrera: ${profile.career || 'No definida'}, Semestre: ${profile.semester || 'No definido'}`);
         });
 
-        // For each profile, count their followers
+        // Para cada perfil, contar sus seguidores
         const usersWithFollowers = await Promise.all(
           profiles.map(async (profile) => {
             const { count } = await supabase
@@ -65,24 +64,25 @@ export default function Popularity() {
               id: profile.id,
               username: profile.username,
               avatar_url: profile.avatar_url,
-              career: profile.career || null,
-              semester: profile.semester || null,
+              career: profile.career, // Mantener null si no existe
+              semester: profile.semester, // Mantener null si no existe
               followers_count: count || 0
             } as PopularUserProfile;
           })
         );
 
-        // Sort users by follower count
+        // Ordenar usuarios por número de seguidores
         const sortedUsers = usersWithFollowers
           .sort((a, b) => b.followers_count - a.followers_count);
 
         console.log('Usuarios ordenados con carrera y semestre:', sortedUsers);
         setPopularUsers(sortedUsers);
 
-        // Extract unique careers for filtering
+        // Extraer carreras únicas para filtrado
         const careers = sortedUsers
           .map(user => user.career)
-          .filter((career): career is string => career !== null && career !== undefined && career !== '');
+          .filter((career): career is string => 
+            career !== null && career !== undefined && career !== '');
         
         const uniqueCareers = [...new Set(careers)];
         console.log('Carreras únicas:', uniqueCareers);
@@ -133,6 +133,11 @@ export default function Popularity() {
             <p className="text-muted-foreground mb-6">
               Los usuarios con más corazones (seguidores) ocupan los primeros lugares. ¡Sigue a otros usuarios para ganar popularidad!
             </p>
+
+            <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+              <h3 className="font-medium mb-2">Información importante</h3>
+              <p className="text-sm">La mayoría de los usuarios aún no han establecido su carrera y semestre. Estos campos aparecerán cuando los usuarios actualicen sus perfiles.</p>
+            </div>
 
             <FilterButtons 
               careerFilters={careerFilters}

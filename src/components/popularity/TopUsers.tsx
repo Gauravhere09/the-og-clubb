@@ -2,9 +2,11 @@
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, BookOpen, Heart, Trophy, Medal } from "lucide-react";
+import { GraduationCap, BookOpen, Heart, Trophy, Medal, PlusCircle } from "lucide-react";
 import { FollowButton } from "@/components/FollowButton";
 import type { PopularUserProfile } from "@/types/database/follow.types";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { useNavigate } from "react-router-dom";
 
 interface TopUsersProps {
   users: PopularUserProfile[];
@@ -12,6 +14,8 @@ interface TopUsersProps {
 }
 
 export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
+  const navigate = useNavigate();
+  
   if (users.length === 0) return null;
 
   return (
@@ -56,18 +60,33 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
                 {user.username || "Usuario"}
               </h3>
               
-              <div className="flex flex-wrap justify-center gap-2 mt-2">
-                {user.career && (
+              <div className="flex flex-wrap justify-center gap-2 mt-2 min-h-[28px]">
+                {user.career ? (
                   <Badge variant="secondary" className="flex items-center gap-1">
                     <GraduationCap className="h-3 w-3" />
                     {user.career}
                   </Badge>
-                )}
-                {user.semester && (
+                ) : null}
+                {user.semester ? (
                   <Badge variant="outline" className="flex items-center gap-1">
                     <BookOpen className="h-3 w-3" />
                     Semestre {user.semester}
                   </Badge>
+                ) : null}
+                {!user.career && !user.semester && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge variant="outline" className="flex items-center gap-1 cursor-default">
+                          <PlusCircle className="h-3 w-3" />
+                          Sin info académica
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="max-w-xs text-xs">Este usuario aún no ha completado su información académica</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
               </div>
             </div>

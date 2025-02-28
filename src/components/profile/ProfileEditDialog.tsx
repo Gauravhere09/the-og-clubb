@@ -60,10 +60,12 @@ export function ProfileEditDialog({
       const updateData: ProfileTable['Update'] = {
         username: formData.username,
         bio: formData.bio,
-        career: formData.career,
-        semester: formData.semester,
+        career: formData.career || null,  // Asegurarse de que se guarde null si está vacío
+        semester: formData.semester || null,  // Asegurarse de que se guarde null si está vacío
         updated_at: new Date().toISOString(),
       };
+
+      console.log("Enviando datos de actualización:", updateData);
 
       const { data, error } = await supabase
         .from("profiles")
@@ -85,6 +87,7 @@ export function ProfileEditDialog({
           semester: profileData.semester
         };
         
+        console.log("Perfil actualizado:", updatedProfile);
         onUpdate(updatedProfile);
         toast({
           title: "Perfil actualizado",
@@ -148,6 +151,7 @@ export function ProfileEditDialog({
                 <SelectValue placeholder="Selecciona tu carrera" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Sin especificar</SelectItem>
                 {careers.map((careerOption) => (
                   <SelectItem key={careerOption} value={careerOption}>
                     {careerOption}
@@ -168,6 +172,7 @@ export function ProfileEditDialog({
                 <SelectValue placeholder="Selecciona tu semestre" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="">Sin especificar</SelectItem>
                 {semesters.map((semesterOption) => (
                   <SelectItem key={semesterOption} value={semesterOption}>
                     {semesterOption}
