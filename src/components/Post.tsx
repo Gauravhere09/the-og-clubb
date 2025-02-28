@@ -131,18 +131,20 @@ export function Post({ post }: PostProps) {
         />
       </div>
       {showComments && (
-        <Comments
-          postId={post.id}
-          comments={comments}
-          onReaction={handleCommentReaction}
-          onReply={handleReply}
-          onSubmitComment={handleSubmitComment}
-          onDeleteComment={handleDeleteComment}
-          newComment={newComment}
-          onNewCommentChange={setNewComment}
-          replyTo={replyTo}
-          onCancelReply={handleCancelReply}
-        />
+        <div className="px-4 pb-4">
+          <Comments
+            postId={post.id}
+            comments={comments}
+            onReaction={handleCommentReaction}
+            onReply={handleReply}
+            onSubmitComment={handleSubmitComment}
+            onDeleteComment={handleDeleteComment}
+            newComment={newComment}
+            onNewCommentChange={setNewComment}
+            replyTo={replyTo}
+            onCancelReply={handleCancelReply}
+          />
+        </div>
       )}
     </Card>
   );

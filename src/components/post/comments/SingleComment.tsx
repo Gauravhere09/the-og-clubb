@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { MoreVertical, Pencil, Trash2, MessageSquare } from "lucide-react";
 import type { Comment } from "@/types/post";
 import { CommentReactions } from "./CommentReactions";
 import { type ReactionType } from "@/types/database/social.types";
@@ -75,6 +75,10 @@ export function SingleComment({
         setIsEditing(false);
       }
     });
+  };
+
+  const handleReply = () => {
+    onReply(comment.id, comment.profiles?.username || '');
   };
 
   return (
@@ -159,14 +163,31 @@ export function SingleComment({
             <Button
               variant="ghost"
               size="sm"
-              className="h-auto p-0 text-xs"
-              onClick={() => onReply(comment.id, comment.profiles?.username || '')}
+              className="h-auto p-0 text-xs flex items-center gap-1"
+              onClick={handleReply}
             >
+              <MessageSquare className="h-3 w-3" />
               Responder
             </Button>
           </div>
         </div>
       </div>
+      
+      {/* Mostrar respuestas si existen */}
+      {comment.replies && comment.replies.length > 0 && (
+        <div className="pl-8 mt-2 space-y-2">
+          {comment.replies.map((reply) => (
+            <SingleComment
+              key={reply.id}
+              comment={reply}
+              onReaction={onReaction}
+              onReply={onReply}
+              onDeleteComment={onDeleteComment}
+              isReply={true}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
