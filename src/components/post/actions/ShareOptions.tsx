@@ -65,11 +65,17 @@ export function ShareOptions({ post, open, onOpenChange }: ShareOptionsProps) {
       const authorUsername = post.profiles?.username || "Usuario";
       
       // Create a new post that references the original content
-      const postData = {
+      const postData: {
+        content: string;
+        user_id: string;
+        media_type: null;
+        visibility: 'public' | 'friends' | 'private';
+        shared_post_id?: string;
+      } = {
         content: `Compartido de ${authorUsername}: ${post.content?.substring(0, 50)}${post.content && post.content.length > 50 ? '...' : ''}`,
         user_id: userId,
         media_type: null,
-        visibility: 'public' as 'public' | 'friends' | 'private'
+        visibility: 'public'
       };
       
       // Try to add shared post ID if column exists

@@ -26,44 +26,50 @@ export async function checkPostsColumns(): Promise<{
     // If we didn't get an error on the basic query, try specific columns
     if (!sharedFromError) {
       try {
-        await supabase.rpc('test_column_exists', { 
-          table_name: 'posts', 
-          column_name: 'shared_from' 
-        });
-        result.hasSharedFrom = true;
-      } catch {
-        // RPC may not exist, try a direct query
+        // Try to use RPC if available, but this might not be available
+        // so we'll catch any errors and fall back to direct queries
+        try {
+          await supabase.rpc('test_column_exists', { 
+            table_name: 'posts', 
+            column_name: 'shared_from' 
+          } as any);
+          result.hasSharedFrom = true;
+        } catch {
+          // RPC may not exist, try a direct query
+          try {
+            const { error } = await supabase
+              .from('posts')
+              .select('shared_from')
+              .limit(1);
+            result.hasSharedFrom = !error;
+          } catch {
+            result.hasSharedFrom = false;
+          }
+        }
+        
+        // Check shared_post_id column
         try {
           const { error } = await supabase
             .from('posts')
-            .select('shared_from')
+            .select('shared_post_id')
             .limit(1);
-          result.hasSharedFrom = !error;
+          result.hasSharedPostId = !error;
         } catch {
-          result.hasSharedFrom = false;
+          result.hasSharedPostId = false;
         }
-      }
-      
-      // Check shared_post_id column
-      try {
-        const { error } = await supabase
-          .from('posts')
-          .select('shared_post_id')
-          .limit(1);
-        result.hasSharedPostId = !error;
-      } catch {
-        result.hasSharedPostId = false;
-      }
-      
-      // Check shared_post_author column
-      try {
-        const { error } = await supabase
-          .from('posts')
-          .select('shared_post_author')
-          .limit(1);
-        result.hasSharedPostAuthor = !error;
-      } catch {
-        result.hasSharedPostAuthor = false;
+        
+        // Check shared_post_author column
+        try {
+          const { error } = await supabase
+            .from('posts')
+            .select('shared_post_author')
+            .limit(1);
+          result.hasSharedPostAuthor = !error;
+        } catch {
+          result.hasSharedPostAuthor = false;
+        }
+      } catch (innerError) {
+        console.error('Error checking columns:', innerError);
       }
     }
     

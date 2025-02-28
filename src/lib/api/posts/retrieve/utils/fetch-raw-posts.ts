@@ -73,17 +73,14 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
     if (hasSharedFromColumn && Array.isArray(data)) {
       // Extract the shared_from IDs from posts that have them
       sharedPostIds = data
-        .filter((post) => {
-          if (!post) return false;
-          if (typeof post !== 'object') return false;
-          if (!hasSharedFromColumn) return false;
-          if (!post.shared_from) return false;
-          return true;
+        .filter((post): post is PostData & { shared_from: string } => {
+          return !!post && 
+                 typeof post === 'object' &&
+                 hasSharedFromColumn && 
+                 'shared_from' in post && 
+                 !!post.shared_from;
         })
-        .map((post) => {
-          // We've confirmed post is not null and has shared_from above
-          return post.shared_from as string;
-        })
+        .map(post => post.shared_from)
         .filter(Boolean);
     }
       
@@ -124,12 +121,13 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
           if (!post) return;
           if (typeof post !== 'object') return;
           if (!hasSharedFromColumn) return;
-          if (!('shared_from' in post)) return;
-          if (!post.shared_from) return;
           
-          const sharedPostId = post.shared_from as string;
-          if (sharedPostsMap[sharedPostId]) {
-            post.shared_post = sharedPostsMap[sharedPostId];
+          // Only proceed if the post has a shared_from property and it's not null
+          if ('shared_from' in post && post.shared_from) {
+            const sharedPostId = post.shared_from as string;
+            if (sharedPostsMap[sharedPostId]) {
+              post.shared_post = sharedPostsMap[sharedPostId];
+            }
           }
         });
       }
