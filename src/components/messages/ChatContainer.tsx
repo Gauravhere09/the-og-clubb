@@ -57,7 +57,12 @@ export const ChatContainer = ({
       {showGroupChat ? (
         <GroupChat
           messages={groupMessages}
-          currentUserId={currentUserId}
+          currentUserId={currentUserId || ""}
+          onSendMessage={async (content, type, audioBlob) => {
+            // Adaptamos esta función para cumplir con los requisitos del componente GroupChat
+            console.log("Enviando mensaje grupal:", content, type);
+            onSendMessage();
+          }}
         />
       ) : (
         <MessageList
@@ -73,12 +78,14 @@ export const ChatContainer = ({
         </div>
       )}
 
-      <MessageInput
-        newMessage={newMessage}
-        onMessageChange={onMessageChange}
-        onSendMessage={onSendMessage}
-        onImageUpload={onImageUpload}
-      />
+      {!showGroupChat && (
+        <MessageInput
+          newMessage={newMessage}
+          onMessageChange={onMessageChange}
+          onSendMessage={onSendMessage}
+          onImageUpload={onImageUpload}
+        />
+      )}
     </div>
   );
 };
