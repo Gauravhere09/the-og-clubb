@@ -3,23 +3,7 @@ import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessa
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { UseFormReturn } from "react-hook-form";
 import * as z from "zod";
-
-// List of careers
-const careers = [
-  "Derecho",
-  "Música",
-  "Teología",
-  "Psicología",
-  "Licenciatura en Bilingüismo: Español e Inglés",
-  "Contaduría Pública",
-  "Administración de Empresas",
-  "Administración de Negocios Internacionales",
-  "Administración Marítima y Portuaria",
-  "Ingeniería Industrial - Tecnología en Logística Empresarial",
-  "Ingeniería Informática - Tecnología en Gestión de Redes Informáticas",
-  "Ingeniería Biomédica - Tecnología en Mantenimiento de Equipo Biomédico",
-  "Ingeniería Ambiental - Tecnología en Desarrollo Ambiental y Sostenible"
-];
+import { careers } from "@/data/careers";
 
 interface CareerSelectProps {
   form: UseFormReturn<z.infer<any>>;
