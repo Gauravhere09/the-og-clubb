@@ -19,26 +19,53 @@ export async function checkPostsColumns(): Promise<{
     // Check shared_from column
     const { error: sharedFromError } = await supabase
       .from('posts')
-      .select('shared_from')
-      .limit(1);
+      .select('id')
+      .limit(1)
+      .maybeSingle();
       
-    result.hasSharedFrom = !sharedFromError;
-    
-    // Check shared_post_id column
-    const { error: sharedPostIdError } = await supabase
-      .from('posts')
-      .select('shared_post_id')
-      .limit(1);
+    // If we didn't get an error on the basic query, try specific columns
+    if (!sharedFromError) {
+      try {
+        await supabase.rpc('test_column_exists', { 
+          table_name: 'posts', 
+          column_name: 'shared_from' 
+        });
+        result.hasSharedFrom = true;
+      } catch {
+        // RPC may not exist, try a direct query
+        try {
+          const { error } = await supabase
+            .from('posts')
+            .select('shared_from')
+            .limit(1);
+          result.hasSharedFrom = !error;
+        } catch {
+          result.hasSharedFrom = false;
+        }
+      }
       
-    result.hasSharedPostId = !sharedPostIdError;
-    
-    // Check shared_post_author column
-    const { error: sharedPostAuthorError } = await supabase
-      .from('posts')
-      .select('shared_post_author')
-      .limit(1);
+      // Check shared_post_id column
+      try {
+        const { error } = await supabase
+          .from('posts')
+          .select('shared_post_id')
+          .limit(1);
+        result.hasSharedPostId = !error;
+      } catch {
+        result.hasSharedPostId = false;
+      }
       
-    result.hasSharedPostId = !sharedPostAuthorError;
+      // Check shared_post_author column
+      try {
+        const { error } = await supabase
+          .from('posts')
+          .select('shared_post_author')
+          .limit(1);
+        result.hasSharedPostAuthor = !error;
+      } catch {
+        result.hasSharedPostAuthor = false;
+      }
+    }
     
     return result;
   } catch (error) {

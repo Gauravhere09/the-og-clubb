@@ -64,21 +64,15 @@ export function ShareOptions({ post, open, onOpenChange }: ShareOptionsProps) {
       // Get author information to store in the content
       const authorUsername = post.profiles?.username || "Usuario";
       
-      // Check if the database has the necessary columns
-      const { data } = await supabase
-        .from('posts')
-        .select('id')
-        .limit(1);
-        
       // Create a new post that references the original content
-      const postData: Record<string, any> = {
+      const postData = {
         content: `Compartido de ${authorUsername}: ${post.content?.substring(0, 50)}${post.content && post.content.length > 50 ? '...' : ''}`,
         user_id: userId,
         media_type: null,
-        visibility: 'public'
+        visibility: 'public' as 'public' | 'friends' | 'private'
       };
       
-      // Try to add shared post ID - this might fail if column doesn't exist
+      // Try to add shared post ID if column exists
       try {
         const { error: testError } = await supabase
           .from('posts')
