@@ -54,12 +54,15 @@ export const UserList = ({ users, onProfileClick }: UserListProps) => {
         </div>
         <div className="space-y-2">
           {remainingUsers.map((user, index) => {
-            // Depuración para verificar datos
-            console.log(`Renderizando usuario en lista ${index + 4}:`, {
+            // Convertimos a string para depuración y visualización
+            const careerValue = user.career ? String(user.career) : null;
+            const semesterValue = user.semester ? String(user.semester) : null;
+            
+            console.log(`Renderizando usuario en lista ${index + 4} (datos procesados):`, {
               id: user.id,
               nombre: user.username,
-              carrera: user.career,
-              semestre: user.semester,
+              carrera: careerValue,
+              semestre: semesterValue,
               seguidores: user.followers_count
             });
             
@@ -91,15 +94,15 @@ export const UserList = ({ users, onProfileClick }: UserListProps) => {
                   </div>
                 </div>
                 <div className="col-span-3 truncate text-sm">
-                  {user.career ? (
-                    <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full">{user.career}</span>
+                  {careerValue ? (
+                    <span className="px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full">{careerValue}</span>
                   ) : (
                     <span className="text-muted-foreground text-xs">No especificada</span>
                   )}
                 </div>
                 <div className="col-span-2 text-sm">
-                  {user.semester ? (
-                    <span className="px-2 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-full">Semestre {user.semester}</span>
+                  {semesterValue ? (
+                    <span className="px-2 py-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 rounded-full">Semestre {semesterValue}</span>
                   ) : (
                     <span className="text-muted-foreground text-xs">No especificado</span>
                   )}

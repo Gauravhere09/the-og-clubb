@@ -21,12 +21,15 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
       {topUsers.map((user, index) => {
-        // Depuración para verificar datos
-        console.log(`Renderizando usuario top ${index + 1}:`, {
+        // Convertimos a string para depuración
+        const careerValue = user.career ? String(user.career) : null;
+        const semesterValue = user.semester ? String(user.semester) : null;
+        
+        console.log(`Renderizando usuario top ${index + 1} (datos procesados):`, {
           id: user.id,
           nombre: user.username,
-          carrera: user.career,
-          semestre: user.semester,
+          carrera: careerValue,
+          semestre: semesterValue,
           seguidores: user.followers_count
         });
         
@@ -71,21 +74,21 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
                 </h3>
                 
                 <div className="flex flex-wrap justify-center gap-2 mt-2 min-h-[28px]">
-                  {user.career && (
+                  {careerValue ? (
                     <Badge variant="secondary" className="flex items-center gap-1">
                       <GraduationCap className="h-3 w-3" />
-                      {user.career}
+                      {careerValue}
                     </Badge>
-                  )}
+                  ) : null}
                   
-                  {user.semester && (
+                  {semesterValue ? (
                     <Badge variant="outline" className="flex items-center gap-1">
                       <BookOpen className="h-3 w-3" />
-                      Semestre {user.semester}
+                      Semestre {semesterValue}
                     </Badge>
-                  )}
+                  ) : null}
                   
-                  {(!user.career && !user.semester) && (
+                  {(!careerValue && !semesterValue) && (
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>

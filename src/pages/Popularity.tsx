@@ -22,25 +22,10 @@ export default function Popularity() {
     const fetchPopularUsers = async () => {
       setLoading(true);
       try {
-        // Vamos a depurar la estructura de la tabla profiles primero
-        const { data: tableInfo, error: tableError } = await supabase
-          .from('profiles')
-          .select('*')
-          .limit(1);
-          
-        if (tableError) {
-          console.error('Error al obtener información de la tabla:', tableError);
-        } else {
-          console.log('Estructura de un perfil de ejemplo:', tableInfo[0]);
-          // Verificamos específicamente las columnas career y semester
-          console.log('Tiene columna career:', tableInfo[0].hasOwnProperty('career'));
-          console.log('Tiene columna semester:', tableInfo[0].hasOwnProperty('semester'));
-        }
-
-        // Ahora obtenemos todos los perfiles con sus datos
+        // Obtenemos todos los perfiles directamente de la tabla
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('*');
+          .select('id, username, avatar_url, career, semester');
 
         if (profilesError) {
           console.error('Error al obtener perfiles:', profilesError);
@@ -61,15 +46,15 @@ export default function Popularity() {
         }
 
         // Depuración detallada de cada perfil
-        console.log('Perfiles obtenidos (total):', profiles.length);
+        console.log('Perfiles recuperados:', profiles.length);
         profiles.forEach((profile, index) => {
           if (index < 5) { // Solo mostramos los primeros 5 para no saturar la consola
-            console.log(`Perfil ${index + 1}:`, {
+            console.log(`Perfil recuperado ${index + 1}:`, {
               id: profile.id,
               username: profile.username,
-              career: profile.career,
-              semester: profile.semester,
-              todas_las_propiedades: Object.keys(profile)
+              career: profile.career ? String(profile.career) : null,
+              semester: profile.semester ? String(profile.semester) : null,
+              propiedades: Object.keys(profile)
             });
           }
         });
@@ -90,8 +75,8 @@ export default function Popularity() {
                 id: profile.id,
                 username: profile.username,
                 avatar_url: profile.avatar_url,
-                career: profile.career || null,
-                semester: profile.semester || null,
+                career: profile.career ? String(profile.career) : null,
+                semester: profile.semester ? String(profile.semester) : null,
                 followers_count: 0
               };
             }
@@ -101,54 +86,25 @@ export default function Popularity() {
               id: profile.id,
               username: profile.username,
               avatar_url: profile.avatar_url,
-              career: profile.career || null,
-              semester: profile.semester || null,
+              career: profile.career ? String(profile.career) : null,
+              semester: profile.semester ? String(profile.semester) : null,
               followers_count: count || 0
             } as PopularUserProfile;
           })
         );
 
-        // Depuración de los usuarios con sus seguidores
-        usersWithFollowers.slice(0, 5).forEach((user, index) => {
-          console.log(`Usuario con seguidores ${index + 1}:`, {
-            id: user.id,
-            username: user.username,
-            career: user.career,
-            semester: user.semester,
-            followers_count: user.followers_count
-          });
-        });
-        
         // Ordenar usuarios por número de seguidores (descendente)
         const sortedUsers = [...usersWithFollowers].sort((a, b) => 
           b.followers_count - a.followers_count
         );
 
-        // Verificar específicamente usuarios con nombres similares a los mencionados
-        const heimy = sortedUsers.find(user => 
-          user.username?.toLowerCase()?.includes('heimy'));
-        const isabel = sortedUsers.find(user => 
-          user.username?.toLowerCase()?.includes('isabel'));
-          
-        if (heimy) {
-          console.log('Información de Heimy en el array final:', {
-            id: heimy.id,
-            username: heimy.username,
-            career: heimy.career,
-            semester: heimy.semester,
-            followers: heimy.followers_count
-          });
-        }
-        
-        if (isabel) {
-          console.log('Información de Isabel en el array final:', {
-            id: isabel.id,
-            username: isabel.username,
-            career: isabel.career,
-            semester: isabel.semester,
-            followers: isabel.followers_count
-          });
-        }
+        console.log('Usuarios ordenados (Top 5):', sortedUsers.slice(0, 5).map(u => ({
+          id: u.id,
+          username: u.username,
+          career: u.career,
+          semester: u.semester,
+          followers: u.followers_count
+        })));
 
         setPopularUsers(sortedUsers);
 
@@ -182,20 +138,6 @@ export default function Popularity() {
   const filteredUsers = filter 
     ? popularUsers.filter(user => user.career === filter)
     : popularUsers;
-
-  // Forzamos un re-render para verificar los datos
-  useEffect(() => {
-    console.log("Estado actual de popularUsers:", popularUsers);
-    popularUsers.slice(0, 5).forEach((user, index) => {
-      console.log(`Perfil en estado ${index + 1}:`, {
-        id: user.id,
-        username: user.username,
-        career: user.career,
-        semester: user.semester,
-        followers: user.followers_count
-      });
-    });
-  }, [popularUsers]);
 
   if (loading) {
     return (
