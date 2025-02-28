@@ -1,23 +1,25 @@
 
+import { MessageList } from "@/components/messages/MessageList";
+import { MessageInput } from "@/components/messages/MessageInput";
+import { ChatHeader } from "@/components/messages/ChatHeader";
+import { GroupChat } from "@/components/messages/GroupChat";
+import { Message } from "@/hooks/use-private-messages";
 import { Friend } from "@/hooks/use-friends";
-import { GroupMessage } from "@/hooks/use-group-messages";
-import { GroupChat } from "./GroupChat";
-import { ChatHeader } from "./ChatHeader";
-import { MessageList } from "./MessageList";
-import { MessageInput } from "./MessageInput";
 
 interface ChatContainerProps {
   showChat: boolean;
   showGroupChat: boolean;
   selectedFriend: Friend | null;
   currentUserId: string | null;
-  messages: any[];
-  groupMessages: GroupMessage[];
+  messages: Message[];
+  groupMessages: any[];
   newMessage: string;
   isTyping: boolean;
   onBack: () => void;
   onMessageChange: (message: string) => void;
   onSendMessage: () => void;
+  onDeleteMessage?: (messageId: string) => void;
+  onImageUpload?: (file: File) => void;
 }
 
 export const ChatContainer = ({
@@ -32,58 +34,51 @@ export const ChatContainer = ({
   onBack,
   onMessageChange,
   onSendMessage,
+  onDeleteMessage,
+  onImageUpload
 }: ChatContainerProps) => {
   if (!showChat) {
     return (
-      <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
-        Selecciona un chat para comenzar
+      <div className="h-full flex flex-col items-center justify-center p-4 text-center text-muted-foreground">
+        <p>Selecciona un chat para comenzar a conversar</p>
+        <p className="text-sm">O inicia una nueva conversación desde el chat grupal</p>
       </div>
     );
   }
 
-  if (showGroupChat && currentUserId) {
-    return (
-      <GroupChat
-        messages={groupMessages}
-        currentUserId={currentUserId}
-        onSendMessage={async () => {}}
-        onClose={() => {
-          onBack();
-          const nav = document.querySelector('nav');
-          if (nav) nav.style.display = 'flex';
-        }}
+  return (
+    <div className="flex flex-col h-full">
+      <ChatHeader
+        selectedFriend={selectedFriend}
+        isGroupChat={showGroupChat}
+        onBack={onBack}
       />
-    );
-  }
 
-  if (selectedFriend) {
-    return (
-      <>
-        <ChatHeader 
-          friend={selectedFriend} 
-          onBack={() => {
-            onBack();
-            const nav = document.querySelector('nav');
-            if (nav) nav.style.display = 'flex';
-          }}
-          isTyping={isTyping}
+      {showGroupChat ? (
+        <GroupChat
+          messages={groupMessages}
+          currentUserId={currentUserId}
         />
-        {currentUserId && (
-          <>
-            <MessageList 
-              messages={messages}
-              currentUserId={currentUserId}
-            />
-            <MessageInput 
-              newMessage={newMessage}
-              onMessageChange={onMessageChange}
-              onSendMessage={onSendMessage}
-            />
-          </>
-        )}
-      </>
-    );
-  }
+      ) : (
+        <MessageList
+          messages={messages}
+          currentUserId={currentUserId}
+          onDeleteMessage={onDeleteMessage}
+        />
+      )}
 
-  return null;
+      {isTyping && (
+        <div className="px-4 py-2 text-sm text-muted-foreground">
+          Escribiendo...
+        </div>
+      )}
+
+      <MessageInput
+        newMessage={newMessage}
+        onMessageChange={onMessageChange}
+        onSendMessage={onSendMessage}
+        onImageUpload={onImageUpload}
+      />
+    </div>
+  );
 };

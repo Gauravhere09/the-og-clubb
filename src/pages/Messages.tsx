@@ -9,6 +9,7 @@ import { useMessageNotifications } from "@/components/messages/MessageNotificati
 import { MessagesLayout } from "@/components/messages/MessagesLayout";
 import { SidebarContent } from "@/components/messages/SidebarContent";
 import { ChatContainer } from "@/components/messages/ChatContainer";
+import { useToast } from "@/hooks/use-toast";
 
 const Messages = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -18,9 +19,10 @@ const Messages = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
+  const { toast } = useToast();
   
   const { friends } = useFriends(currentUserId);
-  const { messages, loadMessages, sendMessage } = usePrivateMessages();
+  const { messages, loadMessages, sendMessage, deleteMessage } = usePrivateMessages();
   const { groupMessages } = useGroupMessages(currentUserId, showGroupChat);
   const { 
     archivedChats, 
@@ -93,6 +95,53 @@ const Messages = () => {
       }
     }
   };
+  
+  const handleDeleteMessage = async (messageId: string) => {
+    if (!currentUserId) return;
+    await deleteMessage(messageId, currentUserId);
+  };
+  
+  const handleImageUpload = async (file: File) => {
+    if (!currentUserId || !selectedFriend) return;
+    
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${currentUserId}-${Date.now()}.${fileExt}`;
+      const filePath = `message_images/${fileName}`;
+      
+      // Subir imagen a Storage
+      const { error: uploadError } = await supabase.storage
+        .from('media')
+        .upload(filePath, file);
+        
+      if (uploadError) throw uploadError;
+      
+      // Obtener URL pública
+      const { data } = supabase.storage
+        .from('media')
+        .getPublicUrl(filePath);
+        
+      if (data && data.publicUrl) {
+        // Enviar mensaje con imagen
+        const messageContent = `[Imagen] ${data.publicUrl}`;
+        const success = await sendMessage(messageContent, currentUserId, selectedFriend);
+        
+        if (success) {
+          toast({
+            title: "Imagen enviada",
+            description: "La imagen se ha enviado correctamente",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error subiendo imagen:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo enviar la imagen",
+      });
+    }
+  };
 
   const handleBack = () => {
     setSelectedFriend(null);
@@ -148,6 +197,8 @@ const Messages = () => {
             onBack={handleBack}
             onMessageChange={handleMessageChange}
             onSendMessage={handleSendMessage}
+            onDeleteMessage={handleDeleteMessage}
+            onImageUpload={handleImageUpload}
           />
         </div>
       }
