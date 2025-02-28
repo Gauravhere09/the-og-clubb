@@ -135,26 +135,36 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
     // Create a map of post IDs to posts with explicit type checking
     const postsMap: Record<string, any> = {};
     
-    // Safely iterate through the posts to verify each one has an id
+    // Safely iterate through the posts
     if (Array.isArray(sharedPosts)) {
-      for (const postItem of sharedPosts) {
-        // Skip null or undefined items
-        if (!postItem) continue;
+      for (let i = 0; i < sharedPosts.length; i++) {
+        const item = sharedPosts[i];
         
-        // Type check and handle postItem safely
-        if (typeof postItem === 'object' && postItem !== null && 'id' in postItem && postItem.id) {
-          postsMap[postItem.id] = {
-            id: postItem.id,
-            content: postItem.content ?? '',
-            user_id: postItem.user_id ?? null,
-            media_url: postItem.media_url ?? null,
-            media_type: postItem.media_type ?? null,
-            visibility: postItem.visibility ?? 'public',
-            poll: postItem.poll ?? null,
-            created_at: postItem.created_at ?? new Date().toISOString(),
-            updated_at: postItem.updated_at ?? new Date().toISOString(),
-            shared_from: postItem.shared_from ?? null,
-            profiles: postItem.profiles ?? null
+        // Skip null or undefined items
+        if (item === null || item === undefined) continue;
+        
+        // Safely access properties with type narrowing
+        if (
+          typeof item === 'object' && 
+          item !== null && 
+          'id' in item && 
+          typeof item.id === 'string' && 
+          item.id
+        ) {
+          const id: string = item.id;
+          
+          postsMap[id] = {
+            id: id,
+            content: typeof item.content === 'string' ? item.content : '',
+            user_id: typeof item.user_id === 'string' ? item.user_id : null,
+            media_url: item.media_url ?? null,
+            media_type: item.media_type ?? null,
+            visibility: typeof item.visibility === 'string' ? item.visibility : 'public',
+            poll: item.poll ?? null,
+            created_at: typeof item.created_at === 'string' ? item.created_at : new Date().toISOString(),
+            updated_at: typeof item.updated_at === 'string' ? item.updated_at : new Date().toISOString(),
+            shared_from: item.shared_from ?? null,
+            profiles: item.profiles ?? null
           };
         }
       }
