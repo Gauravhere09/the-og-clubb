@@ -16,35 +16,26 @@ export async function checkPostsColumns(): Promise<{
   };
 
   try {
-    // Check shared_from column
-    const { error: sharedFromError } = await supabase
+    // Check basic query first
+    const { error: basicQueryError } = await supabase
       .from('posts')
       .select('id')
       .limit(1)
       .maybeSingle();
       
     // If we didn't get an error on the basic query, try specific columns
-    if (!sharedFromError) {
+    if (!basicQueryError) {
       try {
-        // Try to use RPC if available, but this might not be available
-        // so we'll catch any errors and fall back to direct queries
+        // Try to check shared_from column
         try {
-          await supabase.rpc('test_column_exists', { 
-            table_name: 'posts', 
-            column_name: 'shared_from' 
-          } as any);
-          result.hasSharedFrom = true;
+          // Don't use RPC as it's causing 404 errors
+          const { error } = await supabase
+            .from('posts')
+            .select('shared_from')
+            .limit(1);
+          result.hasSharedFrom = !error;
         } catch {
-          // RPC may not exist, try a direct query
-          try {
-            const { error } = await supabase
-              .from('posts')
-              .select('shared_from')
-              .limit(1);
-            result.hasSharedFrom = !error;
-          } catch {
-            result.hasSharedFrom = false;
-          }
+          result.hasSharedFrom = false;
         }
         
         // Check shared_post_id column
