@@ -22,11 +22,10 @@ export default function Popularity() {
     const fetchPopularUsers = async () => {
       setLoading(true);
       try {
-        // Primero obtenemos todos los perfiles de la base de datos
+        // Obtenemos primero todos los perfiles de usuarios
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('id, username, avatar_url, career, semester')
-          .order('created_at', { ascending: false });
+          .select('id, username, avatar_url, career, semester');
 
         if (profilesError) {
           console.error('Error al obtener perfiles:', profilesError);
@@ -35,7 +34,8 @@ export default function Popularity() {
             description: "No se pudieron cargar los perfiles de usuarios",
             variant: "destructive"
           });
-          throw profilesError;
+          setLoading(false);
+          return;
         }
 
         if (!profiles || profiles.length === 0) {
@@ -45,9 +45,17 @@ export default function Popularity() {
           return;
         }
 
-        // Depuración: Mostrar todos los perfiles recuperados
-        console.log('Perfiles obtenidos (total):', profiles.length);
-        
+        // Depuración detallada de cada perfil
+        console.log('Perfiles obtenidos:', profiles.length);
+        profiles.forEach(profile => {
+          console.log('Perfil:', {
+            id: profile.id,
+            username: profile.username,
+            career: profile.career,
+            semester: profile.semester
+          });
+        });
+
         // Para cada perfil, contar sus seguidores
         const usersWithFollowers = await Promise.all(
           profiles.map(async (profile) => {
@@ -60,14 +68,15 @@ export default function Popularity() {
               
             if (error) {
               console.error(`Error al contar seguidores para ${profile.username}:`, error);
+              return {
+                id: profile.id,
+                username: profile.username,
+                avatar_url: profile.avatar_url,
+                career: profile.career,
+                semester: profile.semester,
+                followers_count: 0
+              };
             }
-
-            // Imprimir datos específicos de cada usuario para depuración
-            console.log(`Usuario ${profile.username || 'sin nombre'} (${profile.id}):`, {
-              carrera: profile.career || 'No definida',
-              semestre: profile.semester || 'No definido',
-              seguidores: count || 0
-            });
 
             // Construir objeto con toda la información
             return {
@@ -81,55 +90,41 @@ export default function Popularity() {
           })
         );
 
+        // Depuración de los usuarios con sus seguidores
+        console.log('Usuarios con seguidores antes de ordenar:', usersWithFollowers);
+        
         // Ordenar usuarios por número de seguidores (descendente)
-        const sortedUsers = [...usersWithFollowers].sort((a, b) => {
-          // Primero ordenar por seguidores
-          const followersComparison = b.followers_count - a.followers_count;
-          
-          // En caso de empate, ordenar por nombre de usuario
-          if (followersComparison === 0) {
-            const usernameA = a.username?.toLowerCase() || '';
-            const usernameB = b.username?.toLowerCase() || '';
-            return usernameA.localeCompare(usernameB);
-          }
-          
-          return followersComparison;
-        });
+        const sortedUsers = [...usersWithFollowers].sort((a, b) => 
+          b.followers_count - a.followers_count
+        );
 
-        // Verificar el orden para depuración
-        console.log('Usuarios ordenados por seguidores:');
-        sortedUsers.forEach((user, index) => {
-          console.log(`${index + 1}. ${user.username || 'Usuario sin nombre'}: ${user.followers_count} seguidores`);
-        });
+        // Depuración después del ordenamiento
+        console.log('Usuarios ordenados por seguidores:', sortedUsers);
         
-        // Verificamos específicamente la información de los usuarios mencionados
+        // Depuración final para algunos usuarios específicos
         const heimy = sortedUsers.find(user => 
-          user.username?.toLowerCase().includes('heimy'));
+          user.username?.toLowerCase()?.includes('heimy'));
         const isabel = sortedUsers.find(user => 
-          user.username?.toLowerCase().includes('isabel'));
-        
+          user.username?.toLowerCase()?.includes('isabel'));
+          
         if (heimy) {
-          console.log('Información de Heimy verificada:', {
+          console.log('Información de Heimy en el array final:', {
             id: heimy.id,
-            nombre: heimy.username,
-            carrera: heimy.career,
-            semestre: heimy.semester,
-            seguidores: heimy.followers_count
+            username: heimy.username,
+            career: heimy.career,
+            semester: heimy.semester,
+            followers: heimy.followers_count
           });
-        } else {
-          console.log('No se encontró un usuario con "heimy" en el nombre');
         }
         
         if (isabel) {
-          console.log('Información de Isabel verificada:', {
+          console.log('Información de Isabel en el array final:', {
             id: isabel.id,
-            nombre: isabel.username,
-            carrera: isabel.career,
-            semestre: isabel.semester,
-            seguidores: isabel.followers_count
+            username: isabel.username,
+            career: isabel.career,
+            semester: isabel.semester,
+            followers: isabel.followers_count
           });
-        } else {
-          console.log('No se encontró un usuario con "isabel" en el nombre');
         }
 
         setPopularUsers(sortedUsers);
@@ -141,7 +136,6 @@ export default function Popularity() {
             career !== null && career !== undefined && career !== '');
         
         const uniqueCareers = [...new Set(careers)];
-        console.log('Carreras únicas disponibles para filtrado:', uniqueCareers);
         setCareerFilters(uniqueCareers);
       } catch (error) {
         console.error('Error al cargar usuarios populares:', error);
