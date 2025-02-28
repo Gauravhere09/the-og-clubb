@@ -11,6 +11,9 @@ interface UserListProps {
 }
 
 export const UserList = ({ users, onProfileClick }: UserListProps) => {
+  // Filtramos para excluir los 3 primeros usuarios (ya mostrados en TopUsers)
+  const remainingUsers = users.length > 3 ? users.slice(3) : [];
+  
   return (
     <Card className="overflow-hidden">
       <div className="p-4">
@@ -50,10 +53,14 @@ export const UserList = ({ users, onProfileClick }: UserListProps) => {
           <div className="col-span-2 text-right">Corazones</div>
         </div>
         <div className="space-y-2">
-          {users.length > 3 && users.slice(3).map((user, index) => {
-            console.log(`Renderizando usuario ${user.username}:`, {
+          {remainingUsers.map((user, index) => {
+            // Depuración para verificar datos
+            console.log(`Renderizando usuario en lista ${index + 4}:`, {
+              id: user.id,
+              nombre: user.username,
               carrera: user.career,
-              semestre: user.semester
+              semestre: user.semester,
+              seguidores: user.followers_count
             });
             
             return (

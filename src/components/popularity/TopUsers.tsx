@@ -6,7 +6,6 @@ import { GraduationCap, BookOpen, Heart, Trophy, Medal, PlusCircle } from "lucid
 import { FollowButton } from "@/components/FollowButton";
 import type { PopularUserProfile } from "@/types/database/follow.types";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { useNavigate } from "react-router-dom";
 
 interface TopUsersProps {
   users: PopularUserProfile[];
@@ -14,16 +13,21 @@ interface TopUsersProps {
 }
 
 export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
-  const navigate = useNavigate();
-  
   if (users.length === 0) return null;
+
+  // Tomamos los primeros 3 usuarios
+  const topUsers = users.slice(0, 3);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-      {users.slice(0, 3).map((user, index) => {
-        console.log(`Renderizando usuario top ${user.username}:`, {
+      {topUsers.map((user, index) => {
+        // Depuración para verificar datos
+        console.log(`Renderizando usuario top ${index + 1}:`, {
+          id: user.id,
+          nombre: user.username,
           carrera: user.career,
-          semestre: user.semester
+          semestre: user.semester,
+          seguidores: user.followers_count
         });
         
         return (
@@ -67,19 +71,21 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
                 </h3>
                 
                 <div className="flex flex-wrap justify-center gap-2 mt-2 min-h-[28px]">
-                  {user.career ? (
+                  {user.career && (
                     <Badge variant="secondary" className="flex items-center gap-1">
                       <GraduationCap className="h-3 w-3" />
                       {user.career}
                     </Badge>
-                  ) : null}
-                  {user.semester ? (
+                  )}
+                  
+                  {user.semester && (
                     <Badge variant="outline" className="flex items-center gap-1">
                       <BookOpen className="h-3 w-3" />
                       Semestre {user.semester}
                     </Badge>
-                  ) : null}
-                  {!user.career && !user.semester && (
+                  )}
+                  
+                  {(!user.career && !user.semester) && (
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>

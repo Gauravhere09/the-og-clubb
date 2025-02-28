@@ -22,7 +22,7 @@ export default function Popularity() {
     const fetchPopularUsers = async () => {
       setLoading(true);
       try {
-        // Usamos directamente la función RPC para obtener usuarios con la información completa
+        // Primero obtenemos todos los perfiles de la base de datos
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
           .select('id, username, avatar_url, career, semester')
@@ -45,31 +45,36 @@ export default function Popularity() {
           return;
         }
 
-        // Verificación detallada de los datos para depuración
+        // Depuración: Mostrar todos los perfiles recuperados
         console.log('Perfiles obtenidos (total):', profiles.length);
-        profiles.forEach(profile => {
-          console.log(`Usuario: ${profile.username}`, {
-            id: profile.id,
-            carrera: profile.career || 'No definida',
-            semestre: profile.semester || 'No definido'
-          });
-        });
-
+        
         // Para cada perfil, contar sus seguidores
         const usersWithFollowers = await Promise.all(
           profiles.map(async (profile) => {
-            const { count } = await supabase
+            // Contar seguidores (friendships donde este usuario es el amigo)
+            const { count, error } = await supabase
               .from('friendships')
               .select('*', { count: 'exact', head: true })
               .eq('friend_id', profile.id)
               .eq('status', 'accepted');
+              
+            if (error) {
+              console.error(`Error al contar seguidores para ${profile.username}:`, error);
+            }
 
-            // Construimos el objeto con toda la información disponible
+            // Imprimir datos específicos de cada usuario para depuración
+            console.log(`Usuario ${profile.username || 'sin nombre'} (${profile.id}):`, {
+              carrera: profile.career || 'No definida',
+              semestre: profile.semester || 'No definido',
+              seguidores: count || 0
+            });
+
+            // Construir objeto con toda la información
             return {
               id: profile.id,
               username: profile.username,
               avatar_url: profile.avatar_url,
-              career: profile.career, 
+              career: profile.career,
               semester: profile.semester,
               followers_count: count || 0
             } as PopularUserProfile;
@@ -77,31 +82,54 @@ export default function Popularity() {
         );
 
         // Ordenar usuarios por número de seguidores (descendente)
-        const sortedUsers = usersWithFollowers
-          .sort((a, b) => b.followers_count - a.followers_count);
+        const sortedUsers = [...usersWithFollowers].sort((a, b) => {
+          // Primero ordenar por seguidores
+          const followersComparison = b.followers_count - a.followers_count;
+          
+          // En caso de empate, ordenar por nombre de usuario
+          if (followersComparison === 0) {
+            const usernameA = a.username?.toLowerCase() || '';
+            const usernameB = b.username?.toLowerCase() || '';
+            return usernameA.localeCompare(usernameB);
+          }
+          
+          return followersComparison;
+        });
 
-        console.log('Usuarios ordenados con toda la información:', sortedUsers);
+        // Verificar el orden para depuración
+        console.log('Usuarios ordenados por seguidores:');
+        sortedUsers.forEach((user, index) => {
+          console.log(`${index + 1}. ${user.username || 'Usuario sin nombre'}: ${user.followers_count} seguidores`);
+        });
         
         // Verificamos específicamente la información de los usuarios mencionados
-        const heimy = sortedUsers.find(user => user.username?.toLowerCase().includes('heimy'));
-        const isabel = sortedUsers.find(user => user.username?.toLowerCase().includes('isabel'));
+        const heimy = sortedUsers.find(user => 
+          user.username?.toLowerCase().includes('heimy'));
+        const isabel = sortedUsers.find(user => 
+          user.username?.toLowerCase().includes('isabel'));
         
         if (heimy) {
-          console.log('Información de Heimy:', {
+          console.log('Información de Heimy verificada:', {
+            id: heimy.id,
             nombre: heimy.username,
             carrera: heimy.career,
             semestre: heimy.semester,
             seguidores: heimy.followers_count
           });
+        } else {
+          console.log('No se encontró un usuario con "heimy" en el nombre');
         }
         
         if (isabel) {
-          console.log('Información de Isabel:', {
+          console.log('Información de Isabel verificada:', {
+            id: isabel.id,
             nombre: isabel.username,
             carrera: isabel.career,
             semestre: isabel.semester,
             seguidores: isabel.followers_count
           });
+        } else {
+          console.log('No se encontró un usuario con "isabel" en el nombre');
         }
 
         setPopularUsers(sortedUsers);
