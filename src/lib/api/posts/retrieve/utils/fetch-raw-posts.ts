@@ -71,7 +71,7 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
     if (hasSharedFromColumn && Array.isArray(data)) {
       // Extract the shared_from IDs from posts that have them
       sharedPostIds = data
-        .filter((post): post is any => 
+        .filter((post): post is { shared_from: string | null } => 
           post !== null && 
           typeof post === 'object' && 
           'shared_from' in post && 
@@ -114,11 +114,11 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
       // Add the shared posts to the original data
       if (Array.isArray(data)) {
         data.forEach(post => {
-          if (post && 
+          if (post !== null && 
               typeof post === 'object' && 
               hasSharedFromColumn && 
               'shared_from' in post && 
-              post.shared_from && 
+              post.shared_from !== null && 
               sharedPostsMap[post.shared_from]) {
             post.shared_post = sharedPostsMap[post.shared_from];
           }
