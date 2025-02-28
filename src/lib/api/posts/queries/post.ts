@@ -5,83 +5,42 @@ import { transformPoll } from "../utils";
 
 export async function fetchPostById(postId: string): Promise<Post | null> {
   try {
-    // Check if shared_from column exists
-    const { error: columnCheckError } = await supabase
+    // Direct query without checking for column existence first
+    const { data, error } = await supabase
       .from('posts')
-      .select('shared_from')
-      .limit(1)
-      .maybeSingle();
-    
-    // If shared_from column doesn't exist, use a query without it
-    const hasSharedFromColumn = !columnCheckError;
-    
-    let post = null;
-    
-    if (hasSharedFromColumn) {
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          id,
-          content,
-          user_id,
-          media_url,
-          media_type,
-          visibility,
-          poll,
-          created_at,
-          updated_at,
-          shared_from,
-          profiles (
-            username,
-            avatar_url
-          )
-        `)
-        .eq('id', postId)
-        .single();
-        
-      if (error || !data) return null;
-      post = data;
-    } else {
-      const { data, error } = await supabase
-        .from('posts')
-        .select(`
-          id,
-          content,
-          user_id,
-          media_url,
-          media_type,
-          visibility,
-          poll,
-          created_at,
-          updated_at,
-          profiles (
-            username,
-            avatar_url
-          )
-        `)
-        .eq('id', postId)
-        .single();
-        
-      if (error || !data) return null;
-      post = data;
-    }
-
-    // Ensure post exists before accessing its properties
-    if (!post) return null;
+      .select(`
+        id,
+        content,
+        user_id,
+        media_url,
+        media_type,
+        visibility,
+        poll,
+        created_at,
+        updated_at,
+        profiles (
+          username,
+          avatar_url
+        )
+      `)
+      .eq('id', postId)
+      .single();
+      
+    if (error || !data) return null;
 
     // Transform to Post type
     return {
-      id: post.id,
-      content: post.content ?? '',
-      user_id: post.user_id,
-      media_url: post.media_url,
-      media_type: post.media_type as Post['media_type'],
-      visibility: post.visibility as Post['visibility'],
-      created_at: post.created_at,
-      updated_at: post.updated_at,
-      profiles: post.profiles,
-      poll: transformPoll(post.poll),
-      shared_from: hasSharedFromColumn ? post.shared_from : null,
+      id: data.id,
+      content: data.content ?? '',
+      user_id: data.user_id,
+      media_url: data.media_url,
+      media_type: data.media_type as Post['media_type'],
+      visibility: data.visibility as Post['visibility'],
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      profiles: data.profiles,
+      poll: transformPoll(data.poll),
+      shared_from: null, // Default to null since we're not querying this field
       shared_post: null,
       reactions: { count: 0, by_type: {} },
       reactions_count: 0,
@@ -104,7 +63,6 @@ interface PostData {
   poll?: any;
   created_at?: string | null;
   updated_at?: string | null;
-  shared_from?: string | null;
   profiles?: {
     username?: string | null;
     avatar_url?: string | null;
@@ -115,19 +73,6 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
   if (!sharedPostIds.length) return {};
   
   try {
-    // Check if shared_from column exists
-    const { error: columnCheckError } = await supabase
-      .from('posts')
-      .select('shared_from')
-      .limit(1)
-      .maybeSingle();
-    
-    // If shared_from column doesn't exist, return empty object
-    if (columnCheckError) {
-      console.warn("shared_from column doesn't exist in posts table");
-      return {};
-    }
-    
     const { data: sharedPosts, error } = await supabase
       .from('posts')
       .select(`
@@ -140,7 +85,6 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
         poll,
         created_at,
         updated_at,
-        shared_from,
         profiles (
           username,
           avatar_url
@@ -170,7 +114,7 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
         poll: post.poll ?? null,
         created_at: post.created_at ?? new Date().toISOString(),
         updated_at: post.updated_at ?? new Date().toISOString(),
-        shared_from: post.shared_from ?? null,
+        shared_from: null, // Default to null since this column might not exist
         profiles: post.profiles ?? null
       };
     });

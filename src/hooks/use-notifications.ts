@@ -46,45 +46,92 @@ export const useNotifications = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    const { data, error } = await supabase
-      .from('notifications')
-      .select(`
-        id,
-        type,
-        created_at,
-        message,
-        post_id,
-        comment_id,
-        read,
-        sender:profiles!sender_id (
+    try {
+      // First, check if the table and columns exist to avoid SQL errors
+      const { data: tableInfo, error: tableError } = await supabase
+        .from('notifications')
+        .select('id')
+        .limit(1);
+      
+      if (tableError) {
+        console.error('Error checking notifications table:', tableError);
+        return;
+      }
+      
+      // Use a simple query first to fetch base notification data
+      const { data, error } = await supabase
+        .from('notifications')
+        .select(`
           id,
-          username,
-          avatar_url
-        )
-      `)
-      .eq('receiver_id', user.id)
-      .order('created_at', { ascending: false });
+          type,
+          created_at,
+          message,
+          post_id,
+          comment_id,
+          read,
+          sender_id
+        `)
+        .eq('receiver_id', user.id)
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Error loading notifications:', error);
-      return;
-    }
+      if (error) {
+        console.error('Error loading notifications:', error);
+        return;
+      }
 
-    if (data) {
-      setNotifications(data.map((notification: any) => ({
-        id: notification.id,
-        type: notification.type as NotificationType,
-        created_at: notification.created_at,
-        message: notification.message ?? undefined,
-        post_id: notification.post_id ?? undefined,
-        comment_id: notification.comment_id ?? undefined,
-        read: notification.read,
-        sender: {
-          id: notification.sender?.id ?? '',
-          username: notification.sender?.username ?? '',
-          avatar_url: notification.sender?.avatar_url
-        }
-      })));
+      if (!data || data.length === 0) {
+        setNotifications([]);
+        return;
+      }
+
+      // Get all unique sender IDs
+      const senderIds = [...new Set(data.map(item => item.sender_id))];
+      
+      // Fetch sender profiles in a separate query
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', senderIds);
+        
+      if (profilesError) {
+        console.error('Error loading sender profiles:', profilesError);
+      }
+      
+      // Create a map of sender IDs to profiles for quick lookup
+      const profileMap = new Map();
+      if (profiles) {
+        profiles.forEach(profile => {
+          profileMap.set(profile.id, profile);
+        });
+      }
+      
+      // Map notifications with sender info
+      const notificationsWithSenders = data.map(notification => {
+        const senderProfile = profileMap.get(notification.sender_id) || {
+          id: notification.sender_id,
+          username: 'Usuario',
+          avatar_url: null
+        };
+        
+        return {
+          id: notification.id,
+          type: notification.type as NotificationType,
+          created_at: notification.created_at,
+          message: notification.message ?? undefined,
+          post_id: notification.post_id ?? undefined,
+          comment_id: notification.comment_id ?? undefined,
+          read: notification.read,
+          sender: {
+            id: senderProfile.id,
+            username: senderProfile.username,
+            avatar_url: senderProfile.avatar_url
+          }
+        };
+      });
+      
+      setNotifications(notificationsWithSenders);
+    } catch (error) {
+      console.error('Error in loadNotifications:', error);
     }
   };
 
