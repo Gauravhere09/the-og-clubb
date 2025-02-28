@@ -20,6 +20,8 @@ export interface PostTable {
     created_at: string;
     updated_at: string;
     shared_from: string | null;
+    shared_post_id: string | null;
+    shared_post_author: string | null;
   };
   Insert: {
     id?: string;
@@ -41,6 +43,8 @@ export interface PostTable {
     created_at?: string;
     updated_at?: string;
     shared_from?: string | null;
+    shared_post_id?: string | null;
+    shared_post_author?: string | null;
   };
   Update: {
     id?: string;
@@ -62,6 +66,8 @@ export interface PostTable {
     created_at?: string;
     updated_at?: string;
     shared_from?: string | null;
+    shared_post_id?: string | null;
+    shared_post_author?: string | null;
   };
 }
 
