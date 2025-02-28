@@ -173,6 +173,10 @@ export const useNotifications = () => {
 
             setNotifications(prev => [newNotification, ...prev]);
             
+            // Reproducir sonido de notificación
+            const notificationSound = new Audio("/notification.mp3");
+            notificationSound.play().catch(console.error);
+            
             toast({
               title: "Nueva notificación",
               description: formatNotificationMessage(payload.new.type, senderData.username),
@@ -221,8 +225,78 @@ export const useNotifications = () => {
     }
   };
 
+  // Nueva función para marcar notificaciones como leídas
+  const markAsRead = async (notificationIds?: string[]) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    try {
+      let query = supabase
+        .from('notifications')
+        .update({ read: true });
+
+      if (notificationIds && notificationIds.length > 0) {
+        // Marcar solo las notificaciones especificadas
+        query = query.in('id', notificationIds);
+      } else {
+        // Marcar todas las notificaciones del usuario
+        query = query.eq('receiver_id', user.id);
+      }
+
+      await query;
+      
+      // Actualizar el estado local
+      setNotifications(prev => 
+        prev.map(notification => 
+          notificationIds 
+            ? notificationIds.includes(notification.id) 
+              ? { ...notification, read: true } 
+              : notification
+            : { ...notification, read: true }
+        )
+      );
+      
+    } catch (error) {
+      console.error('Error marking notifications as read:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudieron marcar las notificaciones como leídas",
+      });
+    }
+  };
+
+  // Nueva función para eliminar todas las notificaciones
+  const clearAllNotifications = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    try {
+      await supabase
+        .from('notifications')
+        .delete()
+        .eq('receiver_id', user.id);
+      
+      setNotifications([]);
+      
+      toast({
+        title: "Notificaciones eliminadas",
+        description: "Todas las notificaciones han sido eliminadas",
+      });
+    } catch (error) {
+      console.error('Error clearing notifications:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudieron eliminar las notificaciones",
+      });
+    }
+  };
+
   return {
     notifications,
-    handleFriendRequest
+    handleFriendRequest,
+    markAsRead,
+    clearAllNotifications
   };
 };
