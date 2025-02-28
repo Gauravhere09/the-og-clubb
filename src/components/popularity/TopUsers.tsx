@@ -2,7 +2,7 @@
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, BookOpen, Heart, Award, Medal, Trophy } from "lucide-react";
+import { GraduationCap, BookOpen, Heart, Trophy, Medal } from "lucide-react";
 import { FollowButton } from "@/components/FollowButton";
 import type { PopularUserProfile } from "@/types/database/follow.types";
 

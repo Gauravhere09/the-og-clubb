@@ -21,7 +21,7 @@ export const UserList = ({ users, onProfileClick }: UserListProps) => {
           <div className="col-span-2 text-right">Corazones</div>
         </div>
         <div className="space-y-2">
-          {users.slice(3).map((user, index) => (
+          {users.length > 3 && users.slice(3).map((user, index) => (
             <div 
               key={user.id} 
               className="p-2 hover:bg-muted/50 rounded-md grid grid-cols-12 gap-2 items-center"

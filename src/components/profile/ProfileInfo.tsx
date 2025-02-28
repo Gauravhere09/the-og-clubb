@@ -1,6 +1,8 @@
 
 import { Card } from "@/components/ui/card";
-import { Home, School, MapPin, Heart, GraduationCap, BookOpen } from "lucide-react";
+import { Home, School, MapPin, Heart, GraduationCap, BookOpen, Circle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/pages/Profile";
 
 interface ProfileInfoProps {
@@ -8,9 +10,52 @@ interface ProfileInfoProps {
 }
 
 export function ProfileInfo({ profile }: ProfileInfoProps) {
+  const [isOnline, setIsOnline] = useState(false);
+
+  useEffect(() => {
+    // Verificar si el usuario está en línea al cargar el componente
+    const checkOnlineStatus = async () => {
+      try {
+        // Consultar la presencia del usuario
+        const { data } = await supabase
+          .channel('online-users')
+          .on('presence', { event: 'sync' }, () => {
+            const state = supabase.channel('online-users').presenceState();
+            const isUserOnline = Object.keys(state).includes(profile.id);
+            setIsOnline(isUserOnline);
+          })
+          .subscribe(async (status) => {
+            if (status === 'SUBSCRIBED') {
+              await supabase.channel('online-users').track({
+                online_at: new Date().toISOString(),
+              });
+            }
+          });
+      } catch (error) {
+        console.error("Error al verificar estado online:", error);
+      }
+    };
+
+    checkOnlineStatus();
+
+    // Limpiar la suscripción al desmontar
+    return () => {
+      supabase.channel('online-users').unsubscribe();
+    };
+  }, [profile.id]);
+
   return (
     <Card className="p-4">
-      <h2 className="font-semibold mb-4">Detalles</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-semibold">Detalles</h2>
+        {isOnline && (
+          <div className="flex items-center text-sm text-green-500">
+            <Circle className="h-3 w-3 mr-1 fill-green-500" />
+            <span>En línea</span>
+          </div>
+        )}
+      </div>
+      
       {profile.bio && (
         <p className="text-sm text-muted-foreground mb-4">{profile.bio}</p>
       )}
