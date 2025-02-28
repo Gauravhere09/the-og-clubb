@@ -99,12 +99,10 @@ export function Post({ post, hideComments = false }: PostProps) {
   };
 
   // Check if user is the author of the post
-  const checkIsAuthor = async () => {
-    const { data } = await supabase.auth.getSession();
-    return data.session?.user.id === post.user_id;
+  const isAuthor = async () => {
+    const { data } = await supabase.auth.getUser();
+    return data.user?.id === post.user_id;
   };
-
-  const isAuthor = post.user_id === supabase.auth.getUser()?.data?.user?.id;
 
   return (
     <Card className="overflow-hidden shadow-sm">
@@ -112,7 +110,7 @@ export function Post({ post, hideComments = false }: PostProps) {
         <PostHeader 
           post={post} 
           onDelete={onDeletePost}
-          isAuthor={isAuthor}
+          isAuthor={post.user_id === supabase.auth.getUser().data?.user?.id}
         />
         
         <PostContent 
