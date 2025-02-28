@@ -137,20 +137,23 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
     
     // Safely iterate through the posts to verify each one has an id
     if (Array.isArray(sharedPosts)) {
-      for (const sharedPost of sharedPosts) {
-        if (sharedPost && typeof sharedPost === 'object' && 'id' in sharedPost && sharedPost.id) {
-          postsMap[sharedPost.id] = {
-            id: sharedPost.id,
-            content: sharedPost.content ?? '',
-            user_id: sharedPost.user_id ?? null,
-            media_url: sharedPost.media_url ?? null,
-            media_type: sharedPost.media_type ?? null,
-            visibility: sharedPost.visibility ?? 'public',
-            poll: sharedPost.poll ?? null,
-            created_at: sharedPost.created_at ?? new Date().toISOString(),
-            updated_at: sharedPost.updated_at ?? new Date().toISOString(),
-            shared_from: sharedPost.shared_from ?? null,
-            profiles: sharedPost.profiles ?? null
+      // Filtrar los posts nulos antes de procesarlos
+      const validPosts = sharedPosts.filter(post => post !== null);
+      
+      for (const post of validPosts) {
+        if (typeof post === 'object' && 'id' in post && post.id) {
+          postsMap[post.id] = {
+            id: post.id,
+            content: post.content ?? '',
+            user_id: post.user_id ?? null,
+            media_url: post.media_url ?? null,
+            media_type: post.media_type ?? null,
+            visibility: post.visibility ?? 'public',
+            poll: post.poll ?? null,
+            created_at: post.created_at ?? new Date().toISOString(),
+            updated_at: post.updated_at ?? new Date().toISOString(),
+            shared_from: post.shared_from ?? null,
+            profiles: post.profiles ?? null
           };
         }
       }
