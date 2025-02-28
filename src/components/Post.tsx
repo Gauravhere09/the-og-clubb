@@ -98,11 +98,8 @@ export function Post({ post, hideComments = false }: PostProps) {
     }
   };
 
-  // Check if user is the author of the post
-  const isAuthor = async () => {
-    const { data } = await supabase.auth.getUser();
-    return data.user?.id === post.user_id;
-  };
+  // Fixed: Get current user ID synchronously without accessing Promise.data directly
+  const isCurrentUserAuthor = post.user_id === supabase.auth.getUser().data?.user?.id;
 
   return (
     <Card className="overflow-hidden shadow-sm">
@@ -110,7 +107,7 @@ export function Post({ post, hideComments = false }: PostProps) {
         <PostHeader 
           post={post} 
           onDelete={onDeletePost}
-          isAuthor={post.user_id === supabase.auth.getUser().data?.user?.id}
+          isAuthor={isCurrentUserAuthor}
         />
         
         <PostContent 

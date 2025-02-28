@@ -13,9 +13,10 @@ interface PollDisplayProps {
   postId: string;
   poll: Poll;
   onVote?: (optionId: string) => Promise<void>;
+  disabled?: boolean; // Added this prop
 }
 
-export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
+export function PollDisplay({ postId, poll, onVote, disabled = false }: PollDisplayProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(poll.user_vote);
   const [isVoting, setIsVoting] = useState(false);
   const [showVotesDialog, setShowVotesDialog] = useState(false);
@@ -24,7 +25,7 @@ export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
   const { submitVote } = usePollVoteMutation(postId);
 
   const handleVote = async (optionId: string) => {
-    if (poll.user_vote || isVoting) return;
+    if (poll.user_vote || isVoting || disabled) return;
     
     setIsVoting(true);
     try {
@@ -84,7 +85,7 @@ export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
         <h3 className="text-xl font-semibold">
           {poll.question}
         </h3>
-        {!poll.user_vote && (
+        {!poll.user_vote && !disabled && (
           <p className="text-sm text-muted-foreground">
             Selecciona una opción.
           </p>
@@ -100,7 +101,7 @@ export function PollDisplay({ postId, poll, onVote }: PollDisplayProps) {
             votes={option.votes}
             percentage={getPercentage(option.votes)}
             isSelected={option.id === selectedOption}
-            hasVoted={poll.user_vote !== null}
+            hasVoted={poll.user_vote !== null || disabled}
             isVoting={isVoting}
             onVote={handleVote}
           />
