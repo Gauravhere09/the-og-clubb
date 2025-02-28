@@ -17,20 +17,20 @@ export function ProfileInfo({ profile }: ProfileInfoProps) {
     const checkOnlineStatus = async () => {
       try {
         // Consultar la presencia del usuario
-        const { data } = await supabase
-          .channel('online-users')
+        const channel = supabase.channel('online-users')
           .on('presence', { event: 'sync' }, () => {
-            const state = supabase.channel('online-users').presenceState();
+            const state = channel.presenceState();
             const isUserOnline = Object.keys(state).includes(profile.id);
             setIsOnline(isUserOnline);
           })
           .subscribe(async (status) => {
             if (status === 'SUBSCRIBED') {
-              await supabase.channel('online-users').track({
+              await channel.track({
                 online_at: new Date().toISOString(),
               });
             }
           });
+
       } catch (error) {
         console.error("Error al verificar estado online:", error);
       }
