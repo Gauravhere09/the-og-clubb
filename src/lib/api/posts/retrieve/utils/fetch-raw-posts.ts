@@ -43,13 +43,18 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
     
     if (error) throw error;
     
-    // If there are shared posts, fetch the original posts
-    const sharedPostIds = data
-      ?.filter(post => post.shared_from)
-      .map(post => post.shared_from)
-      .filter(Boolean) as string[];
+    // If there are shared posts and the shared_from column exists, fetch the original posts
+    let sharedPostIds: string[] = [];
+    
+    if (hasSharedFromColumn && data) {
+      // Extract the shared_from IDs
+      sharedPostIds = data
+        .filter(post => post.shared_from)
+        .map(post => post.shared_from)
+        .filter(Boolean) as string[];
+    }
       
-    if (sharedPostIds && sharedPostIds.length > 0) {
+    if (sharedPostIds.length > 0) {
       // Fetch the original posts
       const { data: sharedPosts, error: sharedError } = await supabase
         .from('posts')
@@ -79,11 +84,13 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
       }, {} as Record<string, any>);
       
       // Add the shared posts to the original data
-      data?.forEach(post => {
-        if (post.shared_from && sharedPostsMap[post.shared_from]) {
-          post.shared_post = sharedPostsMap[post.shared_from];
-        }
-      });
+      if (data) {
+        data.forEach(post => {
+          if (hasSharedFromColumn && post.shared_from && sharedPostsMap[post.shared_from]) {
+            post.shared_post = sharedPostsMap[post.shared_from];
+          }
+        });
+      }
     }
     
     return data || [];
