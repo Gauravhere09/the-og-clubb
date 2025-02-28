@@ -141,37 +141,20 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
         // Skip null or undefined items
         if (!postItem) continue;
         
-        // Use a non-null assertion since we've checked for null above
-        const post = postItem as {
-          id: string;
-          content?: string;
-          user_id?: string;
-          media_url?: string | null;
-          media_type?: string | null;
-          visibility?: string;
-          poll?: any;
-          created_at?: string;
-          updated_at?: string;
-          shared_from?: string | null;
-          profiles?: {
-            username: string | null;
-            avatar_url: string | null;
-          } | null;
-        };
-          
-        if (typeof post === 'object' && 'id' in post && post.id) {
-          postsMap[post.id] = {
-            id: post.id,
-            content: post.content ?? '',
-            user_id: post.user_id ?? null,
-            media_url: post.media_url ?? null,
-            media_type: post.media_type ?? null,
-            visibility: post.visibility ?? 'public',
-            poll: post.poll ?? null,
-            created_at: post.created_at ?? new Date().toISOString(),
-            updated_at: post.updated_at ?? new Date().toISOString(),
-            shared_from: post.shared_from ?? null,
-            profiles: post.profiles ?? null
+        // Type check and handle postItem safely
+        if (typeof postItem === 'object' && postItem !== null && 'id' in postItem && postItem.id) {
+          postsMap[postItem.id] = {
+            id: postItem.id,
+            content: postItem.content ?? '',
+            user_id: postItem.user_id ?? null,
+            media_url: postItem.media_url ?? null,
+            media_type: postItem.media_type ?? null,
+            visibility: postItem.visibility ?? 'public',
+            poll: postItem.poll ?? null,
+            created_at: postItem.created_at ?? new Date().toISOString(),
+            updated_at: postItem.updated_at ?? new Date().toISOString(),
+            shared_from: postItem.shared_from ?? null,
+            profiles: postItem.profiles ?? null
           };
         }
       }
