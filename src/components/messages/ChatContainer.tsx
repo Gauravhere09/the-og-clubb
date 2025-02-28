@@ -5,6 +5,7 @@ import { ChatHeader } from "@/components/messages/ChatHeader";
 import { GroupChat } from "@/components/messages/GroupChat";
 import { Message } from "@/hooks/use-private-messages";
 import { Friend } from "@/hooks/use-friends";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ChatContainerProps {
   showChat: boolean;
@@ -37,6 +38,8 @@ export const ChatContainer = ({
   onDeleteMessage,
   onImageUpload
 }: ChatContainerProps) => {
+  const isMobile = useIsMobile();
+
   if (!showChat) {
     return (
       <div className="h-full flex flex-col items-center justify-center p-4 text-center text-muted-foreground">
@@ -47,7 +50,7 @@ export const ChatContainer = ({
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className={`flex flex-col h-full ${isMobile && (showGroupChat || selectedFriend) ? 'fixed inset-0 z-50 bg-background' : ''}`}>
       <ChatHeader
         selectedFriend={selectedFriend}
         isGroupChat={showGroupChat}

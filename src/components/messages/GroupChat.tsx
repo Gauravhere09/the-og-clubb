@@ -3,12 +3,13 @@ import { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, Mic, Square, Image as ImageIcon, ArrowLeft, Search, MoreVertical, Trash } from "lucide-react";
+import { Send, Mic, Square, Image as ImageIcon, MoreVertical, Trash } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { GroupMessage } from "@/hooks/use-group-messages";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface GroupChatProps {
   messages: GroupMessage[];
@@ -24,6 +25,7 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
   const audioChunks = useRef<BlobPart[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const startRecording = async () => {
     try {
@@ -124,34 +126,7 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background md:static md:h-[600px]">
-      <div className="p-4 border-b flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {onClose && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={onClose}
-              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          )}
-          <div className="w-8 h-8 rounded-full bg-[#9b87f5] dark:bg-black border border-[#7E69AB] dark:border-neutral-800 flex items-center justify-center">
-            <span className="text-sm font-semibold text-white">H</span>
-          </div>
-          <div>
-            <div className="font-medium">Red H</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400">Chat grupal</div>
-          </div>
-        </div>
-        <div className="flex items-center">
-          <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
-            <Search className="h-5 w-5" />
-          </Button>
-        </div>
-      </div>
-
+    <div className={`flex flex-col h-full ${isMobile ? 'fixed inset-0 z-50 bg-background' : ''}`}>
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
           {messages.map((message) => (
