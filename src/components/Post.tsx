@@ -119,8 +119,8 @@ export function Post({ post, hideComments = false }: PostProps) {
     locale: es 
   });
 
-  // Determine if this is a shared post by checking shared_post_id
-  const isSharedPost = !!post.shared_post_id;
+  // Determine if this is a shared post by checking shared_post
+  const isSharedPost = !!post.shared_post;
 
   return (
     <Card className="overflow-hidden shadow-sm">
@@ -140,7 +140,7 @@ export function Post({ post, hideComments = false }: PostProps) {
             <div className="border border-border rounded-lg p-4">
               <div className="flex items-center mb-2">
                 <span className="text-sm text-muted-foreground">
-                  Publicación original de <span className="font-semibold">{post.shared_post_author}</span>
+                  Publicación original
                 </span>
               </div>
               {post.shared_post && (

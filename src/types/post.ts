@@ -24,8 +24,6 @@ export interface Post {
   poll?: Poll | null;
   shared_from?: string | null;
   shared_post?: Post | null; // Original post if this is a shared post
-  shared_post_id?: string | null; // ID of the original post if this is a shared post
-  shared_post_author?: string | null; // Username of the original author
   profiles?: {
     username: string | null;
     avatar_url: string | null;

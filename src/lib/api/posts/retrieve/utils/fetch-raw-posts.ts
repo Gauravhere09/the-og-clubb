@@ -17,8 +17,6 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
       poll,
       created_at,
       updated_at,
-      shared_post_id,
-      shared_post_author,
       profiles (
         username,
         avatar_url
@@ -47,8 +45,8 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
     
     // If there are shared posts, fetch the original posts
     const sharedPostIds = data
-      ?.filter(post => post.shared_post_id)
-      .map(post => post.shared_post_id)
+      ?.filter(post => post.shared_from)
+      .map(post => post.shared_from)
       .filter(Boolean) as string[];
       
     if (sharedPostIds && sharedPostIds.length > 0) {
@@ -82,8 +80,8 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
       
       // Add the shared posts to the original data
       data?.forEach(post => {
-        if (post.shared_post_id && sharedPostsMap[post.shared_post_id]) {
-          post.shared_post = sharedPostsMap[post.shared_post_id];
+        if (post.shared_from && sharedPostsMap[post.shared_from]) {
+          post.shared_post = sharedPostsMap[post.shared_from];
         }
       });
     }

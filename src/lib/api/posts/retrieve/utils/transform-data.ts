@@ -79,8 +79,6 @@ export async function transformPostsData(
         poll: transformPoll(post.poll),
         shared_from: hasSharedFromColumn ? post.shared_from : null,
         shared_post: post.shared_post || legacySharedPost,
-        shared_post_id: post.shared_post_id || null,
-        shared_post_author: post.shared_post_author || null,
         user_reaction: userReactionsMap[post.id] as Post['user_reaction'],
         reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
         reactions_count: reactionsMap[post.id]?.count || 0,

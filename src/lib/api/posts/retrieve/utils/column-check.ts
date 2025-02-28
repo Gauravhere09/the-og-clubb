@@ -2,24 +2,25 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Checks if the 'shared_from' column exists in the posts table
+ * Check if the 'shared_from' column exists in the 'posts' table
  */
 export async function checkSharedFromColumn(): Promise<boolean> {
   try {
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('posts')
       .select('shared_from')
-      .limit(1)
-      .maybeSingle();
-    
-    // If we get a 42703 code (column does not exist), return false
-    if (error && error.code === '42703') {
-      return false;
+      .limit(1);
+      
+    if (error) {
+      // If there's an error mentioning "column does not exist", return false
+      if (error.message && error.message.includes('column') && error.message.includes('does not exist')) {
+        console.log('shared_from column does not exist in the posts table');
+        return false;
+      }
+      throw error;
     }
     
-    // If there's no error, the column exists
-    // If there's an error but it's not 42703, we assume the column might exist
-    return !error;
+    return true;
   } catch (error) {
     console.error('Error checking shared_from column:', error);
     return false;
