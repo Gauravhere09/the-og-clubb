@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { NotificationType } from "@/types/notifications";
@@ -21,8 +21,6 @@ interface NotificationWithSender {
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<NotificationWithSender[]>([]);
-  const [unreadCount, setUnreadCount] = useState<number>(0);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const { toast } = useToast();
 
   const formatNotificationMessage = (type: NotificationType, username: string) => {
@@ -44,13 +42,9 @@ export const useNotifications = () => {
     }
   };
 
-  const loadNotifications = useCallback(async () => {
-    setIsLoading(true);
+  const loadNotifications = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setIsLoading(false);
-      return;
-    }
+    if (!user) return;
 
     try {
       // First, check if the table and columns exist to avoid SQL errors
@@ -61,7 +55,6 @@ export const useNotifications = () => {
       
       if (tableError) {
         console.error('Error checking notifications table:', tableError);
-        setIsLoading(false);
         return;
       }
       
@@ -83,14 +76,11 @@ export const useNotifications = () => {
 
       if (error) {
         console.error('Error loading notifications:', error);
-        setIsLoading(false);
         return;
       }
 
       if (!data || data.length === 0) {
         setNotifications([]);
-        setUnreadCount(0);
-        setIsLoading(false);
         return;
       }
 
@@ -140,17 +130,10 @@ export const useNotifications = () => {
       });
       
       setNotifications(notificationsWithSenders);
-      
-      // Count unread notifications
-      const unreadCount = notificationsWithSenders.filter(n => !n.read).length;
-      setUnreadCount(unreadCount);
-      
-      setIsLoading(false);
     } catch (error) {
       console.error('Error in loadNotifications:', error);
-      setIsLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
     loadNotifications();
@@ -165,14 +148,6 @@ export const useNotifications = () => {
           table: 'notifications',
         },
         async (payload) => {
-          // Play notification sound
-          try {
-            const notificationSound = new Audio('/notification.mp3');
-            await notificationSound.play();
-          } catch (error) {
-            console.error('Error playing notification sound:', error);
-          }
-          
           // Fetch sender info for the new notification
           const { data: senderData, error: senderError } = await supabase
             .from('profiles')
@@ -197,7 +172,6 @@ export const useNotifications = () => {
             };
 
             setNotifications(prev => [newNotification, ...prev]);
-            setUnreadCount(prev => prev + 1);
             
             toast({
               title: "Nueva notificación",
@@ -206,34 +180,12 @@ export const useNotifications = () => {
           }
         }
       )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'notifications',
-        },
-        (payload) => {
-          setNotifications(prev => 
-            prev.map(notification => 
-              notification.id === payload.new.id 
-                ? { ...notification, read: payload.new.read }
-                : notification
-            )
-          );
-          
-          // Update unread count if a notification was marked as read
-          if (payload.old.read === false && payload.new.read === true) {
-            setUnreadCount(prev => Math.max(0, prev - 1));
-          }
-        }
-      )
       .subscribe();
 
     return () => {
       channel.unsubscribe();
     };
-  }, [loadNotifications]);
+  }, []);
 
   const handleFriendRequest = async (notificationId: string, senderId: string, accept: boolean) => {
     try {
@@ -253,23 +205,9 @@ export const useNotifications = () => {
         .update({ read: true })
         .eq('id', notificationId);
 
-      // If accepting, create a new notification for the sender
-      if (accept) {
-        await supabase
-          .from('notifications')
-          .insert({
-            type: 'friend_accepted',
-            sender_id: user.id,
-            receiver_id: senderId,
-            message: 'Ha aceptado tu solicitud de amistad',
-            read: false
-          });
-      }
-
       toast({
         title: accept ? "Solicitud aceptada" : "Solicitud rechazada",
         description: accept ? "Ahora son amigos" : "Has rechazado la solicitud de amistad",
-        variant: accept ? "default" : "destructive"
       });
 
       loadNotifications();
@@ -283,69 +221,8 @@ export const useNotifications = () => {
     }
   };
 
-  const markAsRead = async (notificationId: string) => {
-    try {
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('id', notificationId);
-      
-      if (error) throw error;
-      
-      setNotifications(prev => 
-        prev.map(notification => 
-          notification.id === notificationId 
-            ? { ...notification, read: true }
-            : notification
-        )
-      );
-      
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-    }
-  };
-  
-  const markAllAsRead = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      
-      const { error } = await supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('receiver_id', user.id)
-        .eq('read', false);
-      
-      if (error) throw error;
-      
-      setNotifications(prev => 
-        prev.map(notification => ({ ...notification, read: true }))
-      );
-      
-      setUnreadCount(0);
-      
-      toast({
-        title: "Notificaciones actualizadas",
-        description: "Se han marcado todas las notificaciones como leídas",
-      });
-    } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se pudieron marcar las notificaciones como leídas",
-      });
-    }
-  };
-
   return {
     notifications,
-    unreadCount,
-    isLoading,
-    handleFriendRequest,
-    markAsRead,
-    markAllAsRead,
-    loadNotifications
+    handleFriendRequest
   };
 };
