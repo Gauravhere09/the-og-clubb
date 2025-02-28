@@ -24,6 +24,48 @@ export function ProfileContent({ profileId }: ProfileContentProps) {
 
       if (postsError) throw postsError;
 
+      // Fetch shared posts if needed
+      const sharedPostIds = postsData
+        ?.filter(post => post.shared_post_id)
+        .map(post => post.shared_post_id)
+        .filter(Boolean);
+        
+      if (sharedPostIds && sharedPostIds.length > 0) {
+        const { data: sharedPosts, error: sharedError } = await supabase
+          .from('posts')
+          .select(`
+            id,
+            content,
+            user_id,
+            media_url,
+            media_type,
+            visibility,
+            poll,
+            created_at,
+            updated_at,
+            profiles (
+              username,
+              avatar_url
+            )
+          `)
+          .in('id', sharedPostIds);
+          
+        if (sharedError) throw sharedError;
+        
+        // Create a map of shared posts by ID for quick lookup
+        const sharedPostsMap = (sharedPosts || []).reduce((map, post) => {
+          map[post.id] = post;
+          return map;
+        }, {} as Record<string, any>);
+        
+        // Add the shared posts to the original data
+        postsData?.forEach(post => {
+          if (post.shared_post_id && sharedPostsMap[post.shared_post_id]) {
+            post.shared_post = sharedPostsMap[post.shared_post_id];
+          }
+        });
+      }
+
       // Fetch all comments
       const { data: commentsData, error: commentsError } = await supabase
         .from("comments")

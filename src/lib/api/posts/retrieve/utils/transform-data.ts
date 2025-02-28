@@ -50,8 +50,8 @@ export async function transformPostsData(
 
     // Transform posts data
     return rawPosts.map((post): Post => {
-      // Process shared posts if applicable
-      const sharedPost = hasSharedFromColumn && post.shared_from && sharedPostsMap[post.shared_from]
+      // Process shared posts from legacy shared_from if applicable
+      const legacySharedPost = hasSharedFromColumn && post.shared_from && sharedPostsMap[post.shared_from]
         ? {
             id: sharedPostsMap[post.shared_from].id,
             content: sharedPostsMap[post.shared_from].content || '',
@@ -78,7 +78,9 @@ export async function transformPostsData(
         profiles: post.profiles,
         poll: transformPoll(post.poll),
         shared_from: hasSharedFromColumn ? post.shared_from : null,
-        shared_post: sharedPost,
+        shared_post: post.shared_post || legacySharedPost,
+        shared_post_id: post.shared_post_id || null,
+        shared_post_author: post.shared_post_author || null,
         user_reaction: userReactionsMap[post.id] as Post['user_reaction'],
         reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
         reactions_count: reactionsMap[post.id]?.count || 0,

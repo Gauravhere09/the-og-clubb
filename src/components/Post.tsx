@@ -10,6 +10,8 @@ import { type Post as PostType } from "@/types/post";
 import { SharedPostContent } from "./post/SharedPostContent";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface PostProps {
   post: PostType;
@@ -111,6 +113,15 @@ export function Post({ post, hideComments = false }: PostProps) {
   // Check if current user is the author of the post
   const isCurrentUserAuthor = post.user_id === currentUserId;
 
+  // Format the time for shared posts
+  const timeAgo = formatDistanceToNow(new Date(post.created_at), { 
+    addSuffix: true, 
+    locale: es 
+  });
+
+  // Determine if this is a shared post by checking shared_post_id
+  const isSharedPost = !!post.shared_post_id;
+
   return (
     <Card className="overflow-hidden shadow-sm">
       <div className="p-4 space-y-4">
@@ -120,15 +131,36 @@ export function Post({ post, hideComments = false }: PostProps) {
           isAuthor={isCurrentUserAuthor}
         />
         
-        <PostContent 
-          post={post} 
-          postId={post.id}
-        />
-        
-        {post.shared_post && (
-          <div className="mt-2">
-            <SharedPostContent post={post.shared_post} />
+        {/* If it's a shared post, show a minimal caption and the shared content */}
+        {isSharedPost ? (
+          <div>
+            {post.content && (
+              <p className="text-sm whitespace-pre-wrap break-words mb-4">{post.content}</p>
+            )}
+            <div className="border border-border rounded-lg p-4">
+              <div className="flex items-center mb-2">
+                <span className="text-sm text-muted-foreground">
+                  Publicación original de <span className="font-semibold">{post.shared_post_author}</span>
+                </span>
+              </div>
+              {post.shared_post && (
+                <SharedPostContent post={post.shared_post} />
+              )}
+            </div>
           </div>
+        ) : (
+          <>
+            <PostContent 
+              post={post} 
+              postId={post.id}
+            />
+            
+            {post.shared_post && (
+              <div className="mt-2">
+                <SharedPostContent post={post.shared_post} />
+              </div>
+            )}
+          </>
         )}
         
         <PostActions 

@@ -61,15 +61,19 @@ export function ShareOptions({ post, open, onOpenChange }: ShareOptionsProps) {
         return;
       }
 
-      // Create a new post that references the original content without using shared_from column
+      // Get author information to store in the content
+      const authorUsername = post.profiles?.username || "Usuario";
+      
+      // Create a new post that references the original content
       const { data, error } = await supabase
         .from('posts')
         .insert({
-          content: `Compartido: ${post.content.substring(0, 100)}${post.content.length > 100 ? '...' : ''}`,
+          content: "",  // We'll set this as empty and show the original post as shared content
           user_id: userId,
-          media_url: post.media_url,
-          media_type: post.media_type,
-          visibility: 'public'
+          media_type: null,
+          visibility: 'public',
+          shared_post_id: post.id,  // Store the original post ID
+          shared_post_author: authorUsername // Store the original author username
         });
 
       if (error) {
