@@ -1,11 +1,8 @@
 
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { GraduationCap, BookOpen, Heart, Trophy, Medal, PlusCircle } from "lucide-react";
-import { FollowButton } from "@/components/FollowButton";
+import { Heart } from "lucide-react";
 import type { PopularUserProfile } from "@/types/database/follow.types";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 interface TopUsersProps {
   users: PopularUserProfile[];
@@ -13,114 +10,115 @@ interface TopUsersProps {
 }
 
 export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
-  if (users.length === 0) return null;
-
-  // Tomamos los primeros 3 usuarios
-  const topUsers = users.slice(0, 3);
+  // Make sure we have exactly 3 users for top positions
+  if (users.length !== 3) return null;
+  
+  // Arrange users in correct order: 2nd, 1st, 3rd
+  const [silver, gold, bronze] = users;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-      {topUsers.map((user, index) => {
-        // Forzar los valores a string para depuración y visualización
-        const careerValue = typeof user.career === 'string' ? user.career : null;
-        const semesterValue = typeof user.semester === 'string' ? user.semester : null;
-        
-        console.log(`Renderizando usuario top ${index + 1} (datos procesados):`, {
-          id: user.id,
-          nombre: user.username,
-          carrera: careerValue,
-          semestre: semesterValue,
-          seguidores: user.followers_count,
-          tipo_carrera: typeof user.career,
-          tipo_semestre: typeof user.semester,
-          valor_carrera_raw: user.career
-        });
-        
-        return (
-          <Card 
-            key={user.id} 
-            className={`overflow-hidden ${
-              index === 0 ? 'border-amber-500 border-2' : 
-              index === 1 ? 'border-gray-400 border-2' : 
-              index === 2 ? 'border-amber-700 border-2' : ''
-            }`}
-          >
-            <div className="p-6 relative">
-              <div className="absolute -top-1 -right-1 bg-primary text-primary-foreground w-10 h-10 rounded-full flex items-center justify-center">
-                {index === 0 ? (
-                  <Trophy className="h-6 w-6" />
-                ) : index === 1 ? (
-                  <Medal className="h-6 w-6 fill-gray-200" />
-                ) : (
-                  <Medal className="h-6 w-6 fill-amber-800" />
-                )}
-              </div>
-              
-              <div className="flex items-center justify-center mb-4">
-                <Avatar 
-                  className="h-20 w-20 cursor-pointer border-4 border-background" 
-                  onClick={() => onProfileClick(user.id)}
-                >
-                  <AvatarImage src={user.avatar_url || undefined} />
-                  <AvatarFallback>
-                    {user.username?.[0]?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-              
-              <div className="text-center mb-4">
-                <h3 
-                  className="font-semibold text-lg cursor-pointer hover:underline"
-                  onClick={() => onProfileClick(user.id)}
-                >
-                  {user.username || "Usuario"}
-                </h3>
-                
-                <div className="flex flex-wrap justify-center gap-2 mt-2 min-h-[28px]">
-                  {careerValue ? (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      <GraduationCap className="h-3 w-3" />
-                      {careerValue}
-                    </Badge>
-                  ) : null}
-                  
-                  {semesterValue ? (
-                    <Badge variant="outline" className="flex items-center gap-1">
-                      <BookOpen className="h-3 w-3" />
-                      Semestre {semesterValue}
-                    </Badge>
-                  ) : null}
-                  
-                  {(!careerValue && !semesterValue) && (
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Badge variant="outline" className="flex items-center gap-1 cursor-default">
-                            <PlusCircle className="h-3 w-3" />
-                            Sin info académica
-                          </Badge>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p className="max-w-xs text-xs">Este usuario aún no ha completado su información académica</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex justify-center items-center text-lg font-semibold text-primary gap-1 mb-4">
-                <Heart className="h-5 w-5 fill-primary text-primary" />
-                <span>{user.followers_count} corazones</span>
-              </div>
-              
-              <div className="flex justify-center">
-                <FollowButton targetUserId={user.id} />
-              </div>
+    <Card className="p-6">
+      <h2 className="text-xl font-semibold mb-6 text-center">Top 3 Usuarios Más Populares</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+        {/* Silver - 2nd Place */}
+        <div className="flex flex-col items-center order-1 sm:order-1">
+          <div className="relative">
+            <Avatar 
+              className="h-24 w-24 border-4 border-silver cursor-pointer" 
+              onClick={() => onProfileClick(silver.id)}
+            >
+              <AvatarImage src={silver.avatar_url || undefined} />
+              <AvatarFallback className="text-xl">
+                {silver.username?.[0]?.toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="absolute -top-2 -right-2 bg-silver text-white rounded-full h-8 w-8 flex items-center justify-center font-bold">
+              2
             </div>
-          </Card>
-        );
-      })}
-    </div>
+          </div>
+          <h3 
+            className="font-semibold mt-3 cursor-pointer hover:underline"
+            onClick={() => onProfileClick(silver.id)}
+          >
+            {silver.username || "Usuario"}
+          </h3>
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <Heart className="h-4 w-4 text-primary fill-primary" />
+            <span>{silver.followers_count}</span>
+          </div>
+          {silver.career && (
+            <span className="mt-1 text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full">
+              {silver.career}
+            </span>
+          )}
+        </div>
+        
+        {/* Gold - 1st Place */}
+        <div className="flex flex-col items-center order-0 sm:order-2">
+          <div className="relative">
+            <Avatar 
+              className="h-32 w-32 border-4 border-gold cursor-pointer" 
+              onClick={() => onProfileClick(gold.id)}
+            >
+              <AvatarImage src={gold.avatar_url || undefined} />
+              <AvatarFallback className="text-2xl">
+                {gold.username?.[0]?.toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="absolute -top-2 -right-2 bg-gold text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">
+              1
+            </div>
+          </div>
+          <h3 
+            className="font-semibold text-lg mt-3 cursor-pointer hover:underline"
+            onClick={() => onProfileClick(gold.id)}
+          >
+            {gold.username || "Usuario"}
+          </h3>
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <Heart className="h-4 w-4 text-primary fill-primary" />
+            <span>{gold.followers_count}</span>
+          </div>
+          {gold.career && (
+            <span className="mt-1 text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full">
+              {gold.career}
+            </span>
+          )}
+        </div>
+        
+        {/* Bronze - 3rd Place */}
+        <div className="flex flex-col items-center order-2 sm:order-3">
+          <div className="relative">
+            <Avatar 
+              className="h-24 w-24 border-4 border-bronze cursor-pointer" 
+              onClick={() => onProfileClick(bronze.id)}
+            >
+              <AvatarImage src={bronze.avatar_url || undefined} />
+              <AvatarFallback className="text-xl">
+                {bronze.username?.[0]?.toUpperCase() || 'U'}
+              </AvatarFallback>
+            </Avatar>
+            <div className="absolute -top-2 -right-2 bg-bronze text-white rounded-full h-8 w-8 flex items-center justify-center font-bold">
+              3
+            </div>
+          </div>
+          <h3 
+            className="font-semibold mt-3 cursor-pointer hover:underline"
+            onClick={() => onProfileClick(bronze.id)}
+          >
+            {bronze.username || "Usuario"}
+          </h3>
+          <div className="flex items-center gap-1 text-sm text-muted-foreground">
+            <Heart className="h-4 w-4 text-primary fill-primary" />
+            <span>{bronze.followers_count}</span>
+          </div>
+          {bronze.career && (
+            <span className="mt-1 text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full">
+              {bronze.career}
+            </span>
+          )}
+        </div>
+      </div>
+    </Card>
   );
 };

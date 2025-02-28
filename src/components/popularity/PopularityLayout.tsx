@@ -1,22 +1,14 @@
 
-import { ReactNode } from "react";
-import { Navigation } from "@/components/Navigation";
-import { Toaster } from "@/components/ui/toaster";
+import React from "react";
 
 interface PopularityLayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 export const PopularityLayout = ({ children }: PopularityLayoutProps) => {
   return (
-    <div className="flex min-h-screen bg-background">
-      <Navigation />
-      <main className="flex-1 pl-[70px]">
-        <div className="container py-6 max-w-6xl">
-          {children}
-        </div>
-      </main>
-      <Toaster />
+    <div className="container max-w-4xl mx-auto py-8 px-4 sm:px-6">
+      {children}
     </div>
   );
 };
