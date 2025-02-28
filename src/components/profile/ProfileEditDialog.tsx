@@ -182,7 +182,7 @@ export function ProfileEditDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Sin especificar</SelectItem>
+                      <SelectItem value="none">Sin especificar</SelectItem>
                       {careers.map((careerOption) => (
                         <SelectItem key={careerOption} value={careerOption}>
                           {careerOption}
@@ -214,7 +214,7 @@ export function ProfileEditDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="">Sin especificar</SelectItem>
+                      <SelectItem value="none">Sin especificar</SelectItem>
                       {semesters.map((semesterOption) => (
                         <SelectItem key={semesterOption} value={semesterOption}>
                           {semesterOption}
