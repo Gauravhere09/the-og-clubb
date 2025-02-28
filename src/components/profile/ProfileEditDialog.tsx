@@ -9,6 +9,19 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Profile } from "@/pages/Profile";
 import type { ProfileTable } from "@/types/database/profile.types";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormDescription,
+  FormMessage 
+} from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface ProfileEditDialogProps {
   profile: Profile;
@@ -17,20 +30,31 @@ interface ProfileEditDialogProps {
   onUpdate: (updatedProfile: Profile) => void;
 }
 
+const formSchema = z.object({
+  username: z.string().min(2, "El nombre debe tener al menos 2 caracteres").max(30, "El nombre no puede tener más de 30 caracteres"),
+  bio: z.string().max(500, "La biografía no puede tener más de 500 caracteres").optional().or(z.literal("")),
+  career: z.string().optional().or(z.literal("")),
+  semester: z.string().optional().or(z.literal("")),
+});
+
 export function ProfileEditDialog({
   profile,
   isOpen,
   onClose,
   onUpdate,
 }: ProfileEditDialogProps) {
-  const [formData, setFormData] = useState({
-    username: profile.username || "",
-    bio: profile.bio || "",
-    career: profile.career || "",
-    semester: profile.semester || "",
-  });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      username: profile.username || "",
+      bio: profile.bio || "",
+      career: profile.career || "",
+      semester: profile.semester || "",
+    },
+  });
 
   // Lista de carreras para el selector actualizada según la imagen
   const careers = [
@@ -52,16 +76,15 @@ export function ProfileEditDialog({
   // Lista de semestres para el selector
   const semesters = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Egresado"];
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
 
     try {
       const updateData: ProfileTable['Update'] = {
-        username: formData.username,
-        bio: formData.bio,
-        career: formData.career || null,  // Asegurarse de que se guarde null si está vacío
-        semester: formData.semester || null,  // Asegurarse de que se guarde null si está vacío
+        username: values.username,
+        bio: values.bio || null,
+        career: values.career || null,  // Asegurarse de que se guarde null si está vacío
+        semester: values.semester || null,  // Asegurarse de que se guarde null si está vacío
         updated_at: new Date().toISOString(),
       };
 
@@ -113,83 +136,110 @@ export function ProfileEditDialog({
         <DialogHeader>
           <DialogTitle>Editar perfil</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="username" className="text-sm font-medium">
-              Nombre de usuario
-            </label>
-            <Input
-              id="username"
-              value={formData.username}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, username: e.target.value }))
-              }
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre de usuario</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div>
-            <label htmlFor="bio" className="text-sm font-medium">
-              Biografía
-            </label>
-            <Textarea
-              id="bio"
-              value={formData.bio}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, bio: e.target.value }))
-              }
-              rows={4}
+            
+            <FormField
+              control={form.control}
+              name="bio"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Biografía</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} rows={4} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div>
-            <label htmlFor="career" className="text-sm font-medium">
-              Carrera
-            </label>
-            <Select 
-              value={formData.career} 
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, career: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona tu carrera" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Sin especificar</SelectItem>
-                {careers.map((careerOption) => (
-                  <SelectItem key={careerOption} value={careerOption}>
-                    {careerOption}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label htmlFor="semester" className="text-sm font-medium">
-              Semestre
-            </label>
-            <Select 
-              value={formData.semester} 
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, semester: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecciona tu semestre" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Sin especificar</SelectItem>
-                {semesters.map((semesterOption) => (
-                  <SelectItem key={semesterOption} value={semesterOption}>
-                    {semesterOption}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex justify-end gap-4">
-            <Button variant="outline" onClick={onClose} type="button">
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Guardando..." : "Guardar cambios"}
-            </Button>
-          </div>
-        </form>
+            
+            <FormField
+              control={form.control}
+              name="career"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Carrera</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona tu carrera" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">Sin especificar</SelectItem>
+                      {careers.map((careerOption) => (
+                        <SelectItem key={careerOption} value={careerOption}>
+                          {careerOption}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Los usuarios podrán ver tu carrera en tu perfil y ranking
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="semester"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Semestre</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecciona tu semestre" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="">Sin especificar</SelectItem>
+                      {semesters.map((semesterOption) => (
+                        <SelectItem key={semesterOption} value={semesterOption}>
+                          {semesterOption}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Los usuarios podrán ver tu semestre en tu perfil y ranking
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <div className="flex justify-end gap-4">
+              <Button variant="outline" onClick={onClose} type="button">
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? "Guardando..." : "Guardar cambios"}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
