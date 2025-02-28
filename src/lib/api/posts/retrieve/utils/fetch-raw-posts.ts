@@ -1,6 +1,24 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
+type PostData = {
+  id: string;
+  content: string | null;
+  user_id: string;
+  media_url: string | null;
+  media_type: string | null;
+  visibility: 'public' | 'friends' | 'private';
+  poll: any;
+  created_at: string;
+  updated_at: string;
+  profiles: {
+    username: string | null;
+    avatar_url: string | null;
+  };
+  shared_from?: string | null;
+  shared_post?: any;
+};
+
 /**
  * Fetches raw posts data from the database
  */
@@ -49,9 +67,9 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
     if (hasSharedFromColumn && data) {
       // Extract the shared_from IDs
       sharedPostIds = data
-        .filter(post => post.shared_from)
-        .map(post => post.shared_from)
-        .filter(Boolean) as string[];
+        .filter((post: PostData) => post.shared_from)
+        .map((post: PostData) => post.shared_from as string)
+        .filter(Boolean);
     }
       
     if (sharedPostIds.length > 0) {
@@ -85,7 +103,7 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
       
       // Add the shared posts to the original data
       if (data) {
-        data.forEach(post => {
+        data.forEach((post: PostData) => {
           if (hasSharedFromColumn && post.shared_from && sharedPostsMap[post.shared_from]) {
             post.shared_post = sharedPostsMap[post.shared_from];
           }

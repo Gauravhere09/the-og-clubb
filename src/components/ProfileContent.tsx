@@ -1,170 +1,63 @@
 
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
-import { Post } from "@/components/Post";
-import type { Post as PostType, Poll } from "@/types/post";
+import { Feed } from "@/components/Feed";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getFriends } from "@/lib/api/friends";
+import { Link } from "react-router-dom";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ProfileContentProps {
   profileId: string;
 }
 
 export function ProfileContent({ profileId }: ProfileContentProps) {
-  const { data: posts, isLoading } = useQuery({
-    queryKey: ["profile-posts", profileId],
-    queryFn: async () => {
-      const { data: postsData, error: postsError } = await supabase
-        .from("posts")
-        .select(`
-          *,
-          profiles(username, avatar_url)
-        `)
-        .eq("user_id", profileId)
-        .order("created_at", { ascending: false });
-
-      if (postsError) throw postsError;
-
-      // Fetch shared posts if needed
-      const sharedPostIds = postsData
-        ?.filter(post => post.shared_post_id)
-        .map(post => post.shared_post_id)
-        .filter(Boolean);
-        
-      if (sharedPostIds && sharedPostIds.length > 0) {
-        const { data: sharedPosts, error: sharedError } = await supabase
-          .from('posts')
-          .select(`
-            id,
-            content,
-            user_id,
-            media_url,
-            media_type,
-            visibility,
-            poll,
-            created_at,
-            updated_at,
-            profiles (
-              username,
-              avatar_url
-            )
-          `)
-          .in('id', sharedPostIds);
-          
-        if (sharedError) throw sharedError;
-        
-        // Create a map of shared posts by ID for quick lookup
-        const sharedPostsMap = (sharedPosts || []).reduce((map, post) => {
-          map[post.id] = post;
-          return map;
-        }, {} as Record<string, any>);
-        
-        // Add the shared posts to the original data
-        postsData?.forEach(post => {
-          if (post.shared_post_id && sharedPostsMap[post.shared_post_id]) {
-            post.shared_post = sharedPostsMap[post.shared_post_id];
-          }
-        });
-      }
-
-      // Fetch all comments
-      const { data: commentsData, error: commentsError } = await supabase
-        .from("comments")
-        .select("post_id")
-        .in("post_id", (postsData || []).map(p => p.id));
-
-      if (commentsError) throw commentsError;
-
-      // Fetch all reactions
-      const { data: reactionsData, error: reactionsError } = await supabase
-        .from("reactions")
-        .select("post_id, reaction_type")
-        .in("post_id", (postsData || []).map(p => p.id));
-
-      if (reactionsError) throw reactionsError;
-
-      // Count comments manually
-      const commentsMap = (commentsData || []).reduce((acc, comment) => {
-        acc[comment.post_id] = (acc[comment.post_id] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-
-      // Count reactions manually
-      const reactionsMap = (reactionsData || []).reduce((acc, reaction) => {
-        if (!acc[reaction.post_id]) {
-          acc[reaction.post_id] = {
-            count: 0,
-            by_type: {}
-          };
-        }
-        acc[reaction.post_id].count += 1;
-        acc[reaction.post_id].by_type[reaction.reaction_type] = 
-          (acc[reaction.post_id].by_type[reaction.reaction_type] || 0) + 1;
-        return acc;
-      }, {} as Record<string, { count: number, by_type: Record<string, number> }>);
-
-      // Transform poll data
-      const transformPoll = (pollData: unknown): Poll | null => {
-        if (!pollData || typeof pollData !== 'object') return null;
-        
-        const poll = pollData as Record<string, unknown>;
-        if (!poll.question || !poll.options || !Array.isArray(poll.options)) return null;
-
-        return {
-          question: String(poll.question),
-          options: poll.options.map((opt: any) => ({
-            id: String(opt.id),
-            content: String(opt.content),
-            votes: Number(opt.votes) || 0
-          })),
-          total_votes: Number(poll.total_votes) || 0,
-          user_vote: poll.user_vote ? String(poll.user_vote) : null
-        };
-      };
-
-      // Combine all data
-      return (postsData || []).map((post): PostType => ({
-        ...post,
-        media_type: post.media_type as 'image' | 'video' | 'audio' | null,
-        visibility: post.visibility as 'public' | 'friends' | 'private',
-        poll: transformPoll(post.poll),
-        reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
-        reactions_count: reactionsMap[post.id]?.count || 0,
-        comments_count: commentsMap[post.id] || 0
-      }));
-    },
+  const { data: friends = [], isLoading: isLoadingFriends } = useQuery({
+    queryKey: ['friends', profileId],
+    queryFn: () => getFriends()
   });
 
-  if (isLoading) {
-    return (
-      <Card className="p-4">
-        <h2 className="font-semibold mb-4">Publicaciones</h2>
-        <div className="animate-pulse space-y-4">
-          <div className="h-24 bg-muted rounded-md" />
-          <div className="h-24 bg-muted rounded-md" />
-        </div>
-      </Card>
-    );
-  }
-
-  if (!posts?.length) {
-    return (
-      <Card className="p-4">
-        <h2 className="font-semibold mb-4">Publicaciones</h2>
-        <p className="text-muted-foreground text-center py-8">
-          No hay publicaciones para mostrar
-        </p>
-      </Card>
-    );
-  }
-
   return (
-    <div className="space-y-4">
-      <Card className="p-4">
-        <h2 className="font-semibold mb-4">Publicaciones</h2>
-      </Card>
-      {posts.map((post) => (
-        <Post key={post.id} post={post} />
-      ))}
-    </div>
+    <Tabs defaultValue="feed" className="w-full">
+      <TabsList className="w-full">
+        <TabsTrigger value="feed">Publicaciones</TabsTrigger>
+        <TabsTrigger value="friends">Amigos ({friends.length})</TabsTrigger>
+      </TabsList>
+      <TabsContent value="feed">
+        <Feed userId={profileId} />
+      </TabsContent>
+      <TabsContent value="friends">
+        <Card className="p-4">
+          {isLoadingFriends ? (
+            <p className="text-center text-muted-foreground">Cargando amigos...</p>
+          ) : friends.length === 0 ? (
+            <p className="text-center text-muted-foreground">Esta persona aún no tiene amigos</p>
+          ) : (
+            <ScrollArea className="h-[400px] pr-4">
+              <div className="space-y-4">
+                {friends.map((friend) => (
+                  <Link
+                    key={friend.friend_id}
+                    to={`/profile/${friend.friend_id}`}
+                    className="flex items-center gap-3 p-2 hover:bg-accent rounded-lg"
+                  >
+                    <Avatar>
+                      <AvatarImage src={friend.friend_avatar_url || undefined} />
+                      <AvatarFallback>
+                        {friend.friend_username?.[0]?.toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-medium">{friend.friend_username}</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </ScrollArea>
+          )}
+        </Card>
+      </TabsContent>
+    </Tabs>
   );
 }
