@@ -18,7 +18,7 @@ export const Pagination = ({ currentPage, totalPages, onPageChange }: Pagination
         disabled={currentPage === 1}
         className="flex items-center"
       >
-        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+        <ChevronLeft strokeWidth={1.5} className="h-4 w-4" aria-hidden="true" />
         <span className="ml-1">Anterior</span>
       </Button>
       
@@ -34,7 +34,7 @@ export const Pagination = ({ currentPage, totalPages, onPageChange }: Pagination
         className="flex items-center"
       >
         <span className="mr-1">Siguiente</span>
-        <ChevronRight className="h-4 w-4" aria-hidden="true" />
+        <ChevronRight strokeWidth={1.5} className="h-4 w-4" aria-hidden="true" />
       </Button>
     </div>
   );

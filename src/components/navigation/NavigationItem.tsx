@@ -17,11 +17,11 @@ export function NavigationItem({ link, isActive }: { link: NavigationLink; isAct
     <Link
       to={link.to || '#'}
       onClick={handleClick}
-      className={`flex items-center justify-center p-4 transition-colors hover:text-primary relative ${
+      className={`flex items-center justify-center p-4 transition-colors relative ${
         isActive ? "text-primary" : "text-muted-foreground"
       }`}
     >
-      <Icon className="w-6 h-6" />
+      <Icon strokeWidth={1.5} className="w-6 h-6" />
       {link.badge && (
         <Badge 
           variant="destructive" 
