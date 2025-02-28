@@ -101,40 +101,30 @@ export async function getComments(postId: string) {
         });
       }
       
-      // Obtener el conteo de reacciones para cada comentario
-      // En lugar de usar group(), hacemos una consulta por cada comentario o usamos una función SQL
+      // Obtener el conteo de reacciones para cada comentario usando el método tradicional
+      // sin usar .group() ni RPC
       const countByCommentId = new Map();
       
-      // Usamos una consulta SQL personalizada para contar reacciones
-      const { data: reactionCounts, error: countError } = await supabase
-        .rpc('count_reactions_by_comment', { comment_ids: commentIds });
+      // Consultar todas las reacciones para estos comentarios
+      const { data: allReactions } = await supabase
+        .from('reactions')
+        .select('comment_id')
+        .in('comment_id', commentIds);
       
-      if (!countError && reactionCounts) {
-        reactionCounts.forEach((item: { comment_id: string, count: number }) => {
-          countByCommentId.set(item.comment_id, item.count);
+      if (allReactions) {
+        // Contar manualmente las reacciones por comentario
+        const counts: Record<string, number> = {};
+        allReactions.forEach(reaction => {
+          if (!counts[reaction.comment_id]) {
+            counts[reaction.comment_id] = 0;
+          }
+          counts[reaction.comment_id]++;
         });
-      } else {
-        // Alternativa: contar manualmente si la función RPC no está disponible
-        const { data: allReactions } = await supabase
-          .from('reactions')
-          .select('comment_id')
-          .in('comment_id', commentIds);
         
-        if (allReactions) {
-          // Contar manualmente las reacciones por comentario
-          const counts: Record<string, number> = {};
-          allReactions.forEach(reaction => {
-            if (!counts[reaction.comment_id]) {
-              counts[reaction.comment_id] = 0;
-            }
-            counts[reaction.comment_id]++;
-          });
-          
-          // Convertir a Map
-          Object.entries(counts).forEach(([commentId, count]) => {
-            countByCommentId.set(commentId, count);
-          });
-        }
+        // Convertir a Map
+        Object.entries(counts).forEach(([commentId, count]) => {
+          countByCommentId.set(commentId, count);
+        });
       }
       
       // Añadir la reacción del usuario y el conteo a cada comentario
