@@ -17,6 +17,9 @@ interface NotificationWithSender {
   post_id?: string;
   comment_id?: string;
   read: boolean;
+  post_content?: string;
+  post_media?: string | null;
+  comment_content?: string;
 }
 
 export const useNotifications = () => {
@@ -97,6 +100,46 @@ export const useNotifications = () => {
         console.error('Error loading sender profiles:', profilesError);
       }
       
+      // Get all post IDs from notifications
+      const postIds = [...new Set(data.filter(item => item.post_id).map(item => item.post_id!))];
+      
+      // Fetch post details if there are any post IDs
+      let postsData: Record<string, any> = {};
+      if (postIds.length > 0) {
+        const { data: posts, error: postsError } = await supabase
+          .from('posts')
+          .select('id, content, media_url')
+          .in('id', postIds);
+          
+        if (!postsError && posts) {
+          // Create a map of post IDs to post data
+          postsData = posts.reduce((acc, post) => ({
+            ...acc,
+            [post.id]: post
+          }), {});
+        }
+      }
+      
+      // Get all comment IDs from notifications
+      const commentIds = [...new Set(data.filter(item => item.comment_id).map(item => item.comment_id!))];
+      
+      // Fetch comment details if there are any comment IDs
+      let commentsData: Record<string, any> = {};
+      if (commentIds.length > 0) {
+        const { data: comments, error: commentsError } = await supabase
+          .from('comments')
+          .select('id, content')
+          .in('id', commentIds);
+          
+        if (!commentsError && comments) {
+          // Create a map of comment IDs to comment data
+          commentsData = comments.reduce((acc, comment) => ({
+            ...acc,
+            [comment.id]: comment
+          }), {});
+        }
+      }
+      
       // Create a map of sender IDs to profiles for quick lookup
       const profileMap = new Map();
       if (profiles) {
@@ -105,13 +148,27 @@ export const useNotifications = () => {
         });
       }
       
-      // Map notifications with sender info
+      // Map notifications with sender info and related content
       const notificationsWithSenders = data.map(notification => {
         const senderProfile = profileMap.get(notification.sender_id) || {
           id: notification.sender_id,
           username: 'Usuario',
           avatar_url: null
         };
+        
+        // Get post data if this notification is related to a post
+        let postContent = undefined;
+        let postMedia = undefined;
+        if (notification.post_id && postsData[notification.post_id]) {
+          postContent = postsData[notification.post_id].content;
+          postMedia = postsData[notification.post_id].media_url;
+        }
+        
+        // Get comment data if this notification is related to a comment
+        let commentContent = undefined;
+        if (notification.comment_id && commentsData[notification.comment_id]) {
+          commentContent = commentsData[notification.comment_id].content;
+        }
         
         return {
           id: notification.id,
@@ -125,7 +182,10 @@ export const useNotifications = () => {
             id: senderProfile.id,
             username: senderProfile.username,
             avatar_url: senderProfile.avatar_url
-          }
+          },
+          post_content: postContent,
+          post_media: postMedia,
+          comment_content: commentContent
         };
       });
       
@@ -155,6 +215,35 @@ export const useNotifications = () => {
             .eq('id', payload.new.sender_id)
             .single();
           
+          let postContent, postMedia, commentContent;
+          
+          // Fetch post data if this notification is related to a post
+          if (payload.new.post_id) {
+            const { data: postData } = await supabase
+              .from('posts')
+              .select('content, media_url')
+              .eq('id', payload.new.post_id)
+              .single();
+              
+            if (postData) {
+              postContent = postData.content;
+              postMedia = postData.media_url;
+            }
+          }
+          
+          // Fetch comment data if this notification is related to a comment
+          if (payload.new.comment_id) {
+            const { data: commentData } = await supabase
+              .from('comments')
+              .select('content')
+              .eq('id', payload.new.comment_id)
+              .single();
+              
+            if (commentData) {
+              commentContent = commentData.content;
+            }
+          }
+          
           if (!senderError && senderData) {
             const newNotification: NotificationWithSender = {
               id: payload.new.id,
@@ -168,7 +257,10 @@ export const useNotifications = () => {
                 id: senderData.id,
                 username: senderData.username,
                 avatar_url: senderData.avatar_url
-              }
+              },
+              post_content: postContent,
+              post_media: postMedia,
+              comment_content: commentContent
             };
 
             setNotifications(prev => [newNotification, ...prev]);

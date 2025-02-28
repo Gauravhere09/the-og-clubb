@@ -21,6 +21,9 @@ export interface Notification {
   message?: string;
   created_at: string;
   read: boolean;
+  post_content?: string;
+  post_media?: string | null;
+  comment_content?: string;
 }
 
 export interface DatabaseNotification {

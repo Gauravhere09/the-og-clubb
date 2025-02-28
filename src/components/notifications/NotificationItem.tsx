@@ -26,6 +26,9 @@ interface NotificationItemProps {
     post_id?: string;
     comment_id?: string;
     read: boolean;
+    post_content?: string;
+    post_media?: string | null;
+    comment_content?: string;
   };
   onHandleFriendRequest?: (notificationId: string, senderId: string, accept: boolean) => void;
   onClick?: () => void;
@@ -56,6 +59,37 @@ export const NotificationItem = ({
         onMarkAsRead();
       }
     }
+  };
+
+  const renderPostPreview = () => {
+    if (!notification.post_content && !notification.post_media) return null;
+    
+    return (
+      <div className="mt-2 bg-muted/30 p-2 rounded text-sm border border-border/30 line-clamp-2">
+        {notification.post_media && (
+          <div className="mb-1">
+            <img 
+              src={notification.post_media} 
+              alt="Media de la publicación" 
+              className="h-16 w-auto object-cover rounded"
+            />
+          </div>
+        )}
+        {notification.post_content && (
+          <p className="text-muted-foreground line-clamp-2">{notification.post_content}</p>
+        )}
+      </div>
+    );
+  };
+
+  const renderCommentPreview = () => {
+    if (!notification.comment_content) return null;
+    
+    return (
+      <div className="mt-2 bg-muted/30 p-2 rounded text-sm border border-border/30">
+        <p className="text-muted-foreground italic line-clamp-2">"{notification.comment_content}"</p>
+      </div>
+    );
   };
 
   const renderContent = () => {
@@ -172,6 +206,17 @@ export const NotificationItem = ({
         <p className={`text-muted-foreground ${compact ? 'text-xs mt-0.5' : 'text-sm mt-1'}`}>
           {formattedDate}
         </p>
+        
+        {/* Mostrar vista previa de la publicación o comentario */}
+        {!compact && notification.type !== 'friend_request' && (
+          <>
+            {(notification.type === 'post_like' || notification.type === 'post_comment' || notification.type === 'new_post') && 
+              renderPostPreview()}
+            
+            {(notification.type === 'comment_reply') && 
+              renderCommentPreview()}
+          </>
+        )}
         
         {compact && notification.type === 'friend_request' && onHandleFriendRequest && (
           <div className="flex gap-2 mt-2">
