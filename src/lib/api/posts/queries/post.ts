@@ -141,9 +141,10 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
       const validPosts = sharedPosts.filter(post => post !== null);
       
       for (const post of validPosts) {
-        if (typeof post === 'object' && 'id' in post && post.id) {
-          postsMap[post.id] = {
-            id: post.id,
+        if (post && typeof post === 'object' && 'id' in post && post.id) {
+          const postId = post.id;
+          postsMap[postId] = {
+            id: postId,
             content: post.content ?? '',
             user_id: post.user_id ?? null,
             media_url: post.media_url ?? null,
