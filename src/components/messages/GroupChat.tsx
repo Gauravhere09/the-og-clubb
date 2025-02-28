@@ -3,10 +3,12 @@ import { useState, useRef, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Send, Mic, Square, Image as ImageIcon, X, ArrowLeft, Phone, Video, Search, MoreVertical } from "lucide-react";
+import { Send, Mic, Square, Image as ImageIcon, ArrowLeft, Search, MoreVertical, Trash } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { GroupMessage } from "@/hooks/use-group-messages";
-import { uploadProfileImage } from "@/lib/api/profile";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface GroupChatProps {
   messages: GroupMessage[];
@@ -21,6 +23,7 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<BlobPart[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   const startRecording = async () => {
     try {
@@ -71,6 +74,41 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
     }
   };
 
+  const handleDeleteMessage = async (messageId: string) => {
+    try {
+      // Verificar que el mensaje pertenece al usuario actual
+      const messageToDelete = messages.find(msg => msg.id === messageId);
+      
+      if (!messageToDelete) {
+        throw new Error("Mensaje no encontrado");
+      }
+      
+      if (messageToDelete.sender_id !== currentUserId) {
+        throw new Error("No tienes permiso para eliminar este mensaje");
+      }
+      
+      // Eliminar el mensaje
+      const { error } = await supabase
+        .from('group_messages')
+        .delete()
+        .eq('id', messageId);
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Mensaje eliminado",
+        description: "El mensaje ha sido eliminado con éxito",
+      });
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "No se pudo eliminar el mensaje",
+      });
+    }
+  };
+
   useEffect(() => {
     const nav = document.querySelector('nav');
     if (nav && window.innerWidth < 768) {
@@ -107,18 +145,9 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
             <div className="text-sm text-gray-500 dark:text-gray-400">Chat grupal</div>
           </div>
         </div>
-        <div className="hidden md:flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
-            <Video className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
-            <Phone className="h-5 w-5" />
-          </Button>
+        <div className="flex items-center">
           <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
             <Search className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
-            <MoreVertical className="h-5 w-5" />
           </Button>
         </div>
       </div>
@@ -137,29 +166,53 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
                     <AvatarFallback>{message.sender?.username[0]}</AvatarFallback>
                   </Avatar>
                 )}
-                <div
-                  className={`max-w-[80%] rounded-lg p-3 ${
-                    message.sender_id === currentUserId
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
-                  }`}
-                >
-                  {message.type === 'audio' ? (
-                    <audio src={message.media_url || undefined} controls className="max-w-[200px]" />
-                  ) : message.media_url ? (
-                    <img src={message.media_url} alt="Imagen enviada" className="max-w-[200px] rounded" />
-                  ) : (
-                    <p>{message.content}</p>
-                  )}
+                <div className="relative group">
                   <div
-                    className={`text-xs mt-1 ${
-                      message.sender_id === currentUserId 
-                        ? "text-primary-foreground/70" 
-                        : "text-muted-foreground"
+                    className={`max-w-[80%] rounded-lg p-3 ${
+                      message.sender_id === currentUserId
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted"
                     }`}
                   >
-                    {message.sender?.username} • {new Date(message.created_at).toLocaleTimeString()}
+                    {message.type === 'audio' ? (
+                      <audio src={message.media_url || undefined} controls className="max-w-[200px]" />
+                    ) : message.media_url ? (
+                      <img src={message.media_url} alt="Imagen enviada" className="max-w-[200px] rounded" />
+                    ) : (
+                      <p>{message.content}</p>
+                    )}
+                    <div
+                      className={`text-xs mt-1 ${
+                        message.sender_id === currentUserId 
+                          ? "text-primary-foreground/70" 
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {message.sender?.username} • {new Date(message.created_at).toLocaleTimeString()}
+                    </div>
                   </div>
+                  
+                  {/* Opción para eliminar mensaje (solo para mensajes propios) */}
+                  {message.sender_id === currentUserId && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <MoreVertical className={`h-4 w-4 ${
+                          message.sender_id === currentUserId 
+                            ? "text-primary-foreground/70" 
+                            : "text-muted-foreground"
+                        }`} />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem 
+                          className="text-destructive focus:text-destructive cursor-pointer"
+                          onClick={() => handleDeleteMessage(message.id)}
+                        >
+                          <Trash className="h-4 w-4 mr-2" />
+                          Eliminar mensaje
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
               </div>
             </div>

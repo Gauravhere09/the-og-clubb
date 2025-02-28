@@ -1,6 +1,6 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeft, Phone, Video, Search, MoreVertical } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Friend } from "@/hooks/use-friends";
 
@@ -46,18 +46,9 @@ export const ChatHeader = ({ selectedFriend, isGroupChat, onBack }: ChatHeaderPr
           </>
         )}
       </div>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
-          <Video className="h-5 w-5" />
-        </Button>
-        <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
-          <Phone className="h-5 w-5" />
-        </Button>
+      <div className="flex items-center">
         <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
           <Search className="h-5 w-5" />
-        </Button>
-        <Button variant="ghost" size="icon" className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white">
-          <MoreVertical className="h-5 w-5" />
         </Button>
       </div>
     </div>
