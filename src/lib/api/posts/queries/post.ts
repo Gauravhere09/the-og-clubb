@@ -137,14 +137,31 @@ export async function fetchSharedPosts(sharedPostIds: string[]): Promise<Record<
     
     // Safely iterate through the posts to verify each one has an id
     if (Array.isArray(sharedPosts)) {
-      // Filtrar los posts nulos antes de procesarlos
-      const validPosts = sharedPosts.filter(post => post !== null);
-      
-      for (const post of validPosts) {
-        if (post && typeof post === 'object' && 'id' in post && post.id) {
-          const postId = post.id;
-          postsMap[postId] = {
-            id: postId,
+      for (const postItem of sharedPosts) {
+        // Skip null or undefined items
+        if (!postItem) continue;
+        
+        // Use a non-null assertion since we've checked for null above
+        const post = postItem as {
+          id: string;
+          content?: string;
+          user_id?: string;
+          media_url?: string | null;
+          media_type?: string | null;
+          visibility?: string;
+          poll?: any;
+          created_at?: string;
+          updated_at?: string;
+          shared_from?: string | null;
+          profiles?: {
+            username: string | null;
+            avatar_url: string | null;
+          } | null;
+        };
+          
+        if (typeof post === 'object' && 'id' in post && post.id) {
+          postsMap[post.id] = {
+            id: post.id,
             content: post.content ?? '',
             user_id: post.user_id ?? null,
             media_url: post.media_url ?? null,
