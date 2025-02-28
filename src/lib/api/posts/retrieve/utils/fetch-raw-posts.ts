@@ -71,13 +71,17 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
     if (hasSharedFromColumn && Array.isArray(data)) {
       // Extract the shared_from IDs from posts that have them
       sharedPostIds = data
-        .filter((post): post is { shared_from: string | null } => 
-          post !== null && 
-          typeof post === 'object' && 
-          'shared_from' in post && 
-          post.shared_from !== null
-        )
-        .map(post => post.shared_from as string);
+        .filter((post) => {
+          if (post === null) return false;
+          if (typeof post !== 'object') return false;
+          if (!('shared_from' in post)) return false;
+          if (post.shared_from === null) return false;
+          return true;
+        })
+        .map((post) => {
+          // At this point, TypeScript knows post is not null, is an object, and has shared_from property
+          return post.shared_from as string;
+        });
     }
       
     if (sharedPostIds.length > 0) {
@@ -113,14 +117,16 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
       
       // Add the shared posts to the original data
       if (Array.isArray(data)) {
-        data.forEach(post => {
-          if (post !== null && 
-              typeof post === 'object' && 
-              hasSharedFromColumn && 
-              'shared_from' in post && 
-              post.shared_from !== null && 
-              sharedPostsMap[post.shared_from]) {
-            post.shared_post = sharedPostsMap[post.shared_from];
+        data.forEach((post) => {
+          if (post === null) return;
+          if (typeof post !== 'object') return;
+          if (!hasSharedFromColumn) return;
+          if (!('shared_from' in post)) return;
+          if (post.shared_from === null) return;
+          
+          const sharedPostId = post.shared_from as string;
+          if (sharedPostsMap[sharedPostId]) {
+            post.shared_post = sharedPostsMap[sharedPostId];
           }
         });
       }
