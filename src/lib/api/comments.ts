@@ -70,72 +70,78 @@ export async function getComments(postId: string) {
     .from('comments')
     .select(`
       *,
-      profiles(username, avatar_url),
-      likes:likes(count)
+      profiles(username, avatar_url)
     `)
     .eq('post_id', postId)
     .order('created_at', { ascending: true });
 
+  // Obtenemos los datos de comentarios
+  const { data, error } = await query;
+  if (error) throw error;
+  
+  let comments = data as Comment[];
+  
+  // Si hay un usuario autenticado, obtiene sus reacciones
   if (user?.user) {
-    const { data: userLikes } = await supabase
-      .from('likes')
-      .select('comment_id')
-      .eq('user_id', user.user.id);
-
-    const likedCommentIds = new Set(userLikes?.map(like => like.comment_id) || []);
-
-    const { data, error } = await query;
-
-    if (error) throw error;
-
-    const comments = (data as Comment[]).map(comment => ({
-      ...comment,
-      user_has_liked: likedCommentIds.has(comment.id)
-    }));
-
-    const commentMap = new Map<string, Comment>();
-    const rootComments: Comment[] = [];
-
-    comments.forEach(comment => {
-      commentMap.set(comment.id, { ...comment, replies: [] });
-    });
-
-    comments.forEach(comment => {
-      if (comment.parent_id) {
-        const parent = commentMap.get(comment.parent_id);
-        if (parent) {
-          parent.replies?.push(commentMap.get(comment.id)!);
-        }
-      } else {
-        rootComments.push(commentMap.get(comment.id)!);
+    // Obtener las reacciones del usuario a los comentarios
+    const commentIds = comments.map(comment => comment.id);
+    
+    if (commentIds.length > 0) {
+      const { data: userReactions } = await supabase
+        .from('reactions')
+        .select('comment_id, reaction_type')
+        .eq('user_id', user.user.id)
+        .in('comment_id', commentIds);
+      
+      // Crear un mapa de reacciones por id de comentario
+      const reactionsByCommentId = new Map();
+      if (userReactions) {
+        userReactions.forEach(reaction => {
+          reactionsByCommentId.set(reaction.comment_id, reaction.reaction_type);
+        });
       }
-    });
-
-    return rootComments;
-  } else {
-    const { data, error } = await query;
-
-    if (error) throw error;
-
-    const comments = data as Comment[];
-    const commentMap = new Map<string, Comment>();
-    const rootComments: Comment[] = [];
-
-    comments.forEach(comment => {
-      commentMap.set(comment.id, { ...comment, replies: [] });
-    });
-
-    comments.forEach(comment => {
-      if (comment.parent_id) {
-        const parent = commentMap.get(comment.parent_id);
-        if (parent) {
-          parent.replies?.push(commentMap.get(comment.id)!);
-        }
-      } else {
-        rootComments.push(commentMap.get(comment.id)!);
+      
+      // Obtener el conteo de reacciones para cada comentario
+      const { data: reactionCounts } = await supabase
+        .from('reactions')
+        .select('comment_id, count(*)')
+        .in('comment_id', commentIds)
+        .group('comment_id');
+        
+      const countByCommentId = new Map();
+      if (reactionCounts) {
+        reactionCounts.forEach(count => {
+          countByCommentId.set(count.comment_id, parseInt(count.count, 10));
+        });
       }
-    });
-
-    return rootComments;
+      
+      // Añadir la reacción del usuario y el conteo a cada comentario
+      comments = comments.map(comment => ({
+        ...comment,
+        user_reaction: reactionsByCommentId.get(comment.id) || null,
+        likes_count: countByCommentId.get(comment.id) || 0
+      }));
+    }
   }
+
+  // Organizar comentarios en jerarquía (comentarios padres y respuestas)
+  const commentMap = new Map<string, Comment>();
+  const rootComments: Comment[] = [];
+
+  comments.forEach(comment => {
+    commentMap.set(comment.id, { ...comment, replies: [] });
+  });
+
+  comments.forEach(comment => {
+    if (comment.parent_id) {
+      const parent = commentMap.get(comment.parent_id);
+      if (parent && parent.replies) {
+        parent.replies.push(commentMap.get(comment.id)!);
+      }
+    } else {
+      rootComments.push(commentMap.get(comment.id)!);
+    }
+  });
+
+  return rootComments;
 }

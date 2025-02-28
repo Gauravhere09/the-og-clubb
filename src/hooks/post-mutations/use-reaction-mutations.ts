@@ -78,6 +78,8 @@ export function useReactionMutations(postId: string) {
 
   const { mutate: toggleCommentReaction } = useMutation({
     mutationFn: async ({ commentId, type }: CommentReactionParams) => {
+      console.log(`Toggling reaction ${type} for comment ${commentId}`);
+      
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
@@ -95,6 +97,7 @@ export function useReactionMutations(postId: string) {
       if (existingReaction) {
         // Si es la misma reacción, la eliminamos (toggle)
         if (existingReaction.reaction_type === type) {
+          console.log(`Removing existing ${type} reaction`);
           const { error } = await supabase
             .from('reactions')
             .delete()
@@ -102,6 +105,7 @@ export function useReactionMutations(postId: string) {
           if (error) throw error;
         } else {
           // Si es una reacción diferente, la actualizamos
+          console.log(`Updating reaction from ${existingReaction.reaction_type} to ${type}`);
           const { error } = await supabase
             .from('reactions')
             .update({ reaction_type: type })
@@ -110,6 +114,7 @@ export function useReactionMutations(postId: string) {
         }
       } else {
         // Si no existe reacción previa, creamos una nueva
+        console.log(`Creating new ${type} reaction`);
         const { error } = await supabase
           .from('reactions')
           .insert({
@@ -119,6 +124,12 @@ export function useReactionMutations(postId: string) {
           });
         if (error) throw error;
       }
+
+      // Mostrar toast de confirmación
+      toast({
+        title: "Reacción actualizada",
+        description: "Tu reacción ha sido registrada",
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", postId] });

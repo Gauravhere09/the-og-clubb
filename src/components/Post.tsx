@@ -67,6 +67,7 @@ export function Post({ post }: PostProps) {
   };
 
   const handleCommentReaction = (commentId: string, type: ReactionType) => {
+    console.log(`Handling reaction ${type} for comment ${commentId}`);
     toggleCommentReaction({ commentId, type });
   };
 
