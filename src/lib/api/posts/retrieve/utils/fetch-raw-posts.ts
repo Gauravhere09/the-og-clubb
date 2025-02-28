@@ -61,15 +61,20 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
     
     if (error) throw error;
     
+    if (!data) {
+      return [];
+    }
+    
     // If there are shared posts and the shared_from column exists, fetch the original posts
     let sharedPostIds: string[] = [];
     
-    if (hasSharedFromColumn && data) {
-      // Extract the shared_from IDs
+    if (hasSharedFromColumn && Array.isArray(data)) {
+      // Extract the shared_from IDs, ensuring we're working with proper PostData objects
       sharedPostIds = data
-        .filter((post: PostData) => post.shared_from)
-        .map((post: PostData) => post.shared_from as string)
-        .filter(Boolean);
+        .filter((post): post is PostData => 
+          post !== null && typeof post === 'object' && 'shared_from' in post && !!post.shared_from
+        )
+        .map((post) => post.shared_from as string);
     }
       
     if (sharedPostIds.length > 0) {
@@ -97,14 +102,20 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
       
       // Create a map of shared posts by ID for quick lookup
       const sharedPostsMap = (sharedPosts || []).reduce((map, post) => {
-        map[post.id] = post;
+        if (post && typeof post === 'object' && 'id' in post) {
+          map[post.id] = post;
+        }
         return map;
       }, {} as Record<string, any>);
       
       // Add the shared posts to the original data
-      if (data) {
-        data.forEach((post: PostData) => {
-          if (hasSharedFromColumn && post.shared_from && sharedPostsMap[post.shared_from]) {
+      if (Array.isArray(data)) {
+        data.forEach((post) => {
+          if (post && typeof post === 'object' && 
+              hasSharedFromColumn && 
+              'shared_from' in post && 
+              post.shared_from && 
+              sharedPostsMap[post.shared_from]) {
             post.shared_post = sharedPostsMap[post.shared_from];
           }
         });
