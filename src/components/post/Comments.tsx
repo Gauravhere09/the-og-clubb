@@ -1,8 +1,10 @@
 
+import { useState, useEffect } from "react";
 import type { Comment } from "@/types/post";
 import { SingleComment } from "./comments/SingleComment";
 import { CommentInput } from "./comments/CommentInput";
 import type { ReactionType } from "@/types/database/social.types";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CommentsProps {
   postId: string;
@@ -18,6 +20,7 @@ interface CommentsProps {
 }
 
 export function Comments({
+  postId,
   comments,
   onReaction,
   onReply,
@@ -28,10 +31,37 @@ export function Comments({
   replyTo,
   onCancelReply
 }: CommentsProps) {
+  const [localComments, setLocalComments] = useState<Comment[]>(comments);
+
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('comments')
+          .select(`
+            *,
+            profiles:user_id(username, avatar_url)
+          `)
+          .eq('post_id', postId)
+          .order('created_at', { ascending: true });
+        
+        if (error) throw error;
+        
+        if (data) {
+          setLocalComments(data as Comment[]);
+        }
+      } catch (error) {
+        console.error('Error fetching comments:', error);
+      }
+    };
+
+    fetchComments();
+  }, [postId]);
+
   return (
     <div className="mt-4 space-y-4">
       <div className="space-y-4">
-        {comments.map((comment) => (
+        {localComments.map((comment) => (
           <SingleComment
             key={comment.id}
             comment={comment}

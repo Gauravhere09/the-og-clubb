@@ -8,6 +8,8 @@ import { PostContent } from "@/components/post/PostContent";
 import { PostHeader } from "@/components/post/PostHeader";
 import { type Post as PostType } from "@/types/post";
 import { SharedPostContent } from "./post/SharedPostContent";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PostProps {
   post: PostType;
@@ -16,13 +18,25 @@ interface PostProps {
 
 export function Post({ post, hideComments = false }: PostProps) {
   const [showComments, setShowComments] = useState(false);
-  const { addReaction } = usePostMutations();
+  const [comments, setComments] = useState<any[]>([]);
+  const [newComment, setNewComment] = useState("");
+  const [replyTo, setReplyTo] = useState<{ id: string; username: string } | null>(null);
+  const { toast } = useToast();
+  
+  // Initialize usePostMutations with the post ID
+  const { 
+    handleReaction, 
+    handleDeletePost,
+    toggleCommentReaction,
+    submitComment
+  } = usePostMutations(post.id);
 
-  const handleReaction = (type: ReactionType) => {
-    addReaction({
-      postId: post.id,
-      reactionType: type
-    });
+  const onDeletePost = () => {
+    handleDeletePost();
+  };
+
+  const onReaction = (type: ReactionType) => {
+    handleReaction(type);
   };
 
   const toggleComments = () => {
@@ -33,12 +47,78 @@ export function Post({ post, hideComments = false }: PostProps) {
     setShowComments(true);
   };
 
+  const handleCommentReaction = (commentId: string, type: ReactionType) => {
+    toggleCommentReaction({ commentId, type });
+  };
+
+  const handleReply = (commentId: string, username: string) => {
+    setReplyTo({ id: commentId, username });
+    setShowComments(true);
+  };
+
+  const handleSubmitComment = () => {
+    if (!newComment.trim()) return;
+    
+    submitComment({
+      content: newComment,
+      replyToId: replyTo?.id
+    });
+    
+    setNewComment("");
+    setReplyTo(null);
+  };
+
+  const handleCancelReply = () => {
+    setReplyTo(null);
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('id', commentId);
+      
+      if (error) throw error;
+      
+      // Update local state to remove the deleted comment
+      setComments(prev => prev.filter(comment => comment.id !== commentId));
+      
+      toast({
+        title: "Comentario eliminado",
+        description: "El comentario ha sido eliminado correctamente",
+      });
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo eliminar el comentario",
+      });
+    }
+  };
+
+  // Check if user is the author of the post
+  const checkIsAuthor = async () => {
+    const { data } = await supabase.auth.getSession();
+    return data.session?.user.id === post.user_id;
+  };
+
+  const isAuthor = post.user_id === supabase.auth.getUser()?.data?.user?.id;
+
   return (
     <Card className="overflow-hidden shadow-sm">
       <div className="p-4 space-y-4">
-        <PostHeader post={post} />
+        <PostHeader 
+          post={post} 
+          onDelete={onDeletePost}
+          isAuthor={isAuthor}
+        />
         
-        <PostContent post={post} />
+        <PostContent 
+          post={post} 
+          postId={post.id}
+        />
         
         {post.shared_post && (
           <div className="mt-2">
@@ -48,13 +128,24 @@ export function Post({ post, hideComments = false }: PostProps) {
         
         <PostActions 
           post={post} 
-          onReaction={handleReaction} 
+          onReaction={onReaction} 
           onToggleComments={toggleComments}
           onCommentsClick={handleCommentsClick}
         />
         
         {!hideComments && showComments && (
-          <Comments postId={post.id} />
+          <Comments 
+            postId={post.id}
+            comments={comments}
+            onReaction={handleCommentReaction}
+            onReply={handleReply}
+            onSubmitComment={handleSubmitComment}
+            onDeleteComment={handleDeleteComment}
+            newComment={newComment}
+            onNewCommentChange={setNewComment}
+            replyTo={replyTo}
+            onCancelReply={handleCancelReply}
+          />
         )}
       </div>
     </Card>

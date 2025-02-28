@@ -58,7 +58,7 @@ export function SharedPostContent({ post }: SharedPostContentProps) {
             <PollDisplay 
               poll={post.poll} 
               postId={post.id}
-              isDisabled={true}
+              readOnly={true} // Changed isDisabled to readOnly to match PollDisplay props
             />
           </div>
         )}
