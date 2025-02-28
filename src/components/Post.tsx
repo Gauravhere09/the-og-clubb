@@ -98,9 +98,10 @@ export function Post({ post, hideComments = false }: PostProps) {
     }
   };
 
-  // Fixed: Get current user ID synchronously without accessing Promise
-  const currentUser = supabase.auth.getSession();
-  const isCurrentUserAuthor = currentUser ? post.user_id === currentUser.data?.session?.user.id : false;
+  // Fixed: Get current user using the synchronous method
+  const currentSession = supabase.auth.getSession();
+  const currentUser = supabase.auth.getUser();
+  const isCurrentUserAuthor = post.user_id === currentUser.data?.user?.id;
 
   return (
     <Card className="overflow-hidden shadow-sm">
