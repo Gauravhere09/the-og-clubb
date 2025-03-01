@@ -53,9 +53,9 @@ const Index = () => {
       <Navigation />
       <div className="flex-1 flex justify-center md:ml-[70px]">
         <main className="w-full max-w-2xl px-4 py-6 md:py-8 pb-20 md:pb-8">
-          {/* Sticky header and story viewer section */}
-          <div className="sticky top-0 bg-background z-10 pb-4">
-            <div className="flex items-center justify-between mb-6">
+          {/* Solo la barra de navegación superior queda fija */}
+          <div className="sticky top-0 bg-background z-10 pb-2">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Home className="h-5 w-5" />
                 <h1 className="text-2xl font-semibold">Feed</h1>
@@ -95,15 +95,16 @@ const Index = () => {
                 </DropdownMenu>
               </div>
             </div>
+          </div>
 
+          {/* El contenido que se desplaza */}
+          <div className="space-y-6">
             {currentUserId && (
               <StoryViewer currentUserId={currentUserId} />
             )}
             
             <PostCreator />
-          </div>
-          
-          <div className="space-y-6 mt-4">
+            
             <Feed />
           </div>
         </main>
