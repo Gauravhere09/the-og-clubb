@@ -10,9 +10,9 @@ export const formatNotificationMessage = (type: NotificationType, username: stri
     case 'comment_reply':
       return `${username} ha respondido a tu comentario`;
     case 'post_like':
-      return `${username} ha reaccionado a tu publicación`;
+      return `A ${username} le ha gustado tu publicación`;
     case 'new_post':
-      return `${username} ha realizado una nueva publicación`;
+      return `${username} ha publicado algo nuevo`;
     case 'friend_accepted':
       return `${username} ha aceptado tu solicitud de amistad`;
     default:
