@@ -96,7 +96,7 @@ export function subscribeToNotifications(
             
             toastCallback(
               "Nueva notificación",
-              formatNotificationMessage(payload.new.type, defaultSender.username)
+              formatNotificationMessage(payload.new.type as NotificationType, defaultSender.username)
             );
             
             return;

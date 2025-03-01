@@ -51,6 +51,7 @@ export async function fetchNotifications(): Promise<NotificationWithSender[]> {
     if (senderIds.length === 0) {
       return data.map(notification => ({
         ...notification,
+        type: notification.type as NotificationType, // Explicitly cast the type
         sender: {
           id: notification.sender_id || 'unknown',
           username: 'Usuario desconocido',
@@ -170,7 +171,7 @@ function mapNotificationsWithSenders(
     
     return {
       id: notification.id,
-      type: notification.type as NotificationType,
+      type: notification.type as NotificationType, // Explicitly cast to NotificationType
       created_at: notification.created_at,
       message: notification.message ?? undefined,
       post_id: notification.post_id ?? undefined,
