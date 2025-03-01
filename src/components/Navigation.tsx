@@ -52,9 +52,9 @@ export function Navigation() {
   const isProfilePage = location.pathname.startsWith('/profile');
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full bg-background border-t md:relative md:border-t-0 md:border-r md:w-[70px] md:h-screen z-50">
+    <nav className="fixed bottom-0 left-0 w-full bg-background border-t md:relative md:border-t-0 md:border-r md:w-[70px] md:min-h-screen md:h-full z-50">
       <Logo />
-      <div className="grid grid-cols-5 md:grid-cols-1 w-full md:h-[calc(100%-60px)] md:pt-6 relative">
+      <div className="grid grid-cols-5 md:grid-cols-1 w-full md:min-h-[calc(100vh-60px)] md:pt-6">
         {links.map((link) => (
           <NavigationItem
             key={link.label}
