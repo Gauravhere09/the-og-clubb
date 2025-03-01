@@ -35,13 +35,6 @@ export function Navigation() {
       label: "Popularidad"
     },
     { 
-      to: "/notifications", 
-      icon: Bell, 
-      label: "Notificaciones",
-      badge: unreadNotifications > 0 ? unreadNotifications : null,
-      onClick: handleNotificationClick
-    },
-    { 
       to: currentUserId ? `/profile/${currentUserId}` : "/", 
       icon: User, 
       label: "Perfil" 
