@@ -20,9 +20,14 @@ export function subscribeToNotifications(
         // Fetch sender info for the new notification
         const { data: senderData, error: senderError } = await supabase
           .from('profiles')
-          .select('id, username, avatar_url, full_name')
+          .select('id, username, avatar_url')
           .eq('id', payload.new.sender_id)
           .single();
+        
+        if (senderError) {
+          console.error('Error fetching sender info:', senderError);
+          return;
+        }
         
         let postContent, postMedia, commentContent;
         
@@ -53,7 +58,7 @@ export function subscribeToNotifications(
           }
         }
         
-        if (!senderError && senderData) {
+        if (senderData) {
           const newNotification: NotificationWithSender = {
             id: payload.new.id,
             type: payload.new.type as NotificationType,
@@ -63,11 +68,12 @@ export function subscribeToNotifications(
             comment_id: payload.new.comment_id ?? undefined,
             read: payload.new.read,
             sender_id: senderData.id,
+            receiver_id: payload.new.receiver_id,
             sender: {
               id: senderData.id,
               username: senderData.username,
               avatar_url: senderData.avatar_url,
-              full_name: senderData.full_name
+              full_name: undefined // We don't have full_name in the profiles table
             },
             post_content: postContent,
             post_media: postMedia,

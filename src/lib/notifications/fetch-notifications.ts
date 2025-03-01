@@ -29,7 +29,8 @@ export async function fetchNotifications(): Promise<NotificationWithSender[]> {
         post_id,
         comment_id,
         read,
-        sender_id
+        sender_id,
+        receiver_id
       `)
       .eq('receiver_id', user.id)
       .order('created_at', { ascending: false });
@@ -49,11 +50,12 @@ export async function fetchNotifications(): Promise<NotificationWithSender[]> {
     // Fetch sender profiles in a separate query
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, username, avatar_url, full_name')
+      .select('id, username, avatar_url')
       .in('id', senderIds);
       
     if (profilesError) {
       console.error('Error loading sender profiles:', profilesError);
+      return [];
     }
     
     // Get all post IDs from notifications
@@ -110,8 +112,7 @@ export async function fetchNotifications(): Promise<NotificationWithSender[]> {
       const senderProfile = profileMap.get(notification.sender_id) || {
         id: notification.sender_id,
         username: 'Usuario',
-        avatar_url: null,
-        full_name: null
+        avatar_url: null
       };
       
       // Get post data if this notification is related to a post
@@ -137,11 +138,12 @@ export async function fetchNotifications(): Promise<NotificationWithSender[]> {
         comment_id: notification.comment_id ?? undefined,
         read: notification.read,
         sender_id: senderProfile.id,
+        receiver_id: notification.receiver_id,
         sender: {
           id: senderProfile.id,
           username: senderProfile.username,
           avatar_url: senderProfile.avatar_url,
-          full_name: senderProfile.full_name || undefined
+          full_name: undefined // We don't have full_name in the profiles table
         },
         post_content: postContent,
         post_media: postMedia,
