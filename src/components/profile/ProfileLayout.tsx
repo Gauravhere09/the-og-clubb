@@ -18,11 +18,9 @@ export function ProfileLayout({ isLoading, error, children }: ProfileLayoutProps
     return (
       <div className="min-h-screen flex bg-muted/30">
         <Navigation />
-        <main className="flex-1 md:ml-[70px] p-6">
-          <div className="flex items-center justify-center h-full">
-            <Loader2 className="h-8 w-8 animate-spin" />
-          </div>
-        </main>
+        <div className="flex-1 flex justify-center items-center md:ml-[70px]">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
       </div>
     );
   }
@@ -31,7 +29,7 @@ export function ProfileLayout({ isLoading, error, children }: ProfileLayoutProps
     return (
       <div className="min-h-screen flex bg-muted/30">
         <Navigation />
-        <main className="flex-1 md:ml-[70px] p-6 flex items-center justify-center">
+        <div className="flex-1 flex justify-center items-center md:ml-[70px]">
           <Card className="max-w-md w-full p-6">
             <div className="text-center space-y-4">
               <div className="flex justify-center">
@@ -46,7 +44,7 @@ export function ProfileLayout({ isLoading, error, children }: ProfileLayoutProps
               </Button>
             </div>
           </Card>
-        </main>
+        </div>
       </div>
     );
   }
@@ -54,11 +52,11 @@ export function ProfileLayout({ isLoading, error, children }: ProfileLayoutProps
   return (
     <div className="min-h-screen flex bg-muted/30">
       <Navigation />
-      <main className="flex-1 md:ml-[70px] pb-20 md:pb-0">
-        <div className="max-w-4xl mx-auto space-y-4 p-6">
+      <div className="flex-1 flex justify-center md:ml-[70px] pb-20 md:pb-0">
+        <main className="w-full max-w-4xl space-y-4 p-6">
           {children}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
