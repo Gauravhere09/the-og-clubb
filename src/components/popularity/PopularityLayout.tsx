@@ -1,5 +1,6 @@
 
 import React from "react";
+import { Navigation } from "@/components/Navigation";
 
 interface PopularityLayoutProps {
   children: React.ReactNode;
@@ -7,8 +8,13 @@ interface PopularityLayoutProps {
 
 export const PopularityLayout = ({ children }: PopularityLayoutProps) => {
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4 sm:px-6">
-      {children}
+    <div className="min-h-screen flex bg-muted/30">
+      <Navigation />
+      <main className="flex-1">
+        <div className="container max-w-4xl mx-auto py-8 px-4 sm:px-6">
+          {children}
+        </div>
+      </main>
     </div>
   );
 };
