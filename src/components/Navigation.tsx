@@ -1,5 +1,5 @@
 
-import { Bell, Home, MessageCircle, User, Heart } from "lucide-react";
+import { Home, MessageCircle, User, Heart } from "lucide-react";
 import { Logo } from "./navigation/Logo";
 import { NavigationItem } from "./navigation/NavigationItem";
 import { useNavigation } from "./navigation/use-navigation";
@@ -45,7 +45,7 @@ export function Navigation() {
   const isProfilePage = location.pathname.startsWith('/profile');
 
   return (
-    <nav className="fixed bottom-0 left-0 w-full bg-background border-t md:relative md:border-t-0 md:border-r md:w-[70px] md:min-h-screen md:h-screen z-50 flex flex-col">
+    <nav className="fixed bottom-0 left-0 w-full bg-background border-t md:fixed md:top-0 md:bottom-auto md:border-t-0 md:border-r md:w-[70px] md:min-h-screen md:h-screen z-50 flex flex-col">
       <Logo />
       <div className="grid grid-cols-5 md:grid-cols-1 w-full flex-1 md:pt-6">
         {links.map((link) => (
