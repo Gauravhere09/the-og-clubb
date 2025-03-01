@@ -11,6 +11,7 @@ interface NotificationWithSender {
     id: string;
     username: string;
     avatar_url: string | null;
+    full_name?: string; // Añadimos el campo full_name
   };
   created_at: string;
   message?: string;
@@ -90,10 +91,10 @@ export const useNotifications = () => {
       // Get all unique sender IDs
       const senderIds = [...new Set(data.map(item => item.sender_id))];
       
-      // Fetch sender profiles in a separate query
+      // Fetch sender profiles in a separate query - ahora incluimos full_name
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username, avatar_url')
+        .select('id, username, avatar_url, full_name')
         .in('id', senderIds);
         
       if (profilesError) {
@@ -153,7 +154,8 @@ export const useNotifications = () => {
         const senderProfile = profileMap.get(notification.sender_id) || {
           id: notification.sender_id,
           username: 'Usuario',
-          avatar_url: null
+          avatar_url: null,
+          full_name: null
         };
         
         // Get post data if this notification is related to a post
@@ -181,7 +183,8 @@ export const useNotifications = () => {
           sender: {
             id: senderProfile.id,
             username: senderProfile.username,
-            avatar_url: senderProfile.avatar_url
+            avatar_url: senderProfile.avatar_url,
+            full_name: senderProfile.full_name || undefined
           },
           post_content: postContent,
           post_media: postMedia,

@@ -20,6 +20,7 @@ interface NotificationItemProps {
       id: string;
       username: string;
       avatar_url: string | null;
+      full_name?: string; // Añadimos el campo full_name opcional
     };
     created_at: string;
     message?: string;
@@ -44,6 +45,11 @@ export const NotificationItem = ({
   compact = false 
 }: NotificationItemProps) => {
   const navigate = useNavigate();
+
+  // Función para obtener el nombre a mostrar (nombre completo o username)
+  const getSenderDisplayName = () => {
+    return notification.sender.full_name || notification.sender.username;
+  };
 
   const handleClick = () => {
     if (notification.type === 'friend_request') {
@@ -96,7 +102,7 @@ export const NotificationItem = ({
     if (notification.message) {
       return (
         <span>
-          <span className="font-medium">{notification.sender.username}</span> {notification.message}
+          <span className="font-medium">{getSenderDisplayName()}</span> {notification.message}
         </span>
       );
     }
@@ -106,7 +112,7 @@ export const NotificationItem = ({
         return (
           <div className="flex items-center gap-2 flex-wrap">
             <span>
-              Tienes una sugerencia de amistad nueva: <span className="font-medium">{notification.sender.username}</span>
+              Tienes una sugerencia de amistad nueva: <span className="font-medium">{getSenderDisplayName()}</span>
             </span>
             {onHandleFriendRequest && !compact && (
               <div className="flex items-center ml-auto">
@@ -139,37 +145,37 @@ export const NotificationItem = ({
       case 'post_like':
         return (
           <span>
-            <span className="font-medium">{notification.sender.username}</span> ha reaccionado a tu publicación
+            <span className="font-medium">{getSenderDisplayName()}</span> ha reaccionado a tu publicación
           </span>
         );
       case 'post_comment':
         return (
           <span>
-            <span className="font-medium">{notification.sender.username}</span> ha comentado en tu publicación
+            <span className="font-medium">{getSenderDisplayName()}</span> ha comentado en tu publicación
           </span>
         );
       case 'comment_reply':
         return (
           <span>
-            <span className="font-medium">{notification.sender.username}</span> ha respondido a tu comentario
+            <span className="font-medium">{getSenderDisplayName()}</span> ha respondido a tu comentario
           </span>
         );
       case 'message':
         return (
           <span>
-            <span className="font-medium">{notification.sender.username}</span> te envió un mensaje
+            <span className="font-medium">{getSenderDisplayName()}</span> te envió un mensaje
           </span>
         );
       case 'new_post':
         return (
           <span>
-            <span className="font-medium">{notification.sender.username}</span> ha realizado una nueva publicación
+            <span className="font-medium">{getSenderDisplayName()}</span> ha realizado una nueva publicación
           </span>
         );
       case 'friend_accepted':
         return (
           <span>
-            <span className="font-medium">{notification.sender.username}</span> aceptó tu solicitud de amistad
+            <span className="font-medium">{getSenderDisplayName()}</span> aceptó tu solicitud de amistad
           </span>
         );
       default:
