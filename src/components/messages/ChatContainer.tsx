@@ -1,11 +1,12 @@
 
-import { MessageList } from "@/components/messages/MessageList";
-import { MessageInput } from "@/components/messages/MessageInput";
-import { ChatHeader } from "@/components/messages/ChatHeader";
-import { GroupChat } from "@/components/messages/GroupChat";
-import { Message } from "@/hooks/use-private-messages";
+import { GroupChat } from "./GroupChat";
+import { ChatDialog } from "./ChatDialog";
+import { ChatHeader } from "./ChatHeader";
+import { MessageInput } from "./MessageInput";
+import { MessageList } from "./MessageList";
 import { Friend } from "@/hooks/use-friends";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Message } from "@/hooks/use-private-messages";
+import { GroupMessage } from "@/hooks/use-group-messages";
 
 interface ChatContainerProps {
   showChat: boolean;
@@ -13,14 +14,15 @@ interface ChatContainerProps {
   selectedFriend: Friend | null;
   currentUserId: string | null;
   messages: Message[];
-  groupMessages: any[];
+  groupMessages: GroupMessage[];
   newMessage: string;
   isTyping: boolean;
   onBack: () => void;
   onMessageChange: (message: string) => void;
   onSendMessage: () => void;
-  onDeleteMessage?: (messageId: string) => void;
-  onImageUpload?: (file: File) => void;
+  onDeleteMessage: (messageId: string) => void;
+  onImageUpload: (file: File) => Promise<void>;
+  onSendGroupMessage: (content: string, type: 'text' | 'audio' | 'image', mediaBlob?: Blob) => Promise<void>;
 }
 
 export const ChatContainer = ({
@@ -36,59 +38,44 @@ export const ChatContainer = ({
   onMessageChange,
   onSendMessage,
   onDeleteMessage,
-  onImageUpload
+  onImageUpload,
+  onSendGroupMessage
 }: ChatContainerProps) => {
-  const isMobile = useIsMobile();
-
   if (!showChat) {
     return (
-      <div className="h-full flex-1 flex flex-col items-center justify-center p-4 text-center text-muted-foreground bg-gray-50 dark:bg-[#111]">
-        <p className="text-lg font-medium mb-2">Selecciona un chat para comenzar a conversar</p>
-        <p className="text-sm">O inicia una nueva conversación desde el chat grupal</p>
+      <div className="flex-1 flex items-center justify-center p-4 text-muted-foreground">
+        <p>Selecciona un chat para comenzar a conversar</p>
       </div>
     );
   }
 
-  return (
-    <div className={`flex flex-col h-full flex-1 bg-gray-50 dark:bg-[#111] ${isMobile && (showGroupChat || selectedFriend) ? 'fixed inset-0 z-50 bg-background' : ''}`}>
-      <ChatHeader
-        selectedFriend={selectedFriend}
-        isGroupChat={showGroupChat}
-        onBack={onBack}
+  if (showGroupChat) {
+    return (
+      <GroupChat
+        messages={groupMessages}
+        currentUserId={currentUserId || ""}
+        onSendMessage={onSendGroupMessage}
+        onClose={onBack}
       />
+    );
+  }
 
-      {showGroupChat ? (
-        <GroupChat
-          messages={groupMessages}
-          currentUserId={currentUserId || ""}
-          onSendMessage={async (content, type, audioBlob) => {
-            // Adaptamos esta función para cumplir con los requisitos del componente GroupChat
-            console.log("Enviando mensaje grupal:", content, type);
-            onSendMessage();
-          }}
-        />
-      ) : (
-        <MessageList
-          messages={messages}
-          currentUserId={currentUserId}
-          onDeleteMessage={onDeleteMessage}
-        />
-      )}
-
-      {isTyping && (
-        <div className="px-4 py-2 text-sm text-muted-foreground">
-          Escribiendo...
-        </div>
-      )}
-
-      {!showGroupChat && (
-        <MessageInput
-          newMessage={newMessage}
-          onMessageChange={onMessageChange}
-          onSendMessage={onSendMessage}
-          onImageUpload={onImageUpload}
-        />
-      )}
+  return (
+    <div className="flex flex-col h-full">
+      <ChatHeader friend={selectedFriend} onBack={onBack} />
+      <MessageList
+        messages={messages}
+        currentUserId={currentUserId}
+        onDeleteMessage={onDeleteMessage}
+      />
+      <MessageInput
+        message={newMessage}
+        isTyping={isTyping}
+        onMessageChange={onMessageChange}
+        onSendMessage={onSendMessage}
+        onImageUpload={onImageUpload}
+      />
+      <ChatDialog />
     </div>
   );
 };

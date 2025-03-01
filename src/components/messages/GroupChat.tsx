@@ -21,11 +21,20 @@ interface GroupChatProps {
 export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: GroupChatProps) => {
   const [newMessage, setNewMessage] = useState("");
   const [isRecording, setIsRecording] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const audioChunks = useRef<BlobPart[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const isMobile = useIsMobile();
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
   const startRecording = async () => {
     try {
@@ -39,7 +48,19 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
 
       mediaRecorder.current.onstop = async () => {
         const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
-        await onSendMessage('', 'audio', audioBlob);
+        try {
+          setIsSending(true);
+          await onSendMessage('', 'audio', audioBlob);
+        } catch (error) {
+          console.error('Error sending audio message:', error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "No se pudo enviar el mensaje de audio",
+          });
+        } finally {
+          setIsSending(false);
+        }
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -47,6 +68,11 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
       setIsRecording(true);
     } catch (error) {
       console.error('Error starting recording:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo acceder al micrófono",
+      });
     }
   };
 
@@ -59,19 +85,47 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || isSending) return;
 
-    await onSendMessage(newMessage, 'text');
-    setNewMessage("");
+    try {
+      setIsSending(true);
+      await onSendMessage(newMessage, 'text');
+      setNewMessage("");
+    } catch (error) {
+      console.error('Error sending message:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo enviar el mensaje",
+      });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       try {
+        setIsSending(true);
         await onSendMessage(file.name, 'image', file);
+        toast({
+          title: "Imagen enviada",
+          description: "La imagen se ha enviado correctamente",
+        });
       } catch (error) {
         console.error('Error uploading image:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No se pudo enviar la imagen",
+        });
+      } finally {
+        setIsSending(false);
+        // Reset the input value to allow uploading the same file again
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
       }
     }
   };
@@ -127,71 +181,95 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
 
   return (
     <div className={`flex flex-col h-full ${isMobile ? 'fixed inset-0 z-50 bg-background' : ''}`}>
+      <div className="p-2 border-b flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Avatar className="h-8 w-8">
+            <AvatarFallback className="bg-[#9b87f5]">H</AvatarFallback>
+          </Avatar>
+          <div>
+            <h2 className="font-semibold">Red H</h2>
+            <p className="text-xs text-muted-foreground">Chat grupal ({messages.length} mensajes)</p>
+          </div>
+        </div>
+        {onClose && (
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            Volver
+          </Button>
+        )}
+      </div>
+      
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.sender_id === currentUserId ? "justify-end" : "justify-start"}`}
-            >
-              <div className="flex gap-2">
-                {message.sender_id !== currentUserId && (
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={message.sender?.avatar_url || undefined} />
-                    <AvatarFallback>{message.sender?.username[0]}</AvatarFallback>
-                  </Avatar>
-                )}
-                <div className="relative group">
-                  <div
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      message.sender_id === currentUserId
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
-                    }`}
-                  >
-                    {message.type === 'audio' ? (
-                      <audio src={message.media_url || undefined} controls className="max-w-[200px]" />
-                    ) : message.media_url ? (
-                      <img src={message.media_url} alt="Imagen enviada" className="max-w-[200px] rounded" />
-                    ) : (
-                      <p>{message.content}</p>
-                    )}
+          {messages.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No hay mensajes aún. ¡Sé el primero en enviar uno!
+            </div>
+          ) : (
+            messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.sender_id === currentUserId ? "justify-end" : "justify-start"}`}
+              >
+                <div className="flex gap-2">
+                  {message.sender_id !== currentUserId && (
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={message.sender?.avatar_url || undefined} />
+                      <AvatarFallback>{message.sender?.username?.[0] || 'U'}</AvatarFallback>
+                    </Avatar>
+                  )}
+                  <div className="relative group">
                     <div
-                      className={`text-xs mt-1 ${
-                        message.sender_id === currentUserId 
-                          ? "text-primary-foreground/70" 
-                          : "text-muted-foreground"
+                      className={`max-w-[80%] rounded-lg p-3 ${
+                        message.sender_id === currentUserId
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted"
                       }`}
                     >
-                      {message.sender?.username} • {new Date(message.created_at).toLocaleTimeString()}
-                    </div>
-                  </div>
-                  
-                  {/* Opción para eliminar mensaje (solo para mensajes propios) */}
-                  {message.sender_id === currentUserId && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <MoreVertical className={`h-4 w-4 ${
+                      {message.type === 'audio' ? (
+                        <audio src={message.media_url || undefined} controls className="max-w-[200px]" />
+                      ) : message.type === 'image' ? (
+                        <img src={message.media_url || undefined} alt="Imagen enviada" className="max-w-[200px] rounded" />
+                      ) : (
+                        <p>{message.content}</p>
+                      )}
+                      <div
+                        className={`text-xs mt-1 ${
                           message.sender_id === currentUserId 
                             ? "text-primary-foreground/70" 
                             : "text-muted-foreground"
-                        }`} />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem 
-                          className="text-destructive focus:text-destructive cursor-pointer"
-                          onClick={() => handleDeleteMessage(message.id)}
-                        >
-                          <Trash className="h-4 w-4 mr-2" />
-                          Eliminar mensaje
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
+                        }`}
+                      >
+                        {message.sender?.username || 'Usuario'} • {new Date(message.created_at).toLocaleTimeString()}
+                      </div>
+                    </div>
+                    
+                    {/* Opción para eliminar mensaje (solo para mensajes propios) */}
+                    {message.sender_id === currentUserId && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <MoreVertical className={`h-4 w-4 ${
+                            message.sender_id === currentUserId 
+                              ? "text-primary-foreground/70" 
+                              : "text-muted-foreground"
+                          }`} />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem 
+                            className="text-destructive focus:text-destructive cursor-pointer"
+                            onClick={() => handleDeleteMessage(message.id)}
+                          >
+                            <Trash className="h-4 w-4 mr-2" />
+                            Eliminar mensaje
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
+          <div ref={messagesEndRef} />
         </div>
       </ScrollArea>
 
@@ -208,6 +286,7 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
             type="button"
             variant="ghost"
             size="icon"
+            disabled={isSending}
             onClick={() => fileInputRef.current?.click()}
             className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white"
           >
@@ -217,6 +296,7 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
             placeholder="Escribe un mensaje..." 
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
+            disabled={isSending || isRecording}
             className="flex-1"
           />
           {isRecording ? (
@@ -233,12 +313,17 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
               type="button" 
               variant="secondary" 
               size="icon"
+              disabled={isSending}
               onClick={startRecording}
             >
               <Mic className="h-4 w-4" />
             </Button>
           )}
-          <Button type="submit" size="icon" disabled={!newMessage.trim()}>
+          <Button 
+            type="submit" 
+            size="icon" 
+            disabled={!newMessage.trim() || isSending || isRecording}
+          >
             <Send className="h-4 w-4" />
           </Button>
         </form>

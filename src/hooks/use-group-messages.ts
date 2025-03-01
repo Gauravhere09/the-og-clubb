@@ -7,7 +7,7 @@ export interface GroupMessage {
   id: string;
   content: string;
   sender_id: string;
-  type: 'text' | 'audio';
+  type: 'text' | 'audio' | 'image';
   media_url: string | null;
   created_at: string;
   sender?: {
@@ -43,7 +43,7 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
           id: message.id,
           content: message.content,
           sender_id: message.sender_id,
-          type: message.type as 'text' | 'audio',
+          type: message.type as 'text' | 'audio' | 'image',
           media_url: message.media_url,
           created_at: message.created_at,
           sender: message.sender
@@ -69,6 +69,7 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
         schema: 'public', 
         table: 'group_messages' 
       }, async (payload) => {
+        console.log('Nuevo mensaje grupal recibido:', payload.new);
         // Fetch sender info for the new message
         const { data: senderData } = await supabase
           .from('profiles')
@@ -80,13 +81,21 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
           id: payload.new.id,
           content: payload.new.content,
           sender_id: payload.new.sender_id,
-          type: payload.new.type as 'text' | 'audio',
+          type: payload.new.type as 'text' | 'audio' | 'image',
           media_url: payload.new.media_url,
           created_at: payload.new.created_at,
           sender: senderData || undefined
         };
 
         setGroupMessages(prev => [...prev, newMessage]);
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'group_messages'
+      }, (payload) => {
+        console.log('Mensaje grupal eliminado:', payload.old.id);
+        setGroupMessages(prev => prev.filter(msg => msg.id !== payload.old.id));
       })
       .subscribe();
 
@@ -101,19 +110,39 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
 export async function sendGroupMessage(
   senderId: string | null, 
   content: string, 
-  type: 'text' | 'audio' = 'text',
-  audioBlob?: Blob
+  type: 'text' | 'audio' | 'image' = 'text',
+  mediaBlob?: Blob
 ) {
-  if (!senderId) return;
+  if (!senderId) {
+    console.error("Error: No hay ID de remitente para enviar el mensaje");
+    return null;
+  }
+
+  console.info(`Enviando mensaje grupal: ${content} ${type}`);
 
   try {
     let media_url = null;
 
-    if (type === 'audio' && audioBlob) {
+    if (type === 'audio' && mediaBlob) {
       const fileName = `${crypto.randomUUID()}.webm`;
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('media')
-        .upload(fileName, audioBlob);
+        .upload(fileName, mediaBlob);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('media')
+        .getPublicUrl(fileName);
+
+      media_url = publicUrl;
+    }
+    
+    if (type === 'image' && mediaBlob) {
+      const fileName = `group_image_${Date.now()}.jpg`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('media')
+        .upload(fileName, mediaBlob);
 
       if (uploadError) throw uploadError;
 
@@ -136,9 +165,11 @@ export async function sendGroupMessage(
       .single();
 
     if (error) throw error;
+    
+    console.log('Mensaje grupal enviado correctamente:', data);
     return data;
   } catch (error) {
-    console.error('Error sending group message:', error);
+    console.error('Error enviando mensaje grupal:', error);
     throw error;
   }
 }

@@ -7,10 +7,13 @@ import { MessagesLayout } from "@/components/messages/MessagesLayout";
 import { SidebarContent } from "@/components/messages/SidebarContent";
 import { ChatContainer } from "@/components/messages/ChatContainer";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { sendGroupMessage } from "@/hooks/use-group-messages";
+import { useToast } from "@/hooks/use-toast";
 
 export const MessagesController = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const isMobile = useIsMobile();
+  const { toast } = useToast();
   
   // Load current user
   useEffect(() => {
@@ -49,6 +52,29 @@ export const MessagesController = () => {
     handleImageUpload,
     handleBack
   } = useMessages(currentUserId);
+
+  // Handle sending group messages
+  const handleSendGroupMessage = async (content: string, type: 'text' | 'audio' | 'image' = 'text', mediaBlob?: Blob) => {
+    if (!currentUserId) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Debes iniciar sesión para enviar mensajes",
+      });
+      return;
+    }
+
+    try {
+      await sendGroupMessage(currentUserId, content, type, mediaBlob);
+    } catch (error) {
+      console.error("Error al enviar mensaje grupal:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo enviar el mensaje al grupo",
+      });
+    }
+  };
 
   // Determine sidebar visibility based on screen size and selection state
   const showSidebar = (!Boolean(selectedFriend) && !showGroupChat) || !isMobile;
@@ -93,6 +119,7 @@ export const MessagesController = () => {
             onSendMessage={handleSendMessage}
             onDeleteMessage={handleDeleteMessage}
             onImageUpload={handleImageUpload}
+            onSendGroupMessage={handleSendGroupMessage}
           />
         </div>
       }
