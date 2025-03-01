@@ -55,7 +55,7 @@ export function ProfileLayout({ isLoading, error, children }: ProfileLayoutProps
     <div className="min-h-screen flex bg-muted/30">
       <Navigation />
       <main className="flex-1 max-w-4xl mx-auto">
-        <div className="space-y-4">
+        <div className="space-y-4 p-6">
           {children}
         </div>
       </main>

@@ -48,6 +48,9 @@ export function Navigation() {
     }
   ];
 
+  // Check if the current path starts with /profile to highlight the profile icon
+  const isProfilePage = location.pathname.startsWith('/profile');
+
   return (
     <nav className="fixed bottom-0 left-0 w-full bg-background border-t md:relative md:border-t-0 md:border-r md:w-[70px] md:h-screen z-50">
       <Logo />
@@ -56,7 +59,11 @@ export function Navigation() {
           <NavigationItem
             key={link.label}
             link={link}
-            isActive={link.to === location.pathname}
+            isActive={
+              link.label === "Perfil" 
+                ? isProfilePage 
+                : link.to === location.pathname
+            }
           />
         ))}
       </div>
