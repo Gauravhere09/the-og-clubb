@@ -17,7 +17,7 @@ export function NavigationItem({ link, isActive }: { link: NavigationLink; isAct
     <Link
       to={link.to || '#'}
       onClick={handleClick}
-      className={`flex items-center justify-center p-4 transition-colors relative ${
+      className={`flex items-center justify-center py-4 px-2 transition-colors relative ${
         isActive ? "text-primary" : "text-muted-foreground"
       }`}
     >
