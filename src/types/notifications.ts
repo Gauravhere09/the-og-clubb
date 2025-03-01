@@ -26,6 +26,15 @@ export interface Notification {
   comment_content?: string;
 }
 
+export interface NotificationWithSender extends Notification {
+  sender: {
+    id: string;
+    username: string;
+    avatar_url: string | null;
+    full_name?: string;
+  };
+}
+
 export interface DatabaseNotification {
   id: string;
   type: string;
