@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -11,7 +10,7 @@ interface NotificationWithSender {
     id: string;
     username: string;
     avatar_url: string | null;
-    full_name?: string; // Añadimos el campo full_name
+    full_name?: string;
   };
   created_at: string;
   message?: string;
@@ -149,8 +148,9 @@ export const useNotifications = () => {
         });
       }
       
-      // Map notifications with sender info and related content
-      const notificationsWithSenders = data.map(notification => {
+      // Process notifications with sender and post data
+      const processedNotifications = data.map((notification) => {
+        // Find the profile for this notification's sender
         const senderProfile = profileMap.get(notification.sender_id) || {
           id: notification.sender_id,
           username: 'Usuario',
@@ -192,7 +192,7 @@ export const useNotifications = () => {
         };
       });
       
-      setNotifications(notificationsWithSenders);
+      setNotifications(processedNotifications);
     } catch (error) {
       console.error('Error in loadNotifications:', error);
     }
