@@ -31,12 +31,12 @@ export const SidebarContent = ({
   onUnarchive,
 }: SidebarContentProps) => {
   return (
-    <>
+    <div className="flex flex-col h-full">
       <SearchBar 
         searchQuery={searchQuery}
         onSearchChange={onSearchChange}
       />
-      <div className="overflow-y-auto h-[calc(100%-73px)]">
+      <div className="flex-1 overflow-y-auto">
         <GroupChatButton onClick={onGroupChatClick} />
         <FriendList 
           friends={filteredFriends}
@@ -50,6 +50,6 @@ export const SidebarContent = ({
           onUnarchive={onUnarchive}
         />
       </div>
-    </>
+    </div>
   );
 };

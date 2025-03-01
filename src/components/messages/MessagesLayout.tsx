@@ -16,10 +16,10 @@ export const MessagesLayout = ({ sidebar, content, showSidebar }: MessagesLayout
   return (
     <div className="min-h-screen flex bg-white dark:bg-black text-gray-900 dark:text-white">
       <Navigation />
-      <main className="flex-1">
-        <div className="h-[calc(100vh-64px)] flex">
+      <main className="flex-1 flex justify-center">
+        <div className="h-[calc(100vh-64px)] flex max-w-6xl w-full">
           {showSidebar && (
-            <Card className={`${isMobile ? 'w-full' : 'w-[380px]'} md:block rounded-none bg-gray-50 dark:bg-black border-r border-gray-200 dark:border-neutral-800`}>
+            <Card className={`${isMobile ? 'w-full' : 'w-[350px]'} md:block rounded-none bg-gray-50 dark:bg-black border-r border-gray-200 dark:border-neutral-800`}>
               {sidebar}
             </Card>
           )}

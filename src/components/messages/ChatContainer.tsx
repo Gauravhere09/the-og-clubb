@@ -42,15 +42,15 @@ export const ChatContainer = ({
 
   if (!showChat) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-4 text-center text-muted-foreground">
-        <p>Selecciona un chat para comenzar a conversar</p>
+      <div className="h-full flex-1 flex flex-col items-center justify-center p-4 text-center text-muted-foreground bg-gray-50 dark:bg-[#111]">
+        <p className="text-lg font-medium mb-2">Selecciona un chat para comenzar a conversar</p>
         <p className="text-sm">O inicia una nueva conversación desde el chat grupal</p>
       </div>
     );
   }
 
   return (
-    <div className={`flex flex-col h-full ${isMobile && (showGroupChat || selectedFriend) ? 'fixed inset-0 z-50 bg-background' : ''}`}>
+    <div className={`flex flex-col h-full flex-1 bg-gray-50 dark:bg-[#111] ${isMobile && (showGroupChat || selectedFriend) ? 'fixed inset-0 z-50 bg-background' : ''}`}>
       <ChatHeader
         selectedFriend={selectedFriend}
         isGroupChat={showGroupChat}

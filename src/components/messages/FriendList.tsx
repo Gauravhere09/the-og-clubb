@@ -24,7 +24,7 @@ export const FriendList = ({
   onPressEnd 
 }: FriendListProps) => {
   return (
-    <div className="border-r">
+    <div className="w-full">
       <ScrollArea className="h-full">
         {friends.map((friend) => (
           <button
