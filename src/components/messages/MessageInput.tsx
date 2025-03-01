@@ -6,13 +6,15 @@ import { useRef } from "react";
 
 interface MessageInputProps {
   newMessage: string;
+  isTyping?: boolean;
   onMessageChange: (message: string) => void;
   onSendMessage: () => void;
-  onImageUpload?: (file: File) => void;
+  onImageUpload?: (file: File) => Promise<void>;
 }
 
 export const MessageInput = ({ 
   newMessage, 
+  isTyping,
   onMessageChange, 
   onSendMessage,
   onImageUpload 

@@ -69,7 +69,7 @@ export const ChatContainer = ({
         onDeleteMessage={onDeleteMessage}
       />
       <MessageInput
-        message={newMessage}
+        newMessage={newMessage}
         isTyping={isTyping}
         onMessageChange={onMessageChange}
         onSendMessage={onSendMessage}

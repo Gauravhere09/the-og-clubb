@@ -5,12 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Friend } from "@/hooks/use-friends";
 
 interface ChatHeaderProps {
-  selectedFriend: Friend | null;
-  isGroupChat: boolean;
+  friend?: Friend | null;
+  isGroupChat?: boolean;
   onBack: () => void;
 }
 
-export const ChatHeader = ({ selectedFriend, isGroupChat, onBack }: ChatHeaderProps) => {
+export const ChatHeader = ({ friend, isGroupChat = false, onBack }: ChatHeaderProps) => {
   return (
     <div className="p-3 bg-white dark:bg-[#111B21] border-l border-gray-200 dark:border-[#313D45] flex items-center justify-between">
       <div className="flex items-center gap-3">
@@ -33,14 +33,14 @@ export const ChatHeader = ({ selectedFriend, isGroupChat, onBack }: ChatHeaderPr
               <div className="text-sm text-gray-500 dark:text-gray-400">Chat grupal</div>
             </div>
           </>
-        ) : selectedFriend && (
+        ) : friend && (
           <>
             <Avatar className="h-10 w-10">
-              <AvatarImage src={selectedFriend.friend_avatar_url || undefined} />
-              <AvatarFallback>{selectedFriend.friend_username[0]}</AvatarFallback>
+              <AvatarImage src={friend.friend_avatar_url || undefined} />
+              <AvatarFallback>{friend.friend_username[0]}</AvatarFallback>
             </Avatar>
             <div>
-              <div className="font-medium text-gray-900 dark:text-white">{selectedFriend.friend_username}</div>
+              <div className="font-medium text-gray-900 dark:text-white">{friend.friend_username}</div>
               <div className="text-sm text-gray-500 dark:text-gray-400">en línea</div>
             </div>
           </>
