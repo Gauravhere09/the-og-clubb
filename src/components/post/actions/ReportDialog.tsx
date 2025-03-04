@@ -13,13 +13,6 @@ import { Progress } from "@/components/ui/progress";
 // Define ReportReason type
 type ReportReason = 'spam' | 'violence' | 'hate_speech' | 'nudity' | 'other';
 
-interface ReportPostParams {
-  postId: string;
-  userId: string;
-  reason: ReportReason;
-  description?: string;
-}
-
 interface ReportDialogProps {
   postId: string;
   userId: string | null;
@@ -65,13 +58,17 @@ export function ReportDialog({ postId, userId, open, onOpenChange }: ReportDialo
       setIsSubmitting(true);
       const cleanup = simulateProgress();
       
-      await reportPost({
+      const result = await createReport(
         postId,
         userId,
         reason,
-        description,
-      });
+        description
+      );
 
+      if (!result.success) {
+        throw new Error("Error al enviar el reporte");
+      }
+      
       // Complete the progress
       setProgress(100);
       
@@ -99,11 +96,6 @@ export function ReportDialog({ postId, userId, open, onOpenChange }: ReportDialo
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  // Function to actually send the report
-  const reportPost = async ({ postId, userId, reason, description }: ReportPostParams) => {
-    return await createReport(postId, userId, reason, description);
   };
 
   return (

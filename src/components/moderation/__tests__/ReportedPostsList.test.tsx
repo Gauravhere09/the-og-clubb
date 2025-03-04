@@ -46,7 +46,7 @@ describe('ReportedPostsList', () => {
     render(
       <ReportedPostsList 
         reportedPosts={mockReportedPosts}
-        selectedPostId={null}
+        selectedPost={null}
         onSelectPost={jest.fn()}
         isLoading={false}
       />
@@ -71,7 +71,7 @@ describe('ReportedPostsList', () => {
     render(
       <ReportedPostsList 
         reportedPosts={mockReportedPosts}
-        selectedPostId={null}
+        selectedPost={null}
         onSelectPost={mockOnSelectPost}
         isLoading={false}
       />
@@ -89,7 +89,7 @@ describe('ReportedPostsList', () => {
     render(
       <ReportedPostsList 
         reportedPosts={[]}
-        selectedPostId={null}
+        selectedPost={null}
         onSelectPost={jest.fn()}
         isLoading={true}
       />
@@ -102,7 +102,7 @@ describe('ReportedPostsList', () => {
     render(
       <ReportedPostsList 
         reportedPosts={[]}
-        selectedPostId={null}
+        selectedPost={null}
         onSelectPost={jest.fn()}
         isLoading={false}
       />

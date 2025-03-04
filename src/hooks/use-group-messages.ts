@@ -46,7 +46,7 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
           type: message.type as 'text' | 'audio' | 'image',
           media_url: message.media_url,
           created_at: message.created_at,
-          is_deleted: Boolean(message.is_deleted || false), // Ensure it's a boolean with default
+          is_deleted: message.is_deleted !== undefined ? Boolean(message.is_deleted) : false,
           sender: message.sender
         }));
         
@@ -84,7 +84,7 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
           type: payload.new.type as 'text' | 'audio' | 'image',
           media_url: payload.new.media_url,
           created_at: payload.new.created_at,
-          is_deleted: Boolean(payload.new.is_deleted || false), // Ensure it has a default value
+          is_deleted: payload.new.is_deleted !== undefined ? Boolean(payload.new.is_deleted) : false,
           sender: senderData || undefined
         };
 
