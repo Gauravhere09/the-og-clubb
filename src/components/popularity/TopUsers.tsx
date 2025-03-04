@@ -13,8 +13,11 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
   // Make sure we have exactly 3 users for top positions
   if (users.length !== 3) return null;
   
-  // Arrange users in correct order: 2nd, 1st, 3rd
-  const [silver, gold, bronze] = users;
+  // Sort users by followers count (highest to lowest) to ensure correct ranking
+  const sortedUsers = [...users].sort((a, b) => b.followers_count - a.followers_count);
+  
+  // Assign positions correctly
+  const [gold, silver, bronze] = sortedUsers;
 
   return (
     <Card className="p-6">

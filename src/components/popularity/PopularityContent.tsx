@@ -41,7 +41,7 @@ export const PopularityContent = ({ users, onProfileClick }: PopularityContentPr
       )}
       
       <UserList 
-        users={topUsers.length === 3 ? paginatedUsers : paginatedUsers} 
+        users={paginatedUsers}
         onProfileClick={onProfileClick}
         startRank={topUsers.length === 3 ? (startIndex + 4) : (startIndex + 1)}
       />
