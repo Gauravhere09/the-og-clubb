@@ -69,7 +69,7 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
         event: 'INSERT', 
         schema: 'public', 
         table: 'group_messages' 
-      }, async (payload) => {
+      }, async (payload: any) => {
         console.log('Nuevo mensaje grupal recibido:', payload.new);
         const { data: senderData } = await supabase
           .from('profiles')
@@ -84,7 +84,7 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
           type: payload.new.type as 'text' | 'audio' | 'image',
           media_url: payload.new.media_url,
           created_at: payload.new.created_at,
-          is_deleted: payload.new.is_deleted !== undefined ? Boolean(payload.new.is_deleted) : false,
+          is_deleted: Boolean(payload.new.is_deleted), // Convert to boolean safely
           sender: senderData || undefined
         };
 
@@ -94,7 +94,7 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
         event: 'DELETE',
         schema: 'public',
         table: 'group_messages'
-      }, (payload) => {
+      }, (payload: any) => {
         console.log('Mensaje grupal eliminado:', payload.old.id);
         setGroupMessages(prev => prev.filter(msg => msg.id !== payload.old.id));
       })

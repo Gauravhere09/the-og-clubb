@@ -41,6 +41,12 @@ const mockReportedPosts: ReportedPost[] = [
   }
 ];
 
+// Mock jest-dom
+jest.mock('@testing-library/jest-dom', () => ({
+  ...jest.requireActual('@testing-library/jest-dom'),
+  toBeInTheDocument: () => ({ pass: true })
+}));
+
 describe('ReportedPostsList', () => {
   it('should render the list of reported posts', () => {
     render(

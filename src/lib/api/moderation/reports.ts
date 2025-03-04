@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { ReportWithUser } from "@/types/database/moderation.types";
 
@@ -13,8 +14,9 @@ interface ReportPostParams {
 // Helper function to check if table exists
 async function tableExists(tableName: string): Promise<boolean> {
   try {
+    // Use any type to bypass type checking for tables that might not be in the schema
     const { data, error } = await supabase
-      .from(tableName)
+      .from(tableName as any)
       .select('*')
       .limit(1);
     
