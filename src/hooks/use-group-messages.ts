@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +9,7 @@ export interface GroupMessage {
   type: 'text' | 'audio' | 'image';
   media_url: string | null;
   created_at: string;
+  is_deleted: boolean;
   sender?: {
     username: string;
     avatar_url: string | null;
@@ -25,7 +25,6 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
 
     const loadGroupMessages = async () => {
       try {
-        // Cargamos los mensajes del grupo
         const { data, error } = await supabase
           .from('group_messages')
           .select(`
@@ -46,6 +45,7 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
           type: message.type as 'text' | 'audio' | 'image',
           media_url: message.media_url,
           created_at: message.created_at,
+          is_deleted: message.is_deleted,
           sender: message.sender
         }));
         
@@ -70,7 +70,6 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
         table: 'group_messages' 
       }, async (payload) => {
         console.log('Nuevo mensaje grupal recibido:', payload.new);
-        // Fetch sender info for the new message
         const { data: senderData } = await supabase
           .from('profiles')
           .select('username, avatar_url')
@@ -84,6 +83,7 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
           type: payload.new.type as 'text' | 'audio' | 'image',
           media_url: payload.new.media_url,
           created_at: payload.new.created_at,
+          is_deleted: payload.new.is_deleted,
           sender: senderData || undefined
         };
 
