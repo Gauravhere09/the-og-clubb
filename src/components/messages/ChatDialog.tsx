@@ -21,7 +21,7 @@ export interface ChatDialogProps {
 
 export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatDialogProps) => {
   const [newMessage, setNewMessage] = useState("");
-  const { messages, loadMessages, sendMessage } = usePrivateMessages();
+  const { messages, loadMessages, sendMessage, deleteMessage } = usePrivateMessages();
 
   useEffect(() => {
     if (isOpen && currentUserId && targetUser) {
@@ -69,6 +69,10 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
     }
   };
 
+  const handleDeleteMessage = async (messageId: string) => {
+    await deleteMessage(messageId, currentUserId);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md p-0 gap-0 h-[100dvh] md:h-[600px] flex flex-col bg-background">
@@ -88,6 +92,7 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
         <MessageList 
           messages={messages}
           currentUserId={currentUserId}
+          onDeleteMessage={handleDeleteMessage}
         />
 
         <MessageInput 

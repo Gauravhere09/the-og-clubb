@@ -6,6 +6,7 @@ import { MoreVertical, Trash } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import type { GroupMessage } from "@/hooks/use-group-messages";
+import { cn } from "@/lib/utils";
 
 interface GroupMessageItemProps {
   message: GroupMessage;
@@ -23,10 +24,13 @@ export const GroupMessageItem = ({ message, currentUserId }: GroupMessageItemPro
         throw new Error("No tienes permiso para eliminar este mensaje");
       }
       
-      // Eliminar el mensaje
+      // Marcar el mensaje como eliminado
       const { error } = await supabase
         .from('group_messages')
-        .delete()
+        .update({
+          is_deleted: true,
+          content: "Este mensaje ha sido eliminado"
+        })
         .eq('id', message.id);
         
       if (error) throw error;
@@ -56,13 +60,18 @@ export const GroupMessageItem = ({ message, currentUserId }: GroupMessageItemPro
         )}
         <div className="relative group">
           <div
-            className={`max-w-[80%] rounded-lg p-3 ${
-              isCurrentUser
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted"
-            }`}
+            className={cn(
+              "max-w-[80%] rounded-lg p-3",
+              message.is_deleted 
+                ? "bg-muted/50 text-muted-foreground italic"
+                : isCurrentUser
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted"
+            )}
           >
-            {message.type === 'audio' ? (
+            {message.is_deleted ? (
+              <p>{message.content}</p>
+            ) : message.type === 'audio' ? (
               <audio src={message.media_url || undefined} controls className="max-w-[200px]" />
             ) : message.type === 'image' ? (
               <img src={message.media_url || undefined} alt="Imagen enviada" className="max-w-[200px] rounded" />
@@ -80,8 +89,8 @@ export const GroupMessageItem = ({ message, currentUserId }: GroupMessageItemPro
             </div>
           </div>
           
-          {/* Opción para eliminar mensaje (solo para mensajes propios) */}
-          {isCurrentUser && (
+          {/* Opción para eliminar mensaje (solo para mensajes propios no eliminados) */}
+          {isCurrentUser && !message.is_deleted && (
             <DropdownMenu>
               <DropdownMenuTrigger className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <MoreVertical className={`h-4 w-4 ${

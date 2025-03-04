@@ -68,9 +68,11 @@ export function MessageList({ messages, currentUserId, onDeleteMessage }: Messag
                 <div
                   className={cn(
                     "rounded-lg px-3 py-2 text-sm",
-                    isCurrentUser
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
+                    message.is_deleted
+                      ? "bg-muted/50 text-muted-foreground italic"
+                      : isCurrentUser
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-muted"
                   )}
                 >
                   {message.content}
@@ -79,8 +81,8 @@ export function MessageList({ messages, currentUserId, onDeleteMessage }: Messag
                   {formattedDate}
                 </span>
                 
-                {/* Opción para eliminar mensaje (solo para mensajes propios) */}
-                {isCurrentUser && onDeleteMessage && (
+                {/* Opción para eliminar mensaje (solo para mensajes propios no eliminados) */}
+                {isCurrentUser && !message.is_deleted && onDeleteMessage && (
                   <DropdownMenu>
                     <DropdownMenuTrigger className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
                       <MoreVertical className="h-4 w-4 text-primary-foreground hover:text-white" />

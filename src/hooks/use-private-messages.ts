@@ -11,6 +11,7 @@ export interface Message {
   receiver_id: string;
   created_at: string;
   read_at: string | null;
+  is_deleted: boolean;
 }
 
 export function usePrivateMessages() {
@@ -64,7 +65,8 @@ export function usePrivateMessages() {
         .insert({
           content,
           sender_id: currentUserId,
-          receiver_id: selectedFriend.friend_id
+          receiver_id: selectedFriend.friend_id,
+          is_deleted: false
         })
         .select()
         .single();
@@ -97,20 +99,27 @@ export function usePrivateMessages() {
         throw new Error("No tienes permiso para eliminar este mensaje");
       }
       
-      // Eliminar el mensaje
+      // Marcar el mensaje como eliminado en lugar de borrarlo
       const { error } = await supabase
         .from('messages')
-        .delete()
+        .update({
+          is_deleted: true,
+          content: "Este mensaje ha sido eliminado"
+        })
         .eq('id', messageId);
         
       if (error) throw error;
       
       // Actualizar el estado local
-      setMessages(prev => prev.filter(msg => msg.id !== messageId));
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, is_deleted: true, content: "Este mensaje ha sido eliminado" } 
+          : msg
+      ));
       
       toast({
         title: "Mensaje eliminado",
-        description: "El mensaje ha sido eliminado con éxito",
+        description: "El mensaje ha sido eliminado",
       });
       
       return true;
@@ -137,13 +146,15 @@ export function usePrivateMessages() {
         setMessages(prev => [...prev, newMessage]);
       })
       .on('postgres_changes', {
-        event: 'DELETE',
+        event: 'UPDATE',
         schema: 'public',
         table: 'messages'
       }, (payload) => {
-        // Si se elimina un mensaje, actualizamos el estado
-        const deletedId = payload.old.id;
-        setMessages(prev => prev.filter(msg => msg.id !== deletedId));
+        // Si se actualiza un mensaje (como marcar como eliminado), actualizamos el estado
+        const updatedMessage = payload.new as Message;
+        setMessages(prev => prev.map(msg => 
+          msg.id === updatedMessage.id ? updatedMessage : msg
+        ));
       })
       .subscribe();
 
