@@ -1,7 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart } from "lucide-react";
+import { Heart, Trophy, Award, Medal } from "lucide-react";
 import type { PopularUserProfile } from "@/types/database/follow.types";
 
 interface TopUsersProps {
@@ -32,8 +32,8 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
                 {silver.username?.[0]?.toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
-            <div className="absolute -top-2 -right-2 bg-silver text-white rounded-full h-8 w-8 flex items-center justify-center font-bold">
-              2
+            <div className="absolute -top-2 -right-2 bg-silver text-white rounded-full h-8 w-8 flex items-center justify-center">
+              <Award className="h-5 w-5 fill-white" />
             </div>
           </div>
           <h3 
@@ -42,6 +42,7 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
           >
             {silver.username || "Usuario"}
           </h3>
+          <p className="text-sm text-muted-foreground">Plata - 2° Lugar</p>
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <Heart className="h-4 w-4 text-primary fill-primary" />
             <span>{silver.followers_count}</span>
@@ -65,8 +66,8 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
                 {gold.username?.[0]?.toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
-            <div className="absolute -top-2 -right-2 bg-gold text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">
-              1
+            <div className="absolute -top-2 -right-2 bg-gold text-white rounded-full h-10 w-10 flex items-center justify-center">
+              <Trophy className="h-6 w-6 fill-white" />
             </div>
           </div>
           <h3 
@@ -75,6 +76,7 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
           >
             {gold.username || "Usuario"}
           </h3>
+          <p className="text-sm font-bold text-gold">Oro - 1° Lugar</p>
           <div className="flex items-center gap-1 text-muted-foreground">
             <Heart className="h-4 w-4 text-primary fill-primary" />
             <span>{gold.followers_count}</span>
@@ -98,8 +100,8 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
                 {bronze.username?.[0]?.toUpperCase() || 'U'}
               </AvatarFallback>
             </Avatar>
-            <div className="absolute -top-2 -right-2 bg-bronze text-white rounded-full h-8 w-8 flex items-center justify-center font-bold">
-              3
+            <div className="absolute -top-2 -right-2 bg-bronze text-white rounded-full h-8 w-8 flex items-center justify-center">
+              <Medal className="h-5 w-5 fill-white" />
             </div>
           </div>
           <h3 
@@ -108,6 +110,7 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
           >
             {bronze.username || "Usuario"}
           </h3>
+          <p className="text-sm text-muted-foreground">Bronce - 3° Lugar</p>
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <Heart className="h-4 w-4 text-primary fill-primary" />
             <span>{bronze.followers_count}</span>
