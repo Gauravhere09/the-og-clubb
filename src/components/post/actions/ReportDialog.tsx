@@ -5,9 +5,20 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { reportPost, ReportReason } from "@/lib/api/moderation/reports";
+import { createReport } from "@/lib/api/moderation/reports";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+
+// Define ReportReason type
+type ReportReason = 'spam' | 'violence' | 'hate_speech' | 'nudity' | 'other';
+
+interface ReportPostParams {
+  postId: string;
+  userId: string;
+  reason: ReportReason;
+  description?: string;
+}
 
 interface ReportDialogProps {
   postId: string;
@@ -20,7 +31,24 @@ export function ReportDialog({ postId, userId, open, onOpenChange }: ReportDialo
   const [reason, setReason] = useState<ReportReason>("other");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [progress, setProgress] = useState(0);
   const { toast } = useToast();
+
+  // Function to simulate progress for better UX
+  const simulateProgress = () => {
+    setProgress(0);
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 90) {
+          clearInterval(interval);
+          return prev;
+        }
+        return prev + 10;
+      });
+    }, 150);
+
+    return () => clearInterval(interval);
+  };
 
   const handleSubmit = async () => {
     if (!userId) {
@@ -35,6 +63,8 @@ export function ReportDialog({ postId, userId, open, onOpenChange }: ReportDialo
 
     try {
       setIsSubmitting(true);
+      const cleanup = simulateProgress();
+      
       await reportPost({
         postId,
         userId,
@@ -42,15 +72,23 @@ export function ReportDialog({ postId, userId, open, onOpenChange }: ReportDialo
         description,
       });
 
+      // Complete the progress
+      setProgress(100);
+      
       toast({
         title: "Reporte enviado",
         description: "Gracias por ayudarnos a mantener la comunidad segura",
       });
       
-      onOpenChange(false);
-      // Resetear el formulario
-      setReason("other");
-      setDescription("");
+      // Clean up and close 
+      cleanup();
+      setTimeout(() => {
+        onOpenChange(false);
+        // Reset form after dialog closes
+        setReason("other");
+        setDescription("");
+        setProgress(0);
+      }, 500);
     } catch (error) {
       console.error("Error al reportar la publicación:", error);
       toast({
@@ -61,6 +99,11 @@ export function ReportDialog({ postId, userId, open, onOpenChange }: ReportDialo
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Function to actually send the report
+  const reportPost = async ({ postId, userId, reason, description }: ReportPostParams) => {
+    return await createReport(postId, userId, reason, description);
   };
 
   return (
@@ -74,7 +117,16 @@ export function ReportDialog({ postId, userId, open, onOpenChange }: ReportDialo
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <div className="space-y-4 py-4">
+        {isSubmitting && (
+          <div className="py-2">
+            <p className="text-sm text-muted-foreground mb-2">
+              Enviando reporte...
+            </p>
+            <Progress value={progress} className="h-2 mb-2" />
+          </div>
+        )}
+
+        <div className={`space-y-4 py-4 ${isSubmitting ? 'opacity-50 pointer-events-none' : ''}`}>
           <RadioGroup value={reason} onValueChange={(value) => setReason(value as ReportReason)}>
             <div className="flex items-start space-x-2">
               <RadioGroupItem value="spam" id="spam" />
@@ -111,7 +163,11 @@ export function ReportDialog({ postId, userId, open, onOpenChange }: ReportDialo
         </div>
 
         <AlertDialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
             Cancelar
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>

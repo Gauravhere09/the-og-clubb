@@ -1,8 +1,9 @@
 
 import { render, screen } from '@testing-library/react';
-import { ReportedPostsList } from '../ReportedPostsList';
+import ReportedPostsList from '../ReportedPostsList';
 import { ReportedPost } from '@/types/database/moderation.types';
 import userEvent from '@testing-library/user-event';
+import '@testing-library/jest-dom';
 
 // Mock data
 const mockReportedPosts: ReportedPost[] = [

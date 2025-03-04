@@ -10,7 +10,7 @@ export interface GroupMessage {
   type: 'text' | 'audio' | 'image';
   media_url: string | null;
   created_at: string;
-  is_deleted: boolean;
+  is_deleted?: boolean;
   sender?: {
     username: string;
     avatar_url: string | null;
