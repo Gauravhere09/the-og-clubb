@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -45,7 +46,8 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
           type: message.type as 'text' | 'audio' | 'image',
           media_url: message.media_url,
           created_at: message.created_at,
-          is_deleted: message.is_deleted,
+          // Add fallback for is_deleted if it doesn't exist in the response
+          is_deleted: message.is_deleted ?? false,
           sender: message.sender
         }));
         
@@ -83,7 +85,8 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
           type: payload.new.type as 'text' | 'audio' | 'image',
           media_url: payload.new.media_url,
           created_at: payload.new.created_at,
-          is_deleted: payload.new.is_deleted,
+          // Add fallback for is_deleted if it doesn't exist in the payload
+          is_deleted: payload.new.is_deleted ?? false,
           sender: senderData || undefined
         };
 
