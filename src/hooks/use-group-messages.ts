@@ -46,7 +46,7 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
           type: message.type as 'text' | 'audio' | 'image',
           media_url: message.media_url,
           created_at: message.created_at,
-          is_deleted: false, // Default to false if not present
+          is_deleted: message.is_deleted || false, // Default to false if not present
           sender: message.sender
         }));
         
@@ -84,7 +84,7 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
           type: payload.new.type as 'text' | 'audio' | 'image',
           media_url: payload.new.media_url,
           created_at: payload.new.created_at,
-          is_deleted: false, // Default to false for new messages
+          is_deleted: payload.new.is_deleted || false, // Default to false for new messages
           sender: senderData || undefined
         };
 
@@ -160,7 +160,8 @@ export async function sendGroupMessage(
         content,
         sender_id: senderId,
         type,
-        media_url
+        media_url,
+        is_deleted: false
       })
       .select()
       .single();

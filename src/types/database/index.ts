@@ -3,6 +3,7 @@ import { ProfileTable } from './profile.types';
 import { ReactionTable, FriendshipTable, NotificationTable } from './social.types';
 import { PostTable, CommentTable } from './content.types';
 import { MessageTable, GroupMessageTable } from './messaging.types';
+import { ReportTable } from './moderation.types';
 
 export interface Database {
   public: {
@@ -15,6 +16,7 @@ export interface Database {
       messages: MessageTable;
       group_messages: GroupMessageTable;
       notifications: NotificationTable;
+      reports: ReportTable;
     };
     Views: {
       [_ in never]: never;

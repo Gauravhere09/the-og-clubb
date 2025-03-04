@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { MoreVertical, Flag, EyeOff } from "lucide-react";
@@ -12,6 +13,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Post } from "@/types/post";
+import { ReportDialog } from "./actions/ReportDialog";
+import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 interface PostHeaderProps {
   post: Post;
@@ -20,6 +24,18 @@ interface PostHeaderProps {
 }
 
 export function PostHeader({ post, onDelete, isAuthor }: PostHeaderProps) {
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Obtener el ID del usuario actual
+    const getUserId = async () => {
+      const { data } = await supabase.auth.getUser();
+      setCurrentUserId(data.user?.id || null);
+    };
+    getUserId();
+  }, []);
+
   return (
     <div className="flex items-start gap-3 mb-4">
       <div className="flex-1 flex items-start gap-3">
@@ -56,7 +72,10 @@ export function PostHeader({ post, onDelete, isAuthor }: PostHeaderProps) {
             <EyeOff className="h-4 w-4 mr-2" />
             Ocultar publicación
           </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer">
+          <DropdownMenuItem 
+            className="cursor-pointer"
+            onClick={() => setShowReportDialog(true)}
+          >
             <Flag className="h-4 w-4 mr-2" />
             Reportar publicación
           </DropdownMenuItem>
@@ -70,6 +89,13 @@ export function PostHeader({ post, onDelete, isAuthor }: PostHeaderProps) {
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <ReportDialog 
+        postId={post.id}
+        userId={currentUserId}
+        open={showReportDialog}
+        onOpenChange={setShowReportDialog}
+      />
     </div>
   );
 }
