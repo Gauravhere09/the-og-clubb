@@ -75,7 +75,9 @@ export const ChatContainer = ({
         onSendMessage={onSendMessage}
         onImageUpload={onImageUpload}
       />
-      <ChatDialog />
+      {/* Since we're not using the dialog functionality in this component,
+          we'll remove it from here. If it's needed, it should be properly
+          configured with all required props. */}
     </div>
   );
 };

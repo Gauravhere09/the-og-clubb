@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMessages } from "@/hooks/use-messages";
@@ -6,12 +5,20 @@ import { useMessageNotifications } from "@/components/messages/MessageNotificati
 import { MessagesLayout } from "@/components/messages/MessagesLayout";
 import { SidebarContent } from "@/components/messages/SidebarContent";
 import { ChatContainer } from "@/components/messages/ChatContainer";
+import { ChatDialog } from "@/components/messages/ChatDialog";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { sendGroupMessage } from "@/hooks/use-group-messages";
 import { useToast } from "@/hooks/use-toast";
 
 export const MessagesController = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [showChatDialog, setShowChatDialog] = useState(false);
+  const [dialogTargetUser, setDialogTargetUser] = useState<{
+    id: string;
+    username: string;
+    avatar_url: string | null;
+  } | null>(null);
+  
   const isMobile = useIsMobile();
   const { toast } = useToast();
   
