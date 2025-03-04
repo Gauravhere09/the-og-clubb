@@ -46,7 +46,7 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
           type: message.type as 'text' | 'audio' | 'image',
           media_url: message.media_url,
           created_at: message.created_at,
-          is_deleted: message.is_deleted === true ? true : false, // Ensure it's a boolean
+          is_deleted: Boolean(message.is_deleted), // Ensure it's a boolean
           sender: message.sender
         }));
         
