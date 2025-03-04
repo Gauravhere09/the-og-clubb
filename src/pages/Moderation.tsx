@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
@@ -18,7 +17,9 @@ import {
   XCircle, 
   AlertTriangle 
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Post as PostType } from "@/types/post";
+import type { ReportWithUser } from "@/types/database/moderation.types";
 
 interface ReportedPost {
   post_id: string;
@@ -37,30 +38,15 @@ interface ReportedPost {
   }
 }
 
-interface PostReport {
-  id: string;
-  post_id: string;
-  user_id: string;
-  reason: string;
-  description: string | null;
-  status: string;
-  created_at: string;
-  user: {
-    username: string | null;
-    avatar_url: string | null;
-  }
-}
-
 const ModerationPage = () => {
   const [reportedPosts, setReportedPosts] = useState<ReportedPost[]>([]);
   const [selectedPost, setSelectedPost] = useState<string | null>(null);
-  const [postReports, setPostReports] = useState<PostReport[]>([]);
+  const [postReports, setPostReports] = useState<ReportWithUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModerator, setIsModerator] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Esta función debería estar en un contexto de autenticación
   const checkModeratorStatus = async () => {
     const { data } = await supabase.auth.getUser();
     if (!data.user) {
@@ -68,8 +54,6 @@ const ModerationPage = () => {
       return false;
     }
     
-    // En un sistema real, verificaríamos si el usuario tiene rol de moderador
-    // Por ahora, todos los usuarios autenticados pueden ver esta página
     return true;
   };
 
@@ -83,7 +67,6 @@ const ModerationPage = () => {
           const posts = await getReportedPosts();
           setReportedPosts(posts);
           
-          // Si hay posts, seleccionar el primero automáticamente
           if (posts.length > 0) {
             setSelectedPost(posts[0].post_id);
             const reports = await getPostReports(posts[0].post_id);
@@ -123,6 +106,16 @@ const ModerationPage = () => {
     }
   };
 
+  const getReasonLabel = (reason: string) => {
+    switch(reason) {
+      case 'spam': return 'Spam o contenido engañoso';
+      case 'violence': return 'Violencia o contenido peligroso';
+      case 'nudity': return 'Desnudos o contenido sexual';
+      case 'hate_speech': return 'Discurso de odio o acoso';
+      default: return 'Otro motivo';
+    }
+  };
+
   const handleAction = async (action: 'approve' | 'reject' | 'delete') => {
     if (!selectedPost) return;
     
@@ -130,11 +123,9 @@ const ModerationPage = () => {
       setLoading(true);
       await handleReportedPost(selectedPost, action);
       
-      // Actualizar la lista de posts reportados
       const posts = await getReportedPosts();
       setReportedPosts(posts);
       
-      // Si ya no hay post seleccionado, seleccionar el primero (si existe)
       if (posts.length > 0 && !posts.some(p => p.post_id === selectedPost)) {
         setSelectedPost(posts[0].post_id);
         const reports = await getPostReports(posts[0].post_id);
@@ -178,17 +169,6 @@ const ModerationPage = () => {
     );
   }
 
-  const getReasonLabel = (reason: string) => {
-    switch(reason) {
-      case 'spam': return 'Spam o contenido engañoso';
-      case 'violence': return 'Violencia o contenido peligroso';
-      case 'nudity': return 'Desnudos o contenido sexual';
-      case 'hate_speech': return 'Discurso de odio o acoso';
-      default: return 'Otro motivo';
-    }
-  };
-
-  // Convertir el post seleccionado a formato PostType para mostrarlo
   const selectedPostData = selectedPost
     ? reportedPosts.find(p => p.post_id === selectedPost)?.posts as unknown as PostType
     : null;
@@ -224,7 +204,6 @@ const ModerationPage = () => {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-              {/* Lista de posts reportados */}
               <div className="md:col-span-3">
                 <Card className="p-4">
                   <h2 className="text-lg font-medium mb-4">Publicaciones reportadas</h2>
@@ -251,7 +230,6 @@ const ModerationPage = () => {
                 </Card>
               </div>
 
-              {/* Contenido de la publicación y reportes */}
               <div className="md:col-span-9">
                 {selectedPostData && (
                   <Tabs defaultValue="post">

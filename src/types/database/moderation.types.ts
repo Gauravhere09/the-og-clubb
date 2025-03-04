@@ -31,3 +31,10 @@ export interface ReportTable {
     updated_at?: string | null;
   };
 }
+
+export interface ReportWithUser extends ReportTable['Row'] {
+  user: {
+    username: string | null;
+    avatar_url: string | null;
+  };
+}
