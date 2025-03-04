@@ -66,7 +66,7 @@ export function ReportDialog({ postId, userId, open, onOpenChange }: ReportDialo
       );
 
       if (!result.success) {
-        throw new Error("Error al enviar el reporte");
+        throw new Error(result.error || "Error al enviar el reporte");
       }
       
       // Complete the progress
