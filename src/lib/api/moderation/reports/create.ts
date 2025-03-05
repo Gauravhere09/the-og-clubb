@@ -32,7 +32,7 @@ export async function createReport(
     } catch (error) {
       // Fallback to direct query if RPC doesn't exist
       const { data: directReport, error: directError } = await supabase
-        .from('reports')
+        .from('reports' as any)
         .insert({
           post_id: postId,
           user_id: userId,
@@ -53,7 +53,7 @@ export async function createReport(
     tenMinutesAgo.setMinutes(tenMinutesAgo.getMinutes() - 10);
 
     const { data: recentReports, error: recentReportsError } = await supabase
-      .from('reports')
+      .from('reports' as any)
       .select('id')
       .eq('post_id', postId)
       .gte('created_at', tenMinutesAgo.toISOString());
