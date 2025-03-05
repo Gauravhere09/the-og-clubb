@@ -43,11 +43,13 @@ const ModerationPage = () => {
         
         if (isAllowed) {
           const posts = await getReportedPosts();
-          setReportedPosts(posts);
+          // Explicitly cast posts to appropriate type
+          setReportedPosts(posts as ReportedPost[]);
           
           if (posts.length > 0) {
-            setSelectedPost(posts[0].post_id);
-            const reports = await getPostReports(posts[0].post_id);
+            const firstPostId = (posts[0] as any).post_id;
+            setSelectedPost(firstPostId);
+            const reports = await getPostReports(firstPostId);
             setPostReports(reports);
           }
         }
@@ -92,13 +94,18 @@ const ModerationPage = () => {
       await handleReportedPost(selectedPost, action);
       
       const posts = await getReportedPosts();
-      setReportedPosts(posts);
+      // Explicitly cast to appropriate type
+      setReportedPosts(posts as ReportedPost[]);
       
-      if (posts.length > 0 && !posts.some(p => p.post_id === selectedPost)) {
-        setSelectedPost(posts[0].post_id);
-        const reports = await getPostReports(posts[0].post_id);
-        setPostReports(reports);
-      } else if (posts.length === 0) {
+      if (posts.length > 0) {
+        const postExists = posts.some((p: any) => p.post_id === selectedPost);
+        if (!postExists) {
+          const firstPostId = (posts[0] as any).post_id;
+          setSelectedPost(firstPostId);
+          const reports = await getPostReports(firstPostId);
+          setPostReports(reports);
+        }
+      } else {
         setSelectedPost(null);
         setPostReports([]);
       }
@@ -151,6 +158,7 @@ const ModerationPage = () => {
                   reportedPosts={reportedPosts}
                   selectedPost={selectedPost}
                   onSelectPost={handleSelectPost}
+                  isLoading={loading}
                 />
               </div>
 

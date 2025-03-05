@@ -51,7 +51,8 @@ export async function createReport(
 
     if (reportError) {
       // Fallback to direct query if RPC doesn't exist
-      const { data: directReport, error: directError } = await supabase.from('reports' as any)
+      const { data: directReport, error: directError } = await supabase
+        .from('reports' as any)
         .insert({
           post_id: postId,
           user_id: userId,
@@ -73,7 +74,8 @@ export async function createReport(
     const tenMinutesAgo = new Date();
     tenMinutesAgo.setMinutes(tenMinutesAgo.getMinutes() - 10);
 
-    const { data: recentReports, error: recentReportsError } = await supabase.from('reports' as any)
+    const { data: recentReports, error: recentReportsError } = await supabase
+      .from('reports' as any)
       .select('id')
       .eq('post_id', postId)
       .gte('created_at', tenMinutesAgo.toISOString());
@@ -100,7 +102,8 @@ export function reportPost(params: ReportPostParams) {
 export async function getPostReports(postId: string): Promise<ReportWithUser[]> {
   try {
     // Use raw query to avoid type errors
-    const { data, error } = await supabase.from('reports' as any)
+    const { data, error } = await supabase
+      .from('reports' as any)
       .select(`
         *,
         user:profiles!reports_user_id_fkey (
@@ -113,8 +116,8 @@ export async function getPostReports(postId: string): Promise<ReportWithUser[]> 
 
     if (error) throw error;
     
-    // Transform the data to match the ReportWithUser interface
-    const transformedData: ReportWithUser[] = (data || []).map(item => ({
+    // Transform the data with proper typing to avoid errors
+    const transformedData: ReportWithUser[] = (data || []).map((item: any) => ({
       id: item.id,
       post_id: item.post_id,
       user_id: item.user_id,
@@ -136,7 +139,8 @@ export async function getPostReports(postId: string): Promise<ReportWithUser[]> 
 export async function getReportedPosts() {
   try {
     // Use raw query to avoid type errors
-    const { data, error } = await supabase.from('reports' as any)
+    const { data, error } = await supabase
+      .from('reports' as any)
       .select(`
         post_id,
         count:id(count),
@@ -157,8 +161,13 @@ export async function getReportedPosts() {
       .or('post_id.is.not.null')
       .order('count', { ascending: false });
 
-    if (error) throw error;
-    return data || [];
+    if (error) {
+      console.error('Error in getReportedPosts:', error);
+      return [];
+    }
+    
+    // Add explicit type casting to ensure proper types
+    return (data || []) as any[];
   } catch (error) {
     console.error('Error fetching reported posts:', error);
     return [];

@@ -41,11 +41,25 @@ const mockReportedPosts: ReportedPost[] = [
   }
 ];
 
-// Mock jest-dom
-jest.mock('@testing-library/jest-dom', () => ({
-  ...jest.requireActual('@testing-library/jest-dom'),
-  toBeInTheDocument: () => ({ pass: true })
-}));
+// Fix jest-dom mock
+jest.mock('@testing-library/jest-dom', () => {
+  const actual = jest.requireActual('@testing-library/jest-dom');
+  // Add the missing toBeInTheDocument matcher
+  return {
+    ...actual,
+    // This is a simplified implementation just to make TypeScript happy
+    // The real implementation will be provided by the actual jest-dom
+  };
+});
+
+// Extend Jest matchers
+declare global {
+  namespace jest {
+    interface Matchers<R> {
+      toBeInTheDocument(): R;
+    }
+  }
+}
 
 describe('ReportedPostsList', () => {
   it('should render the list of reported posts', () => {
