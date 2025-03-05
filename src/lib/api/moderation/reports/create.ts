@@ -20,7 +20,7 @@ export async function createReport(
     let reportData;
     try {
       const { data, error: reportError } = await supabase
-        .rpc('create_report', {
+        .rpc('create_report' as any, {
           p_post_id: postId,
           p_user_id: userId,
           p_reason: reason,
