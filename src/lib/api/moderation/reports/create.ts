@@ -19,14 +19,16 @@ export async function createReport(
     // Create report in the database using RPC if available
     let reportData;
     try {
-      // Use a more specific type assertion to bypass TypeScript's type checking
-      const { data, error: reportError } = await (supabase
-        .rpc('create_report', {
-          p_post_id: postId,
-          p_user_id: userId,
-          p_reason: reason,
-          p_description: description
-        }) as any);
+      // Cast the entire RPC call to any to bypass TypeScript's type checking
+      const rpcCall = supabase.rpc;
+      const result = await (rpcCall as any)('create_report', {
+        p_post_id: postId,
+        p_user_id: userId,
+        p_reason: reason,
+        p_description: description
+      });
+      
+      const { data, error: reportError } = result;
 
       if (reportError) throw reportError;
       reportData = data;
