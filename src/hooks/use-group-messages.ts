@@ -39,7 +39,7 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
 
         if (error) throw error;
         
-        const transformedData = (data || []).map(message => ({
+        const transformedData = (data || []).map((message: any) => ({
           id: message.id,
           content: message.content,
           sender_id: message.sender_id,
