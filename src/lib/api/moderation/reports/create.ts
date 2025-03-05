@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { ReportReason, ReportPostParams } from "../types";
 import { tableExists } from "../utils";
@@ -15,20 +16,23 @@ export async function createReport(
       return { success: false, error: "La tabla 'reports' no existe" };
     }
 
-    // Create report in the database using raw query to avoid type errors
+    // Create report in the database using RPC if available
     let reportData;
-    const { data, error: reportError } = await supabase
-      .rpc('create_report', {
-        p_post_id: postId,
-        p_user_id: userId,
-        p_reason: reason,
-        p_description: description
-      });
+    try {
+      const { data, error: reportError } = await supabase
+        .rpc('create_report', {
+          p_post_id: postId,
+          p_user_id: userId,
+          p_reason: reason,
+          p_description: description
+        });
 
-    if (reportError) {
+      if (reportError) throw reportError;
+      reportData = data;
+    } catch (error) {
       // Fallback to direct query if RPC doesn't exist
       const { data: directReport, error: directError } = await supabase
-        .from('reports' as any)
+        .from('reports')
         .insert({
           post_id: postId,
           user_id: userId,
@@ -42,8 +46,6 @@ export async function createReport(
         return { success: false, error: directError.message };
       }
       reportData = directReport;
-    } else {
-      reportData = data;
     }
 
     // Check if we need to auto-hide the post (5+ reports in 10 minutes)
@@ -51,7 +53,7 @@ export async function createReport(
     tenMinutesAgo.setMinutes(tenMinutesAgo.getMinutes() - 10);
 
     const { data: recentReports, error: recentReportsError } = await supabase
-      .from('reports' as any)
+      .from('reports')
       .select('id')
       .eq('post_id', postId)
       .gte('created_at', tenMinutesAgo.toISOString());
