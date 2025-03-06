@@ -40,7 +40,17 @@ export function ReactionDetails({ post }: ReactionDetailsProps) {
         .eq('post_id', post.id);
 
       if (error) throw error;
-      return data as UserReaction[];
+      
+      // Filter out duplicate reactions from the same user for each reaction type
+      const userIds = new Set();
+      return (data as UserReaction[]).filter(reaction => {
+        const userIdentifier = `${reaction.profile.username}-${reaction.reaction_type}`;
+        if (userIds.has(userIdentifier)) {
+          return false;
+        }
+        userIds.add(userIdentifier);
+        return true;
+      });
     }
   });
 

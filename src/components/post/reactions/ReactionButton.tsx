@@ -10,6 +10,7 @@ import {
 import { reactionIcons, type ReactionType } from "./ReactionIcons";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ReactionButtonProps {
   userReaction?: ReactionType;
@@ -19,9 +20,14 @@ interface ReactionButtonProps {
 
 export function ReactionButton({ userReaction, onReactionClick, postId }: ReactionButtonProps) {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const handleReactionClick = async (type: ReactionType) => {
+    if (isSubmitting) return;
     try {
+      setIsSubmitting(true);
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Debes iniciar sesión para reaccionar");
 
@@ -56,6 +62,11 @@ export function ReactionButton({ userReaction, onReactionClick, postId }: Reacti
 
         if (error) throw error;
       }
+      
+      // Invalidate the posts and reactions queries
+      await queryClient.invalidateQueries({ queryKey: ["posts"] });
+      await queryClient.invalidateQueries({ queryKey: ["post-reactions", postId] });
+      
     } catch (error) {
       console.error('Error al gestionar la reacción:', error);
       // Revertimos el estado UI si hubo un error
@@ -66,6 +77,8 @@ export function ReactionButton({ userReaction, onReactionClick, postId }: Reacti
         title: "Error",
         description: error instanceof Error ? error.message : "No se pudo procesar tu reacción",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -77,6 +90,7 @@ export function ReactionButton({ userReaction, onReactionClick, postId }: Reacti
           size="sm"
           className={`${userReaction ? reactionIcons[userReaction].color : ''} group`}
           onClick={() => userReaction && handleReactionClick(userReaction)}
+          disabled={isSubmitting}
         >
           {userReaction ? (
             <div className="flex items-center">
@@ -105,6 +119,7 @@ export function ReactionButton({ userReaction, onReactionClick, postId }: Reacti
               size="sm"
               className={`hover:${color} ${userReaction === type ? color : ''} relative group hover:scale-125 transition-transform duration-200`}
               onClick={() => handleReactionClick(type as ReactionType)}
+              disabled={isSubmitting}
             >
               <Icon className="h-6 w-6" />
               <span className="absolute -top-8 scale-0 transition-all rounded bg-black px-2 py-1 text-xs text-white group-hover:scale-100 whitespace-nowrap">
