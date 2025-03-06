@@ -26,7 +26,7 @@ export function VotersList({ option, votes, percentage }: VoterListProps) {
       <div className="flex justify-between">
         <span className="font-medium">{option.content}</span>
         <span>
-          {option.votes} {option.votes === 1 ? "voto" : "votos"} ({percentage}%)
+          {optionVotes.length} {optionVotes.length === 1 ? "voto" : "votos"} ({percentage}%)
         </span>
       </div>
       <Progress value={percentage} className="h-2" />

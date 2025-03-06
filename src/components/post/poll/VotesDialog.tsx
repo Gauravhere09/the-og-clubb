@@ -5,6 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
@@ -49,6 +50,9 @@ export function VotesDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Votos de la encuesta</DialogTitle>
+          <DialogDescription>
+            Resultados detallados de la votación
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-6">
           {poll.options.map((option) => (

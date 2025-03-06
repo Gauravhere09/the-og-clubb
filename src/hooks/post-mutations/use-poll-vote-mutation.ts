@@ -15,6 +15,19 @@ export function usePollVoteMutation(postId: string) {
         throw new Error("Debes iniciar sesión para votar");
       }
       
+      // Verificar si el usuario ya ha votado en esta encuesta
+      const { data: existingVotes, error: checkError } = await supabase
+        .from('poll_votes')
+        .select('id')
+        .eq('post_id', postId)
+        .eq('user_id', currentSession.user.id);
+        
+      if (checkError) throw checkError;
+      
+      if (existingVotes && existingVotes.length > 0) {
+        throw new Error("Ya has votado en esta encuesta");
+      }
+      
       // Insert vote
       const { error: voteError } = await supabase
         .from('poll_votes')
