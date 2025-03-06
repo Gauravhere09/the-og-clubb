@@ -32,8 +32,8 @@ export function VotersList({ option, votes, percentage }: VoterListProps) {
       <Progress value={percentage} className="h-2" />
       {optionVotes.length > 0 && (
         <div className="pt-2 space-y-2">
-          {optionVotes.map((vote) => (
-            <div key={`${vote.option_id}-${vote.profiles.username}`} className="flex items-center gap-2">
+          {optionVotes.map((vote, index) => (
+            <div key={`${vote.option_id}-${vote.profiles.username}-${index}`} className="flex items-center gap-2">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={vote.profiles.avatar_url || undefined} />
                 <AvatarFallback>{vote.profiles.username?.[0].toUpperCase()}</AvatarFallback>

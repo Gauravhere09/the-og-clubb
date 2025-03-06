@@ -13,27 +13,25 @@ interface PollDisplayProps {
   postId: string;
   poll: Poll;
   onVote?: (optionId: string) => Promise<void>;
-  disabled?: boolean; // Added this prop
+  disabled?: boolean;
 }
 
 export function PollDisplay({ postId, poll, onVote, disabled = false }: PollDisplayProps) {
   const [selectedOption, setSelectedOption] = useState<string | null>(poll.user_vote);
-  const [isVoting, setIsVoting] = useState(false);
   const [showVotesDialog, setShowVotesDialog] = useState(false);
   const [votes, setVotes] = useState<VoteWithUser[]>([]);
   const { toast } = useToast();
-  const { submitVote } = usePollVoteMutation(postId);
+  const { submitVote, isPending } = usePollVoteMutation(postId);
 
   const handleVote = async (optionId: string) => {
-    if (poll.user_vote || isVoting || disabled) return;
+    if (poll.user_vote || isPending || disabled) return;
     
-    setIsVoting(true);
     try {
       if (onVote) {
         await onVote(optionId);
       } else {
         // Default voting behavior
-        await submitVote(optionId);
+        submitVote(optionId);
       }
       
       setSelectedOption(optionId);
@@ -43,8 +41,6 @@ export function PollDisplay({ postId, poll, onVote, disabled = false }: PollDisp
         title: "Error al votar",
         description: error.message || "No se pudo registrar tu voto",
       });
-    } finally {
-      setIsVoting(false);
     }
   };
 
@@ -68,7 +64,15 @@ export function PollDisplay({ postId, poll, onVote, disabled = false }: PollDisp
         .eq('post_id', postId);
 
       if (error) throw error;
-      setVotes(votesData as VoteWithUser[]);
+      
+      // Filter out duplicates
+      const uniqueVotes = new Map();
+      (votesData as VoteWithUser[]).forEach(vote => {
+        const key = `${vote.profiles.username}-${vote.option_id}`;
+        uniqueVotes.set(key, vote);
+      });
+      
+      setVotes(Array.from(uniqueVotes.values()) as VoteWithUser[]);
     } catch (error) {
       console.error('Error loading votes:', error);
       toast({
@@ -98,11 +102,11 @@ export function PollDisplay({ postId, poll, onVote, disabled = false }: PollDisp
             key={option.id}
             id={option.id}
             content={option.content}
-            votes={option.votes}
-            percentage={getPercentage(option.votes)}
+            votes={option.votes || 0}
+            percentage={getPercentage(option.votes || 0)}
             isSelected={option.id === selectedOption}
             hasVoted={poll.user_vote !== null || disabled}
-            isVoting={isVoting}
+            isVoting={isPending}
             onVote={handleVote}
           />
         ))}

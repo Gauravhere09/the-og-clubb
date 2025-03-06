@@ -51,7 +51,7 @@ export function VotesDialog({
         <DialogHeader>
           <DialogTitle>Votos de la encuesta</DialogTitle>
           <DialogDescription>
-            Resultados detallados de la votación
+            Resultados detallados de la votación para "{poll.question}"
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-6">
@@ -60,10 +60,15 @@ export function VotesDialog({
               key={option.id}
               option={option}
               votes={votes}
-              percentage={getPercentage(option.votes)}
+              percentage={getPercentage(option.votes || 0)}
             />
           ))}
         </div>
+        {votes.length === 0 && (
+          <div className="py-6 text-center text-muted-foreground">
+            No hay votos registrados en esta encuesta
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
