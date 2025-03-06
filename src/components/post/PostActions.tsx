@@ -28,6 +28,11 @@ export function PostActions({
   const commentCount = post.comments_count || 0;
   const [showShareOptions, setShowShareOptions] = React.useState(false);
 
+  // Manejador local para evitar duplicación de actualizaciones de UI
+  const handleReaction = (type: ReactionType) => {
+    onReaction(type);
+  };
+
   return (
     <div className="space-y-2">
       {/* Interactions Summary */}
@@ -45,7 +50,7 @@ export function PostActions({
       <div className="flex gap-1 border-t border-b py-1">
         <ReactionButton 
           userReaction={userReaction} 
-          onReactionClick={onReaction}
+          onReactionClick={handleReaction}
           postId={post.id}
         />
 

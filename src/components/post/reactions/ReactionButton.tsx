@@ -31,8 +31,13 @@ export function ReactionButton({ userReaction, onReactionClick, postId }: Reacti
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Debes iniciar sesión para reaccionar");
 
-      // Actualizamos el estado UI primero para mejorar la percepción de velocidad
-      onReactionClick(type);
+      // Solo actualizamos UI si no estamos aplicando la misma reacción de nuevo
+      if (userReaction !== type) {
+        onReactionClick(type);
+      } else {
+        // Si es la misma reacción, la quitamos en la UI
+        onReactionClick(type);
+      }
       
       if (userReaction === type) {
         // Si el usuario hace clic en su reacción actual, la eliminamos
@@ -70,7 +75,9 @@ export function ReactionButton({ userReaction, onReactionClick, postId }: Reacti
     } catch (error) {
       console.error('Error al gestionar la reacción:', error);
       // Revertimos el estado UI si hubo un error
-      onReactionClick(userReaction as ReactionType);
+      if (userReaction) {
+        onReactionClick(userReaction);
+      }
       
       toast({
         variant: "destructive",

@@ -41,16 +41,16 @@ export function ReactionDetails({ post }: ReactionDetailsProps) {
 
       if (error) throw error;
       
-      // Filter out duplicate reactions from the same user for each reaction type
-      const userIds = new Set();
-      return (data as UserReaction[]).filter(reaction => {
-        const userIdentifier = `${reaction.profile.username}-${reaction.reaction_type}`;
-        if (userIds.has(userIdentifier)) {
-          return false;
-        }
-        userIds.add(userIdentifier);
-        return true;
+      // Eliminar reacciones duplicadas por usuario
+      const uniqueReactions: Record<string, UserReaction> = {};
+      
+      (data as UserReaction[]).forEach(reaction => {
+        const uniqueKey = `${reaction.profile.username}`;
+        // Solo guardamos la reacción más reciente de cada usuario
+        uniqueReactions[uniqueKey] = reaction;
       });
+      
+      return Object.values(uniqueReactions);
     }
   });
 
