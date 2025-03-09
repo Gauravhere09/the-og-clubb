@@ -14,13 +14,15 @@ interface PostActionsProps {
   onReaction: (type: ReactionType) => void;
   onToggleComments: () => void;
   onCommentsClick: () => void;
+  commentsExpanded?: boolean;
 }
 
 export function PostActions({ 
   post, 
   onReaction, 
   onToggleComments,
-  onCommentsClick 
+  onCommentsClick,
+  commentsExpanded = false
 }: PostActionsProps) {
   const reactionsByType = post.reactions?.by_type || {};
   const userReaction = post.user_reaction as ReactionType | undefined;
@@ -42,7 +44,11 @@ export function PostActions({
         )}
         
         {commentCount > 0 && (
-          <CommentsCount count={commentCount} onClick={onCommentsClick} />
+          <CommentsCount 
+            count={commentCount} 
+            onClick={onCommentsClick} 
+            isExpanded={commentsExpanded}
+          />
         )}
       </div>
 

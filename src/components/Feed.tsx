@@ -39,7 +39,9 @@ export function Feed({ userId }: FeedProps) {
 
   // Actualizar hiddenPostIds cuando cambian los datos de hiddenPosts
   useEffect(() => {
-    setHiddenPostIds(hiddenPosts);
+    if (hiddenPosts && hiddenPosts.length > 0) {
+      setHiddenPostIds(hiddenPosts);
+    }
   }, [hiddenPosts]);
 
   const { data: posts = [], isLoading, refetch } = useQuery({

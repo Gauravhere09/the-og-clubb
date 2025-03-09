@@ -56,10 +56,6 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
     setShowComments(!showComments);
   };
 
-  const handleCommentsClick = () => {
-    setShowComments(true);
-  };
-
   const handleCommentReaction = (commentId: string, type: ReactionType) => {
     toggleCommentReaction({ commentId, type });
   };
@@ -133,7 +129,6 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
           isHidden={isHidden}
         />
         
-        {/* If it's a shared post, show a minimal caption and the shared content */}
         {isSharedPost ? (
           <div>
             {post.content && (
@@ -169,7 +164,8 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
           post={post} 
           onReaction={onReaction} 
           onToggleComments={toggleComments}
-          onCommentsClick={handleCommentsClick}
+          onCommentsClick={toggleComments}
+          commentsExpanded={showComments}
         />
         
         {!hideComments && showComments && (
