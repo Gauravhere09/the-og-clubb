@@ -30,6 +30,11 @@ const App = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      
+      // Clear the query cache when logging out to prevent data persistence issues
+      if (!session) {
+        queryClient.clear();
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -43,21 +48,22 @@ const App = () => {
           <Sonner />
           <BrowserRouter>
             <Routes>
-              <Route path="/" element={session ? <Index /> : <Auth />} />
-              <Route path="/messages" element={session ? <Messages /> : <Auth />} />
+              <Route path="/" element={session ? <Index /> : <Navigate to="/auth" replace />} />
+              <Route path="/messages" element={session ? <Messages /> : <Navigate to="/auth" replace />} />
               <Route 
                 path="/notifications" 
-                element={session ? <Notifications /> : <Auth />} 
+                element={session ? <Notifications /> : <Navigate to="/auth" replace />} 
               />
               <Route path="/profile" element={<Navigate to="/" replace />} />
               <Route 
                 path="/profile/:id" 
-                element={session ? <Profile /> : <Auth />} 
+                element={session ? <Profile /> : <Navigate to="/auth" replace />} 
               />
               <Route 
                 path="/popularity" 
-                element={session ? <Popularity /> : <Auth />} 
+                element={session ? <Popularity /> : <Navigate to="/auth" replace />} 
               />
+              <Route path="/auth" element={session ? <Navigate to="/" replace /> : <Auth />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

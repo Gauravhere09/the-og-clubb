@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -88,8 +87,24 @@ export function useNavigation() {
   }, [currentUserId, location.pathname, toast]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
+    try {
+      await supabase.auth.signOut();
+      
+      // Explicitly navigate to auth page after signing out
+      navigate("/auth");
+      
+      toast({
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión exitosamente."
+      });
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo cerrar sesión. Intenta nuevamente."
+      });
+    }
   };
 
   const handleHomeClick = () => {
