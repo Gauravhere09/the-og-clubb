@@ -20,26 +20,46 @@ export async function updatePostVisibility(postId: string, visibility: 'public' 
 }
 
 export async function hidePost(postId: string) {
+  // Obtener el usuario actual
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) throw new Error('Usuario no autenticado');
+  
   const { error } = await supabase
     .from('hidden_posts')
-    .insert({ post_id: postId });
+    .insert({ 
+      post_id: postId,
+      user_id: user.id
+    });
   
   if (error) throw error;
 }
 
 export async function unhidePost(postId: string) {
+  // Obtener el usuario actual
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) throw new Error('Usuario no autenticado');
+  
   const { error } = await supabase
     .from('hidden_posts')
     .delete()
-    .eq('post_id', postId);
+    .eq('post_id', postId)
+    .eq('user_id', user.id);
   
   if (error) throw error;
 }
 
 export async function getHiddenPosts() {
+  // Obtener el usuario actual
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) return []; // Si no hay usuario autenticado, devolver array vacío
+  
   const { data, error } = await supabase
     .from('hidden_posts')
-    .select('post_id');
+    .select('post_id')
+    .eq('user_id', user.id);
   
   if (error) throw error;
   
