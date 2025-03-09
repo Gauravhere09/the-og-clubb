@@ -2,6 +2,8 @@
 import { Post, Poll } from "@/types/post";
 import { cn } from "@/lib/utils";
 import { PollDisplay } from "./PollDisplay";
+import { useState } from "react";
+import { ImageModal } from "./ImageModal";
 
 interface PostContentProps {
   post: Post;
@@ -10,6 +12,8 @@ interface PostContentProps {
 }
 
 export function PostContent({ post, postId, onVote }: PostContentProps) {
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  
   return (
     <div className="space-y-3 pt-2 pb-3">
       <div className={cn("whitespace-pre-wrap", !post.media_url && "mb-1")}>
@@ -19,11 +23,19 @@ export function PostContent({ post, postId, onVote }: PostContentProps) {
       {post.media_url && (
         <div>
           {post.media_type === "image" && (
-            <img
-              src={post.media_url}
-              alt="Post image"
-              className="rounded-lg w-full object-cover max-h-[500px]"
-            />
+            <>
+              <img
+                src={post.media_url}
+                alt="Post image"
+                className="rounded-lg w-full object-cover max-h-[500px] cursor-pointer hover:opacity-95 transition-opacity"
+                onClick={() => setIsImageModalOpen(true)}
+              />
+              <ImageModal 
+                isOpen={isImageModalOpen}
+                onClose={() => setIsImageModalOpen(false)}
+                imageUrl={post.media_url}
+              />
+            </>
           )}
           {post.media_type === "video" && (
             <video
