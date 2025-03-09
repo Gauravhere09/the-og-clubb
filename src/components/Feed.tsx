@@ -32,15 +32,14 @@ export function Feed({ userId }: FeedProps) {
   const [showHidden, setShowHidden] = useState(false);
 
   // Obtener las publicaciones ocultas
-  const { data: hiddenPosts = [], isLoading: isLoadingHidden } = useQuery({
+  const { data: hiddenPosts = [] } = useQuery({
     queryKey: ["hidden-posts"],
     queryFn: getHiddenPosts,
   });
 
+  // Actualizar hiddenPostIds cuando cambian los datos de hiddenPosts
   useEffect(() => {
-    if (hiddenPosts) {
-      setHiddenPostIds(hiddenPosts);
-    }
+    setHiddenPostIds(hiddenPosts);
   }, [hiddenPosts]);
 
   const { data: posts = [], isLoading, refetch } = useQuery({
@@ -82,7 +81,7 @@ export function Feed({ userId }: FeedProps) {
     }
   }, [showNew, refetch, setSearchParams]);
 
-  if (isLoading || isLoadingHidden) {
+  if (isLoading) {
     return (
       <div className="space-y-4">
         <Card className="p-4">
