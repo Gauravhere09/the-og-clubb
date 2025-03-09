@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { PollDisplay } from "./PollDisplay";
+import { MentionsText } from "./MentionsText";
 
 interface SharedPostContentProps {
   post: PostType;
@@ -31,7 +32,9 @@ export function SharedPostContent({ post }: SharedPostContentProps) {
       </div>
 
       <div>
-        <p className="text-sm whitespace-pre-wrap break-words">{post.content}</p>
+        <p className="text-sm whitespace-pre-wrap break-words">
+          <MentionsText content={post.content} />
+        </p>
         
         {post.media_url && post.media_type === 'image' && (
           <div className="mt-3 rounded-lg overflow-hidden relative">

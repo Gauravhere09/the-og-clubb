@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { PollDisplay } from "./PollDisplay";
 import { useState } from "react";
 import { ImageModal } from "./ImageModal";
+import { MentionsText } from "./MentionsText";
 
 interface PostContentProps {
   post: Post;
@@ -17,7 +18,7 @@ export function PostContent({ post, postId, onVote }: PostContentProps) {
   return (
     <div className="space-y-3 pt-2 pb-3">
       <div className={cn("whitespace-pre-wrap", !post.media_url && "mb-1")}>
-        {post.content}
+        <MentionsText content={post.content} />
       </div>
 
       {post.media_url && (
