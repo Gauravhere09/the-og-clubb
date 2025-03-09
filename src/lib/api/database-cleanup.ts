@@ -104,6 +104,59 @@ export async function deleteSpecificProfiles(profileIds: string[]) {
 }
 
 /**
+ * Elimina todas las publicaciones de un usuario específico
+ * @param userId ID del usuario cuyas publicaciones se desean eliminar
+ */
+export async function deleteAllPostsFromUser(userId: string) {
+  try {
+    // Verificar que el usuario existe
+    const { data: userExists, error: userCheckError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', userId)
+      .single();
+    
+    if (userCheckError || !userExists) {
+      throw new Error(`El usuario con ID ${userId} no existe`);
+    }
+
+    // Eliminar todas las publicaciones del usuario especificado
+    const query = `DELETE FROM posts WHERE user_id = '${userId}'`;
+    return await executeSql(query);
+  } catch (error) {
+    console.error("Error al eliminar publicaciones:", error);
+    return { 
+      success: false, 
+      message: "Error al eliminar publicaciones", 
+      error: error instanceof Error ? error.message : String(error) 
+    };
+  }
+}
+
+/**
+ * Elimina publicaciones específicas por su ID
+ * @param postIds Array de IDs de publicaciones a eliminar
+ */
+export async function deleteSpecificPosts(postIds: string[]) {
+  try {
+    if (!postIds.length) {
+      return { success: false, message: "No se proporcionaron IDs de publicaciones para eliminar" };
+    }
+    
+    const ids = postIds.map(id => `'${id}'`).join(',');
+    const query = `DELETE FROM posts WHERE id IN (${ids})`;
+    return await executeSql(query);
+  } catch (error) {
+    console.error("Error al eliminar publicaciones específicas:", error);
+    return { 
+      success: false, 
+      message: "Error al eliminar publicaciones específicas", 
+      error: error instanceof Error ? error.message : String(error) 
+    };
+  }
+}
+
+/**
  * NOTA IMPORTANTE:
  * 
  * Para utilizar estas funciones, primero debes crear la función RPC 'execute_sql' en Supabase:
@@ -130,3 +183,4 @@ export async function deleteSpecificProfiles(profileIds: string[]) {
  * 
  * 3. Asegúrate de configurar los permisos adecuados para esta función
  */
+
