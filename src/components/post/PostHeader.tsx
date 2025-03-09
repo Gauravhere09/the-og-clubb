@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { MoreVertical, Flag, EyeOff } from "lucide-react";
+import { MoreVertical, Flag, EyeOff, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Link } from "react-router-dom";
@@ -16,16 +16,22 @@ import type { Post } from "@/types/post";
 import { ReportDialog } from "./actions/ReportDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
+import { hidePost, unhidePost } from "@/lib/api/posts/manage";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface PostHeaderProps {
   post: Post;
   onDelete: () => void;
   isAuthor: boolean;
+  isHidden?: boolean;
 }
 
-export function PostHeader({ post, onDelete, isAuthor }: PostHeaderProps) {
+export function PostHeader({ post, onDelete, isAuthor, isHidden = false }: PostHeaderProps) {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     // Obtener el ID del usuario actual
@@ -35,6 +41,44 @@ export function PostHeader({ post, onDelete, isAuthor }: PostHeaderProps) {
     };
     getUserId();
   }, []);
+
+  const handleHidePost = async () => {
+    try {
+      await hidePost(post.id);
+      toast({
+        title: "Publicación oculta",
+        description: "Esta publicación ha sido ocultada de tu feed",
+      });
+      // Invalidar la consulta para actualizar el feed
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    } catch (error) {
+      console.error("Error al ocultar la publicación:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo ocultar la publicación",
+      });
+    }
+  };
+
+  const handleUnhidePost = async () => {
+    try {
+      await unhidePost(post.id);
+      toast({
+        title: "Publicación visible",
+        description: "Esta publicación ahora es visible en tu feed",
+      });
+      // Invalidar la consulta para actualizar el feed
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    } catch (error) {
+      console.error("Error al mostrar la publicación:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo mostrar la publicación",
+      });
+    }
+  };
 
   return (
     <div className="flex items-start gap-3 mb-4">
@@ -68,10 +112,23 @@ export function PostHeader({ post, onDelete, isAuthor }: PostHeaderProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[200px]">
-          <DropdownMenuItem className="cursor-pointer">
-            <EyeOff className="h-4 w-4 mr-2" />
-            Ocultar publicación
-          </DropdownMenuItem>
+          {isHidden ? (
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={handleUnhidePost}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Mostrar publicación
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem 
+              className="cursor-pointer"
+              onClick={handleHidePost}
+            >
+              <EyeOff className="h-4 w-4 mr-2" />
+              Ocultar publicación
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem 
             className="cursor-pointer"
             onClick={() => setShowReportDialog(true)}

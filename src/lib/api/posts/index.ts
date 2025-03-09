@@ -8,7 +8,7 @@ export { createPost } from './create';
 export { getPosts } from './retrieve';
 
 // Post management
-export { deletePost, updatePostVisibility } from './manage';
+export { deletePost, updatePostVisibility, hidePost, unhidePost, getHiddenPosts } from './manage';
 
 // Re-export functions from other files for backward compatibility
 export * from "./types";

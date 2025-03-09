@@ -1,11 +1,11 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Post } from "@/components/Post";
-import { getPosts } from "@/lib/api";
+import { getPosts, getHiddenPosts } from "@/lib/api";
 import type { Post as PostType, Poll } from "@/types/post";
 import { Card } from "./ui/card";
 import { useSearchParams } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 interface FeedProps {
   userId?: string;
@@ -28,6 +28,20 @@ function transformPoll(pollData: any): Poll | null {
 export function Feed({ userId }: FeedProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const showNew = searchParams.get("new") === "true";
+  const [hiddenPostIds, setHiddenPostIds] = useState<string[]>([]);
+  const [showHidden, setShowHidden] = useState(false);
+
+  // Obtener las publicaciones ocultas
+  const { data: hiddenPosts = [], isLoading: isLoadingHidden } = useQuery({
+    queryKey: ["hidden-posts"],
+    queryFn: getHiddenPosts,
+  });
+
+  useEffect(() => {
+    if (hiddenPosts) {
+      setHiddenPostIds(hiddenPosts);
+    }
+  }, [hiddenPosts]);
 
   const { data: posts = [], isLoading, refetch } = useQuery({
     queryKey: ["posts", userId],
@@ -68,7 +82,7 @@ export function Feed({ userId }: FeedProps) {
     }
   }, [showNew, refetch, setSearchParams]);
 
-  if (isLoading) {
+  if (isLoading || isLoadingHidden) {
     return (
       <div className="space-y-4">
         <Card className="p-4">
@@ -81,7 +95,15 @@ export function Feed({ userId }: FeedProps) {
     );
   }
 
-  if (!posts.length) {
+  // Filtrar posts ocultos si no se está mostrando el modo "mostrar ocultos"
+  const visiblePosts = showHidden 
+    ? posts 
+    : posts.filter(post => !hiddenPostIds.includes(post.id));
+  
+  // Publicaciones que están ocultas
+  const onlyHiddenPosts = posts.filter(post => hiddenPostIds.includes(post.id));
+
+  if (!visiblePosts.length && !onlyHiddenPosts.length) {
     return (
       <Card className="p-4">
         <p className="text-center text-muted-foreground">
@@ -93,7 +115,28 @@ export function Feed({ userId }: FeedProps) {
 
   return (
     <div className="space-y-4">
-      {posts.map((post) => (
+      {/* Botón para alternar la visualización de publicaciones ocultas */}
+      {onlyHiddenPosts.length > 0 && (
+        <div className="flex justify-center mb-2">
+          <button 
+            onClick={() => setShowHidden(!showHidden)}
+            className="text-sm text-primary hover:underline"
+          >
+            {showHidden ? "Ocultar publicaciones filtradas" : `Mostrar ${onlyHiddenPosts.length} publicaciones ocultas`}
+          </button>
+        </div>
+      )}
+      
+      {/* Mostrar publicaciones filtradas en modo especial si están visibles */}
+      {showHidden && onlyHiddenPosts.map((post) => (
+        <div key={post.id} className="relative">
+          <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 opacity-10 z-0 pointer-events-none"></div>
+          <Post key={post.id} post={post} isHidden={true} />
+        </div>
+      ))}
+      
+      {/* Mostrar publicaciones normales */}
+      {!showHidden && visiblePosts.map((post) => (
         <Post key={post.id} post={post} />
       ))}
     </div>

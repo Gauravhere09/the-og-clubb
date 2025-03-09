@@ -16,9 +16,10 @@ import { es } from "date-fns/locale";
 interface PostProps {
   post: PostType;
   hideComments?: boolean;
+  isHidden?: boolean;
 }
 
-export function Post({ post, hideComments = false }: PostProps) {
+export function Post({ post, hideComments = false, isHidden = false }: PostProps) {
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState<any[]>([]);
   const [newComment, setNewComment] = useState("");
@@ -129,6 +130,7 @@ export function Post({ post, hideComments = false }: PostProps) {
           post={post} 
           onDelete={onDeletePost}
           isAuthor={isCurrentUserAuthor}
+          isHidden={isHidden}
         />
         
         {/* If it's a shared post, show a minimal caption and the shared content */}
