@@ -30,6 +30,7 @@ interface PostHeaderProps {
 export function PostHeader({ post, onDelete, isAuthor, isHidden = false }: PostHeaderProps) {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -43,13 +44,17 @@ export function PostHeader({ post, onDelete, isAuthor, isHidden = false }: PostH
   }, []);
 
   const handleHidePost = async () => {
+    if (isLoading) return;
+    
     try {
+      setIsLoading(true);
       await hidePost(post.id);
       toast({
         title: "Publicación oculta",
         description: "Esta publicación ha sido ocultada de tu feed",
       });
       // Invalidar la consulta para actualizar el feed
+      queryClient.invalidateQueries({ queryKey: ["hidden-posts"] });
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     } catch (error) {
       console.error("Error al ocultar la publicación:", error);
@@ -58,17 +63,23 @@ export function PostHeader({ post, onDelete, isAuthor, isHidden = false }: PostH
         title: "Error",
         description: "No se pudo ocultar la publicación",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleUnhidePost = async () => {
+    if (isLoading) return;
+    
     try {
+      setIsLoading(true);
       await unhidePost(post.id);
       toast({
         title: "Publicación visible",
         description: "Esta publicación ahora es visible en tu feed",
       });
       // Invalidar la consulta para actualizar el feed
+      queryClient.invalidateQueries({ queryKey: ["hidden-posts"] });
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     } catch (error) {
       console.error("Error al mostrar la publicación:", error);
@@ -77,6 +88,8 @@ export function PostHeader({ post, onDelete, isAuthor, isHidden = false }: PostH
         title: "Error",
         description: "No se pudo mostrar la publicación",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -116,17 +129,19 @@ export function PostHeader({ post, onDelete, isAuthor, isHidden = false }: PostH
             <DropdownMenuItem 
               className="cursor-pointer"
               onClick={handleUnhidePost}
+              disabled={isLoading}
             >
               <Eye className="h-4 w-4 mr-2" />
-              Mostrar publicación
+              {isLoading ? "Procesando..." : "Mostrar publicación"}
             </DropdownMenuItem>
           ) : (
             <DropdownMenuItem 
               className="cursor-pointer"
               onClick={handleHidePost}
+              disabled={isLoading}
             >
               <EyeOff className="h-4 w-4 mr-2" />
-              Ocultar publicación
+              {isLoading ? "Procesando..." : "Ocultar publicación"}
             </DropdownMenuItem>
           )}
           <DropdownMenuItem 
