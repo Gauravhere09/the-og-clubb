@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { useCommentMutations } from "@/hooks/use-comment-mutations";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
 interface SingleCommentProps {
   comment: Comment;
@@ -84,14 +85,21 @@ export function SingleComment({
   return (
     <div className={`${isReply ? "ml-12" : ""} space-y-1`}>
       <div className="flex items-start gap-2">
-        <Avatar className="h-6 w-6">
-          <AvatarImage src={comment.profiles?.avatar_url} />
-          <AvatarFallback>{comment.profiles?.username?.[0]}</AvatarFallback>
-        </Avatar>
+        <Link to={`/profile/${comment.user_id}`}>
+          <Avatar className="h-6 w-6 cursor-pointer hover:ring-2 hover:ring-primary transition-all">
+            <AvatarImage src={comment.profiles?.avatar_url} />
+            <AvatarFallback>{comment.profiles?.username?.[0]}</AvatarFallback>
+          </Avatar>
+        </Link>
         <div className="flex-1 max-w-[70%]">
           <div className="bg-muted p-1.5 rounded-lg">
             <div className="flex justify-between items-start">
-              <p className="font-medium text-xs">{comment.profiles?.username}</p>
+              <Link 
+                to={`/profile/${comment.user_id}`}
+                className="font-medium text-xs hover:underline hover:text-primary transition-colors"
+              >
+                {comment.profiles?.username}
+              </Link>
               {!isLoading && isAuthor && (
                 <TooltipProvider>
                   <Tooltip>
