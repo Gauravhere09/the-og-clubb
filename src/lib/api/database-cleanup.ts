@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
  */
 export async function executeSql(query: string) {
   try {
+    // Fix: Using the correct type for the execute_sql RPC call
     const { data, error } = await supabase.rpc('execute_sql', { query });
     
     if (error) throw error;
