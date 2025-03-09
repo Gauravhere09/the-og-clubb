@@ -1,5 +1,5 @@
 
-import { SingleComment } from "./comments/SingleComment";
+import { CommentsList } from "./comments/CommentsList";
 import { CommentInput } from "./comments/CommentInput";
 import type { Comment } from "@/types/post";
 import type { ReactionType } from "@/types/database/social.types";
@@ -31,21 +31,12 @@ export function Comments({
 }: CommentsProps) {
   return (
     <div className="mt-4 space-y-4">
-      <div className="space-y-4">
-        {comments.length > 0 ? (
-          comments.map((comment) => (
-            <SingleComment
-              key={comment.id}
-              comment={comment}
-              onReaction={onReaction}
-              onReply={onReply}
-              onDeleteComment={onDeleteComment}
-            />
-          ))
-        ) : (
-          <p className="text-sm text-muted-foreground text-center">No hay comentarios. ¡Sé el primero en comentar!</p>
-        )}
-      </div>
+      <CommentsList 
+        comments={comments}
+        onReaction={onReaction}
+        onReply={onReply}
+        onDeleteComment={onDeleteComment}
+      />
 
       <CommentInput
         newComment={newComment}
