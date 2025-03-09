@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
+import { getComments } from "@/lib/api/comments";
 
 interface PostProps {
   post: PostType;
@@ -44,6 +45,26 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
     getUserId();
   }, []);
 
+  // Fetch comments when showComments changes to true
+  useEffect(() => {
+    if (showComments) {
+      const fetchComments = async () => {
+        try {
+          const commentsData = await getComments(post.id);
+          setComments(commentsData);
+        } catch (error) {
+          console.error('Error fetching comments:', error);
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "No se pudieron cargar los comentarios",
+          });
+        }
+      };
+      fetchComments();
+    }
+  }, [showComments, post.id, toast]);
+
   const onDeletePost = () => {
     handleDeletePost();
   };
@@ -71,6 +92,13 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
     submitComment({
       content: newComment,
       replyToId: replyTo?.id
+    }, {
+      onSuccess: () => {
+        // Recargar comentarios después de publicar un nuevo comentario
+        getComments(post.id).then(updatedComments => {
+          setComments(updatedComments);
+        });
+      }
     });
     
     setNewComment("");
@@ -90,8 +118,9 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
       
       if (error) throw error;
       
-      // Update local state to remove the deleted comment
-      setComments(prev => prev.filter(comment => comment.id !== commentId));
+      // Recargar los comentarios después de eliminar
+      const updatedComments = await getComments(post.id);
+      setComments(updatedComments);
       
       toast({
         title: "Comentario eliminado",

@@ -1,10 +1,8 @@
 
-import { useState, useEffect } from "react";
-import type { Comment } from "@/types/post";
 import { SingleComment } from "./comments/SingleComment";
 import { CommentInput } from "./comments/CommentInput";
+import type { Comment } from "@/types/post";
 import type { ReactionType } from "@/types/database/social.types";
-import { getComments } from "@/lib/api/comments";
 
 interface CommentsProps {
   postId: string;
@@ -21,7 +19,7 @@ interface CommentsProps {
 
 export function Comments({
   postId,
-  comments: initialComments,
+  comments,
   onReaction,
   onReply,
   onSubmitComment,
@@ -31,33 +29,22 @@ export function Comments({
   replyTo,
   onCancelReply
 }: CommentsProps) {
-  const [localComments, setLocalComments] = useState<Comment[]>(initialComments);
-
-  useEffect(() => {
-    const fetchCommentsData = async () => {
-      try {
-        const commentsData = await getComments(postId);
-        setLocalComments(commentsData);
-      } catch (error) {
-        console.error('Error fetching comments:', error);
-      }
-    };
-
-    fetchCommentsData();
-  }, [postId]);
-
   return (
     <div className="mt-4 space-y-4">
       <div className="space-y-4">
-        {localComments.map((comment) => (
-          <SingleComment
-            key={comment.id}
-            comment={comment}
-            onReaction={onReaction}
-            onReply={onReply}
-            onDeleteComment={onDeleteComment}
-          />
-        ))}
+        {comments.length > 0 ? (
+          comments.map((comment) => (
+            <SingleComment
+              key={comment.id}
+              comment={comment}
+              onReaction={onReaction}
+              onReply={onReply}
+              onDeleteComment={onDeleteComment}
+            />
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground text-center">No hay comentarios. ¡Sé el primero en comentar!</p>
+        )}
       </div>
 
       <CommentInput
