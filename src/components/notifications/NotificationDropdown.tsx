@@ -211,12 +211,20 @@ export function NotificationDropdown() {
                   {suggestions.slice(0, 5).map((suggestion) => (
                     <div key={suggestion.id} className="p-3 border-b flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarImage src={suggestion.avatar_url || undefined} />
-                          <AvatarFallback>{suggestion.username[0]}</AvatarFallback>
-                        </Avatar>
+                        <Link to={`/profile/${suggestion.id}`} onClick={() => setOpen(false)}>
+                          <Avatar>
+                            <AvatarImage src={suggestion.avatar_url || undefined} />
+                            <AvatarFallback>{suggestion.username[0]}</AvatarFallback>
+                          </Avatar>
+                        </Link>
                         <div>
-                          <div className="font-medium">{suggestion.username}</div>
+                          <Link 
+                            to={`/profile/${suggestion.id}`}
+                            className="font-medium hover:underline"
+                            onClick={() => setOpen(false)}
+                          >
+                            {suggestion.username}
+                          </Link>
                           {suggestion.mutual_friends_count > 0 && (
                             <div className="text-xs text-muted-foreground">
                               {suggestion.mutual_friends_count} amigos en común
