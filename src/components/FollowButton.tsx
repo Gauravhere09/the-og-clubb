@@ -116,27 +116,31 @@ export function FollowButton({ targetUserId, size = "default" }: FollowButtonPro
 
   // Determine the button text and icon based on relationship
   let buttonText = "Seguir";
-  let buttonIcon = <UserPlus className="h-5 w-5 mr-2" />;
+  let buttonIcon = <UserPlus className="h-5 w-5" />;
   let isFollowing = false;
 
   if (relationship === 'friends') {
     buttonText = "Amigos";
-    buttonIcon = <UserCheck className="h-5 w-5 mr-2" />;
+    buttonIcon = <UserCheck className="h-5 w-5" />;
     isFollowing = true;
   } else if (relationship === 'following') {
     buttonText = "Siguiendo";
-    buttonIcon = <Heart fill="currentColor" className="h-5 w-5 mr-2" />;
+    buttonIcon = <Heart fill="currentColor" className="h-5 w-5" />;
     isFollowing = true;
   }
 
+  // For "sm" size, we want to adjust the text and icon size
+  const iconClass = size === "sm" ? "h-4 w-4" : "h-5 w-5";
+  
   return (
     <Button
       variant={isFollowing ? "default" : "outline"}
       size={size}
       onClick={handleFollowToggle}
       disabled={isLoading}
+      className={`flex items-center gap-1 ${size === "sm" ? "px-3 py-1 h-8 text-xs" : ""}`}
     >
-      {buttonIcon}
+      {size !== "sm" && buttonIcon}
       {buttonText}
     </Button>
   );

@@ -8,17 +8,24 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Bell, Check, MoreHorizontal } from "lucide-react";
+import { Bell, Check, MoreHorizontal, X, User, UserPlus, Sparkles } from "lucide-react";
 import { NotificationItem } from "./NotificationItem";
 import { useNotifications } from "@/hooks/use-notifications";
 import { Separator } from "@/components/ui/separator";
 import { Link } from "react-router-dom";
+import { useFriends } from "@/hooks/use-friends";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { FollowButton } from "@/components/FollowButton";
 
 export function NotificationDropdown() {
   const [open, setOpen] = useState(false);
   const { notifications, handleFriendRequest, markAsRead, clearAllNotifications } = useNotifications();
   const [hasUnread, setHasUnread] = useState(false);
   const navigate = useNavigate();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const { suggestions } = useFriends(currentUserId);
+  const [showSuggestions, setShowSuggestions] = useState(true);
 
   // Agrupar notificaciones por fecha
   const today = new Date().toDateString();
@@ -40,11 +47,25 @@ export function NotificationDropdown() {
   useEffect(() => {
     const hasUnreadNotifications = notifications.some((notification) => !notification.read);
     setHasUnread(hasUnreadNotifications);
+    
+    // Get current user
+    const getCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setCurrentUserId(user?.id || null);
+    };
+    
+    getCurrentUser();
   }, [notifications]);
 
   const handleMarkAllAsRead = () => {
     markAsRead();
     setHasUnread(false);
+  };
+
+  const handleDismissSuggestion = (userId: string) => {
+    // Esta función podría implementarse más adelante para persistir
+    // las sugerencias descartadas en la base de datos
+    console.log(`Dismissed suggestion for user ${userId}`);
   };
 
   return (
@@ -174,6 +195,58 @@ export function NotificationDropdown() {
                       compact={true}
                     />
                   ))}
+                </>
+              )}
+              
+              {/* Sección de Sugerencias para ti */}
+              {showSuggestions && suggestions.length > 0 && (
+                <>
+                  <div className="p-2 bg-muted/50 text-sm font-medium text-muted-foreground flex items-center justify-between">
+                    <div className="flex items-center gap-1">
+                      <Sparkles className="h-4 w-4 text-blue-500" />
+                      <span>Sugerencias para ti</span>
+                    </div>
+                  </div>
+                  
+                  {suggestions.slice(0, 5).map((suggestion) => (
+                    <div key={suggestion.id} className="p-3 border-b flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={suggestion.avatar_url || undefined} />
+                          <AvatarFallback>{suggestion.username[0]}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-medium">{suggestion.username}</div>
+                          {suggestion.mutual_friends_count > 0 && (
+                            <div className="text-xs text-muted-foreground">
+                              {suggestion.mutual_friends_count} amigos en común
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <FollowButton targetUserId={suggestion.id} size="sm" />
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8" 
+                          onClick={() => handleDismissSuggestion(suggestion.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <div className="p-2 text-center">
+                    <Link 
+                      to="/friends" 
+                      className="text-sm text-blue-500 hover:underline"
+                      onClick={() => setOpen(false)}
+                    >
+                      Ver todas las sugerencias
+                    </Link>
+                  </div>
                 </>
               )}
             </>
