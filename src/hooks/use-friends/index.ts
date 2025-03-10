@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { checkMutualFollowing, unfollowUser, sendFriendRequest } from "@/lib/api/friends";
 
 interface ProfileData {
   id: string;
@@ -13,14 +14,14 @@ export interface Friend {
   friend_username: string;
   friend_avatar_url: string | null;
   mutual_friends_count?: number;
-  status?: 'pending' | 'accepted' | 'rejected';
+  status?: 'following' | 'follower' | 'friends';
 }
 
 export interface FriendRequest {
   id: string;
   user_id: string;
   friend_id: string;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: 'accepted';
   created_at: string;
   user: {
     username: string;
@@ -37,14 +38,16 @@ export interface FriendSuggestion {
 
 export function useFriends(currentUserId: string | null) {
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [following, setFollowing] = useState<Friend[]>([]);
+  const [followers, setFollowers] = useState<Friend[]>([]);
   const [suggestions, setSuggestions] = useState<FriendSuggestion[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadFriends = async () => {
     if (!currentUserId) return;
 
-    const { data: friendships, error } = await supabase
+    // Get all users the current user is following
+    const { data: followingData, error: followingError } = await supabase
       .from('friendships')
       .select(`
         *,
@@ -57,50 +60,54 @@ export function useFriends(currentUserId: string | null) {
       .eq('user_id', currentUserId)
       .eq('status', 'accepted');
 
-    if (!error && friendships) {
-      const processedFriends = friendships.map(f => ({
-        friend_id: f.friend.id,
-        friend_username: f.friend.username || '',
-        friend_avatar_url: f.friend.avatar_url,
-        status: 'accepted' as const
-      }));
-      setFriends(processedFriends);
-    }
-  };
-
-  const loadRequests = async () => {
-    if (!currentUserId) return;
-
-    const { data, error } = await supabase
+    // Get all users who follow the current user
+    const { data: followersData, error: followersError } = await supabase
       .from('friendships')
       .select(`
         *,
-        sender:profiles!friendships_user_id_fkey (
+        user:profiles!friendships_user_id_fkey (
+          id,
           username,
           avatar_url
         )
       `)
       .eq('friend_id', currentUserId)
-      .eq('status', 'pending');
+      .eq('status', 'accepted');
 
-    if (!error && data) {
-      setFriendRequests(data.map(request => ({
-        id: request.id,
-        user_id: request.user_id,
-        friend_id: request.friend_id,
-        status: request.status as 'pending',
-        created_at: request.created_at,
-        user: {
-          username: request.sender.username || '',
-          avatar_url: request.sender.avatar_url
-        }
-      })));
+    if (!followingError && !followersError && followingData && followersData) {
+      const followingProfiles = followingData.map(f => ({
+        friend_id: f.friend.id,
+        friend_username: f.friend.username || '',
+        friend_avatar_url: f.friend.avatar_url,
+        status: 'following' as const
+      }));
+      
+      const followersProfiles = followersData.map(f => ({
+        friend_id: f.user.id,
+        friend_username: f.user.username || '',
+        friend_avatar_url: f.user.avatar_url,
+        status: 'follower' as const
+      }));
+      
+      setFollowing(followingProfiles);
+      setFollowers(followersProfiles);
+      
+      // Friends are users who mutually follow each other
+      const followingIds = new Set(followingProfiles.map(f => f.friend_id));
+      const mutualFriends = followersProfiles.filter(f => followingIds.has(f.friend_id))
+        .map(f => ({
+          ...f,
+          status: 'friends' as const
+        }));
+      
+      setFriends(mutualFriends);
     }
   };
 
   const loadSuggestions = async () => {
     if (!currentUserId) return;
 
+    // Get some user profiles that are not already being followed
     const { data, error } = await supabase
       .from('profiles')
       .select('id, username, avatar_url')
@@ -108,12 +115,19 @@ export function useFriends(currentUserId: string | null) {
       .limit(5);
 
     if (!error && data) {
-      setSuggestions(data.map(s => ({
-        id: s.id,
-        username: s.username || '',
-        avatar_url: s.avatar_url,
-        mutual_friends_count: 0
-      })));
+      // Check which ones current user is not already following
+      const followingIds = new Set(following.map(f => f.friend_id));
+      
+      // Filter out users that are already being followed
+      const suggestions = data.filter(profile => !followingIds.has(profile.id))
+        .map(s => ({
+          id: s.id,
+          username: s.username || '',
+          avatar_url: s.avatar_url,
+          mutual_friends_count: 0 // We could calculate this later if needed
+        }));
+      
+      setSuggestions(suggestions);
     }
   };
 
@@ -121,46 +135,43 @@ export function useFriends(currentUserId: string | null) {
     if (currentUserId) {
       Promise.all([
         loadFriends(),
-        loadRequests(),
-        loadSuggestions()
-      ]).finally(() => setLoading(false));
+      ]).finally(() => {
+        loadSuggestions();
+        setLoading(false);
+      });
     }
   }, [currentUserId]);
 
-  const sendFriendRequest = async (friendId: string) => {
+  const followUser = async (friendId: string) => {
     if (!currentUserId) return;
 
-    await supabase
-      .from('friendships')
-      .insert({
-        user_id: currentUserId,
-        friend_id: friendId,
-        status: 'pending'
-      });
-
-    await loadSuggestions();
+    try {
+      await sendFriendRequest(friendId);
+      await loadFriends();
+      await loadSuggestions();
+    } catch (error) {
+      console.error("Error following user:", error);
+    }
   };
 
-  const respondToFriendRequest = async (requestId: string, accept: boolean) => {
-    await supabase
-      .from('friendships')
-      .update({
-        status: accept ? 'accepted' : 'rejected'
-      })
-      .eq('id', requestId);
+  const unfollowUserAction = async (friendId: string) => {
+    if (!currentUserId) return;
 
-    await Promise.all([
-      loadRequests(),
-      accept && loadFriends()
-    ]);
+    try {
+      await unfollowUser(friendId);
+      await loadFriends();
+    } catch (error) {
+      console.error("Error unfollowing user:", error);
+    }
   };
 
   return {
-    friends,
-    friendRequests,
+    friends,          // Usuarios que siguen mutuamente (amigos)
+    following,        // Usuarios que el usuario actual sigue
+    followers,        // Usuarios que siguen al usuario actual
     suggestions,
     loading,
-    sendFriendRequest,
-    respondToFriendRequest
+    followUser,       // Seguir a un usuario
+    unfollowUser: unfollowUserAction,  // Dejar de seguir a un usuario
   };
 }

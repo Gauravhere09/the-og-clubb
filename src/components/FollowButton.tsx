@@ -1,9 +1,10 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Heart } from "lucide-react";
+import { Heart, UserCheck, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { checkFriendship, sendFriendRequest, unfollowUser } from "@/lib/api/friends";
 
 interface FollowButtonProps {
   targetUserId: string;
@@ -11,17 +12,17 @@ interface FollowButtonProps {
 }
 
 export function FollowButton({ targetUserId, size = "default" }: FollowButtonProps) {
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [relationship, setRelationship] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Verificar si el usuario ya está siguiendo al perfil
+  // Check the relationship between users
   useEffect(() => {
-    const checkFollowStatus = async () => {
+    const checkRelationshipStatus = async () => {
       setIsLoading(true);
       try {
-        // Obtener usuario actual
+        // Get current user
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
           setIsLoading(false);
@@ -30,34 +31,23 @@ export function FollowButton({ targetUserId, size = "default" }: FollowButtonPro
         
         setCurrentUserId(user.id);
         
-        // No comprobar si se está siguiendo a sí mismo
+        // Don't check relationship with self
         if (user.id === targetUserId) {
           setIsLoading(false);
           return;
         }
 
-        // Comprobar si ya sigue al usuario (usando la tabla friendships)
-        const { data, error } = await supabase
-          .from('friendships')
-          .select()
-          .eq('user_id', user.id)
-          .eq('friend_id', targetUserId)
-          .eq('status', 'accepted')
-          .single();
-
-        if (error && error.code !== 'PGRST116') { // PGRST116 es "no se encontró ningún dato"
-          console.error('Error al verificar estado de seguimiento:', error);
-        }
-        
-        setIsFollowing(!!data);
+        // Check relationship with target user
+        const status = await checkFriendship(targetUserId);
+        setRelationship(status);
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Error checking relationship:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkFollowStatus();
+    checkRelationshipStatus();
   }, [targetUserId]);
 
   const handleFollowToggle = async () => {
@@ -70,7 +60,7 @@ export function FollowButton({ targetUserId, size = "default" }: FollowButtonPro
       return;
     }
 
-    // No permitir seguirse a sí mismo
+    // Don't allow following yourself
     if (currentUserId === targetUserId) {
       toast({
         title: "Error",
@@ -83,41 +73,33 @@ export function FollowButton({ targetUserId, size = "default" }: FollowButtonPro
     setIsLoading(true);
 
     try {
-      if (isFollowing) {
-        // Dejar de seguir: eliminar registro
-        const { error } = await supabase
-          .from('friendships')
-          .delete()
-          .eq('user_id', currentUserId)
-          .eq('friend_id', targetUserId);
-
-        if (error) throw error;
-
-        setIsFollowing(false);
+      if (relationship === 'following' || relationship === 'friends') {
+        // If already following, unfollow
+        await unfollowUser(targetUserId);
+        
+        // Update relationship status
+        const newStatus = relationship === 'friends' ? 'follower' : null;
+        setRelationship(newStatus);
+        
         toast({
           title: "Éxito",
           description: "Has dejado de seguir a este usuario"
         });
       } else {
-        // Seguir: crear registro
-        const { error } = await supabase
-          .from('friendships')
-          .insert({
-            user_id: currentUserId,
-            friend_id: targetUserId,
-            status: 'accepted'
-          });
-
-        if (error) throw error;
-
-        setIsFollowing(true);
+        // If not following, follow
+        await sendFriendRequest(targetUserId);
+        
+        // Update relationship status
+        const newStatus = relationship === 'follower' ? 'friends' : 'following';
+        setRelationship(newStatus);
+        
         toast({
           title: "Éxito",
           description: "Ahora estás siguiendo a este usuario"
         });
       }
     } catch (error) {
-      console.error('Error al cambiar estado de seguimiento:', error);
+      console.error('Error toggling follow status:', error);
       toast({
         title: "Error",
         description: "No se pudo completar la operación",
@@ -129,7 +111,22 @@ export function FollowButton({ targetUserId, size = "default" }: FollowButtonPro
   };
 
   if (currentUserId === targetUserId) {
-    return null; // No mostrar botón en el propio perfil
+    return null; // Don't show button on own profile
+  }
+
+  // Determine the button text and icon based on relationship
+  let buttonText = "Seguir";
+  let buttonIcon = <UserPlus className="h-5 w-5 mr-2" />;
+  let isFollowing = false;
+
+  if (relationship === 'friends') {
+    buttonText = "Amigos";
+    buttonIcon = <UserCheck className="h-5 w-5 mr-2" />;
+    isFollowing = true;
+  } else if (relationship === 'following') {
+    buttonText = "Siguiendo";
+    buttonIcon = <Heart fill="currentColor" className="h-5 w-5 mr-2" />;
+    isFollowing = true;
   }
 
   return (
@@ -139,11 +136,8 @@ export function FollowButton({ targetUserId, size = "default" }: FollowButtonPro
       onClick={handleFollowToggle}
       disabled={isLoading}
     >
-      <Heart
-        fill={isFollowing ? "currentColor" : "none"}
-        className="h-5 w-5 mr-2"
-      />
-      {isFollowing ? "Siguiendo" : "Seguir"}
+      {buttonIcon}
+      {buttonText}
     </Button>
   );
 }
