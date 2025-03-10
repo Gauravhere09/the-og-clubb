@@ -25,22 +25,18 @@ export function ReactionButton({ userReaction, onReactionClick, postId }: Reacti
 
   const handleReactionClick = async (type: ReactionType) => {
     if (isSubmitting) return;
+    
     try {
       setIsSubmitting(true);
       
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Debes iniciar sesión para reaccionar");
 
-      // Solo actualizamos UI si no estamos aplicando la misma reacción de nuevo
-      if (userReaction !== type) {
-        onReactionClick(type);
-      } else {
-        // Si es la misma reacción, la quitamos en la UI
-        onReactionClick(type);
-      }
-      
+      // We'll handle the UI update AFTER the database operation is complete
+      // to prevent double counting
+
       if (userReaction === type) {
-        // Si el usuario hace clic en su reacción actual, la eliminamos
+        // If the user clicks on their current reaction, remove it
         const { error } = await supabase
           .from('reactions')
           .delete()
@@ -48,15 +44,18 @@ export function ReactionButton({ userReaction, onReactionClick, postId }: Reacti
           .eq('user_id', user.id);
 
         if (error) throw error;
+        
+        // Only update UI after successful database operation
+        onReactionClick(type);
       } else {
-        // Si es una reacción diferente o nueva, primero eliminamos cualquier reacción existente
+        // First delete any existing reaction
         await supabase
           .from('reactions')
           .delete()
           .eq('post_id', postId)
           .eq('user_id', user.id);
 
-        // Luego insertamos la nueva reacción
+        // Then insert the new reaction
         const { error } = await supabase
           .from('reactions')
           .insert({
@@ -66,18 +65,17 @@ export function ReactionButton({ userReaction, onReactionClick, postId }: Reacti
           });
 
         if (error) throw error;
+        
+        // Only update UI after successful database operation
+        onReactionClick(type);
       }
       
-      // Invalidate the posts and reactions queries
+      // Invalidate the posts and reactions queries to refresh data
       await queryClient.invalidateQueries({ queryKey: ["posts"] });
       await queryClient.invalidateQueries({ queryKey: ["post-reactions", postId] });
       
     } catch (error) {
       console.error('Error al gestionar la reacción:', error);
-      // Revertimos el estado UI si hubo un error
-      if (userReaction) {
-        onReactionClick(userReaction);
-      }
       
       toast({
         variant: "destructive",

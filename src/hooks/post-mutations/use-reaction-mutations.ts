@@ -14,6 +14,7 @@ export function useReactionMutations(postId: string) {
 
   const { mutate: handleReaction } = useMutation({
     mutationFn: async (type: ReactionType) => {
+      // Prevent multiple simultaneous reactions
       if (mutationInProgressRef.current) return;
       mutationInProgressRef.current = true;
       
@@ -32,30 +33,25 @@ export function useReactionMutations(postId: string) {
 
         if (fetchError) throw fetchError;
 
+        // Handling reactions without updating UI prematurely
         if (existingReactions && existingReactions.length > 0) {
           if (existingReactions[0].reaction_type === type) {
+            // Remove reaction if clicking the same one
             const { error } = await supabase
               .from("reactions")
               .delete()
               .eq("id", existingReactions[0].id);
             if (error) throw error;
           } else {
+            // Replace with new reaction
             const { error } = await supabase
               .from("reactions")
-              .delete()
+              .update({ reaction_type: type })
               .eq("id", existingReactions[0].id);
             if (error) throw error;
-
-            const { error: insertError } = await supabase
-              .from("reactions")
-              .insert({
-                user_id: currentSession.user.id,
-                post_id: postId,
-                reaction_type: type
-              });
-            if (insertError) throw insertError;
           }
         } else {
+          // Create new reaction
           const { error } = await supabase
             .from("reactions")
             .insert({
@@ -66,7 +62,9 @@ export function useReactionMutations(postId: string) {
           if (error) throw error;
         }
         
+        // Only invalidate queries after DB operation is complete
         await queryClient.invalidateQueries({ queryKey: ["posts"] });
+        return type;
       } finally {
         mutationInProgressRef.current = false;
       }
@@ -126,13 +124,13 @@ export function useReactionMutations(postId: string) {
         if (error) throw error;
       }
 
+      // Invalidate after successful operation
+      await queryClient.invalidateQueries({ queryKey: ["comments", postId] });
+
       toast({
         title: "Reacción actualizada",
         description: "Tu reacción ha sido registrada",
       });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["comments", postId] });
     },
     onError: (error) => {
       toast({
