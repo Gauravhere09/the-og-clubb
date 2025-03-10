@@ -46,7 +46,8 @@ export function PollDisplay({ postId, poll, onVote, disabled = false }: PollDisp
 
   const getPercentage = (votes: number) => {
     if (poll.total_votes === 0) return 0;
-    return Math.round((votes / poll.total_votes) * 100);
+    // Ensure we get a whole number percentage and avoid returning 0% when there are votes
+    return Math.max(1, Math.round((votes / poll.total_votes) * 100));
   };
 
   const loadVotes = async () => {
