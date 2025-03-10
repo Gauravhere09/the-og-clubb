@@ -1,8 +1,9 @@
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { X, Download, ZoomIn, ZoomOut, RotateCw } from "lucide-react";
+import { X, Download, ZoomIn, ZoomOut, RotateCw, Share2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface FullScreenImageProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface FullScreenImageProps {
 export function FullScreenImage({ isOpen, onClose, imageUrl, altText = "Imagen" }: FullScreenImageProps) {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
+  const { toast } = useToast();
 
   const handleZoomIn = () => {
     setZoom((prev) => Math.min(prev + 0.25, 3));
@@ -34,6 +36,30 @@ export function FullScreenImage({ isOpen, onClose, imageUrl, altText = "Imagen" 
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: altText,
+          url: imageUrl,
+        });
+        toast({
+          title: "Compartido",
+          description: "La imagen ha sido compartida exitosamente",
+        });
+      } catch (error) {
+        console.error("Error sharing:", error);
+      }
+    } else {
+      // Fallback for browsers that don't support the Web Share API
+      navigator.clipboard.writeText(imageUrl);
+      toast({
+        title: "URL Copiada",
+        description: "La URL de la imagen ha sido copiada al portapapeles",
+      });
+    }
   };
 
   return (
@@ -67,6 +93,14 @@ export function FullScreenImage({ isOpen, onClose, imageUrl, altText = "Imagen" 
             </Button>
           </div>
           <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={handleShare}
+              className="text-foreground hover:bg-accent hover:text-accent-foreground"
+            >
+              <Share2 className="h-5 w-5" />
+            </Button>
             <Button 
               variant="ghost" 
               size="icon" 
