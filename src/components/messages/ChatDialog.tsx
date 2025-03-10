@@ -29,7 +29,7 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
         friend_id: targetUser.id,
         friend_username: targetUser.username,
         friend_avatar_url: targetUser.avatar_url,
-        status: 'accepted'
+        status: 'friends'
       };
       loadMessages(currentUserId, friend);
     }
@@ -60,7 +60,7 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
       friend_id: targetUser.id,
       friend_username: targetUser.username,
       friend_avatar_url: targetUser.avatar_url,
-      status: 'accepted'
+      status: 'friends'
     };
 
     const success = await sendMessage(newMessage, currentUserId, friend);

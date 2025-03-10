@@ -4,7 +4,6 @@ import { Navigation } from "@/components/Navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useFriends } from "@/hooks/use-friends";
-import { FriendRequestsList } from "@/components/friends/FriendRequestsList";
 import { FriendSuggestionsList } from "@/components/friends/FriendSuggestionsList";
 import { AllFriendsList } from "@/components/friends/AllFriendsList";
 import { Card } from "@/components/ui/card";
@@ -24,7 +23,7 @@ interface SentRequest {
 export default function Friends() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [sentRequests, setSentRequests] = useState<SentRequest[]>([]);
-  const { friends, friendRequests, suggestions, loading, sendFriendRequest, respondToFriendRequest } = useFriends(currentUserId);
+  const { friends, following, followers, suggestions, loading, followUser, unfollowUser } = useFriends(currentUserId);
 
   useEffect(() => {
     const getCurrentUser = async () => {
@@ -90,32 +89,85 @@ export default function Friends() {
     <div className="min-h-screen flex bg-muted/30">
       <Navigation />
       <main className="flex-1 max-w-4xl mx-auto p-6">
-        <Tabs defaultValue="requests" className="space-y-4">
+        <Tabs defaultValue="suggestions" className="space-y-4">
           <TabsList>
-            <TabsTrigger value="requests">
-              Solicitudes
-              {friendRequests.length > 0 && (
-                <span className="ml-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
-                  {friendRequests.length}
-                </span>
-              )}
-            </TabsTrigger>
+            <TabsTrigger value="following">Siguiendo</TabsTrigger>
+            <TabsTrigger value="followers">Seguidores</TabsTrigger>
             <TabsTrigger value="suggestions">Sugerencias</TabsTrigger>
-            <TabsTrigger value="all">Todos los amigos</TabsTrigger>
+            <TabsTrigger value="all">Amigos</TabsTrigger>
             <TabsTrigger value="sent">Enviadas</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="requests">
-            <FriendRequestsList 
-              requests={friendRequests}
-              onRespond={respondToFriendRequest}
-            />
+          <TabsContent value="following">
+            <Card className="p-6">
+              <h2 className="text-2xl font-bold mb-6">Usuarios que sigues</h2>
+              {following.length === 0 ? (
+                <p className="text-center text-muted-foreground">
+                  No sigues a ningún usuario todavía
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {following.map((user) => (
+                    <div key={user.friend_id} className="flex items-center justify-between p-4 rounded-lg border">
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={user.friend_avatar_url || undefined} />
+                          <AvatarFallback>
+                            {user.friend_username?.[0]?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="font-medium">{user.friend_username}</div>
+                      </div>
+                      <Button 
+                        variant="outline"
+                        onClick={() => unfollowUser(user.friend_id)}
+                      >
+                        Dejar de seguir
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="followers">
+            <Card className="p-6">
+              <h2 className="text-2xl font-bold mb-6">Usuarios que te siguen</h2>
+              {followers.length === 0 ? (
+                <p className="text-center text-muted-foreground">
+                  Nadie te sigue todavía
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {followers.map((user) => (
+                    <div key={user.friend_id} className="flex items-center justify-between p-4 rounded-lg border">
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={user.friend_avatar_url || undefined} />
+                          <AvatarFallback>
+                            {user.friend_username?.[0]?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="font-medium">{user.friend_username}</div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        onClick={() => followUser(user.friend_id)}
+                      >
+                        Seguir de vuelta
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
           </TabsContent>
 
           <TabsContent value="suggestions">
             <FriendSuggestionsList 
               suggestions={suggestions}
-              onSendRequest={sendFriendRequest}
+              onSendRequest={followUser}
             />
           </TabsContent>
 
