@@ -2,8 +2,10 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { X } from "lucide-react";
+import { Heart, MessageCircle, Send, Smile, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 interface StoryViewProps {
   storyId: string;
@@ -13,6 +15,11 @@ interface StoryViewProps {
 export function StoryView({ storyId, onClose }: StoryViewProps) {
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+  const [comment, setComment] = useState("");
+  const [isLiked, setIsLiked] = useState(false);
+  const [comments, setComments] = useState<{id: string, username: string, text: string}[]>([]);
+  const { toast } = useToast();
   
   // En una implementación real, aquí obtendríamos los datos de la historia
   // a partir de su ID. Por ahora, usamos datos de ejemplo.
@@ -62,6 +69,34 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
     
     return () => clearInterval(timer);
   }, [isPaused, onClose]);
+
+  const handleSendComment = () => {
+    if (!comment.trim()) return;
+    
+    // En una implementación real, aquí enviaríamos el comentario a la base de datos
+    setComments([...comments, {
+      id: Date.now().toString(),
+      username: "Tú",
+      text: comment
+    }]);
+    setComment("");
+    
+    toast({
+      title: "Comentario enviado",
+      description: "Tu comentario ha sido enviado con éxito",
+    });
+  };
+
+  const toggleLike = () => {
+    setIsLiked(!isLiked);
+    
+    toast({
+      title: isLiked ? "Me gusta eliminado" : "Historia gustada",
+      description: isLiked 
+        ? "Se ha eliminado tu reacción" 
+        : "Has indicado que te gusta esta historia",
+    });
+  };
   
   return (
     <Dialog open={true} onOpenChange={() => onClose()}>
@@ -104,15 +139,94 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
         
         {/* Contenido de la historia */}
         <div 
-          className="flex-1 bg-black flex items-center justify-center"
-          onClick={() => setIsPaused(!isPaused)}
+          className="flex-1 bg-black flex items-center justify-center relative"
+          onClick={() => {
+            if (!showComments) {
+              setIsPaused(!isPaused);
+            }
+          }}
         >
           <img 
             src={storyData.imageUrl} 
             alt="Story" 
             className="max-h-full max-w-full object-contain" 
           />
+
+          {/* Barra de reacciones */}
+          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4 px-4">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="bg-background/20 text-white hover:bg-background/40"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleLike();
+              }}
+            >
+              <Heart className={`h-5 w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="bg-background/20 text-white hover:bg-background/40"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowComments(!showComments);
+                setIsPaused(true);
+              }}
+            >
+              <MessageCircle className="h-5 w-5" />
+            </Button>
+          </div>
         </div>
+
+        {/* Panel de comentarios */}
+        {showComments && (
+          <div className="absolute bottom-0 left-0 right-0 bg-background rounded-t-lg p-4 h-1/3 flex flex-col" 
+               onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="font-semibold">Comentarios</h3>
+              <Button variant="ghost" size="sm" onClick={() => {
+                setShowComments(false);
+                setIsPaused(false);
+              }}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto mb-3 space-y-2">
+              {comments.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No hay comentarios aún. Sé el primero en comentar.
+                </p>
+              ) : (
+                comments.map((comment) => (
+                  <div key={comment.id} className="flex gap-2">
+                    <span className="font-semibold text-sm">{comment.username}:</span>
+                    <span className="text-sm">{comment.text}</span>
+                  </div>
+                ))
+              )}
+            </div>
+            
+            <div className="flex gap-2">
+              <Input
+                placeholder="Añade un comentario..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="flex-1"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSendComment();
+                  }
+                }}
+              />
+              <Button size="icon" onClick={handleSendComment}>
+                <Send className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

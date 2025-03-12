@@ -23,6 +23,15 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
   // Aquí normalmente cargaríamos las historias reales de los amigos
   // Por ahora usamos datos de ejemplo
   const exampleStories = [
+    // Tu propia historia
+    { 
+      id: "0", 
+      userId: currentUserId, 
+      username: "Tu", 
+      avatarUrl: null, 
+      hasUnseenStories: false 
+    },
+    // Historias de amigos
     { 
       id: "1", 
       userId: "friend1", 
@@ -79,7 +88,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
                   </div>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  Tu historia
+                  Crear historia
                 </span>
               </div>
             </TooltipTrigger>
@@ -92,6 +101,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         <StoriesList 
           stories={exampleStories} 
           onStoryClick={(storyId) => setViewingStory(storyId)}
+          currentUserId={currentUserId}
         />
       </div>
     </div>

@@ -12,9 +12,10 @@ interface Story {
 interface StoriesListProps {
   stories: Story[];
   onStoryClick: (storyId: string) => void;
+  currentUserId?: string; // Añadimos esta prop para identificar al usuario actual
 }
 
-export function StoriesList({ stories, onStoryClick }: StoriesListProps) {
+export function StoriesList({ stories, onStoryClick, currentUserId }: StoriesListProps) {
   return (
     <>
       {stories.map((story) => (
@@ -28,13 +29,13 @@ export function StoriesList({ stories, onStoryClick }: StoriesListProps) {
               story.hasUnseenStories 
                 ? "border-2 border-primary p-[2px]" 
                 : "border-2 border-muted p-[2px]"
-            }`}>
+            } ${story.userId === currentUserId ? "ring-2 ring-primary" : ""}`}>
               <AvatarImage src={story.avatarUrl || undefined} />
               <AvatarFallback>{story.username[0]}</AvatarFallback>
             </Avatar>
           </div>
           <span className="text-xs text-muted-foreground">
-            {story.username}
+            {story.userId === currentUserId ? "Tu historia" : story.username}
           </span>
         </div>
       ))}
