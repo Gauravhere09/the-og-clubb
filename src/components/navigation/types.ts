@@ -7,5 +7,6 @@ export interface NavigationLink {
   icon: LucideIcon;
   label: string;
   badge?: number | null;
+  badgeVariant?: "default" | "secondary" | "destructive" | "outline";
   onClick?: () => void;
 }

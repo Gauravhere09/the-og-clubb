@@ -24,7 +24,7 @@ export function NavigationItem({ link, isActive }: { link: NavigationLink; isAct
       <Icon strokeWidth={1.5} className="w-6 h-6" />
       {link.badge && (
         <Badge 
-          variant="destructive" 
+          variant={link.badgeVariant || "destructive"} 
           className="absolute -top-1 -right-1 min-w-[20px] h-5 flex items-center justify-center text-xs px-2 py-0"
         >
           {link.badge}
