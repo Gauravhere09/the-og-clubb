@@ -8,8 +8,10 @@ import {
   getFriends,
   getFollowers,
   getPendingFriendRequests,
+  getSentFriendRequests,
   acceptFriendRequest,
   rejectFriendRequest,
+  cancelFriendRequest,
   getFriendSuggestions
 } from "@/lib/api/friends";
 import { useToast } from "@/hooks/use-toast";
@@ -46,6 +48,7 @@ export function useFriends(currentUserId: string | null) {
   const [following, setFollowing] = useState<Friend[]>([]);
   const [followers, setFollowers] = useState<Friend[]>([]);
   const [pendingRequests, setPendingRequests] = useState<FriendRequest[]>([]);
+  const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
   const [suggestions, setSuggestions] = useState<FriendSuggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -93,6 +96,9 @@ export function useFriends(currentUserId: string | null) {
     try {
       const requests = await getPendingFriendRequests();
       setPendingRequests(requests);
+      
+      const sent = await getSentFriendRequests();
+      setSentRequests(sent);
     } catch (error) {
       console.error("Error loading friend requests:", error);
     }
@@ -150,7 +156,7 @@ export function useFriends(currentUserId: string | null) {
         title: "Solicitud enviada",
         description: "Has enviado una solicitud de amistad"
       });
-      await loadFriends();
+      await loadFriendRequests();
       await loadSuggestions();
     } catch (error) {
       console.error("Error following user:", error);
@@ -212,6 +218,27 @@ export function useFriends(currentUserId: string | null) {
     }
   };
 
+  const cancelSentRequest = async (requestId: string) => {
+    try {
+      await cancelFriendRequest(requestId);
+      toast({
+        title: "Solicitud cancelada",
+        description: "Has cancelado la solicitud de amistad"
+      });
+      
+      // Actualizamos los datos
+      await loadFriendRequests();
+      await loadSuggestions();
+    } catch (error) {
+      console.error("Error canceling friend request:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo cancelar la solicitud",
+        variant: "destructive"
+      });
+    }
+  };
+
   const dismissSuggestion = async (userId: string) => {
     setSuggestions(prev => prev.filter(s => s.id !== userId));
   };
@@ -221,11 +248,13 @@ export function useFriends(currentUserId: string | null) {
     following,       // Usuarios que el usuario actual sigue
     followers,       // Usuarios que siguen al usuario actual
     pendingRequests, // Solicitudes de amistad pendientes
+    sentRequests,    // Solicitudes de amistad enviadas
     suggestions,     // Sugerencias de amistad
     loading,
     followUser,      // Enviar solicitud de amistad
     unfollowUser: unfollowUserAction, // Dejar de seguir
     handleFriendRequest, // Aceptar/rechazar solicitud
+    cancelSentRequest, // Cancelar solicitud enviada
     dismissSuggestion, // Descartar sugerencia
   };
 }

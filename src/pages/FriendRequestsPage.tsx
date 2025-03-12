@@ -1,13 +1,12 @@
-
 import React, { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";  // Added Badge import
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "react-router-dom";
-import { UserPlus, User, Users, ChevronRight, UserCheck } from "lucide-react";
+import { UserPlus, User, Users, ChevronRight, UserCheck, Clock } from "lucide-react";
 import { useFriends } from "@/hooks/use-friends";
 import { supabase } from "@/integrations/supabase/client";
 import { FriendSuggestion } from "@/types/friends";
@@ -28,11 +27,14 @@ const FriendRequestsPage = () => {
   }, []);
 
   const {
+    friends,
     pendingRequests,
+    sentRequests,
     suggestions,
     loading,
     handleFriendRequest,
-    dismissSuggestion
+    dismissSuggestion,
+    cancelSentRequest
   } = useFriends(currentUserId);
 
   const handleAccept = async (requestId: string, senderId: string) => {
@@ -44,6 +46,12 @@ const FriendRequestsPage = () => {
   const handleReject = async (requestId: string, senderId: string) => {
     setLoadingStates(prev => ({ ...prev, [requestId]: true }));
     await handleFriendRequest(requestId, senderId, false);
+    setLoadingStates(prev => ({ ...prev, [requestId]: false }));
+  };
+
+  const handleCancelRequest = async (requestId: string) => {
+    setLoadingStates(prev => ({ ...prev, [requestId]: true }));
+    await cancelSentRequest(requestId);
     setLoadingStates(prev => ({ ...prev, [requestId]: false }));
   };
 
@@ -107,6 +115,119 @@ const FriendRequestsPage = () => {
                 Eliminar
               </Button>
             </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderSentRequests = () => {
+    if (loading) {
+      return (
+        <div className="p-4 text-center">
+          <p className="text-muted-foreground">Cargando solicitudes enviadas...</p>
+        </div>
+      );
+    }
+
+    if (!sentRequests.length) {
+      return (
+        <div className="p-8 text-center">
+          <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+            <Clock className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-medium">No hay solicitudes enviadas</h3>
+          <p className="text-muted-foreground mt-1">
+            Cuando envíes una solicitud de amistad, aparecerá aquí
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="divide-y">
+        {sentRequests.map(request => (
+          <div key={request.id} className="p-4 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Link to={`/profile/${request.friend_id}`}>
+                <Avatar className="h-14 w-14">
+                  <AvatarImage src={request.user.avatar_url || undefined} />
+                  <AvatarFallback>{request.user.username[0].toUpperCase()}</AvatarFallback>
+                </Avatar>
+              </Link>
+              <div>
+                <Link to={`/profile/${request.friend_id}`} className="font-medium hover:underline">
+                  {request.user.username}
+                </Link>
+                <p className="text-xs text-muted-foreground">
+                  Enviada el {new Date(request.created_at).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={() => handleCancelRequest(request.id)}
+              disabled={loadingStates[request.id]}
+              variant="outline"
+              size="sm"
+            >
+              Cancelar
+            </Button>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderAllFriends = () => {
+    if (loading) {
+      return (
+        <div className="p-4 text-center">
+          <p className="text-muted-foreground">Cargando amigos...</p>
+        </div>
+      );
+    }
+
+    if (!friends.length) {
+      return (
+        <div className="p-8 text-center">
+          <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+            <Users className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-medium">No tienes amigos todavía</h3>
+          <p className="text-muted-foreground mt-1">
+            Cuando aceptes solicitudes o te acepten, tus amigos aparecerán aquí
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="divide-y">
+        {friends.map(friend => (
+          <div key={friend.friend_id} className="p-4 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <Link to={`/profile/${friend.friend_id}`}>
+                <Avatar className="h-14 w-14">
+                  <AvatarImage src={friend.friend_avatar_url || undefined} />
+                  <AvatarFallback>{friend.friend_username[0].toUpperCase()}</AvatarFallback>
+                </Avatar>
+              </Link>
+              <div>
+                <Link to={`/profile/${friend.friend_id}`} className="font-medium hover:underline">
+                  {friend.friend_username}
+                </Link>
+                {friend.mutual_friends_count > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {friend.mutual_friends_count} amigos en común
+                  </p>
+                )}
+              </div>
+            </div>
+            <Link to={`/profile/${friend.friend_id}`}>
+              <Button variant="ghost" size="icon">
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
         ))}
       </div>
@@ -215,6 +336,17 @@ const FriendRequestsPage = () => {
                   <Badge className="ml-2" variant="secondary">{pendingRequests.length}</Badge>
                 )}
               </TabsTrigger>
+              <TabsTrigger value="sent" className="flex items-center">
+                <Clock className="mr-2 h-4 w-4" />
+                Enviadas
+                {sentRequests.length > 0 && (
+                  <Badge className="ml-2" variant="secondary">{sentRequests.length}</Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="friends" className="flex items-center">
+                <Users className="mr-2 h-4 w-4" />
+                Mis amigos
+              </TabsTrigger>
               <TabsTrigger value="suggestions" className="flex items-center">
                 <UserPlus className="mr-2 h-4 w-4" />
                 Sugerencias
@@ -224,6 +356,14 @@ const FriendRequestsPage = () => {
             <Card>
               <TabsContent value="requests" className="m-0">
                 {renderPendingRequests()}
+              </TabsContent>
+              
+              <TabsContent value="sent" className="m-0">
+                {renderSentRequests()}
+              </TabsContent>
+
+              <TabsContent value="friends" className="m-0">
+                {renderAllFriends()}
               </TabsContent>
               
               <TabsContent value="suggestions" className="m-0">

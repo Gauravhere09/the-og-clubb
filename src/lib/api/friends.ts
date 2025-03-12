@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 
 interface Friend {
@@ -113,6 +112,48 @@ export async function getPendingFriendRequests() {
     return requestsArray;
   } catch (error: any) {
     console.error('Error getting friend requests:', error);
+    throw error;
+  }
+}
+
+export async function getSentFriendRequests() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Usuario no autenticado");
+
+    // Obtenemos solicitudes pendientes enviadas por el usuario actual
+    const { data: sentRequests, error } = await supabase
+      .from('friendships')
+      .select(`
+        id,
+        friend:profiles!friendships_friend_id_fkey (
+          id,
+          username,
+          avatar_url
+        ),
+        created_at
+      `)
+      .eq('user_id', user.id)
+      .eq('status', 'pending');
+
+    if (error) throw error;
+
+    // Convertimos el resultado al formato FriendRequest
+    const requestsArray = (sentRequests || []).map(request => ({
+      id: request.id,
+      user_id: user.id,
+      friend_id: request.friend.id,
+      status: 'pending' as const,
+      created_at: request.created_at,
+      user: {
+        username: request.friend.username || '',
+        avatar_url: request.friend.avatar_url
+      }
+    }));
+
+    return requestsArray;
+  } catch (error: any) {
+    console.error('Error getting sent friend requests:', error);
     throw error;
   }
 }
@@ -248,6 +289,22 @@ export async function rejectFriendRequest(requestId: string) {
     return true;
   } catch (error: any) {
     console.error('Error rejecting friend request:', error);
+    throw error;
+  }
+}
+
+export async function cancelFriendRequest(requestId: string) {
+  try {
+    // Eliminamos la solicitud
+    const { error } = await supabase
+      .from('friendships')
+      .delete()
+      .eq('id', requestId);
+
+    if (error) throw error;
+    return true;
+  } catch (error: any) {
+    console.error('Error canceling friend request:', error);
     throw error;
   }
 }
