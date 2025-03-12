@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { StoryHeader } from "./StoryHeader";
 import { StoryContent } from "./StoryContent";
@@ -136,14 +137,20 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
   };
   
   return (
-    <Dialog open={true} onOpenChange={handleClose}>
+    <Dialog open={true} onOpenChange={() => handleClose()}>
       <DialogContent 
         className={cn(
           "p-0 max-w-md h-[80vh] max-h-[600px] flex flex-col",
           "animate-in fade-in-0 zoom-in-95 duration-300",
           isExiting && "animate-out fade-out-0 zoom-out-95 duration-300"
         )}
+        aria-describedby="story-dialog-description"
       >
+        <DialogTitle className="sr-only">Ver historia</DialogTitle>
+        <span id="story-dialog-description" className="sr-only">
+          Contenido de la historia de {storyData.user.username}
+        </span>
+        
         <StoryHeader 
           username={storyData.user.username}
           avatarUrl={storyData.user.avatarUrl}
