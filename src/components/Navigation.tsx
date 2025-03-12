@@ -78,7 +78,7 @@ export function Navigation() {
       icon: UserPlus,
       label: "Solicitudes",
       badge: pendingRequestsCount > 0 ? pendingRequestsCount : null,
-      badgeVariant: "primary"
+      badgeVariant: "secondary"  // Changed from "primary" to "secondary"
     },
     {
       to: "/popularity",
