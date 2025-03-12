@@ -1,8 +1,7 @@
-
 import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Camera, Image, X, Plus, Wand2, Pencil, MusicNote, UserPlus, Volume2, Cog, ChevronRight } from "lucide-react";
+import { Camera, Image, X, Plus, Wand2, Pencil, Music, UserPlus, Volume2, Cog, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useProfileImage } from "@/hooks/use-profile-image";
@@ -129,7 +128,7 @@ export function StoryCreator({ onClose, currentUserId }: StoryCreatorProps) {
         <Pencil className="h-6 w-6" />
       </Button>
       <Button variant="secondary" size="icon" className="rounded-full bg-gray-800 text-white">
-        <MusicNote className="h-6 w-6" />
+        <Music className="h-6 w-6" />
       </Button>
       <Button variant="secondary" size="icon" className="rounded-full bg-gray-800 text-white">
         <UserPlus className="h-6 w-6" />
