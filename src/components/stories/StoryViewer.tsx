@@ -1,6 +1,5 @@
-
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus } from "lucide-react";
+import { Eye, Upload } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -11,12 +10,6 @@ import { useState } from "react";
 import { StoryCreator } from "./StoryCreator";
 import { StoriesList } from "./StoriesList";
 import { StoryView } from "./StoryView";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Popover,
   PopoverContent,
@@ -31,10 +24,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
   const [showStoryCreator, setShowStoryCreator] = useState(false);
   const [viewingStory, setViewingStory] = useState<string | null>(null);
 
-  // Aquí normalmente cargaríamos las historias reales de los amigos
-  // Por ahora usamos datos de ejemplo
   const exampleStories = [
-    // Tu propia historia
     { 
       id: "0", 
       userId: currentUserId, 
@@ -42,7 +32,6 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
       avatarUrl: null, 
       hasUnseenStories: false 
     },
-    // Historias de amigos
     { 
       id: "1", 
       userId: "friend1", 
@@ -66,8 +55,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
     }
   ];
 
-  // Determinar si el usuario actual tiene una historia
-  const userHasStory = exampleStories.some(
+  const userStory = exampleStories.find(
     (story) => story.userId === currentUserId && story.id !== "0"
   );
 
@@ -93,34 +81,40 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
             <PopoverTrigger asChild>
               <div className="flex flex-col items-center space-y-1">
                 <div className="relative cursor-pointer group">
-                  <Avatar className="w-16 h-16 border-2 border-muted p-1">
+                  <Avatar className={`w-16 h-16 border-2 ${userStory ? 'border-primary' : 'border-muted'} p-1`}>
                     <AvatarFallback>TU</AvatarFallback>
                   </Avatar>
                   <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1 border-2 border-background">
-                    <Plus className="h-4 w-4 text-primary-foreground" />
+                    {userStory ? (
+                      <Eye className="h-4 w-4 text-primary-foreground" />
+                    ) : (
+                      <Upload className="h-4 w-4 text-primary-foreground" />
+                    )}
                   </div>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  Crear historia
+                  {userStory ? 'Tu historia' : 'Crear historia'}
                 </span>
               </div>
             </PopoverTrigger>
             <PopoverContent className="w-40 p-2">
               <div className="flex flex-col gap-1">
-                <button
-                  className="flex items-center gap-2 p-2 rounded-md hover:bg-accent text-sm"
-                  onClick={() => setShowStoryCreator(true)}
-                >
-                  <Plus className="h-4 w-4" />
-                  Subir historia
-                </button>
-                
-                {userHasStory && (
+                {!userStory && (
                   <button
                     className="flex items-center gap-2 p-2 rounded-md hover:bg-accent text-sm"
-                    onClick={() => setViewingStory("0")}
+                    onClick={() => setShowStoryCreator(true)}
                   >
-                    <span className="h-4 w-4 flex items-center justify-center">👁️</span>
+                    <Upload className="h-4 w-4" />
+                    Subir historia
+                  </button>
+                )}
+                
+                {userStory && (
+                  <button
+                    className="flex items-center gap-2 p-2 rounded-md hover:bg-accent text-sm"
+                    onClick={() => setViewingStory(userStory.id)}
+                  >
+                    <Eye className="h-4 w-4" />
                     Ver tu historia
                   </button>
                 )}
@@ -130,7 +124,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         </TooltipProvider>
 
         <StoriesList 
-          stories={exampleStories} 
+          stories={exampleStories.filter(story => story.userId !== currentUserId)} 
           onStoryClick={(storyId) => setViewingStory(storyId)}
           currentUserId={currentUserId}
         />
