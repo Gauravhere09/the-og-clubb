@@ -1,31 +1,36 @@
 
-import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface StoryActionsProps {
   isLiked: boolean;
   toggleLike: (e: React.MouseEvent) => void;
   toggleComments: (e: React.MouseEvent) => void;
+  className?: string;
 }
 
-export function StoryActions({ isLiked, toggleLike, toggleComments }: StoryActionsProps) {
+export function StoryActions({ isLiked, toggleLike, toggleComments, className }: StoryActionsProps) {
   return (
-    <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-4 px-4">
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="bg-background/20 text-white hover:bg-background/40"
+    <div className={cn("p-4 flex justify-center gap-4 bg-background/10 backdrop-blur-sm", className)}>
+      <Button
+        variant="ghost"
+        size="icon"
+        className={cn("text-white hover:text-white hover:bg-white/20", 
+          isLiked && "text-red-500 hover:text-red-500"
+        )}
         onClick={toggleLike}
       >
-        <Heart className={`h-5 w-5 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
+        <Heart className="h-6 w-6" />
       </Button>
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="bg-background/20 text-white hover:bg-background/40"
+      
+      <Button
+        variant="ghost"
+        size="icon"
+        className="text-white hover:text-white hover:bg-white/20"
         onClick={toggleComments}
       >
-        <MessageCircle className="h-5 w-5" />
+        <MessageCircle className="h-6 w-6" />
       </Button>
     </div>
   );

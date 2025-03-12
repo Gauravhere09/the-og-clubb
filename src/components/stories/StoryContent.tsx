@@ -1,6 +1,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface StoryContentProps {
   imageUrls: string[];
@@ -8,6 +9,7 @@ interface StoryContentProps {
   onContentClick: () => void;
   onNextImage: () => void;
   onPrevImage: () => void;
+  className?: string;
 }
 
 export function StoryContent({ 
@@ -15,11 +17,12 @@ export function StoryContent({
   currentImageIndex, 
   onContentClick, 
   onNextImage, 
-  onPrevImage 
+  onPrevImage,
+  className
 }: StoryContentProps) {
   return (
     <div 
-      className="flex-1 bg-black flex items-center justify-center relative"
+      className={cn("flex-1 bg-black flex items-center justify-center relative", className)}
       onClick={onContentClick}
     >
       <img 
