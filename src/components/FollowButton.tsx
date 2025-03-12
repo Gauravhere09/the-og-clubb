@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Heart, UserCheck, UserPlus } from "lucide-react";
+import { Heart, UserCheck, UserPlus, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { checkFriendship, sendFriendRequest, unfollowUser } from "@/lib/api/friends";
@@ -73,29 +73,27 @@ export function FollowButton({ targetUserId, size = "default" }: FollowButtonPro
     setIsLoading(true);
 
     try {
-      if (relationship === 'following' || relationship === 'friends') {
-        // If already following, unfollow
+      if (relationship === 'following' || relationship === 'friends' || relationship === 'pending') {
+        // Si ya estoy siguiendo o tengo solicitud pendiente, dejar de seguir
         await unfollowUser(targetUserId);
         
         // Update relationship status
-        const newStatus = relationship === 'friends' ? 'follower' : null;
-        setRelationship(newStatus);
+        setRelationship(relationship === 'friends' ? 'follower' : null);
         
         toast({
           title: "Éxito",
           description: "Has dejado de seguir a este usuario"
         });
       } else {
-        // If not following, follow
-        await sendFriendRequest(targetUserId);
+        // Si no estoy siguiendo, enviar solicitud
+        const result = await sendFriendRequest(targetUserId);
         
         // Update relationship status
-        const newStatus = relationship === 'follower' ? 'friends' : 'following';
-        setRelationship(newStatus);
+        setRelationship(result.status);
         
         toast({
-          title: "Éxito",
-          description: "Ahora estás siguiendo a este usuario"
+          title: "Solicitud enviada",
+          description: "Has enviado una solicitud de amistad"
         });
       }
     } catch (error) {
@@ -118,6 +116,7 @@ export function FollowButton({ targetUserId, size = "default" }: FollowButtonPro
   let buttonText = "Seguir";
   let buttonIcon = <UserPlus className="h-5 w-5" />;
   let isFollowing = false;
+  let isPending = false;
 
   if (relationship === 'friends') {
     buttonText = "Amigos";
@@ -127,6 +126,10 @@ export function FollowButton({ targetUserId, size = "default" }: FollowButtonPro
     buttonText = "Siguiendo";
     buttonIcon = <Heart fill="currentColor" className="h-5 w-5" />;
     isFollowing = true;
+  } else if (relationship === 'pending') {
+    buttonText = "Pendiente";
+    buttonIcon = <Clock className="h-5 w-5" />;
+    isPending = true;
   }
 
   // For "sm" size, we want to adjust the text and icon size
@@ -134,7 +137,7 @@ export function FollowButton({ targetUserId, size = "default" }: FollowButtonPro
   
   return (
     <Button
-      variant={isFollowing ? "default" : "outline"}
+      variant={isFollowing ? "default" : isPending ? "secondary" : "outline"}
       size={size}
       onClick={handleFollowToggle}
       disabled={isLoading}

@@ -6,14 +6,42 @@ export async function handleFriendRequest(notificationId: string, senderId: stri
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
 
-    await supabase
-      .from('friendships')
-      .upsert({
-        user_id: user.id,
-        friend_id: senderId,
-        status: accept ? 'accepted' : 'rejected'
-      });
+    if (accept) {
+      // Actualizamos la solicitud a 'accepted'
+      await supabase
+        .from('friendships')
+        .update({ status: 'accepted' })
+        .eq('user_id', senderId)
+        .eq('friend_id', user.id);
 
+      // Creamos la relación bidireccional
+      await supabase
+        .from('friendships')
+        .insert({
+          user_id: user.id,
+          friend_id: senderId,
+          status: 'accepted'
+        });
+
+      // Enviamos notificación al remitente
+      await supabase
+        .from('notifications')
+        .insert({
+          type: 'friend_accepted',
+          sender_id: user.id,
+          receiver_id: senderId,
+          read: false
+        });
+    } else {
+      // Rechazamos la solicitud eliminándola
+      await supabase
+        .from('friendships')
+        .delete()
+        .eq('user_id', senderId)
+        .eq('friend_id', user.id);
+    }
+
+    // Marcamos la notificación como leída
     await supabase
       .from('notifications')
       .update({ read: true })

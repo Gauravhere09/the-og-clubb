@@ -1,13 +1,18 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { checkMutualFollowing, unfollowUser, sendFriendRequest } from "@/lib/api/friends";
-
-interface ProfileData {
-  id: string;
-  username: string | null;
-  avatar_url: string | null;
-}
+import { 
+  checkFriendship, 
+  unfollowUser, 
+  sendFriendRequest, 
+  getFriends,
+  getFollowers,
+  getPendingFriendRequests,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  getFriendSuggestions
+} from "@/lib/api/friends";
+import { useToast } from "@/hooks/use-toast";
 
 export interface Friend {
   friend_id: string;
@@ -21,7 +26,7 @@ export interface FriendRequest {
   id: string;
   user_id: string;
   friend_id: string;
-  status: 'accepted';
+  status: 'accepted' | 'pending' | 'rejected';
   created_at: string;
   user: {
     username: string;
@@ -40,105 +45,99 @@ export function useFriends(currentUserId: string | null) {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [following, setFollowing] = useState<Friend[]>([]);
   const [followers, setFollowers] = useState<Friend[]>([]);
+  const [pendingRequests, setPendingRequests] = useState<FriendRequest[]>([]);
   const [suggestions, setSuggestions] = useState<FriendSuggestion[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   const loadFriends = async () => {
     if (!currentUserId) return;
 
-    // Get all users the current user is following
-    const { data: followingData, error: followingError } = await supabase
-      .from('friendships')
-      .select(`
-        *,
-        friend:profiles!friendships_friend_id_fkey (
-          id,
-          username,
-          avatar_url
-        )
-      `)
-      .eq('user_id', currentUserId)
-      .eq('status', 'accepted');
-
-    // Get all users who follow the current user
-    const { data: followersData, error: followersError } = await supabase
-      .from('friendships')
-      .select(`
-        *,
-        user:profiles!friendships_user_id_fkey (
-          id,
-          username,
-          avatar_url
-        )
-      `)
-      .eq('friend_id', currentUserId)
-      .eq('status', 'accepted');
-
-    if (!followingError && !followersError && followingData && followersData) {
-      const followingProfiles = followingData.map(f => ({
-        friend_id: f.friend.id,
-        friend_username: f.friend.username || '',
-        friend_avatar_url: f.friend.avatar_url,
-        status: 'following' as const
-      }));
+    try {
+      const friendsData = await getFriends();
+      const followersData = await getFollowers();
       
-      const followersProfiles = followersData.map(f => ({
-        friend_id: f.user.id,
-        friend_username: f.user.username || '',
-        friend_avatar_url: f.user.avatar_url,
-        status: 'follower' as const
-      }));
-      
-      setFollowing(followingProfiles);
-      setFollowers(followersProfiles);
-      
-      // Friends are users who mutually follow each other
-      const followingIds = new Set(followingProfiles.map(f => f.friend_id));
-      const mutualFriends = followersProfiles.filter(f => followingIds.has(f.friend_id))
+      // Identificamos amigos mutuos
+      const followerIds = new Set(followersData.map(f => f.friend_id));
+      const mutualFriends = friendsData.filter(f => followerIds.has(f.friend_id))
         .map(f => ({
           ...f,
           status: 'friends' as const
         }));
       
+      // Usuarios que sigo pero no me siguen
+      const onlyFollowing = friendsData.filter(f => !followerIds.has(f.friend_id))
+        .map(f => ({
+          ...f,
+          status: 'following' as const
+        }));
+      
+      // Usuarios que me siguen pero no sigo
+      const onlyFollowers = followersData.filter(f => !friendsData.some(fr => fr.friend_id === f.friend_id))
+        .map(f => ({
+          ...f,
+          status: 'follower' as const
+        }));
+      
       setFriends(mutualFriends);
+      setFollowing([...mutualFriends, ...onlyFollowing]);
+      setFollowers([...mutualFriends, ...onlyFollowers]);
+    } catch (error) {
+      console.error("Error loading friends:", error);
+    }
+  };
+
+  const loadFriendRequests = async () => {
+    if (!currentUserId) return;
+
+    try {
+      const requests = await getPendingFriendRequests();
+      setPendingRequests(requests);
+    } catch (error) {
+      console.error("Error loading friend requests:", error);
     }
   };
 
   const loadSuggestions = async () => {
     if (!currentUserId) return;
 
-    // Get some user profiles that are not already being followed
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('id, username, avatar_url')
-      .neq('id', currentUserId)
-      .limit(5);
-
-    if (!error && data) {
-      // Check which ones current user is not already following
-      const followingIds = new Set(following.map(f => f.friend_id));
-      
-      // Filter out users that are already being followed
-      const suggestions = data.filter(profile => !followingIds.has(profile.id))
-        .map(s => ({
-          id: s.id,
-          username: s.username || '',
-          avatar_url: s.avatar_url,
-          mutual_friends_count: 0 // We could calculate this later if needed
-        }));
-      
-      setSuggestions(suggestions);
+    try {
+      const suggestionsData = await getFriendSuggestions();
+      setSuggestions(suggestionsData);
+    } catch (error) {
+      console.error("Error loading suggestions:", error);
     }
   };
 
   useEffect(() => {
     if (currentUserId) {
+      setLoading(true);
       Promise.all([
         loadFriends(),
+        loadFriendRequests(),
+        loadSuggestions()
       ]).finally(() => {
-        loadSuggestions();
         setLoading(false);
       });
+
+      // Suscribirse a cambios en 'friendships'
+      const friendshipsChannel = supabase
+        .channel('friendship_changes')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'friendships',
+        }, () => {
+          // Recargamos los datos cuando hay cambios
+          loadFriends();
+          loadFriendRequests();
+          loadSuggestions();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(friendshipsChannel);
+      };
     }
   }, [currentUserId]);
 
@@ -147,10 +146,19 @@ export function useFriends(currentUserId: string | null) {
 
     try {
       await sendFriendRequest(friendId);
+      toast({
+        title: "Solicitud enviada",
+        description: "Has enviado una solicitud de amistad"
+      });
       await loadFriends();
       await loadSuggestions();
     } catch (error) {
       console.error("Error following user:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo enviar la solicitud",
+        variant: "destructive"
+      });
     }
   };
 
@@ -159,19 +167,65 @@ export function useFriends(currentUserId: string | null) {
 
     try {
       await unfollowUser(friendId);
+      toast({
+        title: "Dejaste de seguir",
+        description: "Has dejado de seguir a este usuario"
+      });
       await loadFriends();
     } catch (error) {
       console.error("Error unfollowing user:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo dejar de seguir al usuario",
+        variant: "destructive"
+      });
     }
   };
 
+  const handleFriendRequest = async (requestId: string, senderId: string, accept: boolean) => {
+    try {
+      if (accept) {
+        await acceptFriendRequest(requestId, senderId);
+        toast({
+          title: "Solicitud aceptada",
+          description: "Ahora son amigos"
+        });
+      } else {
+        await rejectFriendRequest(requestId);
+        toast({
+          title: "Solicitud rechazada",
+          description: "Has rechazado la solicitud de amistad"
+        });
+      }
+      
+      // Actualizamos los datos
+      await loadFriendRequests();
+      await loadFriends();
+      await loadSuggestions();
+    } catch (error) {
+      console.error("Error handling friend request:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo procesar la solicitud",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const dismissSuggestion = async (userId: string) => {
+    setSuggestions(prev => prev.filter(s => s.id !== userId));
+  };
+
   return {
-    friends,          // Usuarios que siguen mutuamente (amigos)
-    following,        // Usuarios que el usuario actual sigue
-    followers,        // Usuarios que siguen al usuario actual
-    suggestions,
+    friends,         // Usuarios que siguen mutuamente (amigos)
+    following,       // Usuarios que el usuario actual sigue
+    followers,       // Usuarios que siguen al usuario actual
+    pendingRequests, // Solicitudes de amistad pendientes
+    suggestions,     // Sugerencias de amistad
     loading,
-    followUser,       // Seguir a un usuario
-    unfollowUser: unfollowUserAction,  // Dejar de seguir a un usuario
+    followUser,      // Enviar solicitud de amistad
+    unfollowUser: unfollowUserAction, // Dejar de seguir
+    handleFriendRequest, // Aceptar/rechazar solicitud
+    dismissSuggestion, // Descartar sugerencia
   };
 }
