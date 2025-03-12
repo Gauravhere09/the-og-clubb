@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -30,14 +31,27 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
   const { data: storyData, isLoading } = useQuery({
     queryKey: ["story", storyId],
     queryFn: async () => {
+      // First get the story
       const { data: story, error: storyError } = await supabase
         .from('stories')
-        .select('id, image_url, created_at, user_id, profiles:user_id(username, avatar_url)')
+        .select('id, image_url, created_at, user_id')
         .eq('id', storyId)
         .single();
         
       if (storyError) throw storyError;
       
+      // Then get the user profile separately
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', story.user_id)
+        .single();
+        
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+      }
+      
+      // Record view if user is logged in
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await supabase
@@ -52,8 +66,8 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
         id: story.id,
         user: {
           id: story.user_id,
-          username: story.profiles?.username || "Usuario",
-          avatarUrl: story.profiles?.avatar_url
+          username: profile?.username || "Usuario",
+          avatarUrl: profile?.avatar_url
         },
         imageUrls: [story.image_url],
         createdAt: story.created_at

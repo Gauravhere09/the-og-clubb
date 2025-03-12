@@ -35,12 +35,12 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
       oneDayAgo.setDate(oneDayAgo.getDate() - 1);
       
       // Obtener todas las historias que no han expirado
-      const { data, error } = await supabase
+      const { data: storiesData, error } = await supabase
         .from('stories')
         .select(`
           id,
           user_id,
-          profiles(username, avatar_url)
+          created_at
         `)
         .gte('expires_at', oneDayAgo.toISOString())
         .order('created_at', { ascending: false });
@@ -49,6 +49,20 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         console.error("Error fetching stories:", error);
         return [];
       }
+      
+      // Get profiles for each user that has stories
+      const userIds = [...new Set(storiesData.map(story => story.user_id))];
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+        
+      if (profilesError) {
+        console.error("Error fetching profiles:", profilesError);
+        return [];
+      }
+      
+      const profilesMap = new Map(profiles.map(profile => [profile.id, profile]));
       
       // Obtener las vistas de historias para el usuario actual
       const { data: views, error: viewsError } = await supabase
@@ -72,15 +86,16 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         hasUnseenStories: boolean 
       }> = {};
       
-      data.forEach(story => {
+      storiesData.forEach(story => {
         const userId = story.user_id;
         const isViewed = viewedStoryIds.has(story.id);
+        const profile = profilesMap.get(userId);
         
         if (!userStories[userId]) {
           userStories[userId] = {
             userId,
-            username: story.profiles?.username || 'Usuario',
-            avatarUrl: story.profiles?.avatar_url,
+            username: profile?.username || 'Usuario',
+            avatarUrl: profile?.avatar_url,
             storyIds: [story.id],
             hasUnseenStories: !isViewed
           };

@@ -27,20 +27,22 @@ export function StoryReactionSummary({ storyId, className }: StoryReactionSummar
   const { data: reactionCounts = {}, isLoading } = useQuery({
     queryKey: ["story-reactions-count", storyId],
     queryFn: async () => {
+      // Get all reactions for this story
       const { data, error } = await supabase
-        .from('story_reactions')
-        .select('reaction_type, count')
-        .eq('story_id', storyId)
-        .group_by('reaction_type');
+        .from('reactions')
+        .select('reaction_type')
+        .eq('story_id', storyId);
 
       if (error) {
         console.error("Error fetching reaction counts:", error);
         return {};
       }
 
+      // Count occurrences of each reaction type
       const counts: Record<string, number> = {};
       data.forEach(item => {
-        counts[item.reaction_type] = parseInt(item.count);
+        const type = item.reaction_type;
+        counts[type] = (counts[type] || 0) + 1;
       });
       
       return counts;
@@ -53,7 +55,7 @@ export function StoryReactionSummary({ storyId, className }: StoryReactionSummar
     return null;
   }
   
-  // Obtener los tres tipos de reacciones más populares
+  // Get the three most popular reaction types
   const topReactions = Object.entries(reactionCounts)
     .sort(([, a], [, b]) => b - a)
     .slice(0, 3)

@@ -3,7 +3,7 @@ import { Heart, ThumbsUp, Smile, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 interface StoryReactionProps {
@@ -54,6 +54,26 @@ export function StoryReaction({ storyId, userId, showReactions, className }: Sto
   const [currentReaction, setCurrentReaction] = useState<StoryReactionType | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Fetch current user reaction on component mount
+  useEffect(() => {
+    async function fetchUserReaction() {
+      const { data, error } = await supabase
+        .from('reactions')
+        .select('reaction_type')
+        .eq('story_id', storyId)
+        .eq('user_id', userId)
+        .maybeSingle();
+        
+      if (!error && data) {
+        setCurrentReaction(data.reaction_type as StoryReactionType);
+      }
+    }
+    
+    if (userId && storyId) {
+      fetchUserReaction();
+    }
+  }, [storyId, userId]);
+
   const handleReaction = async (reactionType: StoryReactionType) => {
     if (isSubmitting) return;
     
@@ -63,7 +83,7 @@ export function StoryReaction({ storyId, userId, showReactions, className }: Sto
       if (currentReaction === reactionType) {
         // Si es la misma reacción, la eliminamos
         const { error } = await supabase
-          .from('story_reactions')
+          .from('reactions')
           .delete()
           .eq('story_id', storyId)
           .eq('user_id', userId);
@@ -79,7 +99,7 @@ export function StoryReaction({ storyId, userId, showReactions, className }: Sto
         // Si ya tiene una reacción, la actualizamos
         if (currentReaction) {
           const { error } = await supabase
-            .from('story_reactions')
+            .from('reactions')
             .update({ reaction_type: reactionType })
             .eq('story_id', storyId)
             .eq('user_id', userId);
@@ -88,7 +108,7 @@ export function StoryReaction({ storyId, userId, showReactions, className }: Sto
         } else {
           // Si no tiene reacción, insertamos una nueva
           const { error } = await supabase
-            .from('story_reactions')
+            .from('reactions')
             .insert({
               story_id: storyId,
               user_id: userId,
