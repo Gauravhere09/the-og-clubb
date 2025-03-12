@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Eye, Upload } from "lucide-react";
 import {
@@ -15,6 +16,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StoryViewerProps {
   currentUserId: string;
@@ -24,40 +27,98 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
   const [showStoryCreator, setShowStoryCreator] = useState(false);
   const [viewingStory, setViewingStory] = useState<string | null>(null);
 
-  const exampleStories = [
-    { 
-      id: "0", 
-      userId: currentUserId, 
-      username: "Tu", 
-      avatarUrl: null, 
-      hasUnseenStories: false 
+  // Obtener las historias de la base de datos
+  const { data: stories = [], isLoading } = useQuery({
+    queryKey: ["stories"],
+    queryFn: async () => {
+      const oneDayAgo = new Date();
+      oneDayAgo.setDate(oneDayAgo.getDate() - 1);
+      
+      // Obtener todas las historias que no han expirado
+      const { data, error } = await supabase
+        .from('stories')
+        .select(`
+          id,
+          user_id,
+          profiles(username, avatar_url)
+        `)
+        .gte('expires_at', oneDayAgo.toISOString())
+        .order('created_at', { ascending: false });
+        
+      if (error) {
+        console.error("Error fetching stories:", error);
+        return [];
+      }
+      
+      // Obtener las vistas de historias para el usuario actual
+      const { data: views, error: viewsError } = await supabase
+        .from('story_views')
+        .select('story_id')
+        .eq('viewer_id', currentUserId);
+        
+      if (viewsError) {
+        console.error("Error fetching story views:", viewsError);
+        return [];
+      }
+      
+      const viewedStoryIds = new Set(views.map(view => view.story_id));
+      
+      // Agrupar historias por usuario
+      const userStories: Record<string, { 
+        userId: string, 
+        username: string, 
+        avatarUrl: string | null,
+        storyIds: string[],
+        hasUnseenStories: boolean 
+      }> = {};
+      
+      data.forEach(story => {
+        const userId = story.user_id;
+        const isViewed = viewedStoryIds.has(story.id);
+        
+        if (!userStories[userId]) {
+          userStories[userId] = {
+            userId,
+            username: story.profiles?.username || 'Usuario',
+            avatarUrl: story.profiles?.avatar_url,
+            storyIds: [story.id],
+            hasUnseenStories: !isViewed
+          };
+        } else {
+          userStories[userId].storyIds.push(story.id);
+          if (!isViewed) {
+            userStories[userId].hasUnseenStories = true;
+          }
+        }
+      });
+      
+      // Convertir el objeto a un array para la UI
+      return Object.values(userStories).map(user => ({
+        id: user.storyIds[0], // Usamos el primer ID de historia como referencia
+        userId: user.userId,
+        username: user.username,
+        avatarUrl: user.avatarUrl,
+        hasUnseenStories: user.hasUnseenStories
+      }));
     },
-    { 
-      id: "1", 
-      userId: "friend1", 
-      username: "Carlos", 
-      avatarUrl: null, 
-      hasUnseenStories: true 
-    },
-    { 
-      id: "2", 
-      userId: "friend2", 
-      username: "Sofía", 
-      avatarUrl: null, 
-      hasUnseenStories: false 
-    },
-    { 
-      id: "3", 
-      userId: "friend3", 
-      username: "Diego", 
-      avatarUrl: null, 
-      hasUnseenStories: true 
-    }
-  ];
+    refetchInterval: 60000 // Refrescar cada minuto
+  });
 
-  const userStory = exampleStories.find(
-    (story) => story.userId === currentUserId && story.id !== "0"
-  );
+  // Verificar si el usuario actual tiene historias
+  const userStory = stories.find(story => story.userId === currentUserId);
+  
+  // Agregar placeholder para "Crear historia" si no hay datos aún
+  const allStories = isLoading
+    ? [
+        { 
+          id: "0", 
+          userId: currentUserId, 
+          username: "Tu", 
+          avatarUrl: null, 
+          hasUnseenStories: false 
+        }
+      ]
+    : stories;
 
   return (
     <div className="mb-6">
@@ -124,7 +185,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         </TooltipProvider>
 
         <StoriesList 
-          stories={exampleStories.filter(story => story.userId !== currentUserId)} 
+          stories={allStories.filter(story => story.userId !== currentUserId)} 
           onStoryClick={(storyId) => setViewingStory(storyId)}
           currentUserId={currentUserId}
         />

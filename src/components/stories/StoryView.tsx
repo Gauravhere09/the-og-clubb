@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
@@ -7,6 +6,10 @@ import { StoryContent } from "./StoryContent";
 import { StoryActions } from "./StoryActions";
 import { StoryComments } from "./StoryComments";
 import { cn } from "@/lib/utils";
+import { StoryReaction } from "./StoryReaction";
+import { StoryReactionSummary } from "./StoryReactionSummary";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StoryViewProps {
   storyId: string;
@@ -21,24 +24,63 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
   const [isExiting, setIsExiting] = useState(false);
   const [comments, setComments] = useState<{id: string, username: string, text: string}[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showReactions, setShowReactions] = useState(false);
   const { toast } = useToast();
   
-  const storyData = {
+  const { data: storyData, isLoading } = useQuery({
+    queryKey: ["story", storyId],
+    queryFn: async () => {
+      const { data: story, error: storyError } = await supabase
+        .from('stories')
+        .select('id, image_url, created_at, user_id, profiles:user_id(username, avatar_url)')
+        .eq('id', storyId)
+        .single();
+        
+      if (storyError) throw storyError;
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('story_views')
+          .upsert({
+            story_id: storyId,
+            viewer_id: user.id
+          }, { onConflict: 'story_id,viewer_id' });
+      }
+      
+      return {
+        id: story.id,
+        user: {
+          id: story.user_id,
+          username: story.profiles?.username || "Usuario",
+          avatarUrl: story.profiles?.avatar_url
+        },
+        imageUrls: [story.image_url],
+        createdAt: story.created_at
+      };
+    }
+  });
+  
+  const displayData = storyData || {
     id: storyId,
     user: {
-      id: `friend${storyId}`,
-      username: storyId === "1" ? "Carlos" : storyId === "2" ? "Sofía" : "Diego",
+      id: `user${storyId}`,
+      username: "Cargando...",
       avatarUrl: null
     },
-    imageUrls: [
-      `https://picsum.photos/seed/${storyId}/800/1200`,
-      `https://picsum.photos/seed/${storyId}1/800/1200`,
-      `https://picsum.photos/seed/${storyId}2/800/1200`,
-    ].slice(0, storyId === "1" ? 3 : storyId === "2" ? 2 : 1),
+    imageUrls: ["https://via.placeholder.com/800x1200?text=Cargando..."],
     createdAt: new Date().toISOString()
   };
   
-  const timeAgo = new Date().getTime() - new Date(storyData.createdAt).getTime();
+  const { data: currentUser } = useQuery({
+    queryKey: ["current-user"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      return user;
+    }
+  });
+  
+  const timeAgo = new Date().getTime() - new Date(displayData.createdAt).getTime();
   const hoursAgo = Math.floor(timeAgo / (1000 * 60 * 60));
   const minutesAgo = Math.floor((timeAgo % (1000 * 60 * 60)) / (1000 * 60));
   
@@ -70,7 +112,7 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
         if (newProgress >= 100) {
           clearInterval(timer);
           
-          if (currentImageIndex < storyData.imageUrls.length - 1) {
+          if (currentImageIndex < displayData.imageUrls.length - 1) {
             setCurrentImageIndex(prev => prev + 1);
             return 0;
           } else {
@@ -85,7 +127,7 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
     }, interval);
     
     return () => clearInterval(timer);
-  }, [isPaused, onClose, currentImageIndex, storyData.imageUrls.length]);
+  }, [isPaused, onClose, currentImageIndex, displayData.imageUrls.length]);
 
   const handleSendComment = (commentText: string) => {
     setComments([...comments, {
@@ -118,14 +160,20 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
     setIsPaused(true);
   };
 
+  const toggleReactions = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowReactions(!showReactions);
+    setIsPaused(true);
+  };
+
   const handleContentClick = () => {
-    if (!showComments) {
+    if (!showComments && !showReactions) {
       setIsPaused(!isPaused);
     }
   };
   
   const handleNextImage = () => {
-    if (currentImageIndex < storyData.imageUrls.length - 1) {
+    if (currentImageIndex < displayData.imageUrls.length - 1) {
       setCurrentImageIndex(prev => prev + 1);
     }
   };
@@ -148,21 +196,21 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
       >
         <DialogTitle className="sr-only">Ver historia</DialogTitle>
         <span id="story-dialog-description" className="sr-only">
-          Contenido de la historia de {storyData.user.username}
+          Contenido de la historia de {displayData.user.username}
         </span>
         
         <StoryHeader 
-          username={storyData.user.username}
-          avatarUrl={storyData.user.avatarUrl}
+          username={displayData.user.username}
+          avatarUrl={displayData.user.avatarUrl}
           timeDisplay={timeDisplay}
           progress={progress}
           currentImageIndex={currentImageIndex}
-          totalImages={storyData.imageUrls.length}
+          totalImages={displayData.imageUrls.length}
           onClose={handleClose}
         />
         
         <StoryContent 
-          imageUrls={storyData.imageUrls}
+          imageUrls={displayData.imageUrls}
           currentImageIndex={currentImageIndex}
           onContentClick={handleContentClick}
           onNextImage={handleNextImage}
@@ -173,10 +221,24 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
           )}
         />
 
+        <div className="absolute bottom-20 left-4 z-10">
+          <StoryReactionSummary storyId={storyId} />
+        </div>
+
+        {currentUser && (
+          <StoryReaction 
+            storyId={storyId}
+            userId={currentUser.id}
+            showReactions={showReactions}
+            className="absolute bottom-16 left-0 right-0 px-4 py-2 bg-background/30 backdrop-blur-sm"
+          />
+        )}
+
         <StoryActions 
           isLiked={isLiked}
           toggleLike={toggleLike}
           toggleComments={toggleComments}
+          toggleReactions={toggleReactions}
           className={cn(
             "animate-in slide-in-from-bottom duration-300",
             isExiting && "animate-out slide-out-to-bottom duration-300"
