@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, X } from "lucide-react";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface Comment {
   id: string;
@@ -14,9 +15,10 @@ interface StoryCommentsProps {
   comments: Comment[];
   onSendComment: (comment: string) => void;
   onClose: () => void;
+  className?: string;
 }
 
-export function StoryComments({ comments, onSendComment, onClose }: StoryCommentsProps) {
+export function StoryComments({ comments, onSendComment, onClose, className }: StoryCommentsProps) {
   const [comment, setComment] = useState("");
 
   const handleSend = () => {
@@ -26,8 +28,10 @@ export function StoryComments({ comments, onSendComment, onClose }: StoryComment
   };
 
   return (
-    <div className="absolute bottom-0 left-0 right-0 bg-background rounded-t-lg p-4 h-1/3 flex flex-col" 
-         onClick={(e) => e.stopPropagation()}>
+    <div 
+      className={cn("absolute bottom-0 left-0 right-0 bg-background rounded-t-lg p-4 h-1/3 flex flex-col", className)} 
+      onClick={(e) => e.stopPropagation()}
+    >
       <div className="flex justify-between items-center mb-3">
         <h3 className="font-semibold">Comentarios</h3>
         <Button variant="ghost" size="sm" onClick={onClose}>
