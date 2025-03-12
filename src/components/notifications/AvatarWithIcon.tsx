@@ -1,11 +1,12 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationIcon } from "./NotificationIcon";
+import { NotificationType } from "@/types/notifications";
 
 interface AvatarWithIconProps {
   avatarUrl: string | null;
   username: string;
-  notificationType: string;
+  notificationType: NotificationType;
   compact?: boolean;
 }
 

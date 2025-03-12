@@ -1,9 +1,10 @@
 
 import { NotificationIcon } from "./NotificationIcon";
 import { NotificationMenu } from "./NotificationMenu";
+import { NotificationType } from "@/types/notifications";
 
 interface NotificationReadIndicatorProps {
-  type: string;
+  type: NotificationType;
   isRead: boolean;
   onMarkAsRead?: () => void;
   compact?: boolean;
