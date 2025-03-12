@@ -18,6 +18,7 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
   const [showComments, setShowComments] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [comments, setComments] = useState<{id: string, username: string, text: string}[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { toast } = useToast();
   
   // En una implementación real, aquí obtendríamos los datos de la historia
@@ -29,7 +30,12 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
       username: storyId === "1" ? "Carlos" : storyId === "2" ? "Sofía" : "Diego",
       avatarUrl: null
     },
-    imageUrl: "https://picsum.photos/seed/" + storyId + "/800/1200",
+    // Simulamos múltiples imágenes
+    imageUrls: [
+      `https://picsum.photos/seed/${storyId}/800/1200`,
+      `https://picsum.photos/seed/${storyId}1/800/1200`,
+      `https://picsum.photos/seed/${storyId}2/800/1200`,
+    ].slice(0, storyId === "1" ? 3 : storyId === "2" ? 2 : 1), // Diferente número de imágenes por historia
     createdAt: new Date().toISOString()
   };
   
@@ -42,11 +48,16 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
     ? `Hace ${hoursAgo}h ${minutesAgo}m` 
     : `Hace ${minutesAgo}m`;
 
+  // Reset progress when changing images
+  useEffect(() => {
+    setProgress(0);
+  }, [currentImageIndex]);
+
   // Gestionar la barra de progreso
   useEffect(() => {
     if (isPaused) return;
 
-    const duration = 5000; // 5 segundos por historia
+    const duration = 5000; // 5 segundos por imagen
     const interval = 100; // actualizar cada 100ms
     const increment = (interval / duration) * 100;
     
@@ -55,19 +66,25 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
         const newProgress = prev + increment;
         if (newProgress >= 100) {
           clearInterval(timer);
-          // En una implementación real, aquí pasaríamos a la siguiente historia
-          // o cerraríamos el visor si es la última
-          setTimeout(() => {
-            onClose();
-          }, 300);
-          return 100;
+          
+          // Si hay más imágenes, pasar a la siguiente
+          if (currentImageIndex < storyData.imageUrls.length - 1) {
+            setCurrentImageIndex(prev => prev + 1);
+            return 0; // Reiniciar progreso para la siguiente imagen
+          } else {
+            // Si es la última imagen, cerrar el visor después de un momento
+            setTimeout(() => {
+              onClose();
+            }, 300);
+            return 100;
+          }
         }
         return newProgress;
       });
     }, interval);
     
     return () => clearInterval(timer);
-  }, [isPaused, onClose]);
+  }, [isPaused, onClose, currentImageIndex, storyData.imageUrls.length]);
 
   const handleSendComment = (commentText: string) => {
     // En una implementación real, aquí enviaríamos el comentario a la base de datos
@@ -107,6 +124,18 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
     }
   };
   
+  const handleNextImage = () => {
+    if (currentImageIndex < storyData.imageUrls.length - 1) {
+      setCurrentImageIndex(prev => prev + 1);
+    }
+  };
+  
+  const handlePrevImage = () => {
+    if (currentImageIndex > 0) {
+      setCurrentImageIndex(prev => prev - 1);
+    }
+  };
+  
   return (
     <Dialog open={true} onOpenChange={() => onClose()}>
       <DialogContent className="p-0 max-w-md h-[80vh] max-h-[600px] flex flex-col">
@@ -115,12 +144,17 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
           avatarUrl={storyData.user.avatarUrl}
           timeDisplay={timeDisplay}
           progress={progress}
+          currentImageIndex={currentImageIndex}
+          totalImages={storyData.imageUrls.length}
           onClose={onClose}
         />
         
         <StoryContent 
-          imageUrl={storyData.imageUrl} 
+          imageUrls={storyData.imageUrls}
+          currentImageIndex={currentImageIndex}
           onContentClick={handleContentClick}
+          onNextImage={handleNextImage}
+          onPrevImage={handlePrevImage}
         />
 
         <StoryActions 
