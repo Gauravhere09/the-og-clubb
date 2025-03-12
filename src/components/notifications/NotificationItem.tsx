@@ -1,13 +1,12 @@
 
 import { useNavigate } from "react-router-dom";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { NotificationIcon } from "./NotificationIcon";
 import { NotificationType } from "@/types/notifications";
 import { formatDate } from "./utils/date-formatter";
 import { NotificationContent } from "./NotificationContent";
 import { NotificationPreview } from "./NotificationPreview";
 import { CompactFriendActions } from "./CompactFriendActions";
-import { NotificationMenu } from "./NotificationMenu";
+import { AvatarWithIcon } from "./AvatarWithIcon";
+import { NotificationReadIndicator } from "./NotificationReadIndicator";
 
 interface NotificationItemProps {
   notification: {
@@ -43,14 +42,14 @@ export const NotificationItem = ({
 }: NotificationItemProps) => {
   const navigate = useNavigate();
 
-  // Función para obtener el nombre a mostrar (nombre completo o username)
+  // Get the name to display (full name or username)
   const getSenderDisplayName = () => {
     return notification.sender.full_name || notification.sender.username;
   };
 
   const handleClick = () => {
     if (notification.type === 'friend_request') {
-      return; // No navegar en solicitudes de amistad
+      return; // No navigation for friend requests
     }
     
     if (onClick) {
@@ -76,15 +75,12 @@ export const NotificationItem = ({
       }`}
       onClick={isClickable ? handleClick : undefined}
     >
-      <div className="relative">
-        <Avatar className={compact ? "h-10 w-10" : ""}>
-          <AvatarImage src={notification.sender.avatar_url || undefined} />
-          <AvatarFallback>{notification.sender.username[0]}</AvatarFallback>
-        </Avatar>
-        <div className="absolute -bottom-1 -right-1 rounded-full bg-blue-500 p-1 border-2 border-background">
-          <NotificationIcon type={notification.type} />
-        </div>
-      </div>
+      <AvatarWithIcon
+        avatarUrl={notification.sender.avatar_url}
+        username={notification.sender.username}
+        notificationType={notification.type}
+        compact={compact}
+      />
       
       <div className={`flex-1 ${compact ? 'pr-8' : ''}`}>
         <div className={compact ? 'text-sm' : ''}>
@@ -102,7 +98,7 @@ export const NotificationItem = ({
           {formattedDate}
         </p>
         
-        {/* Mostrar vista previa de la publicación o comentario */}
+        {/* Preview of post or comment */}
         {!compact && notification.type !== 'friend_request' && (
           <NotificationPreview
             type={notification.type}
@@ -112,6 +108,7 @@ export const NotificationItem = ({
           />
         )}
         
+        {/* Compact friend request actions */}
         {compact && notification.type === 'friend_request' && onHandleFriendRequest && (
           <CompactFriendActions
             notificationId={notification.id}
@@ -121,31 +118,13 @@ export const NotificationItem = ({
         )}
       </div>
       
-      {!compact && (
-        <div className="flex items-center gap-1">
-          <NotificationIcon type={notification.type} />
-          {!notification.read && (
-            <span className="h-2 w-2 rounded-full bg-primary ml-1"></span>
-          )}
-          {onMarkAsRead && (
-            <NotificationMenu
-              isRead={notification.read}
-              onMarkAsRead={onMarkAsRead}
-              compact={false}
-            />
-          )}
-        </div>
-      )}
-      
-      {compact && onMarkAsRead && (
-        <div className="absolute right-2 top-3">
-          <NotificationMenu
-            isRead={notification.read}
-            onMarkAsRead={onMarkAsRead}
-            compact={true}
-          />
-        </div>
-      )}
+      {/* Read indicator and menu */}
+      <NotificationReadIndicator
+        type={notification.type}
+        isRead={notification.read}
+        onMarkAsRead={onMarkAsRead}
+        compact={compact}
+      />
     </div>
   );
 };
