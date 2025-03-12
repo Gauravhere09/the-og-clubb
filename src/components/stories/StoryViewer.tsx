@@ -11,6 +11,17 @@ import { useState } from "react";
 import { StoryCreator } from "./StoryCreator";
 import { StoriesList } from "./StoriesList";
 import { StoryView } from "./StoryView";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface StoryViewerProps {
   currentUserId: string;
@@ -55,6 +66,11 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
     }
   ];
 
+  // Determinar si el usuario actual tiene una historia
+  const userHasStory = exampleStories.some(
+    (story) => story.userId === currentUserId && story.id !== "0"
+  );
+
   return (
     <div className="mb-6">
       {showStoryCreator && (
@@ -73,13 +89,10 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
       
       <div className="flex w-max space-x-4 p-4 overflow-x-auto">
         <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger>
+          <Popover>
+            <PopoverTrigger asChild>
               <div className="flex flex-col items-center space-y-1">
-                <div 
-                  className="relative cursor-pointer group"
-                  onClick={() => setShowStoryCreator(true)}
-                >
+                <div className="relative cursor-pointer group">
                   <Avatar className="w-16 h-16 border-2 border-muted p-1">
                     <AvatarFallback>TU</AvatarFallback>
                   </Avatar>
@@ -91,11 +104,29 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
                   Crear historia
                 </span>
               </div>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Crear nueva historia</p>
-            </TooltipContent>
-          </Tooltip>
+            </PopoverTrigger>
+            <PopoverContent className="w-40 p-2">
+              <div className="flex flex-col gap-1">
+                <button
+                  className="flex items-center gap-2 p-2 rounded-md hover:bg-accent text-sm"
+                  onClick={() => setShowStoryCreator(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Subir historia
+                </button>
+                
+                {userHasStory && (
+                  <button
+                    className="flex items-center gap-2 p-2 rounded-md hover:bg-accent text-sm"
+                    onClick={() => setViewingStory("0")}
+                  >
+                    <span className="h-4 w-4 flex items-center justify-center">👁️</span>
+                    Ver tu historia
+                  </button>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
         </TooltipProvider>
 
         <StoriesList 
