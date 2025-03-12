@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useCallback, memo } from "react";
 import { cn } from "@/lib/utils";
 import { type Comment } from "@/hooks/use-story-comments";
 
@@ -16,11 +16,11 @@ interface StoryCommentsProps {
 export function StoryComments({ comments, onSendComment, onClose, className }: StoryCommentsProps) {
   const [comment, setComment] = useState("");
 
-  const handleSend = () => {
+  const handleSend = useCallback(() => {
     if (!comment.trim()) return;
     onSendComment(comment);
     setComment("");
-  };
+  }, [comment, onSendComment]);
 
   return (
     <div 
@@ -38,7 +38,7 @@ export function StoryComments({ comments, onSendComment, onClose, className }: S
   );
 }
 
-function CommentsHeader({ onClose }: { onClose: () => void }) {
+const CommentsHeader = memo(({ onClose }: { onClose: () => void }) => {
   return (
     <div className="flex justify-between items-center mb-3">
       <h3 className="font-semibold">Comentarios</h3>
@@ -47,9 +47,10 @@ function CommentsHeader({ onClose }: { onClose: () => void }) {
       </Button>
     </div>
   );
-}
+});
+CommentsHeader.displayName = "CommentsHeader";
 
-function CommentsList({ comments }: { comments: Comment[] }) {
+const CommentsList = memo(({ comments }: { comments: Comment[] }) => {
   return (
     <div className="flex-1 overflow-y-auto mb-3 space-y-2">
       {comments.length === 0 ? (
@@ -58,25 +59,36 @@ function CommentsList({ comments }: { comments: Comment[] }) {
         </p>
       ) : (
         comments.map((comment) => (
-          <div key={comment.id} className="flex gap-2">
-            <span className="font-semibold text-sm">{comment.username}:</span>
-            <span className="text-sm">{comment.text}</span>
-          </div>
+          <CommentItem key={comment.id} comment={comment} />
         ))
       )}
     </div>
   );
-}
+});
+CommentsList.displayName = "CommentsList";
 
-function CommentInput({ 
-  comment, 
-  setComment, 
-  handleSend 
-}: { 
+const CommentItem = memo(({ comment }: { comment: Comment }) => {
+  return (
+    <div className="flex gap-2">
+      <span className="font-semibold text-sm">{comment.username}:</span>
+      <span className="text-sm">{comment.text}</span>
+      {comment.timestamp && (
+        <span className="text-xs text-muted-foreground ml-auto">
+          {new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </span>
+      )}
+    </div>
+  );
+});
+CommentItem.displayName = "CommentItem";
+
+interface CommentInputProps {
   comment: string;
   setComment: (value: string) => void;
   handleSend: () => void;
-}) {
+}
+
+const CommentInput = memo(({ comment, setComment, handleSend }: CommentInputProps) => {
   return (
     <div className="flex gap-2">
       <Input
@@ -95,4 +107,5 @@ function CommentInput({
       </Button>
     </div>
   );
-}
+});
+CommentInput.displayName = "CommentInput";

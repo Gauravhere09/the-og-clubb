@@ -28,24 +28,24 @@ export function StoryReaction({ storyId, userId, showReactions, className }: Sto
   const handleReaction = async (reaction: Reaction) => {
     try {
       const { data: existingReaction } = await supabase
-        .from('reactions')
+        .from('story_reactions')
         .select()
         .eq('user_id', userId)
-        .eq('post_id', storyId)
+        .eq('story_id', storyId)
         .single();
 
       if (existingReaction) {
         await supabase
-          .from('reactions')
+          .from('story_reactions')
           .update({ reaction_type: reaction })
           .eq('user_id', userId)
-          .eq('post_id', storyId);
+          .eq('story_id', storyId);
       } else {
         await supabase
-          .from('reactions')
+          .from('story_reactions')
           .insert([{ 
             user_id: userId, 
-            post_id: storyId, 
+            story_id: storyId, 
             reaction_type: reaction 
           }]);
       }

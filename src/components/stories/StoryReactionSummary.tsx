@@ -12,9 +12,9 @@ export function StoryReactionSummary({ storyId }: StoryReactionSummaryProps) {
     queryKey: ["story-reactions", storyId],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('reactions')
+        .from('story_reactions')
         .select('reaction_type, user_id')
-        .eq('post_id', storyId);
+        .eq('story_id', storyId);
         
       if (error) {
         console.error("Error fetching reactions:", error);
