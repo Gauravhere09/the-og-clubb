@@ -1,10 +1,9 @@
 
-import { Heart, ThumbsUp, Smile, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
+import { useState } from 'react';
+import { Button } from '../ui/button';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { Heart, ThumbsUp, Star, PartyPopper } from 'lucide-react';
 
 interface StoryReactionProps {
   storyId: string;
@@ -13,155 +12,72 @@ interface StoryReactionProps {
   className?: string;
 }
 
-export type StoryReactionType = "like" | "love" | "haha" | "wow";
-
-interface Reaction {
-  type: StoryReactionType;
-  icon: React.ReactNode;
-  color: string;
-  label: string;
-}
-
-const reactionTypes: Record<StoryReactionType, Reaction> = {
-  like: {
-    type: "like",
-    icon: <ThumbsUp className="h-4 w-4" />,
-    color: "text-blue-500",
-    label: "Me gusta"
-  },
-  love: {
-    type: "love",
-    icon: <Heart className="h-4 w-4" />,
-    color: "text-red-500",
-    label: "Me encanta"
-  },
-  haha: {
-    type: "haha",
-    icon: <Smile className="h-4 w-4" />,
-    color: "text-yellow-500",
-    label: "Me divierte"
-  },
-  wow: {
-    type: "wow",
-    icon: <Star className="h-4 w-4" />,
-    color: "text-purple-500",
-    label: "Me asombra"
-  }
-};
+type Reaction = 'heart' | 'like' | 'star' | 'party';
 
 export function StoryReaction({ storyId, userId, showReactions, className }: StoryReactionProps) {
+  const [selectedReaction, setSelectedReaction] = useState<Reaction | null>(null);
   const { toast } = useToast();
-  const [currentReaction, setCurrentReaction] = useState<StoryReactionType | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch current user reaction on component mount
-  useEffect(() => {
-    async function fetchUserReaction() {
-      const { data, error } = await supabase
-        .from('reactions')
-        .select('reaction_type')
-        .eq('story_id', storyId)
-        .eq('user_id', userId)
-        .maybeSingle();
-        
-      if (!error && data) {
-        setCurrentReaction(data.reaction_type as StoryReactionType);
-      }
-    }
-    
-    if (userId && storyId) {
-      fetchUserReaction();
-    }
-  }, [storyId, userId]);
+  const reactionIcons = {
+    heart: <Heart className="h-6 w-6" />,
+    like: <ThumbsUp className="h-6 w-6" />,
+    star: <Star className="h-6 w-6" />,
+    party: <PartyPopper className="h-6 w-6" />
+  };
 
-  const handleReaction = async (reactionType: StoryReactionType) => {
-    if (isSubmitting) return;
-    
+  const handleReaction = async (reaction: Reaction) => {
     try {
-      setIsSubmitting(true);
-      
-      if (currentReaction === reactionType) {
-        // Si es la misma reacción, la eliminamos
-        const { error } = await supabase
+      const { data: existingReaction } = await supabase
+        .from('reactions')
+        .select()
+        .eq('user_id', userId)
+        .eq('story_id', storyId)
+        .single();
+
+      if (existingReaction) {
+        await supabase
           .from('reactions')
-          .delete()
-          .eq('story_id', storyId)
-          .eq('user_id', userId);
-          
-        if (error) throw error;
-        
-        setCurrentReaction(null);
-        toast({
-          title: "Reacción eliminada",
-          description: "Has quitado tu reacción de esta historia",
-        });
+          .update({ type: reaction })
+          .eq('user_id', userId)
+          .eq('story_id', storyId);
       } else {
-        // Si ya tiene una reacción, la actualizamos
-        if (currentReaction) {
-          const { error } = await supabase
-            .from('reactions')
-            .update({ reaction_type: reactionType })
-            .eq('story_id', storyId)
-            .eq('user_id', userId);
-            
-          if (error) throw error;
-        } else {
-          // Si no tiene reacción, insertamos una nueva
-          const { error } = await supabase
-            .from('reactions')
-            .insert({
-              story_id: storyId,
-              user_id: userId,
-              reaction_type: reactionType
-            });
-            
-          if (error) throw error;
-        }
-        
-        setCurrentReaction(reactionType);
-        toast({
-          title: "Reacción enviada",
-          description: `Has reaccionado con "${reactionTypes[reactionType].label}" a esta historia`,
-        });
+        await supabase
+          .from('reactions')
+          .insert([{ user_id: userId, story_id: storyId, type: reaction }]);
       }
+
+      setSelectedReaction(reaction);
+      toast({
+        title: "Reacción enviada",
+        description: "Tu reacción ha sido guardada",
+      });
     } catch (error) {
-      console.error('Error al gestionar la reacción:', error);
+      console.error('Error al enviar reacción:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo procesar tu reacción",
+        description: "No se pudo enviar tu reacción",
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
-  
-  if (!showReactions) {
-    return null;
-  }
-  
+
+  if (!showReactions) return null;
+
   return (
-    <div className={cn("flex justify-center gap-2 py-2", className)}>
-      {Object.entries(reactionTypes).map(([type, reaction]) => (
-        <Button
-          key={type}
-          variant="ghost"
-          size="sm"
-          className={cn(
-            "rounded-full hover:bg-accent/50",
-            currentReaction === type && reaction.color
-          )}
-          onClick={() => handleReaction(type as StoryReactionType)}
-          disabled={isSubmitting}
-        >
-          <span className={cn(
-            "flex items-center gap-1",
-            currentReaction === type && reaction.color
-          )}>
-            {reaction.icon}
-          </span>
-        </Button>
-      ))}
+    <div className={className}>
+      <div className="flex justify-center space-x-4">
+        {(Object.entries(reactionIcons) as [Reaction, JSX.Element][]).map(([type, icon]) => (
+          <Button
+            key={type}
+            variant="ghost"
+            size="sm"
+            className={`hover:bg-primary/20 ${selectedReaction === type ? 'text-primary' : ''}`}
+            onClick={() => handleReaction(type)}
+          >
+            {icon}
+          </Button>
+        ))}
+      </div>
     </div>
   );
 }
