@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useStory } from "@/hooks/use-story";
 import { StoryProgress } from "./StoryProgress";
-import { useStoryComments } from "./StoryCommentsProvider";
+import { useStoryComments } from "@/hooks/use-story-comments";
 
 interface StoryViewProps {
   storyId: string;

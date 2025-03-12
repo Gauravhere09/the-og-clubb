@@ -12,7 +12,7 @@ interface StoryReactionProps {
   className?: string;
 }
 
-type Reaction = 'heart' | 'like' | 'star' | 'party';
+export type Reaction = 'heart' | 'like' | 'star' | 'party';
 
 export function StoryReaction({ storyId, userId, showReactions, className }: StoryReactionProps) {
   const [selectedReaction, setSelectedReaction] = useState<Reaction | null>(null);
@@ -31,19 +31,23 @@ export function StoryReaction({ storyId, userId, showReactions, className }: Sto
         .from('reactions')
         .select()
         .eq('user_id', userId)
-        .eq('story_id', storyId)
+        .eq('post_id', storyId)
         .single();
 
       if (existingReaction) {
         await supabase
           .from('reactions')
-          .update({ type: reaction })
+          .update({ reaction_type: reaction })
           .eq('user_id', userId)
-          .eq('story_id', storyId);
+          .eq('post_id', storyId);
       } else {
         await supabase
           .from('reactions')
-          .insert([{ user_id: userId, story_id: storyId, type: reaction }]);
+          .insert([{ 
+            user_id: userId, 
+            post_id: storyId, 
+            reaction_type: reaction 
+          }]);
       }
 
       setSelectedReaction(reaction);
