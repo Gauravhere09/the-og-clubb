@@ -12,9 +12,9 @@ const NotFound = () => {
       location.pathname
     );
     
-    // Redirect to auth page after logging the error
+    // Redirect to home page after logging the error
     const timer = setTimeout(() => {
-      navigate("/auth");
+      navigate("/");
     }, 2000);
     
     return () => clearTimeout(timer);
@@ -24,13 +24,13 @@ const NotFound = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-4">404</h1>
-        <p className="text-xl text-gray-600 mb-4">Oops! Page not found</p>
-        <p className="text-gray-600 mb-4">Redirecting to login page...</p>
+        <p className="text-xl text-gray-600 mb-4">¡Ups! Página no encontrada</p>
+        <p className="text-gray-600 mb-4">Redirigiendo a la página de inicio...</p>
         <button 
-          onClick={() => navigate("/auth")} 
+          onClick={() => navigate("/")} 
           className="text-blue-500 hover:text-blue-700 underline"
         >
-          Go to Login
+          Ir a Inicio
         </button>
       </div>
     </div>

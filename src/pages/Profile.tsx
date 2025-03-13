@@ -1,6 +1,6 @@
 
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfileImage } from "@/hooks/use-profile-image";
 import { ProfileLayout } from "@/components/profile/ProfileLayout";
@@ -27,7 +27,8 @@ export type Profile = {
 };
 
 export default function Profile() {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -48,7 +49,11 @@ export default function Profile() {
         const { data: { user } } = await supabase.auth.getUser();
         setCurrentUserId(user?.id || null);
 
-        if (!id) {
+        // Si no hay ID en la URL, usar el ID del usuario actual
+        const profileId = id || user?.id;
+        
+        if (!profileId) {
+          console.error('No profile ID provided and no user logged in');
           setError(true);
           return;
         }
@@ -57,7 +62,7 @@ export default function Profile() {
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', id)
+          .eq('id', profileId)
           .single();
 
         if (profileError || !profileData) {
@@ -72,7 +77,7 @@ export default function Profile() {
         const { count: followersCount, error: followersError } = await supabase
           .from('friendships')
           .select('*', { count: 'exact', head: true })
-          .eq('friend_id', id)
+          .eq('friend_id', profileId)
           .eq('status', 'accepted');
 
         if (followersError) {
@@ -106,7 +111,7 @@ export default function Profile() {
     };
 
     loadProfile();
-  }, [id]);
+  }, [id, navigate]);
 
   const onImageUpload = async (type: 'avatar' | 'cover', e: React.ChangeEvent<HTMLInputElement>): Promise<string> => {
     try {

@@ -1,3 +1,4 @@
+
 import {
   BrowserRouter,
   Routes,
@@ -20,8 +21,6 @@ import FriendRequestsPage from "./pages/FriendRequestsPage";
 const queryClient = new QueryClient();
 
 function App() {
-  const isAuthPage = window.location.pathname === "/auth";
-
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -30,7 +29,8 @@ function App() {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
-            <Route path="/profile/:userId" element={<Profile />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:id" element={<Profile />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/popularity" element={<Popularity />} />
             <Route path="/moderation" element={<Moderation />} />
