@@ -8,9 +8,7 @@ export function NavigationItem({ link, isActive }: { link: NavigationLink; isAct
 
   const handleClick = (e: React.MouseEvent) => {
     if (link.onClick) {
-      if (link.preventDefaultNavigation) {
-        e.preventDefault();
-      }
+      e.preventDefault();
       link.onClick();
     }
   };

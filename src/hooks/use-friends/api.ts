@@ -81,59 +81,41 @@ export async function getFriendsData(userId: string) {
 }
 
 export async function getFriendSuggestions(userId: string): Promise<FriendSuggestion[]> {
-  try {
-    // Primero obtenemos el perfil del usuario para comparar
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('career, semester')
-      .eq('id', userId)
-      .maybeSingle();
+  // First get the user's profile to compare with
+  const { data: userProfile } = await supabase
+    .from('profiles')
+    .select('career, semester')
+    .eq('id', userId)
+    .single();
 
-    // Obtenemos IDs de amigos existentes para excluirlos
-    const { data: existingFriends } = await supabase
-      .from('friendships')
-      .select('friend_id')
-      .eq('user_id', userId);
+  const { data: suggestions, error: suggestionsError } = await supabase
+    .from('profiles')
+    .select('id, username, avatar_url, career, semester')
+    .neq('id', userId)
+    .limit(5);
 
-    const excludeIds = [
-      userId,
-      ...(existingFriends || []).map(f => f.friend_id)
-    ].filter(Boolean);
+  if (suggestionsError) throw suggestionsError;
 
-    // Obtenemos sugerencias
-    const { data: suggestions, error: suggestionsError } = await supabase
-      .from('profiles')
-      .select('id, username, avatar_url, career, semester')
-      .not('id', 'in', excludeIds.length > 1 ? `(${excludeIds.join(',')})` : `(${userId})`)
-      .limit(10);
-
-    if (suggestionsError) throw suggestionsError;
-
-    // Procesamos las sugerencias con coincidencias
-    return (suggestions || []).map(s => {
-      // Comprobamos coincidencias
-      const careerMatch = userProfile?.career && s.career && 
-                         userProfile.career === s.career;
-      const semesterMatch = userProfile?.semester && s.semester && 
-                            userProfile.semester === s.semester;
-      
-      // Calculamos puntuación de relevancia
-      const relevanceScore = (careerMatch ? 2 : 0) + (semesterMatch ? 1 : 0);
-      
-      return {
-        id: s.id,
-        username: s.username || '',
-        avatar_url: s.avatar_url,
-        career: s.career,
-        semester: s.semester,
-        careerMatch,
-        semesterMatch,
-        relevanceScore,
-        mutual_friends_count: Math.floor(Math.random() * 3) // Placeholder para demostración
-      };
-    }).sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
-  } catch (error) {
-    console.error('Error obteniendo sugerencias de amigos:', error);
-    return [];
-  }
+  return (suggestions || []).map(s => {
+    // Check for career and semester matches
+    const careerMatch = userProfile?.career && s.career && 
+                       userProfile.career === s.career;
+    const semesterMatch = userProfile?.semester && s.semester && 
+                          userProfile.semester === s.semester;
+    
+    // Calculate relevance score (2 points for career match, 1 for semester)
+    const relevanceScore = (careerMatch ? 2 : 0) + (semesterMatch ? 1 : 0);
+    
+    return {
+      id: s.id,
+      username: s.username || '',
+      avatar_url: s.avatar_url,
+      career: s.career,
+      semester: s.semester,
+      careerMatch,
+      semesterMatch,
+      relevanceScore,
+      mutual_friends_count: Math.floor(Math.random() * 3) // Placeholder for demo
+    };
+  }).sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
 }
