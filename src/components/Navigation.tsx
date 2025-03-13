@@ -1,9 +1,7 @@
-
 import { Home, MessageCircle, User, Heart, UserPlus } from "lucide-react";
 import { Logo } from "./navigation/Logo";
 import { NavigationItem } from "./navigation/NavigationItem";
 import { useNavigation } from "./navigation/use-navigation";
-import { useFriends } from "@/hooks/use-friends";
 import type { NavigationLink } from "./navigation/types";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +24,6 @@ export function Navigation() {
   useEffect(() => {
     if (!currentUserId) return;
     
-    // Get initial count of pending requests
     const loadPendingRequests = async () => {
       try {
         const { data, error } = await supabase
@@ -44,7 +41,6 @@ export function Navigation() {
     
     loadPendingRequests();
     
-    // Subscribe to changes in friendships table
     const friendshipsChannel = supabase
       .channel('friendships_changes')
       .on('postgres_changes', {
@@ -62,22 +58,14 @@ export function Navigation() {
     };
   }, [currentUserId]);
 
-  const handleProfileClick = () => {
-    // Solo registramos que se ha hecho clic, la navegación ocurrirá automáticamente
-    if (currentUserId) {
-      console.log("Navigating to profile:", currentUserId);
-      // Forzamos la navegación programáticamente para asegurar que funcione
-      navigate(`/profile/${currentUserId}`);
-    }
-  };
-
   const links: NavigationLink[] = [
     { 
       to: "/",
       icon: Home, 
       label: "Inicio",
       onClick: handleHomeClick,
-      badge: newPosts > 0 ? newPosts : null 
+      badge: newPosts > 0 ? newPosts : null,
+      preventDefaultNavigation: true 
     },
     { 
       to: "/messages", 
@@ -97,16 +85,13 @@ export function Navigation() {
       label: "Popularidad"
     },
     { 
-      to: currentUserId ? `/profile/${currentUserId}` : "/", 
+      to: currentUserId ? `/profile/${currentUserId}` : "/auth", 
       icon: User, 
-      label: "Perfil",
-      onClick: handleProfileClick
+      label: "Perfil"
     }
   ];
 
-  // Check if the current path starts with /profile to highlight the profile icon
   const isProfilePage = location.pathname.startsWith('/profile');
-  // Check if we're on any of the friend request pages
   const isFriendRequestsPage = location.pathname.startsWith('/friends/requests');
 
   return (

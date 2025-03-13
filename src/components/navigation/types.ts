@@ -9,4 +9,5 @@ export interface NavigationLink {
   badge?: number | null;
   badgeVariant?: "default" | "secondary" | "destructive" | "outline";
   onClick?: () => void;
+  preventDefaultNavigation?: boolean;
 }
