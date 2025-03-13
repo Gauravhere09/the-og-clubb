@@ -123,7 +123,7 @@ export function LongPressReactionButton({
   };
 
   return (
-    <ContextMenu open={showReactions} onOpenChange={setShowReactions}>
+    <ContextMenu>
       <ContextMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -151,7 +151,11 @@ export function LongPressReactionButton({
           )}
         </Button>
       </ContextMenuTrigger>
-      <ContextMenuContent className="flex p-1 space-x-1">
+      <ContextMenuContent 
+        className="flex p-1 space-x-1"
+        onEscapeKeyDown={() => setShowReactions(false)}
+        onInteractOutside={() => setShowReactions(false)}
+      >
         {Object.entries(reactionIcons).map(([type, { icon: Icon, color, label }]) => (
           <Button
             key={type}
