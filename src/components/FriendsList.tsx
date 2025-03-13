@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getFriends } from "@/lib/api";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -11,19 +11,18 @@ import { Friend } from "@/types/friends";
 export function FriendsList() {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadFriends();
-  }, []);
-
-  const loadFriends = async () => {
+  const loadFriends = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const friendsData = await getFriends();
       setFriends(friendsData);
     } catch (error: any) {
       console.error("Error cargando amigos:", error);
+      setError(error?.message || "No se pudieron cargar los amigos");
       toast({
         variant: "destructive",
         title: "Error",
@@ -32,12 +31,27 @@ export function FriendsList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadFriends();
+  }, [loadFriends]);
 
   if (loading) {
     return (
       <div className="flex justify-center items-center p-4">
         <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-destructive/10 text-destructive p-4 rounded-md flex flex-col items-center">
+        <p className="font-medium mb-2">Error cargando amigos</p>
+        <Button variant="outline" size="sm" onClick={loadFriends}>
+          Reintentar
+        </Button>
       </div>
     );
   }

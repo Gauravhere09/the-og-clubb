@@ -32,3 +32,25 @@ export interface FriendSuggestion {
 }
 
 export type FriendshipStatus = 'friends' | 'following' | 'follower' | 'pending' | 'request_received' | null;
+
+// Common utility types for API responses
+export interface FriendshipWithProfile {
+  id: string;
+  friend: {
+    id: string;
+    username: string | null;
+    avatar_url: string | null;
+  };
+}
+
+export interface FriendRequestWithProfile {
+  id: string;
+  user_id: string;
+  friend_id: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  created_at: string;
+  user: {
+    username: string | null;
+    avatar_url: string | null;
+  };
+}

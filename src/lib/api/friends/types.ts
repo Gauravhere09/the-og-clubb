@@ -3,12 +3,16 @@ import {
   Friend, 
   FriendRequest, 
   FriendSuggestion, 
-  FriendshipStatus 
+  FriendshipStatus,
+  FriendshipWithProfile,
+  FriendRequestWithProfile
 } from "@/types/friends";
 
 export type { 
   Friend, 
   FriendRequest, 
   FriendSuggestion, 
-  FriendshipStatus 
+  FriendshipStatus,
+  FriendshipWithProfile,
+  FriendRequestWithProfile
 };
