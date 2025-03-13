@@ -60,6 +60,13 @@ export function Navigation() {
     };
   }, [currentUserId]);
 
+  const handleProfileClick = () => {
+    // Add explicit profile navigation handler
+    if (currentUserId) {
+      console.log("Navigating to profile:", currentUserId);
+    }
+  };
+
   const links: NavigationLink[] = [
     { 
       to: "/",
@@ -78,7 +85,7 @@ export function Navigation() {
       icon: UserPlus,
       label: "Solicitudes",
       badge: pendingRequestsCount > 0 ? pendingRequestsCount : null,
-      badgeVariant: "secondary"  // Changed from "primary" to "secondary"
+      badgeVariant: "secondary"
     },
     {
       to: "/popularity",
@@ -88,7 +95,8 @@ export function Navigation() {
     { 
       to: currentUserId ? `/profile/${currentUserId}` : "/", 
       icon: User, 
-      label: "Perfil" 
+      label: "Perfil",
+      onClick: handleProfileClick
     }
   ];
 

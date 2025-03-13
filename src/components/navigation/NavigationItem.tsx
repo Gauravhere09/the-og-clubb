@@ -8,7 +8,8 @@ export function NavigationItem({ link, isActive }: { link: NavigationLink; isAct
 
   const handleClick = (e: React.MouseEvent) => {
     if (link.onClick) {
-      e.preventDefault();
+      // Solo llamamos a onClick pero no prevenimos el evento predeterminado
+      // para que la navegación pueda ocurrir
       link.onClick();
     }
   };
