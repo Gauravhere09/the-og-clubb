@@ -99,7 +99,7 @@ export function LongPressReactionButton({
     }
   }, [isSubmitting, onReactionClick, postId, queryClient, toast, userReaction]);
 
-  const handlePressStart = useCallback((e: React.PointerEvent) => {
+  const handlePressStart = useCallback(() => {
     pressTimer.current = setTimeout(() => {
       setShowReactions(true);
     }, longPressThreshold);
@@ -172,6 +172,15 @@ export function LongPressReactionButton({
     }
   }, [handleReactionClick, showReactions, userReaction]);
 
+  // Touch event handlers that are properly typed
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    handlePressStart();
+  }, [handlePressStart]);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    handlePressEnd();
+  }, [handlePressEnd]);
+
   // Configurar y limpiar event listeners para el movimiento del puntero
   useEffect(() => {
     if (showReactions) {
@@ -209,9 +218,9 @@ export function LongPressReactionButton({
         onPointerDown={handlePressStart}
         onPointerUp={handlePressEnd}
         onPointerLeave={handlePressEnd}
-        onTouchStart={handlePressStart}
-        onTouchEnd={handlePressEnd}
-        onTouchCancel={handlePressEnd}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={handleTouchEnd}
       >
         {userReaction ? (
           <div className="flex items-center">
@@ -256,3 +265,4 @@ export function LongPressReactionButton({
     </div>
   );
 }
+
