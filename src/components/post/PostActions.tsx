@@ -2,12 +2,12 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import type { Post } from "@/types/post";
-import { ReactionButton } from "./reactions/ReactionButton";
 import { type ReactionType } from "./reactions/ReactionIcons";
 import { ShareOptions } from "./actions/ShareOptions";
 import { ReactionSummaryDialog } from "./actions/ReactionSummaryDialog";
 import { CommentsCount } from "./actions/CommentsCount";
 import { CommentButton } from "./actions/CommentButton";
+import { LongPressReactionButton } from "./reactions/LongPressReactionButton";
 
 interface PostActionsProps {
   post: Post;
@@ -54,7 +54,7 @@ export function PostActions({
 
       {/* Action Buttons */}
       <div className="flex gap-1 border-t border-b py-1">
-        <ReactionButton 
+        <LongPressReactionButton 
           userReaction={userReaction} 
           onReactionClick={handleReaction}
           postId={post.id}

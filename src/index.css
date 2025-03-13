@@ -100,3 +100,33 @@
 .border-bronze {
   border-color: #cd7f32;
 }
+
+/* Reaction animations */
+@keyframes reaction-pop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.reaction-appear {
+  animation: reaction-pop 0.3s ease-out forwards;
+}
+
+.reaction-hover {
+  transition: transform 0.2s ease;
+}
+
+.reaction-hover:hover {
+  transform: scale(1.2);
+}
+
+/* Long press indicator */
+@keyframes pulse {
+  0% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0.6; transform: scale(1); }
+}
+
+.pulse-on-hold {
+  animation: pulse 1s infinite;
+}
