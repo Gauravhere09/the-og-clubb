@@ -13,7 +13,6 @@ export function useNavigation() {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Obtener usuario actual
     const getUserId = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setCurrentUserId(user?.id || null);
@@ -21,7 +20,6 @@ export function useNavigation() {
 
     getUserId();
 
-    // Suscribirse a notificaciones en tiempo real
     const notificationsChannel = supabase
       .channel("notifications")
       .on(
@@ -35,7 +33,6 @@ export function useNavigation() {
         (payload) => {
           if (location.pathname !== "/notifications") {
             setUnreadNotifications(prev => prev + 1);
-            // Notificar al usuario
             const notif = payload.new as any;
             if (notif.type === "post_like") {
               toast({
@@ -58,7 +55,6 @@ export function useNavigation() {
       )
       .subscribe();
 
-    // Suscribirse a nuevas publicaciones
     const postsChannel = supabase
       .channel("new-posts")
       .on(
@@ -71,7 +67,6 @@ export function useNavigation() {
         (payload) => {
           if (location.pathname !== "/" && payload.new) {
             const post = payload.new as any;
-            // Si no es una publicación propia
             if (post.user_id !== currentUserId) {
               setNewPosts(prev => prev + 1);
             }
@@ -90,7 +85,6 @@ export function useNavigation() {
     try {
       await supabase.auth.signOut();
       
-      // Explicitly navigate to auth page after signing out
       navigate("/auth");
       
       toast({
@@ -108,17 +102,12 @@ export function useNavigation() {
   };
 
   const handleHomeClick = () => {
-    // Resetear contador de nuevas publicaciones
     setNewPosts(0);
 
-    // Si ya estamos en la página principal, forzar scroll al inicio y mostrar publicaciones recientes
     if (location.pathname === "/") {
-      // Usar searchParams para indicar que queremos mostrar publicaciones recientes
       navigate("/?new=true");
-      // Hacer scroll al inicio de la página
       window.scrollTo(0, 0);
     } else {
-      // Si no estamos en la página principal, navegar allí con el parámetro
       navigate("/?new=true");
     }
   };

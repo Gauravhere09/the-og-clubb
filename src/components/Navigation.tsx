@@ -7,6 +7,7 @@ import { useFriends } from "@/hooks/use-friends";
 import type { NavigationLink } from "./navigation/types";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 export function Navigation() {
   const {
@@ -19,6 +20,7 @@ export function Navigation() {
     location
   } = useNavigation();
   
+  const navigate = useNavigate();
   const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
   
   useEffect(() => {
@@ -61,9 +63,11 @@ export function Navigation() {
   }, [currentUserId]);
 
   const handleProfileClick = () => {
-    // Add explicit profile navigation handler
+    // Solo registramos que se ha hecho clic, la navegación ocurrirá automáticamente
     if (currentUserId) {
       console.log("Navigating to profile:", currentUserId);
+      // Forzamos la navegación programáticamente para asegurar que funcione
+      navigate(`/profile/${currentUserId}`);
     }
   };
 
