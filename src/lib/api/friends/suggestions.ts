@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { FriendSuggestion } from "./types";
+import { FriendSuggestion } from "@/types/friends";
 
 export async function getFriendSuggestions() {
   try {
@@ -23,7 +23,7 @@ export async function getFriendSuggestions() {
       .from('profiles')
       .select('career, semester')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     // Obtenemos sugerencias de usuarios que no son amigos ni tienen solicitudes pendientes
     const { data: suggestions, error } = await supabase
@@ -35,7 +35,7 @@ export async function getFriendSuggestions() {
     if (error) throw error;
 
     // Transformamos los resultados a nuestro formato FriendSuggestion
-    const sugestionsWithMutualFriends = await Promise.all((suggestions || []).map(async (sugg) => {
+    const suggestionsWithScores = (suggestions || []).map(sugg => {
       // Calculamos coincidencias de carrera y semestre
       const careerMatch = currentUserProfile?.career && sugg.career && 
                           currentUserProfile.career === sugg.career;
@@ -60,10 +60,12 @@ export async function getFriendSuggestions() {
         relevanceScore,
         mutual_friends_count
       };
-    }));
+    });
 
     // Ordenamos por relevancia (primero las coincidencias de carrera y semestre)
-    return sugestionsWithMutualFriends.sort((a, b) => b.relevanceScore - a.relevanceScore);
+    return suggestionsWithScores.sort((a, b) => 
+      (b.relevanceScore || 0) - (a.relevanceScore || 0)
+    );
   } catch (error: any) {
     console.error('Error getting friend suggestions:', error);
     return [];

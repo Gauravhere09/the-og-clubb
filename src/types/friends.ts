@@ -4,6 +4,7 @@ export interface Friend {
   friend_username: string;
   friend_avatar_url: string | null;
   mutual_friends_count?: number;
+  status?: 'following' | 'follower' | 'friends';
 }
 
 export interface FriendRequest {
@@ -29,3 +30,5 @@ export interface FriendSuggestion {
   semesterMatch?: boolean;
   relevanceScore?: number;
 }
+
+export type FriendshipStatus = 'friends' | 'following' | 'follower' | 'pending' | 'request_received' | null;

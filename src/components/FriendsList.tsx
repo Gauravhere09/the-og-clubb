@@ -6,12 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-
-interface Friend {
-  id: string;
-  username: string;
-  avatar_url: string | null;
-}
+import { Friend } from "@/types/friends";
 
 export function FriendsList() {
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -24,15 +19,11 @@ export function FriendsList() {
 
   const loadFriends = async () => {
     try {
+      setLoading(true);
       const friendsData = await getFriends();
-      // Transformar los datos para que coincidan con la interfaz Friend
-      const transformedFriends = friendsData.map((friendship: any) => ({
-        id: friendship.friend_id,
-        username: friendship.friend_username,
-        avatar_url: friendship.friend_avatar_url
-      }));
-      setFriends(transformedFriends);
+      setFriends(friendsData);
     } catch (error: any) {
+      console.error("Error cargando amigos:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -44,7 +35,11 @@ export function FriendsList() {
   };
 
   if (loading) {
-    return <div>Cargando amigos...</div>;
+    return (
+      <div className="flex justify-center items-center p-4">
+        <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    );
   }
 
   if (friends.length === 0) {
@@ -54,17 +49,17 @@ export function FriendsList() {
   return (
     <div className="space-y-4">
       {friends.map((friend) => (
-        <div key={friend.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent">
+        <div key={friend.friend_id} className="flex items-center justify-between p-2 rounded-lg hover:bg-accent">
           <div className="flex items-center gap-3">
             <Avatar>
-              <AvatarImage src={friend.avatar_url || undefined} />
-              <AvatarFallback>{friend.username[0]}</AvatarFallback>
+              <AvatarImage src={friend.friend_avatar_url || undefined} />
+              <AvatarFallback>{friend.friend_username[0]}</AvatarFallback>
             </Avatar>
             <div>
-              <div className="font-medium">{friend.username}</div>
+              <div className="font-medium">{friend.friend_username}</div>
             </div>
           </div>
-          <Link to={`/messages?user=${friend.id}`}>
+          <Link to={`/messages?user=${friend.friend_id}`}>
             <Button variant="ghost" size="icon">
               <Mail className="h-4 w-4" />
             </Button>

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { 
   getFriends,
@@ -8,7 +8,8 @@ import {
   getSentFriendRequests,
   getFriendSuggestions
 } from "@/lib/api/friends";
-import { Friend, FriendRequest, FriendSuggestion } from "./types";
+import { Friend, FriendRequest, FriendSuggestion } from "@/types/friends";
+import { useToast } from "@/hooks/use-toast";
 
 export function useFriendData(currentUserId: string | null) {
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -18,41 +19,64 @@ export function useFriendData(currentUserId: string | null) {
   const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
   const [suggestions, setSuggestions] = useState<FriendSuggestion[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  // Memoizar los amigos mutuos y únicos
+  const mutualAndUniqueConnections = useMemo(() => {
+    // Crear un conjunto con los IDs de seguidores
+    const followerIds = new Set(followers.map(f => f.friend_id));
+    
+    // Identificar amigos mutuos
+    const mutualFriends = friends.filter(f => followerIds.has(f.friend_id))
+      .map(f => ({
+        ...f,
+        status: 'friends' as const
+      }));
+    
+    // Identificar usuarios que solo sigo
+    const onlyFollowing = friends.filter(f => !followerIds.has(f.friend_id))
+      .map(f => ({
+        ...f,
+        status: 'following' as const
+      }));
+    
+    // Identificar usuarios que solo me siguen
+    const onlyFollowers = followers.filter(f => !friends.some(fr => fr.friend_id === f.friend_id))
+      .map(f => ({
+        ...f,
+        status: 'follower' as const
+      }));
+    
+    return {
+      mutualFriends,
+      onlyFollowing,
+      onlyFollowers
+    };
+  }, [friends, followers]);
 
   const loadFriends = async () => {
     if (!currentUserId) return;
 
     try {
-      const friendsData = await getFriends();
-      const followersData = await getFollowers();
+      const [friendsData, followersData] = await Promise.all([
+        getFriends(),
+        getFollowers()
+      ]);
       
-      // Identificamos amigos mutuos
-      const followerIds = new Set(followersData.map(f => f.friend_id));
-      const mutualFriends = friendsData.filter(f => followerIds.has(f.friend_id))
-        .map(f => ({
-          ...f,
-          status: 'friends' as const
-        }));
+      setFriends(friendsData);
+      setFollowers(followersData);
       
-      // Usuarios que sigo pero no me siguen
-      const onlyFollowing = friendsData.filter(f => !followerIds.has(f.friend_id))
-        .map(f => ({
-          ...f,
-          status: 'following' as const
-        }));
+      // Usar los datos memorizados
+      const { mutualFriends, onlyFollowing, onlyFollowers } = mutualAndUniqueConnections;
       
-      // Usuarios que me siguen pero no sigo
-      const onlyFollowers = followersData.filter(f => !friendsData.some(fr => fr.friend_id === f.friend_id))
-        .map(f => ({
-          ...f,
-          status: 'follower' as const
-        }));
-      
-      setFriends(mutualFriends);
       setFollowing([...mutualFriends, ...onlyFollowing]);
-      setFollowers([...mutualFriends, ...onlyFollowers]);
     } catch (error) {
       console.error("Error loading friends:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudieron cargar los amigos",
+      });
     }
   };
 
@@ -60,13 +84,20 @@ export function useFriendData(currentUserId: string | null) {
     if (!currentUserId) return;
 
     try {
-      const requests = await getPendingFriendRequests();
-      setPendingRequests(requests);
+      const [requests, sent] = await Promise.all([
+        getPendingFriendRequests(),
+        getSentFriendRequests()
+      ]);
       
-      const sent = await getSentFriendRequests();
+      setPendingRequests(requests);
       setSentRequests(sent);
     } catch (error) {
       console.error("Error loading friend requests:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudieron cargar las solicitudes",
+      });
     }
   };
 
@@ -78,17 +109,32 @@ export function useFriendData(currentUserId: string | null) {
       setSuggestions(suggestionsData);
     } catch (error) {
       console.error("Error loading suggestions:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudieron cargar las sugerencias",
+      });
     }
   };
 
   useEffect(() => {
     if (currentUserId) {
       setLoading(true);
+      
       Promise.all([
         loadFriends(),
         loadFriendRequests(),
         loadSuggestions()
-      ]).finally(() => {
+      ])
+      .catch(error => {
+        console.error("Error loading friend data:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Hubo un problema cargando los datos",
+        });
+      })
+      .finally(() => {
         setLoading(false);
       });
 
@@ -114,7 +160,7 @@ export function useFriendData(currentUserId: string | null) {
   }, [currentUserId]);
 
   return {
-    friends,
+    friends: mutualAndUniqueConnections.mutualFriends,
     following,
     followers,
     pendingRequests,
