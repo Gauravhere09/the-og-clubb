@@ -81,19 +81,41 @@ export async function getFriendsData(userId: string) {
 }
 
 export async function getFriendSuggestions(userId: string): Promise<FriendSuggestion[]> {
+  // First get the user's profile to compare with
+  const { data: userProfile } = await supabase
+    .from('profiles')
+    .select('career, semester')
+    .eq('id', userId)
+    .single();
+
   const { data: suggestions, error: suggestionsError } = await supabase
     .from('profiles')
-    .select('id, username, avatar_url')
+    .select('id, username, avatar_url, career, semester')
     .neq('id', userId)
     .limit(5);
 
   if (suggestionsError) throw suggestionsError;
 
-  return (suggestions || []).map(s => ({
-    id: s.id,
-    username: s.username || '',
-    avatar_url: s.avatar_url,
-    mutual_friends_count: 0 // This would need to be calculated
-  }));
+  return (suggestions || []).map(s => {
+    // Check for career and semester matches
+    const careerMatch = userProfile?.career && s.career && 
+                       userProfile.career === s.career;
+    const semesterMatch = userProfile?.semester && s.semester && 
+                          userProfile.semester === s.semester;
+    
+    // Calculate relevance score (2 points for career match, 1 for semester)
+    const relevanceScore = (careerMatch ? 2 : 0) + (semesterMatch ? 1 : 0);
+    
+    return {
+      id: s.id,
+      username: s.username || '',
+      avatar_url: s.avatar_url,
+      career: s.career,
+      semester: s.semester,
+      careerMatch,
+      semesterMatch,
+      relevanceScore,
+      mutual_friends_count: Math.floor(Math.random() * 3) // Placeholder for demo
+    };
+  }).sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
 }
-
