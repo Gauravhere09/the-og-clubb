@@ -22,6 +22,11 @@ export interface FriendSuggestion {
   username: string;
   avatar_url: string | null;
   mutual_friends_count: number;
+  career?: string | null;
+  semester?: string | null;
+  careerMatch?: boolean;
+  semesterMatch?: boolean;
+  relevanceScore?: number;
 }
 
 export type FriendshipStatus = 'friends' | 'following' | 'follower' | 'pending' | 'request_received' | null;

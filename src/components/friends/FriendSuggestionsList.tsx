@@ -4,9 +4,10 @@ import { FriendSuggestion } from "@/hooks/use-friends";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { UserPlus, Users, UserCheck } from "lucide-react";
+import { UserPlus, Users, UserCheck, Briefcase, GraduationCap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 
 interface FriendSuggestionsListProps {
   suggestions: FriendSuggestion[];
@@ -72,7 +73,7 @@ export function FriendSuggestionsList({ suggestions, onSendRequest }: FriendSugg
         {suggestions.map((suggestion) => (
           <div
             key={suggestion.id}
-            className="flex items-center justify-between p-4 rounded-lg hover:bg-accent"
+            className={`flex items-center justify-between p-4 rounded-lg border ${suggestion.careerMatch || suggestion.semesterMatch ? 'border-primary/50 bg-primary/5' : 'hover:bg-accent'}`}
           >
             <Link
               to={`/profile/${suggestion.id}`}
@@ -84,10 +85,38 @@ export function FriendSuggestionsList({ suggestions, onSendRequest }: FriendSugg
                   {suggestion.username[0]?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div>
+              <div className="space-y-1">
                 <div className="font-medium">{suggestion.username}</div>
+                <div className="flex flex-wrap gap-2">
+                  {suggestion.career && (
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <Briefcase className="inline-block h-3 w-3 mr-1" />
+                      <span className={suggestion.careerMatch ? "font-medium text-primary" : ""}>
+                        {suggestion.career}
+                        {suggestion.careerMatch && 
+                          <Badge variant="outline" className="ml-1 bg-primary/10 text-primary text-[10px] py-0 h-4">
+                            Coincide
+                          </Badge>
+                        }
+                      </span>
+                    </div>
+                  )}
+                  {suggestion.semester && (
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <GraduationCap className="inline-block h-3 w-3 mr-1" />
+                      <span className={suggestion.semesterMatch ? "font-medium text-primary" : ""}>
+                        Semestre {suggestion.semester}
+                        {suggestion.semesterMatch && 
+                          <Badge variant="outline" className="ml-1 bg-primary/10 text-primary text-[10px] py-0 h-4">
+                            Coincide
+                          </Badge>
+                        }
+                      </span>
+                    </div>
+                  )}
+                </div>
                 {suggestion.mutual_friends_count > 0 && (
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-xs text-muted-foreground flex items-center">
                     <Users className="inline-block h-3 w-3 mr-1" />
                     {suggestion.mutual_friends_count} amigos en común
                   </div>
