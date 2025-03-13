@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp } from "lucide-react";
 import { reactionIcons, type ReactionType } from "./ReactionIcons";
@@ -30,7 +30,8 @@ export function LongPressReactionButton({
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
   const longPressThreshold = 500; // ms
 
-  const handleReactionClick = async (type: ReactionType) => {
+  // Memoize the reaction handler to prevent unnecessary re-renders
+  const handleReactionClick = useCallback(async (type: ReactionType) => {
     if (isSubmitting) return;
     
     try {
@@ -91,20 +92,20 @@ export function LongPressReactionButton({
       setIsSubmitting(false);
       setShowReactions(false);
     }
-  };
+  }, [isSubmitting, onReactionClick, postId, queryClient, toast, userReaction]);
 
-  const handlePressStart = () => {
+  const handlePressStart = useCallback(() => {
     pressTimer.current = setTimeout(() => {
       setShowReactions(true);
     }, longPressThreshold);
-  };
+  }, [longPressThreshold]);
 
-  const handlePressEnd = () => {
+  const handlePressEnd = useCallback(() => {
     if (pressTimer.current) {
       clearTimeout(pressTimer.current);
       pressTimer.current = null;
     }
-  };
+  }, []);
 
   // Clean up timer if component unmounts while timer is active
   useEffect(() => {
@@ -116,11 +117,11 @@ export function LongPressReactionButton({
   }, []);
 
   // Handle click on the main button (non-long press)
-  const handleButtonClick = () => {
+  const handleButtonClick = useCallback(() => {
     if (!showReactions && userReaction) {
       handleReactionClick(userReaction);
     }
-  };
+  }, [handleReactionClick, showReactions, userReaction]);
 
   return (
     <ContextMenu>

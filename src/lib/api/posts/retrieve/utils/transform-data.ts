@@ -8,8 +8,12 @@ import {
   fetchUserPollVotes,
   fetchSharedPosts
 } from "../../queries";
-import { transformPoll } from "../../utils";
-import { processReactionsData, processCommentsData } from "./process-reactions";
+import { 
+  processReactionsData, 
+  processCommentsData, 
+  updatePollsWithUserVotes,
+  transformPostsData as transformPostsToObjects
+} from "../../utils/transform-utils";
 
 /**
  * Transforms raw posts data into Post objects with all needed data
@@ -34,29 +38,8 @@ export async function transformPostsData(
     // Update poll data with user votes
     updatePollsWithUserVotes(rawPosts, votesMap);
 
-    // Transform posts data
-    return rawPosts.map((post): Post => {
-      if (!post) return {} as Post;
-
-      return {
-        id: post.id,
-        content: post.content || '',
-        user_id: post.user_id,
-        media_url: post.media_url,
-        media_type: post.media_type as Post['media_type'],
-        visibility: post.visibility as Post['visibility'],
-        created_at: post.created_at,
-        updated_at: post.updated_at,
-        profiles: post.profiles,
-        poll: transformPoll(post.poll),
-        shared_from: null, // Always null since the column doesn't exist
-        shared_post: null, // Always null since shared posts don't exist
-        user_reaction: userReactionsMap[post.id] as Post['user_reaction'],
-        reactions: reactionsMap[post.id] || { count: 0, by_type: {} },
-        reactions_count: reactionsMap[post.id]?.count || 0,
-        comments_count: commentsCountMap[post.id] || 0
-      };
-    });
+    // Transform posts data using the shared utility
+    return transformPostsToObjects(rawPosts, reactionsMap, commentsCountMap, userReactionsMap);
   } catch (error) {
     console.error('Error transforming posts data:', error);
     throw error;
@@ -95,19 +78,4 @@ async function getUserData(user: any, rawPosts: any[], postIds: string[]) {
   }
   
   return { userReactionsMap, votesMap };
-}
-
-/**
- * Update polls with user votes
- */
-function updatePollsWithUserVotes(rawPosts: any[], votesMap: Record<string, string>) {
-  rawPosts.forEach(post => {
-    if (!post) return;
-    
-    if (post.poll && typeof post.poll === 'object') {
-      // Safely update the poll object with typechecking
-      const pollObj = post.poll as Record<string, any>;
-      pollObj.user_vote = votesMap[post.id] || null;
-    }
-  });
 }
