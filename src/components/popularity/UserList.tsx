@@ -1,7 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, HelpCircle } from "lucide-react";
+import { Heart, HelpCircle, Users } from "lucide-react";
 import type { PopularUserProfile } from "@/types/database/follow.types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -17,7 +17,7 @@ export const UserList = ({ users, onProfileClick, startRank = 4 }: UserListProps
       <div className="p-4">
         <div className="text-sm font-medium text-muted-foreground mb-4 px-2 grid grid-cols-12 gap-2">
           <div className="col-span-1">#</div>
-          <div className="col-span-4">Usuario</div>
+          <div className="col-span-3">Usuario</div>
           <div className="col-span-3">
             <div className="flex items-center">
               Carrera
@@ -48,7 +48,30 @@ export const UserList = ({ users, onProfileClick, startRank = 4 }: UserListProps
               </TooltipProvider>
             </div>
           </div>
-          <div className="col-span-2 text-right">Corazones</div>
+          <div className="col-span-1 text-right">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Users className="h-4 w-4 inline" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs text-xs">Seguidores</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          <div className="col-span-2 text-right">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Heart className="h-4 w-4 inline text-primary" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="max-w-xs text-xs">Corazones</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
         <div className="space-y-2">
           {users.map((user, index) => {
@@ -62,6 +85,7 @@ export const UserList = ({ users, onProfileClick, startRank = 4 }: UserListProps
               carrera: careerValue,
               semestre: semesterValue,
               seguidores: user.followers_count,
+              corazones: user.hearts_count,
               tipo_carrera: typeof user.career,
               tipo_semestre: typeof user.semester
             });
@@ -74,7 +98,7 @@ export const UserList = ({ users, onProfileClick, startRank = 4 }: UserListProps
                 <div className="col-span-1 font-medium text-muted-foreground">
                   {startRank + index}
                 </div>
-                <div className="col-span-4">
+                <div className="col-span-3">
                   <div className="flex items-center space-x-3">
                     <Avatar 
                       className="h-8 w-8 cursor-pointer" 
@@ -107,9 +131,13 @@ export const UserList = ({ users, onProfileClick, startRank = 4 }: UserListProps
                     <span className="text-muted-foreground text-xs">No especificado</span>
                   )}
                 </div>
-                <div className="col-span-2 flex items-center justify-end gap-1">
-                  <Heart className="h-4 w-4 text-primary fill-primary" />
+                <div className="col-span-1 flex items-center justify-end gap-1">
+                  <Users className="h-4 w-4 text-blue-500" />
                   <span className="font-semibold">{user.followers_count}</span>
+                </div>
+                <div className="col-span-2 flex items-center justify-end gap-1">
+                  <Heart className="h-4 w-4 text-red-500 fill-red-500" />
+                  <span className="font-semibold">{user.hearts_count || 0}</span>
                 </div>
               </div>
             );

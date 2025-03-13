@@ -1,7 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, Trophy, Award, Medal } from "lucide-react";
+import { Heart, Trophy, Award, Medal, Users } from "lucide-react";
 import type { PopularUserProfile } from "@/types/database/follow.types";
 
 interface TopUsersProps {
@@ -13,8 +13,8 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
   // Make sure we have exactly 3 users for top positions
   if (users.length !== 3) return null;
   
-  // Sort users by followers count (highest to lowest) to ensure correct ranking
-  const sortedUsers = [...users].sort((a, b) => b.followers_count - a.followers_count);
+  // Sort users by hearts count (highest to lowest) to ensure correct ranking
+  const sortedUsers = [...users].sort((a, b) => (b.hearts_count || 0) - (a.hearts_count || 0));
   
   // Assign positions correctly
   const [gold, silver, bronze] = sortedUsers;
@@ -46,9 +46,15 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
             {silver.username || "Usuario"}
           </h3>
           <p className="text-sm text-muted-foreground">Plata - 2° Lugar</p>
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Heart className="h-4 w-4 text-primary fill-primary" />
-            <span>{silver.followers_count}</span>
+          <div className="flex flex-col gap-1 mt-2">
+            <div className="flex items-center justify-center gap-1 text-sm text-red-500">
+              <Heart className="h-4 w-4 fill-red-500" />
+              <span>{silver.hearts_count || 0}</span>
+            </div>
+            <div className="flex items-center justify-center gap-1 text-sm text-blue-500">
+              <Users className="h-4 w-4" />
+              <span>{silver.followers_count}</span>
+            </div>
           </div>
           {silver.career && (
             <span className="mt-1 text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full">
@@ -80,9 +86,15 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
             {gold.username || "Usuario"}
           </h3>
           <p className="text-sm font-bold text-gold">Oro - 1° Lugar</p>
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <Heart className="h-4 w-4 text-primary fill-primary" />
-            <span>{gold.followers_count}</span>
+          <div className="flex flex-col gap-1 mt-2">
+            <div className="flex items-center justify-center gap-1 text-red-500">
+              <Heart className="h-5 w-5 fill-red-500" />
+              <span className="font-bold">{gold.hearts_count || 0}</span>
+            </div>
+            <div className="flex items-center justify-center gap-1 text-blue-500">
+              <Users className="h-5 w-5" />
+              <span>{gold.followers_count}</span>
+            </div>
           </div>
           {gold.career && (
             <span className="mt-1 text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full">
@@ -114,9 +126,15 @@ export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
             {bronze.username || "Usuario"}
           </h3>
           <p className="text-sm text-muted-foreground">Bronce - 3° Lugar</p>
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Heart className="h-4 w-4 text-primary fill-primary" />
-            <span>{bronze.followers_count}</span>
+          <div className="flex flex-col gap-1 mt-2">
+            <div className="flex items-center justify-center gap-1 text-sm text-red-500">
+              <Heart className="h-4 w-4 fill-red-500" />
+              <span>{bronze.hearts_count || 0}</span>
+            </div>
+            <div className="flex items-center justify-center gap-1 text-sm text-blue-500">
+              <Users className="h-4 w-4" />
+              <span>{bronze.followers_count}</span>
+            </div>
           </div>
           {bronze.career && (
             <span className="mt-1 text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full">

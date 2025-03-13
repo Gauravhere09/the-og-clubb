@@ -22,6 +22,7 @@ export type Profile = {
   semester: string | null;
   relationship_status: string | null;
   followers_count: number;
+  hearts_count: number;  // Añadimos contador de corazones
   created_at: string;
   updated_at: string;
 };
@@ -84,6 +85,16 @@ export default function Profile() {
           console.error('Error fetching followers:', followersError);
         }
 
+        // Get hearts count
+        const { count: heartsCount, error: heartsError } = await supabase
+          .from('profile_hearts')
+          .select('*', { count: 'exact', head: true })
+          .eq('profile_id', profileId);
+
+        if (heartsError) {
+          console.error('Error fetching hearts:', heartsError);
+        }
+
         // Crear el objeto Profile con los datos obtenidos
         const newProfile: Profile = {
           id: typedProfileData.id,
@@ -97,6 +108,7 @@ export default function Profile() {
           semester: typedProfileData.semester,
           relationship_status: null,
           followers_count: followersCount || 0,
+          hearts_count: heartsCount || 0, // Añadimos contador de corazones
           created_at: typedProfileData.created_at,
           updated_at: typedProfileData.updated_at
         };

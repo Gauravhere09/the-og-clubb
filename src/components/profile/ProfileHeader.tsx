@@ -2,11 +2,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Edit2, ImagePlus, MessageCircle, Maximize } from "lucide-react";
+import { Camera, Edit2, Heart, ImagePlus, MessageCircle, Maximize } from "lucide-react";
 import { FollowButton } from "@/components/FollowButton";
 import { ProfileEditDialog } from "@/components/profile/ProfileEditDialog";
 import { ChatDialog } from "@/components/messages/ChatDialog";
 import { FullScreenImage } from "@/components/profile/FullScreenImage";
+import { useProfileHeart } from "@/hooks/use-profile-heart";
 import type { Profile } from "@/pages/Profile";
 
 interface ProfileHeaderProps {
@@ -20,6 +21,7 @@ export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfile
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState<{url: string, type: 'avatar' | 'cover'} | null>(null);
+  const { hasGivenHeart, heartsCount, isLoading: heartLoading, toggleHeart } = useProfileHeart(profile.id);
 
   const handleProfileUpdate = (updatedProfile: Profile) => {
     onProfileUpdate?.(updatedProfile);
@@ -140,9 +142,15 @@ export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfile
                 <h1 className="text-2xl font-bold">
                   {profile.username || "Usuario sin nombre"}
                 </h1>
-                <p className="text-muted-foreground">
-                  {profile.followers_count} seguidores
-                </p>
+                <div className="flex items-center gap-3">
+                  <p className="text-muted-foreground">
+                    {profile.followers_count} seguidores
+                  </p>
+                  <div className="flex items-center text-red-500 dark:text-red-400">
+                    <Heart className={`h-4 w-4 mr-1 ${hasGivenHeart ? 'fill-red-500 dark:fill-red-400' : ''}`} />
+                    <span>{heartsCount}</span>
+                  </div>
+                </div>
               </div>
               {currentUserId === profile.id ? (
                 <Button variant="outline" onClick={() => setIsEditDialogOpen(true)}>
@@ -152,6 +160,15 @@ export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfile
               ) : (
                 <div className="flex gap-2">
                   <FollowButton targetUserId={profile.id} />
+                  <Button 
+                    variant="outline" 
+                    onClick={toggleHeart}
+                    disabled={heartLoading || !currentUserId}
+                    className={hasGivenHeart ? 'border-red-500 dark:border-red-400 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20' : ''}
+                  >
+                    <Heart className={`h-4 w-4 mr-2 ${hasGivenHeart ? 'fill-red-500 dark:fill-red-400' : ''}`} />
+                    {hasGivenHeart ? 'Quitar corazón' : 'Dar corazón'}
+                  </Button>
                   <Button variant="outline" onClick={handleMessageClick}>
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Mensaje

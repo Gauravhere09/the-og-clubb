@@ -82,38 +82,39 @@ export function usePopularUsers() {
         });
 
         // Procesamiento de perfiles con manejo de errores para cada uno
-        const usersWithFollowers = await Promise.all(
+        const usersWithData = await Promise.all(
           profiles.map(async (profile) => {
             try {
               // Contar seguidores
-              const { count, error } = await supabase
+              const { count: followersCount, error: followersError } = await supabase
                 .from('friendships')
                 .select('*', { count: 'exact', head: true })
                 .eq('friend_id', profile.id)
                 .eq('status', 'accepted');
+
+              // Contar corazones
+              const { count: heartsCount, error: heartsError } = await supabase
+                .from('profile_hearts')
+                .select('*', { count: 'exact', head: true })
+                .eq('profile_id', profile.id);
                 
-              if (error) {
-                console.error(`Error al contar seguidores para ${profile.username || profile.id}:`, error);
-                
-                // Retornar el perfil con contador a 0 en caso de error
-                return {
-                  id: profile.id,
-                  username: profile.username || "Usuario",
-                  avatar_url: profile.avatar_url,
-                  career: typeof profile.career === 'string' ? profile.career : null,
-                  semester: typeof profile.semester === 'string' ? profile.semester : null,
-                  followers_count: 0
-                } as PopularUserProfile;
+              if (followersError) {
+                console.error(`Error al contar seguidores para ${profile.username || profile.id}:`, followersError);
               }
 
-              // Construir objeto de usuario con seguidores
+              if (heartsError) {
+                console.error(`Error al contar corazones para ${profile.username || profile.id}:`, heartsError);
+              }
+
+              // Construir objeto de usuario con seguidores y corazones
               return {
                 id: profile.id,
                 username: profile.username || "Usuario",
                 avatar_url: profile.avatar_url,
                 career: typeof profile.career === 'string' ? profile.career : null,
                 semester: typeof profile.semester === 'string' ? profile.semester : null,
-                followers_count: count || 0
+                followers_count: followersCount || 0,
+                hearts_count: heartsCount || 0
               } as PopularUserProfile;
             } catch (profileError) {
               console.error(`Error inesperado procesando perfil ${profile.username || profile.id}:`, profileError);
@@ -125,19 +126,21 @@ export function usePopularUsers() {
                 avatar_url: profile.avatar_url,
                 career: null,
                 semester: null,
-                followers_count: 0
+                followers_count: 0,
+                hearts_count: 0
               } as PopularUserProfile;
             }
           })
         );
 
-        // Ordenar usuarios por número de seguidores
-        const sortedUsers = [...usersWithFollowers].sort((a, b) => 
-          b.followers_count - a.followers_count
-        );
+        // Ordenar usuarios por número de corazones (primero) y seguidores (segundo criterio de desempate)
+        const sortedUsers = [...usersWithData].sort((a, b) => {
+          const heartsDiff = (b.hearts_count || 0) - (a.hearts_count || 0);
+          return heartsDiff !== 0 ? heartsDiff : b.followers_count - a.followers_count;
+        });
 
         // Verificación final de los datos procesados
-        console.log(`Procesados ${sortedUsers.length} usuarios con información de seguidores`);
+        console.log(`Procesados ${sortedUsers.length} usuarios con información de seguidores y corazones`);
         
         if (sortedUsers.length > 0) {
           console.log('Muestra de usuarios ordenados (Top 3):', 
@@ -146,7 +149,8 @@ export function usePopularUsers() {
               username: u.username,
               career: u.career,
               semester: u.semester,
-              followers: u.followers_count
+              followers: u.followers_count,
+              hearts: u.hearts_count
             }))
           );
         }
