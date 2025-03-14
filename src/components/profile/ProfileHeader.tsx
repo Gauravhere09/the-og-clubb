@@ -8,6 +8,7 @@ import { ProfileEditDialog } from "@/components/profile/ProfileEditDialog";
 import { ChatDialog } from "@/components/messages/ChatDialog";
 import { FullScreenImage } from "@/components/profile/FullScreenImage";
 import { useProfileHeart } from "@/hooks/use-profile-heart";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { Profile } from "@/pages/Profile";
 
 interface ProfileHeaderProps {
@@ -22,6 +23,7 @@ export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfile
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState<{url: string, type: 'avatar' | 'cover'} | null>(null);
   const { hasGivenHeart, heartsCount, isLoading: heartLoading, toggleHeart } = useProfileHeart(profile.id);
+  const isMobile = useIsMobile();
 
   const isOwner = currentUserId === profile.id;
 
@@ -62,8 +64,8 @@ export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfile
         onOpenFullscreen={openFullScreenCover}
       />
 
-      <div className="relative px-6 -mt-[64px]">
-        <div className="flex items-end gap-4">
+      <div className={`relative px-2 md:px-6 -mt-[64px] profile-header`}>
+        <div className={`flex ${isMobile ? 'flex-col' : 'items-end'} gap-4`}>
           <ProfileAvatar
             avatarUrl={profile.avatar_url}
             username={profile.username}
@@ -72,10 +74,10 @@ export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfile
             onOpenFullscreen={openFullScreenAvatar}
           />
           
-          <div className="flex-1">
-            <div className="flex items-center justify-between">
+          <div className="flex-1 mt-2 md:mt-0">
+            <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex items-center justify-between'}`}>
               <div>
-                <h1 className="text-2xl font-bold">
+                <h1 className="text-xl md:text-2xl font-bold">
                   {profile.username || "Usuario sin nombre"}
                 </h1>
                 <ProfileStats 

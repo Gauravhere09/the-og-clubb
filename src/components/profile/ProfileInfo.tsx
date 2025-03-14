@@ -1,103 +1,85 @@
 
-import { Card } from "@/components/ui/card";
-import { Home, School, MapPin, Heart, GraduationCap, BookOpen, Circle } from "lucide-react";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { GraduationCap, Building2, CalendarDays } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { Profile } from "@/pages/Profile";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface ProfileInfoProps {
   profile: Profile;
 }
 
 export function ProfileInfo({ profile }: ProfileInfoProps) {
-  const [isOnline, setIsOnline] = useState(false);
-
-  useEffect(() => {
-    // Verificar si el usuario está en línea al cargar el componente
-    const checkOnlineStatus = async () => {
-      try {
-        // Consultar la presencia del usuario
-        const channel = supabase.channel('online-users');
-        
-        channel.on('presence', { event: 'sync' }, () => {
-          const state = channel.presenceState();
-          const isUserOnline = Object.keys(state).includes(profile.id);
-          setIsOnline(isUserOnline);
-        })
-        .subscribe(async (status) => {
-          if (status === 'SUBSCRIBED') {
-            await channel.track({
-              online_at: new Date().toISOString(),
-            });
-          }
-        });
-
-      } catch (error) {
-        console.error("Error al verificar estado online:", error);
-      }
-    };
-
-    checkOnlineStatus();
-
-    // Limpiar la suscripción al desmontar
-    return () => {
-      supabase.channel('online-users').unsubscribe();
-    };
-  }, [profile.id]);
+  const isMobile = useIsMobile();
+  
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return format(date, "MMMM yyyy", { locale: es });
+    } catch (error) {
+      return "Fecha desconocida";
+    }
+  };
 
   return (
-    <Card className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="font-semibold">Detalles</h2>
-        {isOnline && (
-          <div className="flex items-center text-sm text-green-500">
-            <Circle className="h-3 w-3 mr-1 fill-green-500" />
-            <span>En línea</span>
+    <Card className="h-fit">
+      <CardHeader>
+        <CardTitle className="text-lg">Información</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className={`space-y-4 profile-info-grid ${isMobile ? 'grid-cols-1' : 'grid grid-cols-1'}`}>
+          {profile.bio && (
+            <div className="space-y-1">
+              <h3 className="text-sm font-medium">Sobre mí</h3>
+              <p className="text-sm text-muted-foreground">{profile.bio}</p>
+              <Separator className="my-2" />
+            </div>
+          )}
+          
+          {(profile.career || profile.semester) && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-medium">Educación</h3>
+              </div>
+              {profile.career && (
+                <p className="text-sm text-muted-foreground pl-6">
+                  Carrera: {profile.career}
+                </p>
+              )}
+              {profile.semester && (
+                <p className="text-sm text-muted-foreground pl-6">
+                  Semestre: {profile.semester}
+                </p>
+              )}
+              <Separator className="my-2" />
+            </div>
+          )}
+          
+          {profile.location && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-medium">Ubicación</h3>
+              </div>
+              <p className="text-sm text-muted-foreground pl-6">{profile.location}</p>
+              <Separator className="my-2" />
+            </div>
+          )}
+          
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+              <h3 className="text-sm font-medium">Se unió</h3>
+            </div>
+            <p className="text-sm text-muted-foreground pl-6">
+              {formatDate(profile.created_at)}
+            </p>
           </div>
-        )}
-      </div>
-      
-      {profile.bio && (
-        <p className="text-sm text-muted-foreground mb-4">{profile.bio}</p>
-      )}
-      <div className="space-y-3">
-        {profile.location && (
-          <div className="flex items-center gap-2 text-sm">
-            <Home className="h-4 w-4 text-muted-foreground" />
-            <span>Vive en {profile.location}</span>
-          </div>
-        )}
-        {profile.education && (
-          <div className="flex items-center gap-2 text-sm">
-            <School className="h-4 w-4 text-muted-foreground" />
-            <span>Estudió en {profile.education}</span>
-          </div>
-        )}
-        {profile.career && (
-          <div className="flex items-center gap-2 text-sm">
-            <GraduationCap className="h-4 w-4 text-muted-foreground" />
-            <span>Carrera: {profile.career}</span>
-          </div>
-        )}
-        {profile.semester && (
-          <div className="flex items-center gap-2 text-sm">
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-            <span>Semestre: {profile.semester}</span>
-          </div>
-        )}
-        {profile.location && (
-          <div className="flex items-center gap-2 text-sm">
-            <MapPin className="h-4 w-4 text-muted-foreground" />
-            <span>De {profile.location}</span>
-          </div>
-        )}
-        {profile.relationship_status && (
-          <div className="flex items-center gap-2 text-sm">
-            <Heart className="h-4 w-4 text-muted-foreground" />
-            <span>{profile.relationship_status}</span>
-          </div>
-        )}
-      </div>
+        </div>
+      </CardContent>
     </Card>
   );
 }

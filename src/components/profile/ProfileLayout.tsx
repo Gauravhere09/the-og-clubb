@@ -4,6 +4,7 @@ import { Loader2, UserX } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProfileLayoutProps {
   isLoading?: boolean;
@@ -13,14 +14,15 @@ interface ProfileLayoutProps {
 
 export function ProfileLayout({ isLoading, error, children }: ProfileLayoutProps) {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col md:flex-row bg-muted/30">
-        <div className="fixed bottom-0 left-0 right-0 md:static md:left-0 z-10">
+        <div className={`${isMobile ? 'fixed bottom-0 left-0 right-0 z-10' : 'md:static md:left-0'}`}>
           <Navigation />
         </div>
-        <div className="flex-1 flex justify-center items-center md:ml-[70px] pb-16 md:pb-0">
+        <div className={`flex-1 flex justify-center items-center ${!isMobile ? 'md:ml-[70px]' : ''} pb-16 md:pb-0`}>
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       </div>
@@ -30,10 +32,10 @@ export function ProfileLayout({ isLoading, error, children }: ProfileLayoutProps
   if (error) {
     return (
       <div className="min-h-screen flex flex-col md:flex-row bg-muted/30">
-        <div className="fixed bottom-0 left-0 right-0 md:static md:left-0 z-10">
+        <div className={`${isMobile ? 'fixed bottom-0 left-0 right-0 z-10' : 'md:static md:left-0'}`}>
           <Navigation />
         </div>
-        <div className="flex-1 flex justify-center items-center md:ml-[70px] pb-16 md:pb-0">
+        <div className={`flex-1 flex justify-center items-center ${!isMobile ? 'md:ml-[70px]' : ''} pb-16 md:pb-0`}>
           <Card className="max-w-md w-full p-6 mx-4">
             <div className="text-center space-y-4">
               <div className="flex justify-center">
@@ -55,11 +57,11 @@ export function ProfileLayout({ isLoading, error, children }: ProfileLayoutProps
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-muted/30">
-      <div className="fixed bottom-0 left-0 right-0 md:static md:left-0 z-10">
+      <div className={`${isMobile ? 'fixed bottom-0 left-0 right-0 z-10' : 'md:static md:left-0'}`}>
         <Navigation />
       </div>
-      <div className="flex-1 w-full md:ml-[70px] pb-16 md:pb-0">
-        <main className="max-w-4xl mx-auto space-y-4 p-4 md:p-6">
+      <div className={`flex-1 w-full ${!isMobile ? 'md:ml-[70px]' : ''} pb-16 md:pb-0`}>
+        <main className="max-w-4xl mx-auto space-y-4 p-4">
           {children}
         </main>
       </div>

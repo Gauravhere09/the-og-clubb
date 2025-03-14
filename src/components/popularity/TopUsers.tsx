@@ -1,8 +1,9 @@
 
-import { Card } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, Trophy, Award, Medal, Users } from "lucide-react";
+import { Crown, Award, Medal } from "lucide-react";
 import type { PopularUserProfile } from "@/types/database/follow.types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TopUsersProps {
   users: PopularUserProfile[];
@@ -10,139 +11,74 @@ interface TopUsersProps {
 }
 
 export const TopUsers = ({ users, onProfileClick }: TopUsersProps) => {
-  // Make sure we have exactly 3 users for top positions
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  
+  // Ensure we have exactly 3 users
   if (users.length !== 3) return null;
   
-  // Sort users by hearts count (highest to lowest) to ensure correct ranking
-  const sortedUsers = [...users].sort((a, b) => (b.hearts_count || 0) - (a.hearts_count || 0));
+  // Arrange users in the right order for display: 2nd, 1st, 3rd
+  const displayOrder = [users[1], users[0], users[2]];
   
-  // Assign positions correctly
-  const [gold, silver, bronze] = sortedUsers;
-
+  // Get color classes based on position
+  const getClasses = (index: number) => {
+    switch(index) {
+      case 0: return { bg: "bg-silver", text: "text-silver", icon: <Medal className="h-5 w-5 text-silver" /> };
+      case 1: return { bg: "bg-gold", text: "text-gold", icon: <Crown className="h-6 w-6 text-gold" /> };
+      case 2: return { bg: "bg-bronze", text: "text-bronze", icon: <Award className="h-5 w-5 text-bronze" /> };
+      default: return { bg: "", text: "", icon: null };
+    }
+  };
+  
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-semibold mb-6 text-center">Top 3 Usuarios Más Populares</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-        {/* Silver - 2nd Place */}
-        <div className="flex flex-col items-center order-1 sm:order-1">
-          <div className="relative">
-            <Avatar 
-              className="h-24 w-24 border-4 border-silver cursor-pointer" 
-              onClick={() => onProfileClick(silver.id)}
-            >
-              <AvatarImage src={silver.avatar_url || undefined} />
-              <AvatarFallback className="text-xl">
-                {silver.username?.[0]?.toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="absolute -top-2 -right-2 bg-silver text-white rounded-full h-8 w-8 flex items-center justify-center">
-              <Award className="h-5 w-5 fill-white" />
-            </div>
-          </div>
-          <h3 
-            className="font-semibold mt-3 cursor-pointer hover:underline"
-            onClick={() => onProfileClick(silver.id)}
-          >
-            {silver.username || "Usuario"}
-          </h3>
-          <p className="text-sm text-muted-foreground">Plata - 2° Lugar</p>
-          <div className="flex flex-col gap-1 mt-2">
-            <div className="flex items-center justify-center gap-1 text-sm text-red-500">
-              <Heart className="h-4 w-4 fill-red-500" />
-              <span>{silver.hearts_count || 0}</span>
-            </div>
-            <div className="flex items-center justify-center gap-1 text-sm text-blue-500">
-              <Users className="h-4 w-4" />
-              <span>{silver.followers_count}</span>
-            </div>
-          </div>
-          {silver.career && (
-            <span className="mt-1 text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full">
-              {silver.career}
-            </span>
-          )}
-        </div>
+    <div className={`grid grid-cols-1 ${!isMobile ? 'md:grid-cols-3' : ''} gap-2 md:gap-4 top-users-grid`}>
+      {displayOrder.map((user, index) => {
+        const classes = getClasses(index);
+        const ranking = index === 1 ? 1 : index === 0 ? 2 : 3;
         
-        {/* Gold - 1st Place */}
-        <div className="flex flex-col items-center order-0 sm:order-2">
-          <div className="relative">
-            <Avatar 
-              className="h-32 w-32 border-4 border-gold cursor-pointer" 
-              onClick={() => onProfileClick(gold.id)}
-            >
-              <AvatarImage src={gold.avatar_url || undefined} />
-              <AvatarFallback className="text-2xl">
-                {gold.username?.[0]?.toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="absolute -top-2 -right-2 bg-gold text-white rounded-full h-10 w-10 flex items-center justify-center">
-              <Trophy className="h-6 w-6 fill-white" />
-            </div>
-          </div>
-          <h3 
-            className="font-semibold text-lg mt-3 cursor-pointer hover:underline"
-            onClick={() => onProfileClick(gold.id)}
-          >
-            {gold.username || "Usuario"}
-          </h3>
-          <p className="text-sm font-bold text-gold">Oro - 1° Lugar</p>
-          <div className="flex flex-col gap-1 mt-2">
-            <div className="flex items-center justify-center gap-1 text-red-500">
-              <Heart className="h-5 w-5 fill-red-500" />
-              <span className="font-bold">{gold.hearts_count || 0}</span>
-            </div>
-            <div className="flex items-center justify-center gap-1 text-blue-500">
-              <Users className="h-5 w-5" />
-              <span>{gold.followers_count}</span>
-            </div>
-          </div>
-          {gold.career && (
-            <span className="mt-1 text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full">
-              {gold.career}
-            </span>
-          )}
-        </div>
+        // For mobile view, ensure proper display order (1st, 2nd, 3rd)
+        const mobileOrder = isMobile ? (ranking === 1 ? 0 : ranking === 2 ? 1 : 2) : undefined;
         
-        {/* Bronze - 3rd Place */}
-        <div className="flex flex-col items-center order-2 sm:order-3">
-          <div className="relative">
-            <Avatar 
-              className="h-24 w-24 border-4 border-bronze cursor-pointer" 
-              onClick={() => onProfileClick(bronze.id)}
-            >
-              <AvatarImage src={bronze.avatar_url || undefined} />
-              <AvatarFallback className="text-xl">
-                {bronze.username?.[0]?.toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="absolute -top-2 -right-2 bg-bronze text-white rounded-full h-8 w-8 flex items-center justify-center">
-              <Medal className="h-5 w-5 fill-white" />
-            </div>
-          </div>
-          <h3 
-            className="font-semibold mt-3 cursor-pointer hover:underline"
-            onClick={() => onProfileClick(bronze.id)}
+        return (
+          <div 
+            key={user.id} 
+            onClick={() => onProfileClick(user.id)}
+            className={`relative bg-card rounded-lg shadow p-4 flex flex-col items-center cursor-pointer hover:shadow-md transition-shadow
+                       ${isMobile ? 'order-' + mobileOrder : ''}`}
           >
-            {bronze.username || "Usuario"}
-          </h3>
-          <p className="text-sm text-muted-foreground">Bronce - 3° Lugar</p>
-          <div className="flex flex-col gap-1 mt-2">
-            <div className="flex items-center justify-center gap-1 text-sm text-red-500">
-              <Heart className="h-4 w-4 fill-red-500" />
-              <span>{bronze.hearts_count || 0}</span>
+            <div className="absolute top-2 right-2 flex items-center">
+              {classes.icon}
+              <span className={`font-semibold ml-1 ${classes.text}`}>#{ranking}</span>
             </div>
-            <div className="flex items-center justify-center gap-1 text-sm text-blue-500">
-              <Users className="h-4 w-4" />
-              <span>{bronze.followers_count}</span>
+            
+            <div className="relative">
+              <Avatar className="h-24 w-24 md:h-28 md:w-28 border-2 border-background">
+                <AvatarImage
+                  src={user.avatar_url || ""}
+                  alt={user.username || ""}
+                  className="object-cover"
+                />
+                <AvatarFallback>{user.username?.[0]?.toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className={`absolute -bottom-1 right-0 h-7 w-7 rounded-full flex items-center justify-center ${classes.bg}`}>
+                {classes.icon}
+              </div>
+            </div>
+            
+            <div className="text-center mt-3">
+              <h3 className="font-semibold text-base md:text-lg truncate max-w-[120px] md:max-w-[150px]">
+                {user.username || "Usuario"}
+              </h3>
+              <p className="text-muted-foreground text-sm mt-1 truncate max-w-[120px] md:max-w-[150px]">
+                {user.career || ""}
+              </p>
+              <p className="text-sm font-medium mt-2">
+                <span className="text-primary">{user.followers_count}</span> seguidores
+              </p>
             </div>
           </div>
-          {bronze.career && (
-            <span className="mt-1 text-xs px-2 py-1 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full">
-              {bronze.career}
-            </span>
-          )}
-        </div>
-      </div>
-    </Card>
+        );
+      })}
+    </div>
   );
 };

@@ -8,6 +8,7 @@ import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileInfo } from "@/components/profile/ProfileInfo";
 import { ProfileContent } from "@/components/profile/ProfileContent";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import type { ProfileTable } from "@/types/database/profile.types";
 
 export type Profile = {
@@ -36,6 +37,7 @@ export default function Profile() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { handleImageUpload } = useProfileImage();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   const handleProfileUpdate = (updatedProfile: Profile) => {
     setProfile(updatedProfile);
@@ -160,12 +162,12 @@ export default function Profile() {
             onImageUpload={onImageUpload}
             onProfileUpdate={handleProfileUpdate}
           />
-          <div className="space-y-4 px-6 py-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-1">
+          <div className="space-y-4 px-2 sm:px-4 py-4">
+            <div className={`grid grid-cols-1 ${!isMobile ? 'md:grid-cols-3' : ''} gap-4`}>
+              <div className={`${!isMobile ? 'md:col-span-1' : ''}`}>
                 <ProfileInfo profile={profile} />
               </div>
-              <div className="md:col-span-2">
+              <div className={`${!isMobile ? 'md:col-span-2' : ''}`}>
                 <ProfileContent profileId={profile.id} />
               </div>
             </div>
