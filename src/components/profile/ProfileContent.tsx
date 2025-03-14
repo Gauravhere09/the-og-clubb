@@ -3,19 +3,42 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Feed } from "@/components/Feed";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getFriends } from "@/lib/api/friends";
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProfileContentProps {
   profileId: string;
 }
 
 export function ProfileContent({ profileId }: ProfileContentProps) {
+  // Get friends data directly from Supabase
   const { data: friends = [], isLoading: isLoadingFriends } = useQuery({
     queryKey: ['friends', profileId],
-    queryFn: () => getFriends()
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('friendships')
+          .select(`
+            user:profiles!friendships_user_id_fkey(id, username, avatar_url)
+          `)
+          .eq('friend_id', profileId)
+          .eq('status', 'accepted');
+
+        if (error) throw error;
+        
+        // Return friends from user column
+        return data?.map(item => ({
+          friend_id: item.user.id,
+          friend_username: item.user.username,
+          friend_avatar_url: item.user.avatar_url
+        })) || [];
+      } catch (error) {
+        console.error('Error fetching friends:', error);
+        return [];
+      }
+    }
   });
 
   return (

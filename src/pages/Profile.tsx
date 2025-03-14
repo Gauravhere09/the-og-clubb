@@ -22,7 +22,7 @@ export type Profile = {
   semester: string | null;
   relationship_status: string | null;
   followers_count: number;
-  hearts_count: number;  // Añadimos contador de corazones
+  hearts_count: number;
   created_at: string;
   updated_at: string;
 };
@@ -108,7 +108,7 @@ export default function Profile() {
           semester: typedProfileData.semester,
           relationship_status: null,
           followers_count: followersCount || 0,
-          hearts_count: heartsCount || 0, // Añadimos contador de corazones
+          hearts_count: heartsCount || 0,
           created_at: typedProfileData.created_at,
           updated_at: typedProfileData.updated_at
         };
