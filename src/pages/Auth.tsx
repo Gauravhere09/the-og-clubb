@@ -10,8 +10,8 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4 py-8 sm:py-12">
+      <div className="w-full max-w-md space-y-6 bg-background rounded-lg shadow-sm p-6 sm:p-8">
         <div className="text-center">
           <div className="mx-auto w-12 h-12 bg-primary rounded-xl flex items-center justify-center mb-4">
             <span className="text-2xl font-bold text-primary-foreground">H</span>

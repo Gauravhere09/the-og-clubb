@@ -25,7 +25,9 @@ export const MessagesLayout = ({ sidebar, content, showSidebar }: MessagesLayout
               {sidebar}
             </Card>
           )}
-          {content}
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {content}
+          </div>
         </div>
       </main>
     </div>
