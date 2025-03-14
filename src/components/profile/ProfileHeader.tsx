@@ -1,9 +1,9 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Edit2, Heart, ImagePlus, MessageCircle, Maximize } from "lucide-react";
-import { FollowButton } from "@/components/FollowButton";
+import { ProfileCover } from "./ProfileCover";
+import { ProfileAvatar } from "./ProfileAvatar";
+import { ProfileStats } from "./ProfileStats";
+import { ProfileActions } from "./ProfileActions";
 import { ProfileEditDialog } from "@/components/profile/ProfileEditDialog";
 import { ChatDialog } from "@/components/messages/ChatDialog";
 import { FullScreenImage } from "@/components/profile/FullScreenImage";
@@ -23,6 +23,8 @@ export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfile
   const [fullscreenImage, setFullscreenImage] = useState<{url: string, type: 'avatar' | 'cover'} | null>(null);
   const { hasGivenHeart, heartsCount, isLoading: heartLoading, toggleHeart } = useProfileHeart(profile.id);
 
+  const isOwner = currentUserId === profile.id;
+
   const handleProfileUpdate = (updatedProfile: Profile) => {
     onProfileUpdate?.(updatedProfile);
   };
@@ -31,150 +33,68 @@ export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfile
     setIsChatOpen(true);
   };
 
-  const openFullScreenImage = (type: 'avatar' | 'cover') => {
-    const url = type === 'avatar' ? profile.avatar_url : profile.cover_url;
-    if (url) {
-      setFullscreenImage({ url, type });
+  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    return onImageUpload('avatar', e);
+  };
+
+  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    return onImageUpload('cover', e);
+  };
+
+  const openFullScreenAvatar = () => {
+    if (profile.avatar_url) {
+      setFullscreenImage({ url: profile.avatar_url, type: 'avatar' });
+    }
+  };
+
+  const openFullScreenCover = () => {
+    if (profile.cover_url) {
+      setFullscreenImage({ url: profile.cover_url, type: 'cover' });
     }
   };
 
   return (
     <>
-      <div className="relative h-[300px]">
-        <div className="w-full h-full bg-muted flex items-center justify-center">
-          {profile.cover_url ? (
-            <div className="relative w-full h-full">
-              <img 
-                src={profile.cover_url} 
-                alt="Cover" 
-                className="w-full h-full object-cover cursor-pointer"
-                onClick={() => openFullScreenImage('cover')}
-              />
-              <Button
-                size="icon"
-                variant="ghost"
-                className="absolute bottom-4 right-16 bg-black/50 hover:bg-black/70 text-white"
-                onClick={() => openFullScreenImage('cover')}
-              >
-                <Maximize className="h-4 w-4" />
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center w-full h-full">
-              <ImagePlus className="h-12 w-12 text-muted-foreground/50" />
-            </div>
-          )}
-          {currentUserId === profile.id && (
-            <div className="absolute bottom-4 right-4">
-              <input
-                type="file"
-                id="cover-upload"
-                className="hidden"
-                accept="image/*"
-                onChange={(e) => onImageUpload('cover', e)}
-              />
-              <label htmlFor="cover-upload">
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="cursor-pointer"
-                  asChild
-                >
-                  <span>
-                    <ImagePlus className="h-4 w-4" />
-                  </span>
-                </Button>
-              </label>
-            </div>
-          )}
-        </div>
-      </div>
+      <ProfileCover 
+        coverUrl={profile.cover_url}
+        isOwner={isOwner}
+        onUpload={handleCoverUpload}
+        onOpenFullscreen={openFullScreenCover}
+      />
 
       <div className="relative px-6 -mt-[64px]">
         <div className="flex items-end gap-4">
-          <div className="relative">
-            <Avatar 
-              className="h-32 w-32 border-4 border-background cursor-pointer"
-              onClick={() => profile.avatar_url && openFullScreenImage('avatar')}
-            >
-              <AvatarImage src={profile.avatar_url || undefined} />
-              <AvatarFallback>
-                {profile.username?.[0]?.toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            {profile.avatar_url && (
-              <Button
-                size="icon"
-                variant="ghost"
-                className="absolute top-0 right-0 bg-black/50 hover:bg-black/70 text-white"
-                onClick={() => openFullScreenImage('avatar')}
-              >
-                <Maximize className="h-4 w-4" />
-              </Button>
-            )}
-            {currentUserId === profile.id && (
-              <div className="absolute -right-2 -bottom-2">
-                <input
-                  type="file"
-                  id="avatar-upload"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={(e) => onImageUpload('avatar', e)}
-                />
-                <label htmlFor="avatar-upload">
-                  <Button
-                    size="icon"
-                    variant="secondary"
-                    className="cursor-pointer"
-                    asChild
-                  >
-                    <span>
-                      <Camera className="h-4 w-4" />
-                    </span>
-                  </Button>
-                </label>
-              </div>
-            )}
-          </div>
+          <ProfileAvatar
+            avatarUrl={profile.avatar_url}
+            username={profile.username}
+            isOwner={isOwner}
+            onUpload={handleAvatarUpload}
+            onOpenFullscreen={openFullScreenAvatar}
+          />
+          
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold">
                   {profile.username || "Usuario sin nombre"}
                 </h1>
-                <div className="flex items-center gap-3">
-                  <p className="text-muted-foreground">
-                    {profile.followers_count} seguidores
-                  </p>
-                  <div className="flex items-center text-red-500 dark:text-red-400">
-                    <Heart className={`h-4 w-4 mr-1 ${hasGivenHeart ? 'fill-red-500 dark:fill-red-400' : ''}`} />
-                    <span>{heartsCount}</span>
-                  </div>
-                </div>
+                <ProfileStats 
+                  followersCount={profile.followers_count}
+                  heartsCount={heartsCount}
+                  hasGivenHeart={hasGivenHeart}
+                />
               </div>
-              {currentUserId === profile.id ? (
-                <Button variant="outline" onClick={() => setIsEditDialogOpen(true)}>
-                  <Edit2 className="h-4 w-4 mr-2" />
-                  Editar perfil
-                </Button>
-              ) : (
-                <div className="flex gap-2">
-                  <FollowButton targetUserId={profile.id} />
-                  <Button 
-                    variant="outline" 
-                    onClick={toggleHeart}
-                    disabled={heartLoading || !currentUserId}
-                    className={hasGivenHeart ? 'border-red-500 dark:border-red-400 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20' : ''}
-                  >
-                    <Heart className={`h-4 w-4 mr-2 ${hasGivenHeart ? 'fill-red-500 dark:fill-red-400' : ''}`} />
-                    {hasGivenHeart ? 'Quitar corazón' : 'Dar corazón'}
-                  </Button>
-                  <Button variant="outline" onClick={handleMessageClick}>
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    Mensaje
-                  </Button>
-                </div>
-              )}
+              
+              <ProfileActions
+                isOwner={isOwner}
+                profileId={profile.id}
+                hasGivenHeart={hasGivenHeart}
+                heartLoading={heartLoading}
+                currentUserId={currentUserId}
+                onEditClick={() => setIsEditDialogOpen(true)}
+                onMessageClick={handleMessageClick}
+                onToggleHeart={toggleHeart}
+              />
             </div>
           </div>
         </div>
