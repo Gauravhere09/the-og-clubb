@@ -106,7 +106,7 @@ export function Navigation() {
       label: "Popularidad"
     },
     { 
-      to: isAuthenticated && currentUserId ? `/profile/${currentUserId}` : "/auth", 
+      to: currentUserId ? `/profile/${currentUserId}` : "/auth", 
       icon: User, 
       label: "Perfil" 
     }
