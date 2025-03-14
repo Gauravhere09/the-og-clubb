@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Post } from "@/components/Post";
 import { getPosts, getHiddenPosts } from "@/lib/api";
@@ -158,33 +157,57 @@ export function Feed({ userId }: FeedProps) {
       });
     }
     
-    // Primeras publicaciones (3 o menos)
-    const firstBatch = visiblePostsCopy.slice(0, 3);
-    firstBatch.forEach(post => {
-      feedContent.push(
-        <div key={post.id} className="mb-4">
-          <Post post={post} />
-        </div>
-      );
-    });
-    
-    // Solo insertar componente de sugerencias de amigos si hay posts visibles
-    // y solo si hay más posts después de las primeras 3
-    if (visiblePostsCopy.length > 3) {
+    // Mostrar PeopleYouMayKnow al principio o después del primer post si hay pocos posts
+    if (visiblePostsCopy.length <= 3) {
+      if (visiblePostsCopy.length > 0) {
+        // Mostrar primer post
+        const firstPost = visiblePostsCopy.shift();
+        feedContent.push(
+          <div key={firstPost!.id} className="mb-4">
+            <Post post={firstPost!} />
+          </div>
+        );
+      }
+      
+      // Insertar PeopleYouMayKnow después del primer post o al principio si no hay posts
       feedContent.push(
         <PeopleYouMayKnow key="people-you-may-know" />
       );
-    }
-    
-    // Resto de publicaciones
-    const remainingPosts = visiblePostsCopy.slice(3);
-    remainingPosts.forEach(post => {
+      
+      // Mostrar los posts restantes
+      visiblePostsCopy.forEach(post => {
+        feedContent.push(
+          <div key={post.id} className="mb-4">
+            <Post post={post} />
+          </div>
+        );
+      });
+    } else {
+      // Si hay más de 3 posts, mantener la lógica original
+      // Primeras publicaciones (2 o menos)
+      const firstBatch = visiblePostsCopy.splice(0, 2);
+      firstBatch.forEach(post => {
+        feedContent.push(
+          <div key={post.id} className="mb-4">
+            <Post post={post} />
+          </div>
+        );
+      });
+      
+      // Insertar componente de sugerencias de amigos después de los primeros 2 posts
       feedContent.push(
-        <div key={post.id} className="mb-4">
-          <Post post={post} />
-        </div>
+        <PeopleYouMayKnow key="people-you-may-know" />
       );
-    });
+      
+      // Resto de publicaciones
+      visiblePostsCopy.forEach(post => {
+        feedContent.push(
+          <div key={post.id} className="mb-4">
+            <Post post={post} />
+          </div>
+        );
+      });
+    }
     
     return feedContent;
   };

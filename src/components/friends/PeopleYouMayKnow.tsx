@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { UserPlus, ChevronRight, Users, X } from "lucide-react";
@@ -98,8 +97,38 @@ export function PeopleYouMayKnow() {
     sugg => !dismissedFriends[sugg.id]
   );
 
-  // Si no hay sugerencias visibles o todavía está cargando, no mostrar el componente
-  if (loading || visibleSuggestions.length === 0) {
+  // Si está cargando, mostrar un esqueleto de carga en lugar de no mostrar nada
+  if (loading) {
+    return (
+      <Card className="mb-4 overflow-hidden">
+        <CardHeader className="pb-2 pt-4 px-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Personas que quizá conozcas</CardTitle>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="px-2 py-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="relative rounded-lg p-3 border animate-pulse">
+                <div className="flex flex-col items-center text-center gap-2">
+                  <div className="h-16 w-16 rounded-full bg-muted"></div>
+                  <div className="h-4 w-20 bg-muted rounded"></div>
+                  <div className="h-3 w-16 bg-muted rounded"></div>
+                  <div className="h-8 w-full bg-muted rounded mt-1"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // No mostrar el componente si no hay sugerencias visibles
+  if (visibleSuggestions.length === 0) {
     return null;
   }
 
