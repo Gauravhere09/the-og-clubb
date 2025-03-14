@@ -63,34 +63,6 @@
     margin-bottom: 0.5rem;
     padding: 0.5rem 0.75rem;
   }
-  
-  /* Fix reaction menu styling */
-  .reaction-menu {
-    width: 100% !important;
-    left: 0 !important;
-    right: 0 !important;
-    justify-content: space-around !important;
-  }
-  
-  /* Fix share options display */
-  .share-options {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-  
-  /* Ensure better button spacing */
-  .action-buttons {
-    gap: 0.25rem !important;
-  }
-  
-  /* Chat dialog improvements */
-  .chat-dialog {
-    width: 100% !important;
-    height: 100vh !important;
-    margin: 0 !important;
-    max-width: 100% !important;
-    max-height: 100% !important;
-  }
 }
 
 /* Fixed navigation for mobile */

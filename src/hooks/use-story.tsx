@@ -1,94 +1,90 @@
 
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDistanceToNow } from "date-fns";
-import { es } from "date-fns/locale";
 
 interface StoryData {
   id: string;
   user: {
     id: string;
     username: string;
-    avatarUrl: string;
+    avatarUrl: string | null;
   };
   imageUrls: string[];
   createdAt: string;
 }
 
-export function useStory() {
-  const { storyId } = useParams<{ storyId: string }>();
-  const navigate = useNavigate();
-  const [storyData, setStoryData] = useState<StoryData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [timeDisplay, setTimeDisplay] = useState("");
-  const [error, setError] = useState<Error | null>(null);
-  
-  useEffect(() => {
-    if (!storyId) {
-      navigate("/");
-      return;
-    }
-
-    const fetchStory = async () => {
-      try {
-        setIsLoading(true);
+export function useStory(storyId: string) {
+  const { data: storyData, isLoading } = useQuery({
+    queryKey: ["story", storyId],
+    queryFn: async () => {
+      // First get the story
+      const { data: story, error: storyError } = await supabase
+        .from('stories')
+        .select('id, image_url, created_at, user_id')
+        .eq('id', storyId)
+        .single();
         
-        // Here would be the actual fetch from the database
-        // This is mocked for demonstration purposes
-        const response = await supabase
-          .from("stories")
-          .select(`
-            id,
-            created_at,
-            media_url,
-            user_id,
-            profiles:user_id (
-              id,
-              username,
-              avatar_url
-            )
-          `)
-          .eq("id", storyId)
-          .single();
+      if (storyError) throw storyError;
+      
+      // Then get the user profile separately
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', story.user_id)
+        .single();
         
-        if (response.error) {
-          throw new Error(response.error.message);
-        }
-        
-        if (!response.data) {
-          throw new Error("Story not found");
-        }
-        
-        const data = response.data;
-        
-        setStoryData({
-          id: data.id,
-          user: {
-            id: data.profiles.id,
-            username: data.profiles.username || "Usuario",
-            avatarUrl: data.profiles.avatar_url || "",
-          },
-          imageUrls: [data.media_url],
-          createdAt: data.created_at,
-        });
-        
-        // Format time display
-        setTimeDisplay(formatDistanceToNow(new Date(data.created_at), {
-          addSuffix: true,
-          locale: es
-        }));
-        
-      } catch (err) {
-        console.error("Error fetching story:", err);
-        setError(err instanceof Error ? err : new Error("Unknown error"));
-      } finally {
-        setIsLoading(false);
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
       }
-    };
-    
-    fetchStory();
-  }, [storyId, navigate]);
+      
+      // Record view if user is logged in
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('story_views')
+          .upsert({
+            story_id: storyId,
+            viewer_id: user.id
+          }, { onConflict: 'story_id,viewer_id' });
+      }
+      
+      return {
+        id: story.id,
+        user: {
+          id: story.user_id,
+          username: profile?.username || "Usuario",
+          avatarUrl: profile?.avatar_url
+        },
+        imageUrls: [story.image_url],
+        createdAt: story.created_at
+      };
+    }
+  });
+
+  // Create a placeholder while loading
+  const displayData = storyData || {
+    id: storyId,
+    user: {
+      id: `user${storyId}`,
+      username: "Cargando...",
+      avatarUrl: null
+    },
+    imageUrls: ["https://via.placeholder.com/800x1200?text=Cargando..."],
+    createdAt: new Date().toISOString()
+  };
+
+  // Calculate time ago
+  const timeAgo = new Date().getTime() - new Date(displayData.createdAt).getTime();
+  const hoursAgo = Math.floor(timeAgo / (1000 * 60 * 60));
+  const minutesAgo = Math.floor((timeAgo % (1000 * 60 * 60)) / (1000 * 60));
   
-  return { storyData, isLoading, timeDisplay, error };
+  const timeDisplay = hoursAgo > 0 
+    ? `Hace ${hoursAgo}h ${minutesAgo}m` 
+    : `Hace ${minutesAgo}m`;
+
+  return {
+    storyData: displayData,
+    isLoading,
+    timeDisplay
+  };
 }

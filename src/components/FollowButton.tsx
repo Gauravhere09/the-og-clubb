@@ -51,32 +51,28 @@ export function FollowButton({ targetUserId, size = "default" }: FollowButtonPro
   }, [targetUserId]);
 
   const handleFollowToggle = async () => {
+    if (!currentUserId) {
+      toast({
+        title: "Error",
+        description: "Debes iniciar sesión para seguir a otros usuarios",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Don't allow following yourself
+    if (currentUserId === targetUserId) {
+      toast({
+        title: "Error",
+        description: "No puedes seguirte a ti mismo",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
     try {
-      // Verify current user session first
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Error de sesión",
-          description: "Debes iniciar sesión para interactuar con otros usuarios",
-          variant: "destructive"
-        });
-        return;
-      }
-      
-      setCurrentUserId(user.id);
-      
-      // Don't allow following yourself
-      if (user.id === targetUserId) {
-        toast({
-          title: "Error",
-          description: "No puedes seguirte a ti mismo",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      setIsLoading(true);
-
       if (relationship === 'following' || relationship === 'friends' || relationship === 'pending') {
         // Si ya estoy siguiendo o tengo solicitud pendiente, dejar de seguir
         await unfollowUser(targetUserId);

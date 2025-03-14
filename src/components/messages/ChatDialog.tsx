@@ -7,8 +7,6 @@ import { usePrivateMessages } from "@/hooks/use-private-messages";
 import { Friend } from "@/hooks/use-friends";
 import { X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 export interface ChatDialogProps {
   isOpen: boolean;
@@ -24,21 +22,16 @@ export interface ChatDialogProps {
 export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatDialogProps) => {
   const [newMessage, setNewMessage] = useState("");
   const { messages, loadMessages, sendMessage, deleteMessage } = usePrivateMessages();
-  const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen && currentUserId && targetUser) {
-      setIsLoading(true);
       const friend: Friend = {
         friend_id: targetUser.id,
-        friend_username: targetUser.username || "Usuario",
+        friend_username: targetUser.username,
         friend_avatar_url: targetUser.avatar_url,
         status: 'friends'
       };
-      
-      loadMessages(currentUserId, friend)
-        .finally(() => setIsLoading(false));
+      loadMessages(currentUserId, friend);
     }
 
     // Ocultar la navegación cuando el chat está abierto en móvil
@@ -58,42 +51,21 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
         nav.style.display = 'flex';
       }
     };
-  }, [isOpen, currentUserId, targetUser, loadMessages]);
+  }, [isOpen, currentUserId, targetUser]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
-    
-    if (!currentUserId) {
-      const { data } = await supabase.auth.getUser();
-      if (!data.user) {
-        toast({
-          title: "Error",
-          description: "Debes iniciar sesión para enviar mensajes",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
 
     const friend: Friend = {
       friend_id: targetUser.id,
-      friend_username: targetUser.username || "Usuario",
+      friend_username: targetUser.username,
       friend_avatar_url: targetUser.avatar_url,
       status: 'friends'
     };
 
-    try {
-      const success = await sendMessage(newMessage, currentUserId, friend);
-      if (success) {
-        setNewMessage("");
-      }
-    } catch (error) {
-      console.error("Error al enviar mensaje:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo enviar el mensaje",
-        variant: "destructive",
-      });
+    const success = await sendMessage(newMessage, currentUserId, friend);
+    if (success) {
+      setNewMessage("");
     }
   };
 
@@ -103,7 +75,7 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md p-0 gap-0 h-[100dvh] md:h-[600px] flex flex-col bg-background chat-dialog">
+      <DialogContent className="max-w-md p-0 gap-0 h-[100dvh] md:h-[600px] flex flex-col bg-background">
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Avatar>
@@ -121,7 +93,6 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
           messages={messages}
           currentUserId={currentUserId}
           onDeleteMessage={handleDeleteMessage}
-          isLoading={isLoading}
         />
 
         <MessageInput 
