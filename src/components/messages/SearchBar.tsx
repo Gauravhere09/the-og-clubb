@@ -13,6 +13,8 @@ export const SearchBar = ({ searchQuery, onSearchChange }: SearchBarProps) => {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         <input
           type="text"
+          id="search-messages"
+          name="search-messages"
           placeholder="Buscar o empezar un nuevo chat"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}

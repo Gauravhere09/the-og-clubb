@@ -61,6 +61,8 @@ export function CommentInput({
           placeholder={replyTo ? `Escribe tu respuesta para ${replyTo.username}...` : "Escribe un comentario..."}
           className="resize-none min-h-[80px]"
           onKeyDown={handleKeyDown}
+          id="comment-textarea"
+          name="comment-textarea"
         />
         <Button onClick={onSubmitComment} disabled={!newComment.trim()}>
           Comentar

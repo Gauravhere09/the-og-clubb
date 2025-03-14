@@ -38,6 +38,8 @@ export const MessageInput = ({
         ref={fileInputRef}
         onChange={handleFileChange}
         accept="image/*"
+        id="message-image-upload"
+        name="message-image-upload"
         className="hidden"
       />
       <Button 
@@ -54,12 +56,16 @@ export const MessageInput = ({
           e.preventDefault();
           onSendMessage();
         }}
+        id="message-form"
+        name="message-form"
       >
         <Input 
           placeholder="Escribe un mensaje" 
           value={newMessage}
           onChange={(e) => onMessageChange(e.target.value)}
           className="flex-1 bg-white dark:bg-[#111B21] border-gray-200 dark:border-transparent text-gray-900 dark:text-white placeholder:text-gray-400 focus-visible:ring-0"
+          id="new-message"
+          name="new-message"
         />
         {newMessage ? (
           <Button type="submit" size="icon" variant="ghost" className="text-[#9b87f5] hover:text-[#7E69AB] dark:hover:bg-[#111B21]">

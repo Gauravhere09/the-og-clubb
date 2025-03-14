@@ -62,8 +62,10 @@ export function PollCreator({ onPollCreate, onCancel }: PollCreatorProps) {
       
       <div className="space-y-6">
         <div className="space-y-2">
-          <label className="text-sm text-muted-foreground">Pregunta</label>
+          <label className="text-sm text-muted-foreground" htmlFor="poll-question">Pregunta</label>
           <Input
+            id="poll-question"
+            name="poll-question"
             placeholder="Escribe tu pregunta"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
@@ -80,6 +82,8 @@ export function PollCreator({ onPollCreate, onCancel }: PollCreatorProps) {
                 value={option}
                 onChange={(e) => updateOption(index, e.target.value)}
                 className="bg-background border-muted-foreground/20"
+                id={`poll-option-${index}`}
+                name={`poll-option-${index}`}
               />
               {options.length > 2 && (
                 <Button
@@ -113,6 +117,8 @@ export function PollCreator({ onPollCreate, onCancel }: PollCreatorProps) {
           <Switch
             checked={allowMultipleAnswers}
             onCheckedChange={setAllowMultipleAnswers}
+            id="multiple-answers"
+            name="multiple-answers"
           />
         </div>
       </div>

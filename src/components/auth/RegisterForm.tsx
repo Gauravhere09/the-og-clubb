@@ -92,13 +92,14 @@ export function RegisterForm({ loading, setLoading, sendVerificationEmail }: Reg
   };
 
   return (
-    <form onSubmit={handleRegister} className="space-y-4">
+    <form onSubmit={handleRegister} className="space-y-4" id="register-form" name="register-form">
       <div>
         <label htmlFor="username" className="block text-sm font-medium mb-1">
           Nombre de usuario
         </label>
         <Input
           id="username"
+          name="username"
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
@@ -112,8 +113,8 @@ export function RegisterForm({ loading, setLoading, sendVerificationEmail }: Reg
         <label htmlFor="career" className="block text-sm font-medium mb-1">
           Carrera estudiada
         </label>
-        <Select value={career} onValueChange={setCareer} disabled={loading}>
-          <SelectTrigger id="career">
+        <Select value={career} onValueChange={setCareer} disabled={loading} name="career">
+          <SelectTrigger id="career" name="career">
             <SelectValue placeholder="Selecciona tu carrera" />
           </SelectTrigger>
           <SelectContent>
@@ -130,8 +131,8 @@ export function RegisterForm({ loading, setLoading, sendVerificationEmail }: Reg
         <label htmlFor="semester" className="block text-sm font-medium mb-1">
           Semestre actual
         </label>
-        <Select value={semester} onValueChange={setSemester} disabled={loading}>
-          <SelectTrigger id="semester">
+        <Select value={semester} onValueChange={setSemester} disabled={loading} name="semester">
+          <SelectTrigger id="semester" name="semester">
             <SelectValue placeholder="Selecciona tu semestre" />
           </SelectTrigger>
           <SelectContent>
@@ -150,6 +151,7 @@ export function RegisterForm({ loading, setLoading, sendVerificationEmail }: Reg
         </label>
         <Input
           id="register-email"
+          name="register-email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -165,6 +167,7 @@ export function RegisterForm({ loading, setLoading, sendVerificationEmail }: Reg
         </label>
         <Input
           id="register-password"
+          name="register-password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

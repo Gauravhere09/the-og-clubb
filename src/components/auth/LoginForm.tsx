@@ -40,13 +40,14 @@ export function LoginForm({ loading, setLoading }: LoginFormProps) {
   };
 
   return (
-    <form onSubmit={handleLogin} className="space-y-4">
+    <form onSubmit={handleLogin} className="space-y-4" id="login-form" name="login-form">
       <div>
         <label htmlFor="login-email" className="block text-sm font-medium mb-1">
           Email
         </label>
         <Input
           id="login-email"
+          name="login-email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -61,6 +62,7 @@ export function LoginForm({ loading, setLoading }: LoginFormProps) {
         </label>
         <Input
           id="login-password"
+          name="login-password"
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

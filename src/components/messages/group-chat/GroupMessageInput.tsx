@@ -67,12 +67,14 @@ export const GroupMessageInput = ({
 
   return (
     <div className="p-4 border-t">
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      <form onSubmit={handleSubmit} className="flex gap-2" id="group-message-form" name="group-message-form">
         <input
           type="file"
           ref={fileInputRef}
           onChange={handleFileChange}
           accept="image/*"
+          id="group-message-image"
+          name="group-message-image"
           className="hidden"
         />
         <Button
@@ -91,6 +93,8 @@ export const GroupMessageInput = ({
           onChange={(e) => setNewMessage(e.target.value)}
           disabled={isSending || isRecording}
           className="flex-1"
+          id="group-new-message"
+          name="group-new-message"
         />
         {isRecording ? (
           <Button 
