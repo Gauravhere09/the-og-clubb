@@ -16,13 +16,13 @@ export function CareerSelect({ form }: CareerSelectProps) {
       name="career"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Carrera</FormLabel>
+          <FormLabel htmlFor="career">Carrera</FormLabel>
           <Select
             onValueChange={field.onChange}
             defaultValue={field.value}
           >
             <FormControl>
-              <SelectTrigger>
+              <SelectTrigger id="career">
                 <SelectValue placeholder="Selecciona tu carrera" />
               </SelectTrigger>
             </FormControl>

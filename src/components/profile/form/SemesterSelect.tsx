@@ -18,13 +18,13 @@ export function SemesterSelect({ form }: SemesterSelectProps) {
       name="semester"
       render={({ field }) => (
         <FormItem>
-          <FormLabel>Semestre</FormLabel>
+          <FormLabel htmlFor="semester">Semestre</FormLabel>
           <Select
             onValueChange={field.onChange}
             defaultValue={field.value}
           >
             <FormControl>
-              <SelectTrigger>
+              <SelectTrigger id="semester">
                 <SelectValue placeholder="Selecciona tu semestre" />
               </SelectTrigger>
             </FormControl>

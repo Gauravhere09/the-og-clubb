@@ -17,9 +17,13 @@ export function ProfileBasicInfo({ form }: ProfileBasicInfoProps) {
         name="username"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Nombre de usuario</FormLabel>
+            <FormLabel htmlFor="username">Nombre de usuario</FormLabel>
             <FormControl>
-              <Input {...field} />
+              <Input 
+                id="username" 
+                {...field} 
+                autoComplete="username" 
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
@@ -31,9 +35,13 @@ export function ProfileBasicInfo({ form }: ProfileBasicInfoProps) {
         name="bio"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Biografía</FormLabel>
+            <FormLabel htmlFor="bio">Biografía</FormLabel>
             <FormControl>
-              <Textarea {...field} rows={4} />
+              <Textarea 
+                id="bio" 
+                {...field} 
+                rows={4} 
+              />
             </FormControl>
             <FormMessage />
           </FormItem>
