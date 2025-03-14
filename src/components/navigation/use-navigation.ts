@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -20,6 +21,15 @@ export function useNavigation() {
     };
 
     getUserId();
+
+    // Establecer un listener para cambios de autenticación
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setCurrentUserId(session?.user.id || null);
+      } else if (event === 'SIGNED_OUT') {
+        setCurrentUserId(null);
+      }
+    });
 
     // Suscribirse a notificaciones en tiempo real
     const notificationsChannel = supabase
@@ -81,6 +91,7 @@ export function useNavigation() {
       .subscribe();
 
     return () => {
+      if (authListener) authListener.subscription.unsubscribe();
       notificationsChannel.unsubscribe();
       postsChannel.unsubscribe();
     };

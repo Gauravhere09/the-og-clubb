@@ -20,6 +20,26 @@ export function Navigation() {
   } = useNavigation();
   
   const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  
+  useEffect(() => {
+    // Verificar estado de autenticación inicial
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+    
+    checkAuth();
+    
+    // Suscribirse a cambios en el estado de autenticación
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+    
+    return () => {
+      if (authListener) authListener.subscription.unsubscribe();
+    };
+  }, []);
   
   useEffect(() => {
     if (!currentUserId) return;
@@ -86,7 +106,7 @@ export function Navigation() {
       label: "Popularidad"
     },
     { 
-      to: currentUserId ? `/profile/${currentUserId}` : "/auth", 
+      to: isAuthenticated && currentUserId ? `/profile/${currentUserId}` : "/auth", 
       icon: User, 
       label: "Perfil" 
     }
