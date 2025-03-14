@@ -16,9 +16,11 @@ export function ProfileLayout({ isLoading, error, children }: ProfileLayoutProps
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex bg-muted/30">
-        <Navigation />
-        <div className="flex-1 flex justify-center items-center md:ml-[70px]">
+      <div className="min-h-screen flex flex-col md:flex-row bg-muted/30">
+        <div className="fixed bottom-0 left-0 right-0 md:static md:left-0 z-10">
+          <Navigation />
+        </div>
+        <div className="flex-1 flex justify-center items-center md:ml-[70px] pb-16 md:pb-0">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
       </div>
@@ -27,10 +29,12 @@ export function ProfileLayout({ isLoading, error, children }: ProfileLayoutProps
 
   if (error) {
     return (
-      <div className="min-h-screen flex bg-muted/30">
-        <Navigation />
-        <div className="flex-1 flex justify-center items-center md:ml-[70px]">
-          <Card className="max-w-md w-full p-6">
+      <div className="min-h-screen flex flex-col md:flex-row bg-muted/30">
+        <div className="fixed bottom-0 left-0 right-0 md:static md:left-0 z-10">
+          <Navigation />
+        </div>
+        <div className="flex-1 flex justify-center items-center md:ml-[70px] pb-16 md:pb-0">
+          <Card className="max-w-md w-full p-6 mx-4">
             <div className="text-center space-y-4">
               <div className="flex justify-center">
                 <UserX className="h-12 w-12 text-muted-foreground" />
@@ -50,10 +54,12 @@ export function ProfileLayout({ isLoading, error, children }: ProfileLayoutProps
   }
 
   return (
-    <div className="min-h-screen flex bg-muted/30">
-      <Navigation />
-      <div className="flex-1 flex justify-center md:ml-[70px] pb-20 md:pb-0">
-        <main className="w-full max-w-4xl space-y-4 p-6">
+    <div className="min-h-screen flex flex-col md:flex-row bg-muted/30">
+      <div className="fixed bottom-0 left-0 right-0 md:static md:left-0 z-10">
+        <Navigation />
+      </div>
+      <div className="flex-1 w-full md:ml-[70px] pb-16 md:pb-0">
+        <main className="max-w-4xl mx-auto space-y-4 p-4 md:p-6">
           {children}
         </main>
       </div>

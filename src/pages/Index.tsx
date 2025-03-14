@@ -3,7 +3,7 @@ import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/Feed";
 import { StoryViewer } from "@/components/stories/StoryViewer";
-import { Home, Plus, Menu, LogOut, Moon, Sun } from "lucide-react";
+import { Home, Menu, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -49,18 +49,21 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-background">
-      <Navigation />
-      <div className="flex-1 flex justify-center md:ml-[70px]">
-        <main className="w-full max-w-2xl px-4 py-6 md:py-8 pb-20 md:pb-8">
-          {/* Solo la barra de navegación superior queda fija */}
-          <div className="sticky top-0 bg-background z-10 pb-2">
+    <div className="min-h-screen flex flex-col md:flex-row bg-background">
+      <div className="fixed bottom-0 left-0 right-0 md:static md:left-0 z-10">
+        <Navigation />
+      </div>
+      
+      <div className="flex-1 w-full md:ml-[70px] pb-16 md:pb-0">
+        <main className="max-w-2xl mx-auto px-4 py-4 md:py-8">
+          {/* Barra de navegación superior fija */}
+          <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2 -mx-4 px-4 pt-2">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Home className="h-5 w-5" />
-                <h1 className="text-2xl font-semibold">Feed</h1>
+                <h1 className="text-xl md:text-2xl font-semibold">Feed</h1>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <FriendSearch />
                 <NotificationDropdown />
                 <DropdownMenu>
@@ -98,7 +101,7 @@ const Index = () => {
           </div>
 
           {/* El contenido que se desplaza */}
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {currentUserId && (
               <StoryViewer currentUserId={currentUserId} />
             )}
