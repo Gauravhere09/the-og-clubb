@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Post } from "@/components/Post";
 import { getPosts, getHiddenPosts } from "@/lib/api";
@@ -32,13 +31,11 @@ export function Feed({ userId }: FeedProps) {
   const [hiddenPostIds, setHiddenPostIds] = useState<string[]>([]);
   const [showHidden, setShowHidden] = useState(false);
 
-  // Obtener las publicaciones ocultas
   const { data: hiddenPosts = [] } = useQuery({
     queryKey: ["hidden-posts"],
     queryFn: getHiddenPosts,
   });
 
-  // Actualizar hiddenPostIds cuando cambian los datos de hiddenPosts
   useEffect(() => {
     if (hiddenPosts && hiddenPosts.length > 0) {
       setHiddenPostIds(hiddenPosts);
@@ -54,12 +51,10 @@ export function Feed({ userId }: FeedProps) {
         poll: transformPoll(post.poll)
       }));
 
-      // Siempre ordenar por fecha más reciente
       transformedPosts = transformedPosts
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       if (showNew) {
-        // Si se solicita mostrar solo publicaciones nuevas, filtramos por las últimas 24 horas
         const twentyFourHoursAgo = new Date();
         twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
@@ -74,11 +69,9 @@ export function Feed({ userId }: FeedProps) {
     }
   });
 
-  // Cuando se detecta el parámetro 'new', recargar los posts y luego limpiar el parámetro
   useEffect(() => {
     if (showNew) {
       refetch().then(() => {
-        // Limpiar el parámetro de la URL después de cargar
         setSearchParams({});
       });
     }
@@ -97,12 +90,10 @@ export function Feed({ userId }: FeedProps) {
     );
   }
 
-  // Filtrar posts ocultos si no se está mostrando el modo "mostrar ocultos"
   const visiblePosts = showHidden 
     ? posts 
     : posts.filter(post => !hiddenPostIds.includes(post.id));
   
-  // Publicaciones que están ocultas
   const onlyHiddenPosts = posts.filter(post => hiddenPostIds.includes(post.id));
 
   if (!visiblePosts.length && !onlyHiddenPosts.length) {
@@ -115,11 +106,9 @@ export function Feed({ userId }: FeedProps) {
     );
   }
 
-  // Renderizar feed con PeopleYouMayKnow después de cada 3 posts
   const renderFeedContent = () => {
     const feedContent = [];
     
-    // Botón para mostrar publicaciones ocultas
     if (onlyHiddenPosts.length > 0 && !showHidden) {
       feedContent.push(
         <div key="hidden-posts-toggle" className="flex justify-center mb-2">
@@ -133,7 +122,6 @@ export function Feed({ userId }: FeedProps) {
       );
     }
     
-    // Insertar publicaciones ocultas si están visibles
     if (showHidden && onlyHiddenPosts.length > 0) {
       feedContent.push(
         <div key="hidden-posts-toggle" className="flex justify-center mb-2">
@@ -156,30 +144,29 @@ export function Feed({ userId }: FeedProps) {
       });
     }
     
-    // Dividir los posts visibles en grupos de 3 e insertar PeopleYouMayKnow después de cada grupo
-    const visiblePostsCopy = [...visiblePosts];
+    const firstPosts = visiblePosts.slice(0, 3);
+    firstPosts.forEach(post => {
+      feedContent.push(
+        <div key={post.id} className="mb-4">
+          <Post post={post} />
+        </div>
+      );
+    });
     
-    while (visiblePostsCopy.length > 0) {
-      // Tomar hasta 3 posts para este grupo
-      const chunk = visiblePostsCopy.splice(0, 3);
-      
-      // Renderizar los posts del grupo
-      chunk.forEach(post => {
-        feedContent.push(
-          <div key={post.id} className="mb-4">
-            <Post post={post} />
-          </div>
-        );
-      });
-      
-      // Insertar PeopleYouMayKnow después de cada grupo de 3 posts
-      // Solo si hay más posts por mostrar o si es el último grupo pero hay suficientes posts en total
-      if (visiblePostsCopy.length > 0 || visiblePosts.length >= 3) {
-        feedContent.push(
-          <PeopleYouMayKnow key={`people-${feedContent.length}`} />
-        );
-      }
+    if (visiblePosts.length >= 3) {
+      feedContent.push(
+        <PeopleYouMayKnow key="people-you-may-know" />
+      );
     }
+    
+    const remainingPosts = visiblePosts.slice(3);
+    remainingPosts.forEach(post => {
+      feedContent.push(
+        <div key={post.id} className="mb-4">
+          <Post post={post} />
+        </div>
+      );
+    });
     
     return feedContent;
   };
