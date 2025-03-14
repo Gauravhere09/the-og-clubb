@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { UserPlus, ChevronRight, Users, X, MoreHorizontal } from "lucide-react";
+import { UserPlus, ChevronRight, Users, X, MoreHorizontal, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
@@ -15,6 +15,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 export function PeopleYouMayKnow() {
   const [suggestions, setSuggestions] = useState<FriendSuggestion[]>([]);
@@ -28,8 +35,8 @@ export function PeopleYouMayKnow() {
       try {
         setLoading(true);
         const data = await getFriendSuggestions();
-        // Limit to suggestions for the feed widget
-        setSuggestions(data.slice(0, 4)); // Show only 4 suggestions to match the image
+        // Get more suggestions for the carousel
+        setSuggestions(data.slice(0, 10));
       } catch (error) {
         console.error("Error fetching friend suggestions:", error);
       } finally {
@@ -177,59 +184,68 @@ export function PeopleYouMayKnow() {
           </DropdownMenu>
         </div>
       </CardHeader>
-      <CardContent className="px-2 py-2">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {visibleSuggestions.slice(0, 4).map((suggestion) => (
-            <div 
-              key={suggestion.id}
-              className="relative rounded-lg p-3 hover:bg-muted/30 transition-colors"
-            >
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full bg-gray-200 dark:bg-gray-700 opacity-70 hover:opacity-100 z-10"
-                onClick={() => handleDismiss(suggestion.id)}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-              
-              <div className="flex flex-col items-center text-center gap-2">
-                <Link to={`/profile/${suggestion.id}`}>
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={suggestion.avatar_url || undefined} />
-                    <AvatarFallback>
-                      {suggestion.username[0]?.toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                </Link>
-                <div>
-                  <Link to={`/profile/${suggestion.id}`} className="font-medium text-sm hover:underline line-clamp-1">
-                    {suggestion.username}
-                  </Link>
+      <CardContent className="px-0 py-2">
+        <Carousel
+          opts={{
+            align: "start",
+            loop: true
+          }}
+          className="w-full"
+        >
+          <CarouselContent className="ml-2">
+            {visibleSuggestions.map((suggestion) => (
+              <CarouselItem key={suggestion.id} className="pl-2 md:basis-1/4 basis-1/2 lg:basis-1/4">
+                <div className="relative rounded-lg p-3 hover:bg-muted/30 transition-colors">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute top-1 right-1 h-6 w-6 p-0 rounded-full bg-gray-200 dark:bg-gray-700 opacity-70 hover:opacity-100 z-10"
+                    onClick={() => handleDismiss(suggestion.id)}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
                   
-                  {suggestion.mutual_friends_count > 0 && (
-                    <div className="flex items-center justify-center text-xs text-muted-foreground mt-1">
-                      <span className="line-clamp-1">
-                        {suggestion.mutual_friends_count} {suggestion.mutual_friends_count === 1 ? 'amigo' : 'amigos'} en común
-                      </span>
+                  <div className="flex flex-col items-center text-center gap-2">
+                    <Link to={`/profile/${suggestion.id}`}>
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={suggestion.avatar_url || undefined} />
+                        <AvatarFallback>
+                          {suggestion.username[0]?.toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Link>
+                    <div>
+                      <Link to={`/profile/${suggestion.id}`} className="font-medium text-sm hover:underline line-clamp-1">
+                        {suggestion.username}
+                      </Link>
+                      
+                      {suggestion.mutual_friends_count > 0 && (
+                        <div className="flex items-center justify-center text-xs text-muted-foreground mt-1">
+                          <span className="line-clamp-1">
+                            {suggestion.mutual_friends_count} {suggestion.mutual_friends_count === 1 ? 'amigo' : 'amigos'} en común
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  )}
+                    
+                    <Button 
+                      variant={requestedFriends[suggestion.id] ? "secondary" : "default"}
+                      size="sm" 
+                      className="w-full mt-1"
+                      disabled={requestedFriends[suggestion.id]}
+                      onClick={() => handleSendRequest(suggestion.id)}
+                    >
+                      <UserPlus className="h-4 w-4 mr-1" />
+                      {requestedFriends[suggestion.id] ? "Enviada" : "Añadir amigo"}
+                    </Button>
+                  </div>
                 </div>
-                
-                <Button 
-                  variant={requestedFriends[suggestion.id] ? "secondary" : "primary"}
-                  size="sm" 
-                  className="w-full mt-1"
-                  disabled={requestedFriends[suggestion.id]}
-                  onClick={() => handleSendRequest(suggestion.id)}
-                >
-                  <UserPlus className="h-4 w-4 mr-1" />
-                  {requestedFriends[suggestion.id] ? "Enviada" : "Añadir amigo"}
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="left-1 md:left-2" />
+          <CarouselNext className="right-1 md:right-2" />
+        </Carousel>
         <div className="mt-3 text-center">
           <Link to="/friends" className="text-sm text-primary hover:underline">
             Ver todo
