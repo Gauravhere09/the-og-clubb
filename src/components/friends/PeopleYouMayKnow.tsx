@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { UserPlus, ChevronRight, Users } from "lucide-react";
+import { UserPlus, ChevronRight, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "react-router-dom";
@@ -14,6 +14,7 @@ export function PeopleYouMayKnow() {
   const [suggestions, setSuggestions] = useState<FriendSuggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [requestedFriends, setRequestedFriends] = useState<Record<string, boolean>>({});
+  const [dismissedFriends, setDismissedFriends] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -21,8 +22,8 @@ export function PeopleYouMayKnow() {
       try {
         setLoading(true);
         const data = await getFriendSuggestions();
-        // Limit to 2-4 suggestions for the feed widget
-        setSuggestions(data.slice(0, 4));
+        // Limit to suggestions for the feed widget
+        setSuggestions(data.slice(0, 6));
       } catch (error) {
         console.error("Error fetching friend suggestions:", error);
       } finally {
@@ -85,7 +86,19 @@ export function PeopleYouMayKnow() {
     }
   };
 
-  if (loading || suggestions.length === 0) {
+  const handleDismiss = (friendId: string) => {
+    setDismissedFriends(prev => ({
+      ...prev, 
+      [friendId]: true
+    }));
+  };
+
+  // Filter out dismissed suggestions
+  const visibleSuggestions = suggestions.filter(
+    sugg => !dismissedFriends[sugg.id]
+  );
+
+  if (loading || visibleSuggestions.length === 0) {
     return null;
   }
 
@@ -93,19 +106,31 @@ export function PeopleYouMayKnow() {
     <Card className="mb-4 overflow-hidden">
       <CardHeader className="pb-2 pt-4 px-4">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-lg">Personas que quizá conozcas</CardTitle>
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            <CardTitle className="text-lg">Personas que quizá conozcas</CardTitle>
+          </div>
           <Link to="/friends" className="text-sm text-primary flex items-center">
             Ver todo <ChevronRight className="h-4 w-4 ml-1" />
           </Link>
         </div>
       </CardHeader>
-      <CardContent className="px-3 py-2">
-        <div className="grid grid-cols-2 gap-2">
-          {suggestions.slice(0, 4).map((suggestion) => (
+      <CardContent className="px-2 py-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {visibleSuggestions.slice(0, 6).map((suggestion) => (
             <div 
               key={suggestion.id}
-              className="relative rounded-lg p-3 border"
+              className="relative rounded-lg p-3 border hover:bg-muted/30 transition-colors"
             >
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute top-1 right-1 h-6 w-6 p-1 opacity-70 hover:opacity-100 z-10"
+                onClick={() => handleDismiss(suggestion.id)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              
               <div className="flex flex-col items-center text-center gap-2">
                 <Link to={`/profile/${suggestion.id}`}>
                   <Avatar className="h-16 w-16">
@@ -116,16 +141,15 @@ export function PeopleYouMayKnow() {
                   </Avatar>
                 </Link>
                 <div>
-                  <Link to={`/profile/${suggestion.id}`} className="font-medium text-sm hover:underline">
+                  <Link to={`/profile/${suggestion.id}`} className="font-medium text-sm hover:underline line-clamp-1">
                     {suggestion.username}
                   </Link>
                   
                   {suggestion.mutual_friends_count > 0 && (
                     <div className="flex items-center justify-center text-xs text-muted-foreground mt-1">
-                      <Avatar className="h-4 w-4 mr-1">
-                        <AvatarFallback className="text-[8px]">👥</AvatarFallback>
-                      </Avatar>
-                      {suggestion.mutual_friends_count} {suggestion.mutual_friends_count === 1 ? 'amigo' : 'amigos'} en común
+                      <span className="line-clamp-1">
+                        {suggestion.mutual_friends_count} {suggestion.mutual_friends_count === 1 ? 'amigo' : 'amigos'} en común
+                      </span>
                     </div>
                   )}
                 </div>
@@ -138,7 +162,7 @@ export function PeopleYouMayKnow() {
                   onClick={() => handleSendRequest(suggestion.id)}
                 >
                   <UserPlus className="h-4 w-4 mr-1" />
-                  {requestedFriends[suggestion.id] ? "Enviada" : "Añadir"}
+                  {requestedFriends[suggestion.id] ? "Enviada" : "Añadir amigo"}
                 </Button>
               </div>
             </div>

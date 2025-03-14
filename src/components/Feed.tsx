@@ -121,6 +121,20 @@ export function Feed({ userId }: FeedProps) {
     const feedContent = [];
     let visiblePostsCopy = [...visiblePosts];
     
+    // Botón para mostrar publicaciones ocultas
+    if (onlyHiddenPosts.length > 0 && !showHidden) {
+      feedContent.push(
+        <div key="hidden-posts-toggle" className="flex justify-center mb-2">
+          <button 
+            onClick={() => setShowHidden(!showHidden)}
+            className="text-sm text-primary hover:underline"
+          >
+            {`Mostrar ${onlyHiddenPosts.length} publicaciones ocultas`}
+          </button>
+        </div>
+      );
+    }
+    
     // Insertar publicaciones ocultas si están visibles
     if (showHidden && onlyHiddenPosts.length > 0) {
       feedContent.push(
@@ -177,18 +191,6 @@ export function Feed({ userId }: FeedProps) {
 
   return (
     <div className="space-y-0">
-      {/* Botón para alternar la visualización de publicaciones ocultas */}
-      {onlyHiddenPosts.length > 0 && !showHidden && (
-        <div className="flex justify-center mb-2">
-          <button 
-            onClick={() => setShowHidden(!showHidden)}
-            className="text-sm text-primary hover:underline"
-          >
-            {`Mostrar ${onlyHiddenPosts.length} publicaciones ocultas`}
-          </button>
-        </div>
-      )}
-      
       {renderFeedContent()}
     </div>
   );
