@@ -80,9 +80,9 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
           <div className="flex items-center gap-3">
             <Avatar>
               <AvatarImage src={targetUser.avatar_url || undefined} />
-              <AvatarFallback>{targetUser.username[0]}</AvatarFallback>
+              <AvatarFallback>{targetUser.username?.[0] || '?'}</AvatarFallback>
             </Avatar>
-            <div className="font-medium">{targetUser.username}</div>
+            <div className="font-medium">{targetUser.username || "Usuario"}</div>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="h-5 w-5" />
