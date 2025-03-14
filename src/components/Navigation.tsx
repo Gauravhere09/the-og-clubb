@@ -78,7 +78,7 @@ export function Navigation() {
       icon: UserPlus,
       label: "Solicitudes",
       badge: pendingRequestsCount > 0 ? pendingRequestsCount : null,
-      badgeVariant: "secondary"  // Changed from "primary" to "secondary"
+      badgeVariant: "secondary"
     },
     {
       to: "/popularity",
@@ -86,7 +86,7 @@ export function Navigation() {
       label: "Popularidad"
     },
     { 
-      to: currentUserId ? `/profile/${currentUserId}` : "/", 
+      to: currentUserId ? `/profile/${currentUserId}` : "/auth", 
       icon: User, 
       label: "Perfil" 
     }
