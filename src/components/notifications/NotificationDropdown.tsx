@@ -1,68 +1,28 @@
 
-import { useState, useEffect } from "react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Bell } from "lucide-react";
-import { useNotifications } from "@/hooks/use-notifications";
-import { useFriends } from "@/hooks/use-friends";
-import { supabase } from "@/integrations/supabase/client";
 import { NotificationDropdownHeader } from "./NotificationDropdownHeader";
 import { NotificationGroups } from "./NotificationGroups";
 import { NotificationsSuggestions } from "./NotificationsSuggestions";
+import { useNotificationDropdown } from "@/hooks/use-notification-dropdown";
 
 export function NotificationDropdown() {
-  const [open, setOpen] = useState(false);
-  const { notifications, handleFriendRequest, markAsRead, clearAllNotifications } = useNotifications();
-  const [hasUnread, setHasUnread] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const { suggestions } = useFriends(currentUserId);
-  const [showSuggestions, setShowSuggestions] = useState(true);
-
-  // Group notifications by date
-  const today = new Date().toDateString();
-  const yesterday = new Date(Date.now() - 86400000).toDateString();
-  
-  const groupedNotifications = notifications.reduce((acc, notification) => {
-    const date = new Date(notification.created_at).toDateString();
-    
-    let group = "older";
-    if (date === today) group = "today";
-    else if (date === yesterday) group = "yesterday";
-    
-    if (!acc[group]) acc[group] = [];
-    acc[group].push(notification);
-    
-    return acc;
-  }, { today: [], yesterday: [], older: [] });
-
-  useEffect(() => {
-    const hasUnreadNotifications = notifications.some((notification) => !notification.read);
-    setHasUnread(hasUnreadNotifications);
-    
-    // Get current user
-    const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUserId(user?.id || null);
-    };
-    
-    getCurrentUser();
-  }, [notifications]);
-
-  const handleMarkAllAsRead = () => {
-    markAsRead();
-    setHasUnread(false);
-  };
-
-  const handleDismissSuggestion = (userId: string) => {
-    // Esta función podría implementarse más adelante para persistir
-    // las sugerencias descartadas en la base de datos
-    console.log(`Dismissed suggestion for user ${userId}`);
-  };
+  const {
+    open,
+    setOpen,
+    hasUnread,
+    notifications,
+    groupedNotifications,
+    handleFriendRequest,
+    markAsRead,
+    suggestions,
+    showSuggestions,
+    toggleSuggestions,
+    handleMarkAllAsRead,
+    handleDismissSuggestion
+  } = useNotificationDropdown();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -80,6 +40,7 @@ export function NotificationDropdown() {
           )}
         </Button>
       </PopoverTrigger>
+      
       <PopoverContent align="end" className="w-96 p-0 max-h-[80vh] overflow-hidden">
         <NotificationDropdownHeader 
           hasUnread={hasUnread} 
@@ -106,6 +67,8 @@ export function NotificationDropdown() {
                   suggestions={suggestions}
                   onDismissSuggestion={handleDismissSuggestion}
                   setOpen={setOpen}
+                  onToggleVisibility={toggleSuggestions}
+                  showToggle={true}
                 />
               )}
             </>

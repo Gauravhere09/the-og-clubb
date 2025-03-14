@@ -9,12 +9,16 @@ interface NotificationsSuggestionsProps {
   suggestions: FriendSuggestion[];
   onDismissSuggestion: (userId: string) => void;
   setOpen: (open: boolean) => void;
+  onToggleVisibility?: () => void;
+  showToggle?: boolean;
 }
 
 export function NotificationsSuggestions({ 
   suggestions, 
   onDismissSuggestion, 
-  setOpen 
+  setOpen,
+  onToggleVisibility,
+  showToggle = false
 }: NotificationsSuggestionsProps) {
   const { loadingStates, pendingRequests, sendFriendRequest } = useSuggestionRequests();
 
@@ -22,7 +26,7 @@ export function NotificationsSuggestions({
   
   return (
     <>
-      <SuggestionsHeader />
+      <SuggestionsHeader onToggleVisibility={onToggleVisibility} showToggle={showToggle} />
       
       {suggestions.slice(0, 5).map((suggestion) => (
         <SuggestionItem
