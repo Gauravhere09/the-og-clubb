@@ -98,6 +98,7 @@ export function PeopleYouMayKnow() {
     sugg => !dismissedFriends[sugg.id]
   );
 
+  // Si no hay sugerencias visibles o todavía está cargando, no mostrar el componente
   if (loading || visibleSuggestions.length === 0) {
     return null;
   }

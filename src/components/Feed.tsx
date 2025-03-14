@@ -119,7 +119,7 @@ export function Feed({ userId }: FeedProps) {
   // después de las primeras 3 publicaciones (o menos si hay menos posts)
   const renderFeedContent = () => {
     const feedContent = [];
-    let visiblePostsCopy = [...visiblePosts];
+    const visiblePostsCopy = [...visiblePosts];
     
     // Botón para mostrar publicaciones ocultas
     if (onlyHiddenPosts.length > 0 && !showHidden) {
@@ -168,9 +168,9 @@ export function Feed({ userId }: FeedProps) {
       );
     });
     
-    // Insertar componente de sugerencias de amigos
-    // Solo mostrar si hay posts visibles
-    if (visiblePostsCopy.length > 0) {
+    // Solo insertar componente de sugerencias de amigos si hay posts visibles
+    // y solo si hay más posts después de las primeras 3
+    if (visiblePostsCopy.length > 3) {
       feedContent.push(
         <PeopleYouMayKnow key="people-you-may-know" />
       );
