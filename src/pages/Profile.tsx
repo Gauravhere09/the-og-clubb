@@ -26,6 +26,8 @@ export type Profile = {
   hearts_count: number;
   created_at: string;
   updated_at: string;
+  status?: 'online' | 'offline' | 'away' | null;
+  last_seen?: string | null;
 };
 
 export default function Profile() {
@@ -97,6 +99,15 @@ export default function Profile() {
           console.error('Error fetching hearts:', heartsError);
         }
 
+        // Obtener estado de conexión
+        const status = user && user.id === profileId 
+          ? 'online' 
+          : profileData.last_seen 
+            ? new Date(profileData.last_seen).getTime() > Date.now() - 1000 * 60 * 5 
+              ? 'online' 
+              : 'offline'
+            : 'offline';
+
         // Crear el objeto Profile con los datos obtenidos
         const newProfile: Profile = {
           id: typedProfileData.id,
@@ -112,7 +123,9 @@ export default function Profile() {
           followers_count: followersCount || 0,
           hearts_count: heartsCount || 0,
           created_at: typedProfileData.created_at,
-          updated_at: typedProfileData.updated_at
+          updated_at: typedProfileData.updated_at,
+          status: typedProfileData.status || status,
+          last_seen: typedProfileData.last_seen
         };
 
         setProfile(newProfile);
@@ -125,6 +138,10 @@ export default function Profile() {
     };
 
     loadProfile();
+    
+    // Actualizar el perfil cada 2 minutos para refrescar estado de conexión
+    const interval = setInterval(loadProfile, 120000);
+    return () => clearInterval(interval);
   }, [id, navigate]);
 
   const onImageUpload = async (type: 'avatar' | 'cover', e: React.ChangeEvent<HTMLInputElement>): Promise<string> => {
@@ -162,7 +179,7 @@ export default function Profile() {
             onImageUpload={onImageUpload}
             onProfileUpdate={handleProfileUpdate}
           />
-          <div className="space-y-4 px-2 sm:px-4 py-4">
+          <div className="space-y-4 px-2 sm:px-4 py-4 profile-info-grid">
             <div className={`grid grid-cols-1 ${!isMobile ? 'md:grid-cols-3' : ''} gap-4`}>
               <div className={`${!isMobile ? 'md:col-span-1' : ''}`}>
                 <ProfileInfo profile={profile} />

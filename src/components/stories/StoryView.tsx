@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { StoryHeader } from "./StoryHeader";
 import { StoryContent } from "./StoryContent";
@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useStory } from "@/hooks/use-story";
 import { StoryProgress } from "./StoryProgress";
 import { useStoryComments } from "@/hooks/use-story-comments";
+import { useToast } from "@/hooks/use-toast";
 
 interface StoryViewProps {
   storyId: string;
@@ -25,14 +26,33 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
   const [isExiting, setIsExiting] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showReactions, setShowReactions] = useState(false);
+  const { toast } = useToast();
   
-  const { storyData, timeDisplay } = useStory(storyId);
+  const { storyData, timeDisplay, isLoading, error } = useStory(storyId);
+  
+  useEffect(() => {
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo cargar la historia",
+      });
+      onClose();
+    }
+  }, [error, onClose, toast]);
+  
   const { progress } = StoryProgress({ 
     isPaused, 
     currentImageIndex, 
-    totalImages: storyData.imageUrls.length,
+    totalImages: storyData?.imageUrls?.length || 0,
     onComplete: handleClose,
-    onImageComplete: () => setCurrentImageIndex(prev => prev + 1)
+    onImageComplete: () => {
+      if (storyData?.imageUrls && currentImageIndex < storyData.imageUrls.length - 1) {
+        setCurrentImageIndex(prev => prev + 1);
+      } else {
+        handleClose();
+      }
+    }
   });
   
   const { 
@@ -66,7 +86,7 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
   const toggleReactions = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowReactions(!showReactions);
-    setIsPaused(true);
+    setIsPaused(!showReactions);
   };
 
   const handleContentClick = () => {
@@ -76,7 +96,7 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
   };
   
   const handleNextImage = () => {
-    if (currentImageIndex < storyData.imageUrls.length - 1) {
+    if (storyData?.imageUrls && currentImageIndex < storyData.imageUrls.length - 1) {
       setCurrentImageIndex(prev => prev + 1);
     }
   };
@@ -86,6 +106,16 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
       setCurrentImageIndex(prev => prev - 1);
     }
   };
+  
+  if (isLoading || !storyData) {
+    return (
+      <Dialog open={true} onOpenChange={() => handleClose()}>
+        <DialogContent className="p-4 max-w-md h-[80vh] max-h-[600px] flex items-center justify-center">
+          <div className="animate-pulse h-8 w-8 rounded-full bg-primary/30"></div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
   
   return (
     <Dialog open={true} onOpenChange={() => handleClose()}>
