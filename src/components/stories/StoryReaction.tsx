@@ -19,10 +19,10 @@ export function StoryReaction({ storyId, userId, showReactions, className }: Sto
   const { toast } = useToast();
 
   const reactionIcons = {
-    heart: <Heart className="h-6 w-6" />,
-    like: <ThumbsUp className="h-6 w-6" />,
-    star: <Star className="h-6 w-6" />,
-    party: <PartyPopper className="h-6 w-6" />
+    heart: <Heart className="h-6 w-6 text-rose-500" />,
+    like: <ThumbsUp className="h-6 w-6 text-blue-500" />,
+    star: <Star className="h-6 w-6 text-amber-400" />,
+    party: <PartyPopper className="h-6 w-6 text-purple-500" />
   };
 
   const handleReaction = async (reaction: Reaction) => {

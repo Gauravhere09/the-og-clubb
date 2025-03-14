@@ -71,8 +71,11 @@ export function ReactionMenu({
             activeReaction === type ? "scale-125 bg-muted" : "hover:scale-110",
             activeReaction === type ? color : ""
           )}
+          onClick={() => onReactionSelected(type as ReactionType)}
         >
-          <Icon className={cn("h-6 w-6", activeReaction === type ? color : "")} />
+          <span className={cn("block h-6 w-6", activeReaction === type ? color : "")}>
+            <Icon className="h-6 w-6" />
+          </span>
           {activeReaction === type && (
             <span className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 bg-background text-foreground px-2 py-1 rounded text-xs whitespace-nowrap">
               {label}

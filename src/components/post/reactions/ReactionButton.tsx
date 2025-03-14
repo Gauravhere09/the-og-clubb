@@ -99,7 +99,9 @@ export function ReactionButton({ userReaction, onReactionClick, postId }: Reacti
         >
           {userReaction ? (
             <div className="flex items-center">
-              {React.createElement(reactionIcons[userReaction].icon, { className: "h-4 w-4" })}
+              <span className={`inline-block ${reactionIcons[userReaction].color}`}>
+                {React.createElement(reactionIcons[userReaction].icon, { className: "h-4 w-4" })}
+              </span>
               <span className="ml-2">{reactionIcons[userReaction].label}</span>
             </div>
           ) : (
@@ -126,7 +128,9 @@ export function ReactionButton({ userReaction, onReactionClick, postId }: Reacti
               onClick={() => handleReactionClick(type as ReactionType)}
               disabled={isSubmitting}
             >
-              <Icon className="h-6 w-6" />
+              <span className={`inline-block ${color}`}>
+                <Icon className="h-6 w-6" />
+              </span>
               <span className="absolute -top-8 scale-0 transition-all rounded bg-black px-2 py-1 text-xs text-white group-hover:scale-100 whitespace-nowrap">
                 {label}
               </span>
