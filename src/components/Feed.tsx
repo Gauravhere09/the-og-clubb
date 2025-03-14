@@ -1,212 +1,112 @@
-import { useQuery } from "@tanstack/react-query";
-import { Post } from "@/components/Post";
-import { getPosts, getHiddenPosts } from "@/lib/api";
-import type { Post as PostType, Poll } from "@/types/post";
-import { Card } from "./ui/card";
+
+import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useFeed } from "@/hooks/use-feed";
+import { FeedLoading } from "@/components/feed/FeedLoading";
+import { EmptyFeed } from "@/components/feed/EmptyFeed";
+import { HiddenPostsToggle } from "@/components/feed/HiddenPostsToggle";
+import { HiddenPosts } from "@/components/feed/HiddenPosts";
+import { FeedPosts } from "@/components/feed/FeedPosts";
 import { PeopleYouMayKnow } from "@/components/friends/PeopleYouMayKnow";
 
 interface FeedProps {
   userId?: string;
 }
 
-function transformPoll(pollData: any): Poll | null {
-  if (!pollData) return null;
-  return {
-    question: pollData.question,
-    options: (pollData.options || []).map((opt: any) => ({
-      id: opt.id,
-      content: opt.content,
-      votes: Number(opt.votes)
-    })),
-    total_votes: Number(pollData.total_votes),
-    user_vote: pollData.user_vote
-  };
-}
-
 export function Feed({ userId }: FeedProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const showNew = searchParams.get("new") === "true";
-  const [hiddenPostIds, setHiddenPostIds] = useState<string[]>([]);
-  const [showHidden, setShowHidden] = useState(false);
+  
+  const {
+    visiblePosts,
+    onlyHiddenPosts,
+    isLoading,
+    showHidden,
+    toggleHiddenPosts,
+    refetch
+  } = useFeed(userId, showNew);
 
-  // Obtener las publicaciones ocultas
-  const { data: hiddenPosts = [] } = useQuery({
-    queryKey: ["hidden-posts"],
-    queryFn: getHiddenPosts,
-  });
-
-  // Actualizar hiddenPostIds cuando cambian los datos de hiddenPosts
-  useEffect(() => {
-    if (hiddenPosts && hiddenPosts.length > 0) {
-      setHiddenPostIds(hiddenPosts);
-    }
-  }, [hiddenPosts]);
-
-  const { data: posts = [], isLoading, refetch } = useQuery({
-    queryKey: ["posts", userId],
-    queryFn: () => getPosts(userId),
-    select: (data) => {
-      let transformedPosts = data.map(post => ({
-        ...post,
-        poll: transformPoll(post.poll)
-      }));
-
-      // Siempre ordenar por fecha más reciente
-      transformedPosts = transformedPosts
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-      if (showNew) {
-        // Si se solicita mostrar solo publicaciones nuevas, filtramos por las últimas 24 horas
-        const twentyFourHoursAgo = new Date();
-        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-
-        transformedPosts = transformedPosts
-          .filter(post => {
-            const postDate = new Date(post.created_at);
-            return postDate > twentyFourHoursAgo;
-          });
-      }
-
-      return transformedPosts;
-    }
-  });
-
-  // Cuando se detecta el parámetro 'new', recargar los posts y luego limpiar el parámetro
+  // When new posts parameter is detected, refetch and clear the parameter
   useEffect(() => {
     if (showNew) {
       refetch().then(() => {
-        // Limpiar el parámetro de la URL después de cargar
         setSearchParams({});
       });
     }
   }, [showNew, refetch, setSearchParams]);
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <Card className="p-4">
-          <div className="animate-pulse space-y-4">
-            <div className="h-4 bg-muted rounded w-3/4" />
-            <div className="h-20 bg-muted rounded" />
-          </div>
-        </Card>
-      </div>
-    );
+    return <FeedLoading />;
   }
-
-  // Filtrar posts ocultos si no se está mostrando el modo "mostrar ocultos"
-  const visiblePosts = showHidden 
-    ? posts 
-    : posts.filter(post => !hiddenPostIds.includes(post.id));
-  
-  // Publicaciones que están ocultas
-  const onlyHiddenPosts = posts.filter(post => hiddenPostIds.includes(post.id));
 
   if (!visiblePosts.length && !onlyHiddenPosts.length) {
-    return (
-      <Card className="p-4">
-        <p className="text-center text-muted-foreground">
-          No hay publicaciones para mostrar
-        </p>
-      </Card>
-    );
+    return <EmptyFeed />;
   }
 
-  // Dividir los posts para insertar el componente "PeopleYouMayKnow"
-  // después de las primeras 3 publicaciones (o menos si hay menos posts)
+  // Divide posts to insert PeopleYouMayKnow component
   const renderFeedContent = () => {
     const feedContent = [];
+    
+    // Add toggle for hidden posts
+    feedContent.push(
+      <HiddenPostsToggle 
+        key="hidden-posts-toggle"
+        showHidden={showHidden}
+        onToggle={toggleHiddenPosts}
+        hiddenPostsCount={onlyHiddenPosts.length}
+      />
+    );
+    
+    // Show hidden posts if enabled
+    feedContent.push(
+      <HiddenPosts 
+        key="hidden-posts"
+        posts={onlyHiddenPosts}
+        show={showHidden}
+      />
+    );
+    
+    // Clone the visible posts array
     const visiblePostsCopy = [...visiblePosts];
     
-    // Botón para mostrar publicaciones ocultas
-    if (onlyHiddenPosts.length > 0 && !showHidden) {
-      feedContent.push(
-        <div key="hidden-posts-toggle" className="flex justify-center mb-2">
-          <button 
-            onClick={() => setShowHidden(!showHidden)}
-            className="text-sm text-primary hover:underline"
-          >
-            {`Mostrar ${onlyHiddenPosts.length} publicaciones ocultas`}
-          </button>
-        </div>
-      );
-    }
-    
-    // Insertar publicaciones ocultas si están visibles
-    if (showHidden && onlyHiddenPosts.length > 0) {
-      feedContent.push(
-        <div key="hidden-posts-toggle" className="flex justify-center mb-2">
-          <button 
-            onClick={() => setShowHidden(!showHidden)}
-            className="text-sm text-primary hover:underline"
-          >
-            {showHidden ? "Ocultar publicaciones filtradas" : `Mostrar ${onlyHiddenPosts.length} publicaciones ocultas`}
-          </button>
-        </div>
-      );
-      
-      onlyHiddenPosts.forEach(post => {
-        feedContent.push(
-          <div key={post.id} className="relative mb-4">
-            <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 opacity-10 z-0 pointer-events-none"></div>
-            <Post key={post.id} post={post} isHidden={true} />
-          </div>
-        );
-      });
-    }
-    
-    // Mostrar PeopleYouMayKnow al principio o después del primer post si hay pocos posts
+    // Handle insertion of PeopleYouMayKnow based on post count
     if (visiblePostsCopy.length <= 3) {
       if (visiblePostsCopy.length > 0) {
-        // Mostrar primer post
+        // Show first post
         const firstPost = visiblePostsCopy.shift();
         feedContent.push(
           <div key={firstPost!.id} className="mb-4">
-            <Post post={firstPost!} />
+            <FeedPosts posts={[firstPost!]} />
           </div>
         );
       }
       
-      // Insertar PeopleYouMayKnow después del primer post o al principio si no hay posts
+      // Insert PeopleYouMayKnow after first post or at beginning if no posts
       feedContent.push(
         <PeopleYouMayKnow key="people-you-may-know" />
       );
       
-      // Mostrar los posts restantes
-      visiblePostsCopy.forEach(post => {
+      // Show remaining posts
+      if (visiblePostsCopy.length > 0) {
         feedContent.push(
-          <div key={post.id} className="mb-4">
-            <Post post={post} />
-          </div>
+          <FeedPosts key="remaining-posts" posts={visiblePostsCopy} />
         );
-      });
+      }
     } else {
-      // Si hay más de 3 posts, mantener la lógica original
-      // Primeras publicaciones (2 o menos)
+      // For more than 3 posts, show first 2, then suggestions, then the rest
       const firstBatch = visiblePostsCopy.splice(0, 2);
-      firstBatch.forEach(post => {
-        feedContent.push(
-          <div key={post.id} className="mb-4">
-            <Post post={post} />
-          </div>
-        );
-      });
       
-      // Insertar componente de sugerencias de amigos después de los primeros 2 posts
+      feedContent.push(
+        <FeedPosts key="first-batch" posts={firstBatch} />
+      );
+      
       feedContent.push(
         <PeopleYouMayKnow key="people-you-may-know" />
       );
       
-      // Resto de publicaciones
-      visiblePostsCopy.forEach(post => {
-        feedContent.push(
-          <div key={post.id} className="mb-4">
-            <Post post={post} />
-          </div>
-        );
-      });
+      feedContent.push(
+        <FeedPosts key="remaining-posts" posts={visiblePostsCopy} />
+      );
     }
     
     return feedContent;
