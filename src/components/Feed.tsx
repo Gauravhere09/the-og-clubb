@@ -6,6 +6,7 @@ import type { Post as PostType, Poll } from "@/types/post";
 import { Card } from "./ui/card";
 import { useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { PeopleYouMayKnow } from "@/components/friends/PeopleYouMayKnow";
 
 interface FeedProps {
   userId?: string;
@@ -114,11 +115,16 @@ export function Feed({ userId }: FeedProps) {
     );
   }
 
-  return (
-    <div className="space-y-4">
-      {/* Botón para alternar la visualización de publicaciones ocultas */}
-      {onlyHiddenPosts.length > 0 && (
-        <div className="flex justify-center mb-2">
+  // Dividir los posts para insertar el componente "PeopleYouMayKnow"
+  // después de las primeras 3 publicaciones (o menos si hay menos posts)
+  const renderFeedContent = () => {
+    const feedContent = [];
+    let visiblePostsCopy = [...visiblePosts];
+    
+    // Insertar publicaciones ocultas si están visibles
+    if (showHidden && onlyHiddenPosts.length > 0) {
+      feedContent.push(
+        <div key="hidden-posts-toggle" className="flex justify-center mb-2">
           <button 
             onClick={() => setShowHidden(!showHidden)}
             className="text-sm text-primary hover:underline"
@@ -126,20 +132,64 @@ export function Feed({ userId }: FeedProps) {
             {showHidden ? "Ocultar publicaciones filtradas" : `Mostrar ${onlyHiddenPosts.length} publicaciones ocultas`}
           </button>
         </div>
+      );
+      
+      onlyHiddenPosts.forEach(post => {
+        feedContent.push(
+          <div key={post.id} className="relative mb-4">
+            <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 opacity-10 z-0 pointer-events-none"></div>
+            <Post key={post.id} post={post} isHidden={true} />
+          </div>
+        );
+      });
+    }
+    
+    // Primeras publicaciones (3 o menos)
+    const firstBatch = visiblePostsCopy.slice(0, 3);
+    firstBatch.forEach(post => {
+      feedContent.push(
+        <div key={post.id} className="mb-4">
+          <Post post={post} />
+        </div>
+      );
+    });
+    
+    // Insertar componente de sugerencias de amigos
+    // Solo mostrar si hay posts visibles
+    if (visiblePostsCopy.length > 0) {
+      feedContent.push(
+        <PeopleYouMayKnow key="people-you-may-know" />
+      );
+    }
+    
+    // Resto de publicaciones
+    const remainingPosts = visiblePostsCopy.slice(3);
+    remainingPosts.forEach(post => {
+      feedContent.push(
+        <div key={post.id} className="mb-4">
+          <Post post={post} />
+        </div>
+      );
+    });
+    
+    return feedContent;
+  };
+
+  return (
+    <div className="space-y-0">
+      {/* Botón para alternar la visualización de publicaciones ocultas */}
+      {onlyHiddenPosts.length > 0 && !showHidden && (
+        <div className="flex justify-center mb-2">
+          <button 
+            onClick={() => setShowHidden(!showHidden)}
+            className="text-sm text-primary hover:underline"
+          >
+            {`Mostrar ${onlyHiddenPosts.length} publicaciones ocultas`}
+          </button>
+        </div>
       )}
       
-      {/* Mostrar publicaciones filtradas en modo especial si están visibles */}
-      {showHidden && onlyHiddenPosts.map((post) => (
-        <div key={post.id} className="relative">
-          <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 opacity-10 z-0 pointer-events-none"></div>
-          <Post key={post.id} post={post} isHidden={true} />
-        </div>
-      ))}
-      
-      {/* Mostrar publicaciones normales */}
-      {!showHidden && visiblePosts.map((post) => (
-        <Post key={post.id} post={post} />
-      ))}
+      {renderFeedContent()}
     </div>
   );
 }

@@ -47,9 +47,10 @@ export const reactionIcons = {
     icon: ({ className }: { className?: string }) => (
       <svg className={className} viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10" fill="currentColor"/>
-        <path d="M8 16s1.5-2 4-2 4 2 4 2" stroke="white" strokeWidth="1.5" fill="none"/>
+        <path d="M8 16s1.5 2 4 2 4-2 4-2" stroke="white" strokeWidth="1.5" fill="none" transform="rotate(180 12 16)"/>
         <circle cx="8.5" cy="10" r="1.5" fill="white"/>
         <circle cx="15.5" cy="10" r="1.5" fill="white"/>
+        <path d="M9 14l0.25 1M15 14l-0.25 1" stroke="white" strokeWidth="0.5"/>
       </svg>
     ), 
     color: "text-yellow-300", 
