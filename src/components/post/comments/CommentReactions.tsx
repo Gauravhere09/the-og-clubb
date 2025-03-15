@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { reactionIcons, type ReactionType } from "@/components/post/reactions/ReactionIcons";
@@ -21,22 +21,54 @@ export function CommentReactions({
 }: CommentReactionsProps) {
   const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  
+  // Check authentication status on mount
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        setIsAuthenticated(!!data.session);
+      } catch (error) {
+        console.error("Error checking authentication:", error);
+        setIsAuthenticated(false);
+      }
+    };
+    
+    checkAuthStatus();
+    
+    // Subscribe to auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+    
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
   
   const checkAuth = useCallback(async () => {
+    // First check the cached state for better UX
+    if (isAuthenticated === false) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Debes iniciar sesión para reaccionar",
+      });
+      return false;
+    }
+    
+    // Double check with the server to be sure
     try {
-      const { data, error } = await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
+      const hasSession = !!data.session;
       
-      if (error) {
-        console.error("Session validation error:", error);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Error al verificar tu sesión",
-        });
-        return false;
+      // Update the cached state if it's different
+      if (isAuthenticated !== hasSession) {
+        setIsAuthenticated(hasSession);
       }
       
-      if (!data.session) {
+      if (!hasSession) {
         toast({
           variant: "destructive",
           title: "Error",
@@ -46,16 +78,16 @@ export function CommentReactions({
       }
       
       return true;
-    } catch (err) {
-      console.error("Error validating session:", err);
+    } catch (error) {
+      console.error("Error checking authentication:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Error al verificar tu sesión",
+        description: "Error al verificar tu sesión. Intenta de nuevo.",
       });
       return false;
     }
-  }, [toast]);
+  }, [isAuthenticated, toast]);
   
   const handleReactionClick = useCallback(async (type: ReactionType) => {
     const isAuthenticated = await checkAuth();

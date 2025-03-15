@@ -47,7 +47,7 @@ export function useReactionMutations(postId: string) {
   }, []);
 
   // Check if user is authenticated
-  const checkAuth = React.useCallback(async () => {
+  const checkAuth = React.useCallback(async (showToast = true) => {
     // If we've already checked and user is authenticated, return true
     if (sessionChecked && hasValidSession) {
       return true;
@@ -59,6 +59,13 @@ export function useReactionMutations(postId: string) {
       if (error) {
         console.error("Session validation error:", error);
         setHasValidSession(false);
+        if (showToast) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Error al verificar la sesión",
+          });
+        }
         return false;
       }
       
@@ -66,14 +73,29 @@ export function useReactionMutations(postId: string) {
       setHasValidSession(isAuthenticated);
       setSessionChecked(true);
       
+      if (!isAuthenticated && showToast) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Debes iniciar sesión para reaccionar",
+        });
+      }
+      
       return isAuthenticated;
     } catch (err) {
       console.error("Error validating session:", err);
       setHasValidSession(false);
       setSessionChecked(true);
+      if (showToast) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Error al verificar la sesión",
+        });
+      }
       return false;
     }
-  }, [sessionChecked, hasValidSession]);
+  }, [sessionChecked, hasValidSession, toast]);
 
   const { mutate: handleReaction } = useMutation({
     mutationFn: async (type: ReactionType) => {
@@ -86,22 +108,12 @@ export function useReactionMutations(postId: string) {
         const isAuthenticated = await checkAuth();
         
         if (!isAuthenticated) {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Debes iniciar sesión para reaccionar",
-          });
           throw new Error("Debes iniciar sesión para reaccionar");
         }
 
         const { data } = await supabase.auth.getSession();
         
         if (!data.session?.user) {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Debes iniciar sesión para reaccionar",
-          });
           throw new Error("Debes iniciar sesión para reaccionar");
         }
 
@@ -165,8 +177,8 @@ export function useReactionMutations(postId: string) {
     mutationFn: async ({ commentId, type }: CommentReactionParams) => {
       console.log(`Toggling reaction ${type} for comment ${commentId}`);
       
-      // Check authentication first
-      const isAuthenticated = await checkAuth();
+      // Check authentication first without showing a toast (we'll show it later if needed)
+      const isAuthenticated = await checkAuth(false);
       
       if (!isAuthenticated) {
         toast({
