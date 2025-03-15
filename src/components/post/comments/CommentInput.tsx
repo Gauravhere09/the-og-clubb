@@ -41,6 +41,12 @@ export function CommentInput({
     }
   }, [replyTo]);
 
+  // Add debugging log
+  useEffect(() => {
+    console.log("Mention list visible:", mentionListVisible);
+    console.log("Mention users:", mentionUsers);
+  }, [mentionListVisible, mentionUsers]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Submit comment when pressing Enter (without Shift)
     if (e.key === 'Enter' && !e.shiftKey && !mentionListVisible) {
@@ -80,6 +86,7 @@ export function CommentInput({
   };
 
   const handleSelectMention = (user: any) => {
+    console.log("Selecting mention:", user);
     const newText = insertMention(newComment, user);
     onNewCommentChange(newText);
     setTimeout(() => {

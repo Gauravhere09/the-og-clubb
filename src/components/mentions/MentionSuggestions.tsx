@@ -1,6 +1,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { useEffect } from "react";
 
 interface MentionUser {
   id: string;
@@ -25,6 +26,13 @@ export function MentionSuggestions({
   onSelectUser,
   onSetIndex
 }: MentionSuggestionsProps) {
+  // Log visibility state and users to help debug
+  useEffect(() => {
+    if (isVisible) {
+      console.log("Mention suggestions visible with users:", users);
+    }
+  }, [isVisible, users]);
+
   if (!isVisible || users.length === 0) return null;
 
   return (

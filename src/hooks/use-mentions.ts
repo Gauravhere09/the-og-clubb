@@ -30,6 +30,7 @@ export function useMentions() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
+        // Fetch up to 5 users whose usernames match the search string
         const { data, error } = await supabase
           .from('profiles')
           .select('id, username, avatar_url')
@@ -38,15 +39,34 @@ export function useMentions() {
           .order('username')
           .limit(5);
 
-        if (error) throw error;
+        if (error) {
+          console.error("Error fetching users for mention:", error);
+          throw error;
+        }
+        
+        // Log results to help debugging
+        console.log("Mention search results:", data);
         setMentionUsers(data || []);
+        
+        // If we have results, ensure the list is visible
+        if (data && data.length > 0) {
+          setMentionListVisible(true);
+        }
       } catch (error) {
         console.error('Error searching for users:', error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No se pudieron cargar los usuarios para mención"
+        });
       }
     };
 
-    searchForUsers();
-  }, [mentionSearch]);
+    // Only search if we have at least one character
+    if (mentionSearch.length > 0) {
+      searchForUsers();
+    }
+  }, [mentionSearch, toast]);
 
   // Calculate mention string position in text
   const getMentionIndices = (text: string, caretPos: number) => {
@@ -78,9 +98,11 @@ export function useMentions() {
     const mentionIndices = getMentionIndices(text, caretPos);
     
     if (mentionIndices) {
+      console.log("Mention detected:", mentionIndices.query);
       setMentionSearch(mentionIndices.query);
       setMentionListVisible(true);
       setCaretPosition(caretPos);
+      setMentionIndex(-1); // Reset selection index when search changes
       
       // Calculate position of mention list
       calculateMentionPosition(inputElement, mentionIndices.start);
@@ -100,6 +122,7 @@ export function useMentions() {
     const inputRect = element.getBoundingClientRect();
     const caretCoordinates = getCaretCoordinates(element, mentionStart);
     
+    // Adjust position based on element type and scrolling
     setMentionPosition({
       top: inputRect.top + caretCoordinates.top + 20,
       left: inputRect.left + caretCoordinates.left
