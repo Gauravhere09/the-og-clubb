@@ -5,7 +5,10 @@ import { FriendSuggestion } from "./types";
 export async function getFriendSuggestions() {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Usuario no autenticado");
+    if (!user) {
+      // Return empty array instead of throwing error when user is not authenticated
+      return [];
+    }
 
     // Obtenemos los IDs de los usuarios que ya son amigos o tienen solicitudes pendientes
     const { data: existingConnections } = await supabase

@@ -34,7 +34,7 @@ export function PeopleYouMayKnow() {
     return <PeopleYouMayKnowSkeleton />;
   }
 
-  // No show the component if no visible suggestions
+  // Don't show the component if no visible suggestions
   if (visibleSuggestions.length === 0) {
     return null;
   }

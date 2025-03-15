@@ -16,11 +16,19 @@ export function usePeopleSuggestions() {
     const fetchSuggestions = async () => {
       try {
         setLoading(true);
+        // Check if user is authenticated before fetching suggestions
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setSuggestions([]);
+          return;
+        }
+        
         const data = await getFriendSuggestions();
         // Get more suggestions for the carousel
         setSuggestions(data.slice(0, 10));
       } catch (error) {
         console.error("Error fetching friend suggestions:", error);
+        setSuggestions([]);
       } finally {
         setLoading(false);
       }
