@@ -19,16 +19,21 @@ export function useReactionMutations(postId: string) {
       mutationInProgressRef.current = true;
       
       try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        const { data } = await supabase.auth.getSession();
         
-        if (!currentSession?.user) {
+        if (!data.session?.user) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Debes iniciar sesión para reaccionar",
+          });
           throw new Error("Debes iniciar sesión para reaccionar");
         }
 
         const { data: existingReactions, error: fetchError } = await supabase
           .from("reactions")
           .select()
-          .eq("user_id", currentSession.user.id)
+          .eq("user_id", data.session.user.id)
           .eq("post_id", postId);
 
         if (fetchError) throw fetchError;
@@ -55,7 +60,7 @@ export function useReactionMutations(postId: string) {
           const { error } = await supabase
             .from("reactions")
             .insert({
-              user_id: currentSession.user.id,
+              user_id: data.session.user.id,
               post_id: postId,
               reaction_type: type
             });
@@ -65,6 +70,9 @@ export function useReactionMutations(postId: string) {
         // Only invalidate queries after DB operation is complete
         await queryClient.invalidateQueries({ queryKey: ["posts"] });
         return type;
+      } catch (error) {
+        console.error("Error handling reaction:", error);
+        throw error;
       } finally {
         mutationInProgressRef.current = false;
       }
@@ -75,7 +83,6 @@ export function useReactionMutations(postId: string) {
         title: "Error",
         description: error instanceof Error ? error.message : "No se pudo actualizar la reacción",
       });
-      mutationInProgressRef.current = false;
     },
   });
 
@@ -83,16 +90,21 @@ export function useReactionMutations(postId: string) {
     mutationFn: async ({ commentId, type }: CommentReactionParams) => {
       console.log(`Toggling reaction ${type} for comment ${commentId}`);
       
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data } = await supabase.auth.getSession();
       
-      if (!user) {
+      if (!data.session?.user) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Debes iniciar sesión para reaccionar",
+        });
         throw new Error("Debes iniciar sesión para reaccionar");
       }
       
       const { data: existingReaction } = await supabase
         .from('reactions')
         .select()
-        .eq('user_id', user.id)
+        .eq('user_id', data.session.user.id)
         .eq('comment_id', commentId)
         .maybeSingle();
 
@@ -117,7 +129,7 @@ export function useReactionMutations(postId: string) {
         const { error } = await supabase
           .from('reactions')
           .insert({
-            user_id: user.id,
+            user_id: data.session.user.id,
             comment_id: commentId,
             reaction_type: type
           });

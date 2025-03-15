@@ -34,8 +34,8 @@ export function CommentContent({
     );
   }
 
-  if (isAudio) {
-    return <audio src={audioUrl || undefined} controls className="mt-1 max-w-[180px] h-8" />;
+  if (isAudio && audioUrl) {
+    return <audio src={audioUrl} controls className="mt-1 max-w-[180px] h-8" />;
   }
 
   return <p className="text-xs whitespace-pre-wrap break-words comment-text-selectable">{content}</p>;

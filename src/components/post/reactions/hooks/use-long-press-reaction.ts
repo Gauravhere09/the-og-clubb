@@ -32,8 +32,15 @@ export function useLongPressReaction({
     try {
       setIsSubmitting(true);
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Debes iniciar sesión para reaccionar");
+      const { data } = await supabase.auth.getSession();
+      if (!data.session?.user) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Debes iniciar sesión para reaccionar",
+        });
+        return;
+      }
 
       // We'll handle the UI update AFTER the database operation is complete
       if (userReaction === type) {
@@ -42,7 +49,7 @@ export function useLongPressReaction({
           .from('reactions')
           .delete()
           .eq('post_id', postId)
-          .eq('user_id', user.id);
+          .eq('user_id', data.session.user.id);
 
         if (error) throw error;
         
@@ -54,14 +61,14 @@ export function useLongPressReaction({
           .from('reactions')
           .delete()
           .eq('post_id', postId)
-          .eq('user_id', user.id);
+          .eq('user_id', data.session.user.id);
 
         // Then insert the new reaction
         const { error } = await supabase
           .from('reactions')
           .insert({
             post_id: postId,
-            user_id: user.id,
+            user_id: data.session.user.id,
             reaction_type: type
           });
 
@@ -109,7 +116,7 @@ export function useLongPressReaction({
   }, [activeReaction, handleReactionClick, showReactions]);
 
   // Handle click on the main button (non-long press)
-  const handleButtonClick = useCallback(() => {
+  const handleButtonClick = useCallback(async () => {
     if (!showReactions && userReaction) {
       handleReactionClick(userReaction);
     }

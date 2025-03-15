@@ -5,6 +5,8 @@ import { Send, X } from "lucide-react";
 import { useState, useCallback, memo, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { type Comment } from "@/hooks/use-story-comments";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StoryCommentsProps {
   comments: Comment[];
@@ -15,12 +17,25 @@ interface StoryCommentsProps {
 
 export function StoryComments({ comments, onSendComment, onClose, className }: StoryCommentsProps) {
   const [comment, setComment] = useState("");
+  const { toast } = useToast();
 
-  const handleSend = useCallback(() => {
+  const handleSend = useCallback(async () => {
     if (!comment.trim()) return;
+    
+    // Check authentication before sending comment
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Debes iniciar sesión para comentar",
+      });
+      return;
+    }
+    
     onSendComment(comment);
     setComment("");
-  }, [comment, onSendComment]);
+  }, [comment, onSendComment, toast]);
 
   return (
     <div 

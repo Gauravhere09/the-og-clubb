@@ -6,6 +6,8 @@ import { reactionIcons, type ReactionType } from "./ReactionIcons";
 import { useLongPressReaction } from "./hooks/use-long-press-reaction";
 import { useReactionPointerEvents } from "./hooks/use-reaction-pointer-events";
 import { ReactionMenu } from "./ReactionMenu";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LongPressReactionButtonProps {
   userReaction?: ReactionType;
@@ -19,6 +21,21 @@ export function LongPressReactionButton({
   postId 
 }: LongPressReactionButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const { toast } = useToast();
+  
+  // Check authentication before starting long press process
+  const checkAuth = useCallback(async () => {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Debes iniciar sesión para reaccionar",
+      });
+      return false;
+    }
+    return true;
+  }, [toast]);
   
   // Use our custom hook for reaction logic
   const {
@@ -50,10 +67,26 @@ export function LongPressReactionButton({
     handlePointerMove
   });
 
+  // Handle press start with auth check
+  const handleAuthPressStart = useCallback(async () => {
+    const isAuthenticated = await checkAuth();
+    if (isAuthenticated) {
+      handlePressStart();
+    }
+  }, [checkAuth, handlePressStart]);
+
+  // Button click with auth check
+  const handleAuthButtonClick = useCallback(async () => {
+    const isAuthenticated = await checkAuth();
+    if (isAuthenticated) {
+      handleButtonClick();
+    }
+  }, [checkAuth, handleButtonClick]);
+
   // Touch event handlers that are properly typed
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    handlePressStart();
-  }, [handlePressStart]);
+    handleAuthPressStart();
+  }, [handleAuthPressStart]);
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     handlePressEnd();
@@ -72,9 +105,9 @@ export function LongPressReactionButton({
         variant="ghost"
         size="sm"
         className={`${userReaction ? reactionIcons[userReaction].color : ''} group`}
-        onClick={handleButtonClick}
+        onClick={handleAuthButtonClick}
         disabled={isSubmitting}
-        onPointerDown={handlePressStart}
+        onPointerDown={handleAuthPressStart}
         onPointerUp={handlePressEnd}
         onPointerLeave={handlePressEnd}
         onTouchStart={handleTouchStart}
