@@ -24,6 +24,38 @@ export function useLongPressReaction({
   const [showReactions, setShowReactions] = useState(false);
   const [activeReaction, setActiveReaction] = useState<ReactionType | null>(null);
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // Clear auth error when component unmounts
+  useEffect(() => {
+    return () => {
+      setAuthError(null);
+    };
+  }, []);
+
+  // Validate user session
+  const validateSession = useCallback(async () => {
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("Session validation error:", error);
+        setAuthError("Error al verificar la sesión");
+        return null;
+      }
+      
+      if (!data.session?.user) {
+        setAuthError("Debes iniciar sesión para reaccionar");
+        return null;
+      }
+      
+      return data.session.user;
+    } catch (err) {
+      console.error("Error validating session:", err);
+      setAuthError("Error al verificar la sesión");
+      return null;
+    }
+  }, []);
 
   // Memoize the reaction handler to prevent unnecessary re-renders
   const handleReactionClick = useCallback(async (type: ReactionType) => {
@@ -31,13 +63,14 @@ export function useLongPressReaction({
     
     try {
       setIsSubmitting(true);
+      setAuthError(null);
       
-      const { data } = await supabase.auth.getSession();
-      if (!data.session?.user) {
+      const user = await validateSession();
+      if (!user) {
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Debes iniciar sesión para reaccionar",
+          description: authError || "Debes iniciar sesión para reaccionar",
         });
         return;
       }
@@ -49,7 +82,7 @@ export function useLongPressReaction({
           .from('reactions')
           .delete()
           .eq('post_id', postId)
-          .eq('user_id', data.session.user.id);
+          .eq('user_id', user.id);
 
         if (error) throw error;
         
@@ -61,14 +94,14 @@ export function useLongPressReaction({
           .from('reactions')
           .delete()
           .eq('post_id', postId)
-          .eq('user_id', data.session.user.id);
+          .eq('user_id', user.id);
 
         // Then insert the new reaction
         const { error } = await supabase
           .from('reactions')
           .insert({
             post_id: postId,
-            user_id: data.session.user.id,
+            user_id: user.id,
             reaction_type: type
           });
 
@@ -95,7 +128,7 @@ export function useLongPressReaction({
       setShowReactions(false);
       setActiveReaction(null);
     }
-  }, [isSubmitting, onReactionClick, postId, queryClient, toast, userReaction]);
+  }, [isSubmitting, onReactionClick, postId, queryClient, toast, userReaction, validateSession, authError]);
 
   const handlePressStart = useCallback(() => {
     pressTimer.current = setTimeout(() => {
@@ -140,6 +173,7 @@ export function useLongPressReaction({
     handlePressStart,
     handlePressEnd,
     handleButtonClick,
-    handleReactionClick
+    handleReactionClick,
+    authError
   };
 }

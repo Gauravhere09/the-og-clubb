@@ -11,6 +11,69 @@ export function useReactionMutations(postId: string) {
   const { toast } = useToast();
   
   const mutationInProgressRef = React.useRef(false);
+  const [sessionChecked, setSessionChecked] = React.useState(false);
+  const [hasValidSession, setHasValidSession] = React.useState(false);
+
+  // Check session on component mount
+  React.useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Error checking session:", error);
+          setHasValidSession(false);
+        } else {
+          setHasValidSession(!!data.session);
+        }
+        setSessionChecked(true);
+      } catch (error) {
+        console.error("Error checking session:", error);
+        setHasValidSession(false);
+        setSessionChecked(true);
+      }
+    };
+    
+    checkSession();
+    
+    // Subscribe to auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setHasValidSession(!!session);
+      setSessionChecked(true);
+    });
+    
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  // Check if user is authenticated
+  const checkAuth = React.useCallback(async () => {
+    // If we've already checked and user is authenticated, return true
+    if (sessionChecked && hasValidSession) {
+      return true;
+    }
+    
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error("Session validation error:", error);
+        setHasValidSession(false);
+        return false;
+      }
+      
+      const isAuthenticated = !!data.session;
+      setHasValidSession(isAuthenticated);
+      setSessionChecked(true);
+      
+      return isAuthenticated;
+    } catch (err) {
+      console.error("Error validating session:", err);
+      setHasValidSession(false);
+      setSessionChecked(true);
+      return false;
+    }
+  }, [sessionChecked, hasValidSession]);
 
   const { mutate: handleReaction } = useMutation({
     mutationFn: async (type: ReactionType) => {
@@ -19,6 +82,18 @@ export function useReactionMutations(postId: string) {
       mutationInProgressRef.current = true;
       
       try {
+        // Check authentication first
+        const isAuthenticated = await checkAuth();
+        
+        if (!isAuthenticated) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Debes iniciar sesión para reaccionar",
+          });
+          throw new Error("Debes iniciar sesión para reaccionar");
+        }
+
         const { data } = await supabase.auth.getSession();
         
         if (!data.session?.user) {
@@ -90,6 +165,18 @@ export function useReactionMutations(postId: string) {
     mutationFn: async ({ commentId, type }: CommentReactionParams) => {
       console.log(`Toggling reaction ${type} for comment ${commentId}`);
       
+      // Check authentication first
+      const isAuthenticated = await checkAuth();
+      
+      if (!isAuthenticated) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Debes iniciar sesión para reaccionar",
+        });
+        throw new Error("Debes iniciar sesión para reaccionar");
+      }
+      
       const { data } = await supabase.auth.getSession();
       
       if (!data.session?.user) {
@@ -155,6 +242,8 @@ export function useReactionMutations(postId: string) {
 
   return {
     handleReaction,
-    toggleCommentReaction
+    toggleCommentReaction,
+    isAuthenticated: hasValidSession,
+    checkAuth
   };
 }
