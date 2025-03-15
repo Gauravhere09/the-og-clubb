@@ -1,86 +1,62 @@
 
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { 
-  getFriends,
-  getFollowers,
-  getPendingFriendRequests,
-  getSentFriendRequests,
-  getFriendSuggestions
-} from "@/lib/api/friends";
+import { useEffect, useCallback } from "react";
+import { useFriendFetch } from "./api/use-friend-fetch";
+import { useFriendState } from "./api/use-friend-state";
+import { useFriendSubscription } from "./api/use-friend-subscription";
 import { Friend, FriendRequest, FriendSuggestion } from "./types";
 
 export function useFriendData(currentUserId: string | null) {
-  const [friends, setFriends] = useState<Friend[]>([]);
-  const [following, setFollowing] = useState<Friend[]>([]);
-  const [followers, setFollowers] = useState<Friend[]>([]);
-  const [pendingRequests, setPendingRequests] = useState<FriendRequest[]>([]);
-  const [sentRequests, setSentRequests] = useState<FriendRequest[]>([]);
-  const [suggestions, setSuggestions] = useState<FriendSuggestion[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    fetchFriends,
+    fetchFriendRequests,
+    fetchSuggestions,
+    setLoading
+  } = useFriendFetch(currentUserId);
+  
+  const {
+    friends,
+    following,
+    followers,
+    pendingRequests,
+    sentRequests,
+    suggestions,
+    loading,
+    updateFriendsState,
+    updateRequestsState,
+    updateSuggestionsState
+  } = useFriendState();
 
-  const loadFriends = async () => {
+  const loadFriends = useCallback(async () => {
     if (!currentUserId) return;
+    
+    const { mutualFriends, onlyFollowing, onlyFollowers } = await fetchFriends();
+    updateFriendsState(mutualFriends, onlyFollowing, onlyFollowers);
+  }, [currentUserId, fetchFriends, updateFriendsState]);
 
-    try {
-      const friendsData = await getFriends();
-      const followersData = await getFollowers();
-      
-      // Identificamos amigos mutuos
-      const followerIds = new Set(followersData.map(f => f.friend_id));
-      const mutualFriends = friendsData.filter(f => followerIds.has(f.friend_id))
-        .map(f => ({
-          ...f,
-          status: 'friends' as const
-        }));
-      
-      // Usuarios que sigo pero no me siguen
-      const onlyFollowing = friendsData.filter(f => !followerIds.has(f.friend_id))
-        .map(f => ({
-          ...f,
-          status: 'following' as const
-        }));
-      
-      // Usuarios que me siguen pero no sigo
-      const onlyFollowers = followersData.filter(f => !friendsData.some(fr => fr.friend_id === f.friend_id))
-        .map(f => ({
-          ...f,
-          status: 'follower' as const
-        }));
-      
-      setFriends(mutualFriends);
-      setFollowing([...mutualFriends, ...onlyFollowing]);
-      setFollowers([...mutualFriends, ...onlyFollowers]);
-    } catch (error) {
-      console.error("Error loading friends:", error);
-    }
-  };
-
-  const loadFriendRequests = async () => {
+  const loadFriendRequests = useCallback(async () => {
     if (!currentUserId) return;
+    
+    const { pendingRequests, sentRequests } = await fetchFriendRequests();
+    updateRequestsState(pendingRequests, sentRequests);
+  }, [currentUserId, fetchFriendRequests, updateRequestsState]);
 
-    try {
-      const requests = await getPendingFriendRequests();
-      setPendingRequests(requests);
-      
-      const sent = await getSentFriendRequests();
-      setSentRequests(sent);
-    } catch (error) {
-      console.error("Error loading friend requests:", error);
-    }
-  };
-
-  const loadSuggestions = async () => {
+  const loadSuggestions = useCallback(async () => {
     if (!currentUserId) return;
+    
+    const suggestionsData = await fetchSuggestions();
+    updateSuggestionsState(suggestionsData);
+  }, [currentUserId, fetchSuggestions, updateSuggestionsState]);
 
-    try {
-      const suggestionsData = await getFriendSuggestions();
-      setSuggestions(suggestionsData);
-    } catch (error) {
-      console.error("Error loading suggestions:", error);
-    }
-  };
+  const updateAllData = useCallback(() => {
+    loadFriends();
+    loadFriendRequests();
+    loadSuggestions();
+  }, [loadFriends, loadFriendRequests, loadSuggestions]);
 
+  // Setup real-time subscription
+  useFriendSubscription(currentUserId, updateAllData);
+
+  // Initial data load
   useEffect(() => {
     if (currentUserId) {
       setLoading(true);
@@ -91,27 +67,8 @@ export function useFriendData(currentUserId: string | null) {
       ]).finally(() => {
         setLoading(false);
       });
-
-      // Suscribirse a cambios en 'friendships'
-      const friendshipsChannel = supabase
-        .channel('friendship_changes')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'friendships',
-        }, () => {
-          // Recargamos los datos cuando hay cambios
-          loadFriends();
-          loadFriendRequests();
-          loadSuggestions();
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(friendshipsChannel);
-      };
     }
-  }, [currentUserId]);
+  }, [currentUserId, loadFriends, loadFriendRequests, loadSuggestions, setLoading]);
 
   return {
     friends,
