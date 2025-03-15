@@ -1,6 +1,6 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Comment } from "@/types/post";
+import { sendMentionNotifications } from "./posts/notifications";
 
 export async function createComment(postId: string, content: string, parentId?: string) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -18,6 +18,9 @@ export async function createComment(postId: string, content: string, parentId?: 
     .single();
 
   if (error) throw error;
+
+  // Procesar menciones y enviar notificaciones
+  await sendMentionNotifications(content, postId, comment.id, user.id);
 
   // Get post owner and parent comment owner IDs
   const { data: post } = await supabase
@@ -64,7 +67,7 @@ export async function createComment(postId: string, content: string, parentId?: 
 }
 
 export async function getComments(postId: string) {
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user } } = await supabase.auth.getSession();
   
   // Obtenemos los datos de comentarios
   const { data: commentsData, error: commentsError } = await supabase

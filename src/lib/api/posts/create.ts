@@ -4,7 +4,7 @@ import { Post } from "@/types/post";
 import { Tables } from "@/types/database";
 import { transformPoll } from "./utils";
 import { uploadMediaFile, getMediaType } from "./storage";
-import { sendNewPostNotifications } from "./notifications";
+import { sendNewPostNotifications, sendMentionNotifications } from "./notifications";
 import { CreatePostParams } from "./types";
 
 export async function createPost({
@@ -62,7 +62,11 @@ export async function createPost({
           visibility,
           poll,
           created_at,
-          updated_at
+          updated_at,
+          profiles (
+            username,
+            avatar_url
+          )
         `)
         .single();
 
@@ -77,6 +81,9 @@ export async function createPost({
         .single();
 
       if (profileError) throw profileError;
+
+      // Procesar menciones en el contenido y enviar notificaciones
+      await sendMentionNotifications(content, rawPost.id, null, user.id);
 
       // Send notifications to friends
       await sendNewPostNotifications(user.id, rawPost.id);

@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useRef } from "react";
-import { X } from "lucide-react";
+import { X, AtSign } from "lucide-react";
 
 interface CommentInputProps {
   newComment: string;
@@ -36,6 +36,26 @@ export function CommentInput({
     }
   };
 
+  const handleMentionClick = () => {
+    if (textareaRef.current) {
+      const cursorPos = textareaRef.current.selectionStart;
+      const textBefore = newComment.substring(0, cursorPos);
+      const textAfter = newComment.substring(cursorPos);
+      
+      // Insertamos @ en la posición del cursor
+      const newValue = textBefore + '@' + textAfter;
+      onNewCommentChange(newValue);
+      
+      // Enfocamos el textarea y movemos el cursor a la posición después del @
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.setSelectionRange(cursorPos + 1, cursorPos + 1);
+        }
+      }, 0);
+    }
+  };
+
   return (
     <div className="space-y-2">
       {replyTo && (
@@ -53,23 +73,36 @@ export function CommentInput({
           </Button>
         </div>
       )}
-      <div className="flex gap-2">
-        <Textarea
-          ref={textareaRef}
-          value={newComment}
-          onChange={(e) => onNewCommentChange(e.target.value)}
-          placeholder={replyTo ? `Escribe tu respuesta para ${replyTo.username}...` : "Escribe un comentario..."}
-          className="resize-none min-h-[80px]"
-          onKeyDown={handleKeyDown}
-          id="comment-textarea"
-          name="comment-textarea"
-        />
-        <Button onClick={onSubmitComment} disabled={!newComment.trim()}>
-          Comentar
-        </Button>
-      </div>
-      <div className="text-xs text-muted-foreground">
-        Presiona Enter para enviar, Shift+Enter para nueva línea
+      <div className="flex gap-2 flex-col">
+        <div className="flex items-center gap-2">
+          <Textarea
+            ref={textareaRef}
+            value={newComment}
+            onChange={(e) => onNewCommentChange(e.target.value)}
+            placeholder={replyTo ? `Escribe tu respuesta para ${replyTo.username}...` : "Escribe un comentario..."}
+            className="resize-none min-h-[80px]"
+            onKeyDown={handleKeyDown}
+            id="comment-textarea"
+            name="comment-textarea"
+          />
+          <Button onClick={onSubmitComment} disabled={!newComment.trim()}>
+            Comentar
+          </Button>
+        </div>
+        <div className="flex justify-between items-center">
+          <div className="text-xs text-muted-foreground">
+            Presiona Enter para enviar, Shift+Enter para nueva línea
+          </div>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleMentionClick}
+            className="text-xs flex items-center gap-1"
+          >
+            <AtSign className="h-3 w-3" />
+            Mencionar
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -9,7 +9,8 @@ export type NotificationType =
   | 'post_like' 
   | 'post_comment'
   | 'comment_reply'
-  | 'friend_accepted';
+  | 'friend_accepted'
+  | 'mention'; // Añadimos el nuevo tipo de notificación
 
 export interface Notification {
   id: string;

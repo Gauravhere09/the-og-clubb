@@ -15,6 +15,8 @@ export const formatNotificationMessage = (type: NotificationType, username: stri
       return `${username} ha publicado algo nuevo`;
     case 'friend_accepted':
       return `${username} ha aceptado tu solicitud de amistad`;
+    case 'mention':
+      return `${username} te ha mencionado en una publicación`;
     default:
       return `Nueva notificación de ${username}`;
   }

@@ -1,4 +1,3 @@
-
 import { NotificationType } from "@/types/notifications";
 import { Button } from "@/components/ui/button";
 import { Check, X } from "lucide-react";
@@ -64,6 +63,12 @@ export const NotificationContent = ({
             </div>
           )}
         </div>
+      );
+    case 'mention':
+      return (
+        <span>
+          <span className="font-medium">{senderName}</span> te ha mencionado en una publicación
+        </span>
       );
     case 'post_like':
       return (

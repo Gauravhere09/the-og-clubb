@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,7 @@ import { PollCreator } from "./post/PollCreator";
 import { PostActionButtons } from "./post/PostActionButtons";
 import { FilePreview } from "./post/FilePreview";
 import { VisibilitySelector } from "./post/VisibilitySelector";
+import { AtSign } from "lucide-react";
 
 export function PostCreator() {
   const [content, setContent] = useState("");
@@ -19,6 +20,7 @@ export function PostCreator() {
   const [visibility, setVisibility] = useState<'public' | 'friends' | 'private'>('public');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const { mutate: submitPost, isPending } = useMutation({
     mutationFn: async (pollData?: { question: string; options: string[] }) => {
@@ -71,19 +73,52 @@ export function PostCreator() {
     submitPost(undefined); // Pasamos undefined cuando no hay datos de encuesta
   };
 
+  const handleMentionClick = () => {
+    if (textareaRef.current) {
+      const cursorPos = textareaRef.current.selectionStart;
+      const textBefore = content.substring(0, cursorPos);
+      const textAfter = content.substring(cursorPos);
+      
+      // Insertamos @ en la posición del cursor
+      const newContent = textBefore + '@' + textAfter;
+      setContent(newContent);
+      
+      // Enfocamos el textarea y movemos el cursor a la posición después del @
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.setSelectionRange(cursorPos + 1, cursorPos + 1);
+        }
+      }, 0);
+    }
+  };
+
   return (
     <Card className="p-4 space-y-4">
       <Textarea
+        ref={textareaRef}
         placeholder="¿Qué estás pensando?"
         value={content}
         onChange={(e) => setContent(e.target.value)}
         className="resize-none"
       />
       
-      <VisibilitySelector 
-        visibility={visibility} 
-        onVisibilityChange={setVisibility} 
-      />
+      <div className="flex items-center justify-between">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handleMentionClick}
+          className="text-sm flex items-center gap-1"
+        >
+          <AtSign className="h-4 w-4" />
+          Mencionar a alguien
+        </Button>
+        
+        <VisibilitySelector 
+          visibility={visibility} 
+          onVisibilityChange={setVisibility} 
+        />
+      </div>
       
       {showPollCreator && (
         <PollCreator
