@@ -1,5 +1,5 @@
 
-import React, { useRef, useCallback, useState, useEffect } from "react";
+import React, { useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp } from "lucide-react";
 import { reactionIcons, type ReactionType } from "./ReactionIcons";
@@ -22,55 +22,12 @@ export function LongPressReactionButton({
 }: LongPressReactionButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { toast } = useToast();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   
-  // Check authentication status on mount
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        setIsAuthenticated(!!data.session);
-      } catch (error) {
-        console.error("Error checking authentication:", error);
-        setIsAuthenticated(false);
-      }
-    };
-    
-    checkAuthStatus();
-    
-    // Subscribe to auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
-    });
-    
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
-  
-  // Check authentication before starting long press process
+  // Check authentication before any reaction action
   const checkAuth = useCallback(async () => {
-    // First check the cached state for better UX
-    if (isAuthenticated === false) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Debes iniciar sesión para reaccionar",
-      });
-      return false;
-    }
-    
-    // Double check with the server to be sure
     try {
       const { data } = await supabase.auth.getSession();
-      const hasSession = !!data.session;
-      
-      // Update the cached state if it's different
-      if (isAuthenticated !== hasSession) {
-        setIsAuthenticated(hasSession);
-      }
-      
-      if (!hasSession) {
+      if (!data.session) {
         toast({
           variant: "destructive",
           title: "Error",
@@ -78,18 +35,17 @@ export function LongPressReactionButton({
         });
         return false;
       }
-      
       return true;
     } catch (error) {
-      console.error("Error checking authentication:", error);
+      console.error("Error checking auth:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Error al verificar tu sesión. Intenta de nuevo.",
+        description: "Error al verificar tu sesión",
       });
       return false;
     }
-  }, [isAuthenticated, toast]);
+  }, [toast]);
   
   // Use our custom hook for reaction logic
   const {

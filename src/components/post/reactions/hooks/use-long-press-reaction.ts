@@ -1,9 +1,9 @@
 
-import { useState, useRef, useCallback, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useState, useCallback } from "react";
 import { type ReactionType } from "../ReactionIcons";
+import { useReactionAuth } from "./use-reaction-auth";
+import { useReactionHandler } from "./use-reaction-handler";
+import { useLongPress } from "./use-long-press";
 
 interface UseLongPressReactionProps {
   userReaction?: ReactionType;
@@ -16,169 +16,42 @@ export function useLongPressReaction({
   userReaction,
   onReactionClick,
   postId,
-  longPressThreshold = 500, // Default threshold
+  longPressThreshold = 500,
 }: UseLongPressReactionProps) {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showReactions, setShowReactions] = useState(false);
-  const [activeReaction, setActiveReaction] = useState<ReactionType | null>(null);
-  const pressTimer = useRef<NodeJS.Timeout | null>(null);
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { authError, isAuthenticated, validateSession } = useReactionAuth();
+  
+  const { isSubmitting, handleReactionClick } = useReactionHandler({
+    postId,
+    userReaction,
+    onReactionClick,
+    validateSession
+  });
 
-  // Check authentication status on mount
-  useEffect(() => {
-    const checkAuthStatus = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        setIsAuthenticated(!!data.session);
-      } catch (error) {
-        console.error("Error checking authentication:", error);
-        setIsAuthenticated(false);
-      }
-    };
-    
-    checkAuthStatus();
-    
-    // Subscribe to auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
-      if (!!session) {
-        setAuthError(null);
-      }
-    });
-    
-    return () => {
-      authListener.subscription.unsubscribe();
-      setAuthError(null);
-    };
-  }, []);
+  // Wrap the reaction handler to include menu state management
+  const [activeReactionState, setActiveReactionState] = useState<ReactionType | null>(null);
+  const [showReactionsState, setShowReactionsState] = useState(false);
 
-  // Validate user session
-  const validateSession = useCallback(async () => {
-    // First check the cached state for better UX
-    if (isAuthenticated === false) {
-      setAuthError("Debes iniciar sesión para reaccionar");
-      return null;
+  // Handle completed long press with reaction selection
+  const handleReactionComplete = useCallback((selectedReaction: ReactionType | null) => {
+    if (selectedReaction) {
+      handleReactionClick(selectedReaction);
     }
-    
-    try {
-      const { data, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error("Session validation error:", error);
-        setAuthError("Error al verificar la sesión");
-        setIsAuthenticated(false);
-        return null;
-      }
-      
-      if (!data.session?.user) {
-        setAuthError("Debes iniciar sesión para reaccionar");
-        setIsAuthenticated(false);
-        return null;
-      }
-      
-      setIsAuthenticated(true);
-      return data.session.user;
-    } catch (err) {
-      console.error("Error validating session:", err);
-      setAuthError("Error al verificar la sesión");
-      setIsAuthenticated(false);
-      return null;
-    }
-  }, [isAuthenticated]);
+    setShowReactionsState(false);
+    setActiveReactionState(null);
+  }, [handleReactionClick]);
 
-  // Memoize the reaction handler to prevent unnecessary re-renders
-  const handleReactionClick = useCallback(async (type: ReactionType) => {
-    if (isSubmitting) return;
-    
-    try {
-      setIsSubmitting(true);
-      setAuthError(null);
-      
-      const user = await validateSession();
-      if (!user) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Debes iniciar sesión para reaccionar",
-        });
-        return;
-      }
-
-      // We'll handle the UI update AFTER the database operation is complete
-      if (userReaction === type) {
-        // If the user clicks on their current reaction, remove it
-        const { error } = await supabase
-          .from('reactions')
-          .delete()
-          .eq('post_id', postId)
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-        
-        // Only update UI after successful database operation
-        onReactionClick(type);
-      } else {
-        // First delete any existing reaction
-        await supabase
-          .from('reactions')
-          .delete()
-          .eq('post_id', postId)
-          .eq('user_id', user.id);
-
-        // Then insert the new reaction
-        const { error } = await supabase
-          .from('reactions')
-          .insert({
-            post_id: postId,
-            user_id: user.id,
-            reaction_type: type
-          });
-
-        if (error) throw error;
-        
-        // Only update UI after successful database operation
-        onReactionClick(type);
-      }
-      
-      // Invalidate the posts and reactions queries to refresh data
-      await queryClient.invalidateQueries({ queryKey: ["posts"] });
-      await queryClient.invalidateQueries({ queryKey: ["post-reactions", postId] });
-      
-    } catch (error) {
-      console.error('Error al gestionar la reacción:', error);
-      
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error instanceof Error ? error.message : "No se pudo procesar tu reacción",
-      });
-    } finally {
-      setIsSubmitting(false);
-      setShowReactions(false);
-      setActiveReaction(null);
-    }
-  }, [isSubmitting, onReactionClick, postId, queryClient, toast, userReaction, validateSession]);
-
-  const handlePressStart = useCallback(() => {
-    pressTimer.current = setTimeout(() => {
-      setShowReactions(true);
-    }, longPressThreshold);
-  }, [longPressThreshold]);
-
-  const handlePressEnd = useCallback(() => {
-    if (pressTimer.current) {
-      clearTimeout(pressTimer.current);
-      pressTimer.current = null;
-    }
-    
-    // Si hay una reacción activa, aplicarla cuando se levante el dedo/ratón
-    if (activeReaction && showReactions) {
-      handleReactionClick(activeReaction);
-    }
-  }, [activeReaction, handleReactionClick, showReactions]);
+  // Use the long press hook
+  const {
+    showReactions,
+    activeReaction,
+    setActiveReaction,
+    setShowReactions,
+    handlePressStart,
+    handlePressEnd
+  } = useLongPress({
+    longPressThreshold,
+    onPressEnd: handleReactionComplete
+  });
 
   // Handle click on the main button (non-long press)
   const handleButtonClick = useCallback(async () => {
@@ -186,15 +59,6 @@ export function useLongPressReaction({
       handleReactionClick(userReaction);
     }
   }, [handleReactionClick, showReactions, userReaction]);
-
-  // Clean up timer if component unmounts while timer is active
-  useEffect(() => {
-    return () => {
-      if (pressTimer.current) {
-        clearTimeout(pressTimer.current);
-      }
-    };
-  }, []);
 
   return {
     isSubmitting,
