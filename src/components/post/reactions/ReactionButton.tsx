@@ -9,8 +9,7 @@ import {
 } from "@/components/ui/popover";
 import { reactionIcons, type ReactionType } from "./ReactionIcons";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useLongPressReaction } from "./hooks/use-long-press-reaction";
 
 interface ReactionButtonProps {
   userReaction?: ReactionType;
@@ -20,108 +19,30 @@ interface ReactionButtonProps {
 
 export function ReactionButton({ userReaction, onReactionClick, postId }: ReactionButtonProps) {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isOpen, setIsOpen] = React.useState(false);
-
-  const checkAuth = async () => {
-    try {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Debes iniciar sesión para reaccionar",
-        });
-        return false;
-      }
-      return true;
-    } catch (error) {
-      console.error("Error checking auth:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Error al verificar tu sesión",
-      });
-      return false;
-    }
-  };
-
-  const handleReactionClick = async (type: ReactionType) => {
-    if (isSubmitting) return;
-    
-    try {
-      // Verify user is authenticated
-      const isAuthenticated = await checkAuth();
-      if (!isAuthenticated) return;
-      
-      setIsSubmitting(true);
-      
-      const { data } = await supabase.auth.getSession();
-      if (!data.session?.user) {
-        throw new Error("Debes iniciar sesión para reaccionar");
-      }
-
-      // We'll handle the UI update AFTER the database operation is complete
-      // to prevent double counting
-      if (userReaction === type) {
-        // If the user clicks on their current reaction, remove it
-        const { error } = await supabase
-          .from('reactions')
-          .delete()
-          .eq('post_id', postId)
-          .eq('user_id', data.session.user.id);
-
-        if (error) throw error;
-        
-        // Only update UI after successful database operation
-        onReactionClick(type);
-      } else {
-        // First delete any existing reaction
-        await supabase
-          .from('reactions')
-          .delete()
-          .eq('post_id', postId)
-          .eq('user_id', data.session.user.id);
-
-        // Then insert the new reaction
-        const { error } = await supabase
-          .from('reactions')
-          .insert({
-            post_id: postId,
-            user_id: data.session.user.id,
-            reaction_type: type
-          });
-
-        if (error) throw error;
-        
-        // Only update UI after successful database operation
-        onReactionClick(type);
-      }
-      
-      // Invalidate the posts and reactions queries to refresh data
-      await queryClient.invalidateQueries({ queryKey: ["posts"] });
-      await queryClient.invalidateQueries({ queryKey: ["post-reactions", postId] });
-      
-    } catch (error) {
-      console.error('Error al gestionar la reacción:', error);
-      
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error instanceof Error ? error.message : "No se pudo procesar tu reacción",
-      });
-    } finally {
-      setIsSubmitting(false);
-      setIsOpen(false);
-    }
-  };
+  
+  // Use our custom hook for reaction logic
+  const {
+    isSubmitting,
+    handleReactionClick,
+    authError,
+    isAuthenticated
+  } = useLongPressReaction({
+    userReaction,
+    onReactionClick,
+    postId
+  });
 
   const handleOpenChange = async (open: boolean) => {
     if (open) {
-      const isAuthenticated = await checkAuth();
       if (isAuthenticated) {
         setIsOpen(true);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: authError || "Debes iniciar sesión para reaccionar",
+        });
       }
     } else {
       setIsOpen(false);
@@ -131,9 +52,14 @@ export function ReactionButton({ userReaction, onReactionClick, postId }: Reacti
   // Handle direct button click (for the current reaction)
   const handleButtonClick = async () => {
     if (userReaction) {
-      const isAuthenticated = await checkAuth();
       if (isAuthenticated) {
         handleReactionClick(userReaction);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: authError || "Debes iniciar sesión para reaccionar",
+        });
       }
     }
   };
