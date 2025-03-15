@@ -11,6 +11,8 @@ import { PostActionButtons } from "./post/PostActionButtons";
 import { FilePreview } from "./post/FilePreview";
 import { VisibilitySelector } from "./post/VisibilitySelector";
 import { AtSign } from "lucide-react";
+import { useMentions } from "@/hooks/use-mentions";
+import { MentionSuggestions } from "./mentions/MentionSuggestions";
 
 export function PostCreator() {
   const [content, setContent] = useState("");
@@ -21,6 +23,17 @@ export function PostCreator() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const {
+    mentionUsers,
+    mentionListVisible,
+    mentionPosition,
+    mentionIndex,
+    setMentionIndex,
+    handleTextChange,
+    insertMention,
+    setMentionListVisible
+  } = useMentions();
 
   const { mutate: submitPost, isPending } = useMutation({
     mutationFn: async (pollData?: { question: string; options: string[] }) => {
@@ -73,6 +86,47 @@ export function PostCreator() {
     submitPost(undefined); // Pasamos undefined cuando no hay datos de encuesta
   };
 
+  const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setContent(value);
+    
+    if (textareaRef.current) {
+      handleTextChange(value, textareaRef.current.selectionStart, textareaRef.current);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    // Handle mention selection with keyboard navigation
+    if (mentionListVisible && mentionUsers.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setMentionIndex(prev => (prev + 1) % mentionUsers.length);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setMentionIndex(prev => (prev <= 0 ? mentionUsers.length - 1 : prev - 1));
+      } else if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        if (mentionIndex >= 0 && mentionIndex < mentionUsers.length) {
+          const newText = insertMention(content, mentionUsers[mentionIndex]);
+          setContent(newText);
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setMentionListVisible(false);
+      }
+    }
+  };
+
+  const handleSelectMention = (user: any) => {
+    const newText = insertMention(content, user);
+    setContent(newText);
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }, 0);
+  };
+
   const handleMentionClick = () => {
     if (textareaRef.current) {
       const cursorPos = textareaRef.current.selectionStart;
@@ -95,13 +149,25 @@ export function PostCreator() {
 
   return (
     <Card className="p-4 space-y-4">
-      <Textarea
-        ref={textareaRef}
-        placeholder="¿Qué estás pensando?"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        className="resize-none"
-      />
+      <div className="relative">
+        <Textarea
+          ref={textareaRef}
+          placeholder="¿Qué estás pensando?"
+          value={content}
+          onChange={handleTextAreaChange}
+          onKeyDown={handleKeyDown}
+          className="resize-none"
+        />
+        
+        <MentionSuggestions
+          users={mentionUsers}
+          isVisible={mentionListVisible}
+          position={mentionPosition}
+          selectedIndex={mentionIndex}
+          onSelectUser={handleSelectMention}
+          onSetIndex={setMentionIndex}
+        />
+      </div>
       
       <div className="flex items-center justify-between">
         <Button 

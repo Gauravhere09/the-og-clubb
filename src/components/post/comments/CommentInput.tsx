@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useRef } from "react";
 import { X, AtSign } from "lucide-react";
+import { useMentions } from "@/hooks/use-mentions";
+import { MentionSuggestions } from "@/components/mentions/MentionSuggestions";
 
 interface CommentInputProps {
   newComment: string;
@@ -21,6 +23,17 @@ export function CommentInput({
 }: CommentInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
+  const {
+    mentionUsers,
+    mentionListVisible,
+    mentionPosition,
+    mentionIndex,
+    setMentionIndex,
+    handleTextChange,
+    insertMention,
+    setMentionListVisible
+  } = useMentions();
+  
   // Focus the textarea when replying to someone
   useEffect(() => {
     if (replyTo && textareaRef.current) {
@@ -30,10 +43,50 @@ export function CommentInput({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Submit comment when pressing Enter (without Shift)
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !mentionListVisible) {
       e.preventDefault();
       onSubmitComment();
+      return;
     }
+    
+    // Handle mention selection with keyboard navigation
+    if (mentionListVisible && mentionUsers.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setMentionIndex(prev => (prev + 1) % mentionUsers.length);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setMentionIndex(prev => (prev <= 0 ? mentionUsers.length - 1 : prev - 1));
+      } else if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        if (mentionIndex >= 0 && mentionIndex < mentionUsers.length) {
+          const newText = insertMention(newComment, mentionUsers[mentionIndex]);
+          onNewCommentChange(newText);
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setMentionListVisible(false);
+      }
+    }
+  };
+
+  const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    onNewCommentChange(value);
+    
+    if (textareaRef.current) {
+      handleTextChange(value, textareaRef.current.selectionStart, textareaRef.current);
+    }
+  };
+
+  const handleSelectMention = (user: any) => {
+    const newText = insertMention(newComment, user);
+    onNewCommentChange(newText);
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }, 0);
   };
 
   const handleMentionClick = () => {
@@ -74,20 +127,29 @@ export function CommentInput({
         </div>
       )}
       <div className="flex gap-2 flex-col">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 relative">
           <Textarea
             ref={textareaRef}
             value={newComment}
-            onChange={(e) => onNewCommentChange(e.target.value)}
+            onChange={handleTextAreaChange}
+            onKeyDown={handleKeyDown}
             placeholder={replyTo ? `Escribe tu respuesta para ${replyTo.username}...` : "Escribe un comentario..."}
             className="resize-none min-h-[80px]"
-            onKeyDown={handleKeyDown}
             id="comment-textarea"
             name="comment-textarea"
           />
           <Button onClick={onSubmitComment} disabled={!newComment.trim()}>
             Comentar
           </Button>
+          
+          <MentionSuggestions
+            users={mentionUsers}
+            isVisible={mentionListVisible}
+            position={mentionPosition}
+            selectedIndex={mentionIndex}
+            onSelectUser={handleSelectMention}
+            onSetIndex={setMentionIndex}
+          />
         </div>
         <div className="flex justify-between items-center">
           <div className="text-xs text-muted-foreground">
