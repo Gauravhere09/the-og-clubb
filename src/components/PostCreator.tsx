@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,6 +13,8 @@ import { VisibilitySelector } from "./post/VisibilitySelector";
 import { AtSign } from "lucide-react";
 import { useMentions } from "@/hooks/mentions";
 import { MentionSuggestions } from "./mentions/MentionSuggestions";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 
 export function PostCreator() {
   const [content, setContent] = useState("");
@@ -20,6 +22,7 @@ export function PostCreator() {
   const [isUploading, setIsUploading] = useState(false);
   const [showPollCreator, setShowPollCreator] = useState(false);
   const [visibility, setVisibility] = useState<'public' | 'friends' | 'private'>('public');
+  const [currentUser, setCurrentUser] = useState<{ id: string, avatar_url: string | null, username: string | null } | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -34,6 +37,29 @@ export function PostCreator() {
     insertMention,
     setMentionListVisible
   } = useMentions();
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('avatar_url, username')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile) {
+          setCurrentUser({
+            id: user.id,
+            avatar_url: profile.avatar_url,
+            username: profile.username
+          });
+        }
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   const { mutate: submitPost, isPending } = useMutation({
     mutationFn: async (pollData?: { question: string; options: string[] }) => {
@@ -149,24 +175,30 @@ export function PostCreator() {
 
   return (
     <Card className="p-4 space-y-4">
-      <div className="relative">
-        <Textarea
-          ref={textareaRef}
-          placeholder="¿Qué estás pensando?"
-          value={content}
-          onChange={handleTextAreaChange}
-          onKeyDown={handleKeyDown}
-          className="resize-none"
-        />
-        
-        <MentionSuggestions
-          users={mentionUsers}
-          isVisible={mentionListVisible}
-          position={mentionPosition}
-          selectedIndex={mentionIndex}
-          onSelectUser={handleSelectMention}
-          onSetIndex={setMentionIndex}
-        />
+      <div className="flex items-center gap-3 mb-2">
+        <Avatar className="h-10 w-10 border-2 border-primary/10">
+          <AvatarImage src={currentUser?.avatar_url || undefined} />
+          <AvatarFallback>{currentUser?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+        </Avatar>
+        <div className="relative flex-1">
+          <Textarea
+            ref={textareaRef}
+            placeholder="¿Qué estás pensando?"
+            value={content}
+            onChange={handleTextAreaChange}
+            onKeyDown={handleKeyDown}
+            className="resize-none rounded-full pl-4 pr-12 py-2 min-h-0 h-10 focus-visible:h-20 transition-all duration-200 bg-muted/50"
+          />
+          
+          <MentionSuggestions
+            users={mentionUsers}
+            isVisible={mentionListVisible}
+            position={mentionPosition}
+            selectedIndex={mentionIndex}
+            onSelectUser={handleSelectMention}
+            onSetIndex={setMentionIndex}
+          />
+        </div>
       </div>
       
       <div className="flex items-center justify-between">
