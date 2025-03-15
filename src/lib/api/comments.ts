@@ -1,10 +1,11 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Comment } from "@/types/post";
 import { sendMentionNotifications } from "./posts/notifications";
 
 export async function createComment(postId: string, content: string, parentId?: string) {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error("Usuario no autenticado");
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session?.user) throw new Error("Usuario no autenticado");
 
   const { data: comment, error } = await supabase
     .from('comments')
@@ -12,7 +13,7 @@ export async function createComment(postId: string, content: string, parentId?: 
       post_id: postId,
       content,
       parent_id: parentId,
-      user_id: user.id
+      user_id: sessionData.session.user.id
     })
     .select('*, profiles(username, avatar_url)')
     .single();
@@ -20,7 +21,7 @@ export async function createComment(postId: string, content: string, parentId?: 
   if (error) throw error;
 
   // Procesar menciones y enviar notificaciones
-  await sendMentionNotifications(content, postId, comment.id, user.id);
+  await sendMentionNotifications(content, postId, comment.id, sessionData.session.user.id);
 
   // Get post owner and parent comment owner IDs
   const { data: post } = await supabase
@@ -36,12 +37,12 @@ export async function createComment(postId: string, content: string, parentId?: 
     .single() : { data: null };
 
   // Create notification for post owner if it's a direct comment
-  if (post && post.user_id !== user.id && !parentId) {
+  if (post && post.user_id !== sessionData.session.user.id && !parentId) {
     await supabase
       .from('notifications')
       .insert({
         type: 'post_comment',
-        sender_id: user.id,
+        sender_id: sessionData.session.user.id,
         receiver_id: post.user_id,
         post_id: postId,
         comment_id: comment.id,
@@ -50,12 +51,12 @@ export async function createComment(postId: string, content: string, parentId?: 
   }
 
   // Create notification for parent comment owner if it's a reply
-  if (parentComment && parentComment.user_id !== user.id) {
+  if (parentComment && parentComment.user_id !== sessionData.session.user.id) {
     await supabase
       .from('notifications')
       .insert({
         type: 'comment_reply',
-        sender_id: user.id,
+        sender_id: sessionData.session.user.id,
         receiver_id: parentComment.user_id,
         post_id: postId,
         comment_id: comment.id,
@@ -67,7 +68,8 @@ export async function createComment(postId: string, content: string, parentId?: 
 }
 
 export async function getComments(postId: string) {
-  const { data: { user } } = await supabase.auth.getSession();
+  const { data } = await supabase.auth.getSession();
+  const currentUser = data.session?.user;
   
   // Obtenemos los datos de comentarios
   const { data: commentsData, error: commentsError } = await supabase
@@ -84,7 +86,7 @@ export async function getComments(postId: string) {
   let comments = commentsData as Comment[];
   
   // Si hay un usuario autenticado, obtiene sus reacciones
-  if (user) {
+  if (currentUser) {
     // Obtener las reacciones del usuario a los comentarios
     const commentIds = comments.map(comment => comment.id);
     
@@ -93,7 +95,7 @@ export async function getComments(postId: string) {
       const { data: userReactions } = await supabase
         .from('reactions')
         .select('comment_id, reaction_type')
-        .eq('user_id', user.id)
+        .eq('user_id', currentUser.id)
         .in('comment_id', commentIds);
       
       // Crear un mapa de reacciones por id de comentario
@@ -160,3 +162,4 @@ export async function getComments(postId: string) {
 
   return rootComments;
 }
+
