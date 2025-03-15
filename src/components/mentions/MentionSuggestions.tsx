@@ -69,7 +69,15 @@ export function MentionSuggestions({
             onMouseEnter={() => onSetIndex(index)}
           >
             <Avatar className="h-6 w-6">
-              <AvatarImage src={user.avatar_url || undefined} />
+              <AvatarImage 
+                src={user.avatar_url || undefined} 
+                alt={user.username}
+                onError={(e) => {
+                  console.log("Error cargando avatar en menciones:", e);
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none'; // Ocultar imagen en error
+                }}
+              />
               <AvatarFallback>{user.username[0]?.toUpperCase()}</AvatarFallback>
             </Avatar>
             <span className="text-sm font-medium">{user.username}</span>

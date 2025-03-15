@@ -40,21 +40,33 @@ export function PostCreator() {
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('avatar_url, username')
-          .eq('id', user.id)
-          .single();
-        
-        if (profile) {
-          setCurrentUser({
-            id: user.id,
-            avatar_url: profile.avatar_url,
-            username: profile.username
-          });
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          console.log("Usuario autenticado:", user.id);
+          
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('avatar_url, username')
+            .eq('id', user.id)
+            .single();
+          
+          if (error) {
+            console.error("Error al obtener perfil:", error);
+            return;
+          }
+          
+          if (profile) {
+            console.log("Perfil obtenido:", profile);
+            setCurrentUser({
+              id: user.id,
+              avatar_url: profile.avatar_url,
+              username: profile.username
+            });
+          }
         }
+      } catch (error) {
+        console.error("Error en fetchCurrentUser:", error);
       }
     };
 
@@ -177,7 +189,15 @@ export function PostCreator() {
     <Card className="p-4 space-y-4">
       <div className="flex items-center gap-3 mb-2">
         <Avatar className="h-10 w-10 border-2 border-primary/10">
-          <AvatarImage src={currentUser?.avatar_url || undefined} />
+          <AvatarImage 
+            src={currentUser?.avatar_url || undefined} 
+            alt={currentUser?.username || "Usuario"}
+            onError={(e) => {
+              console.log("Error cargando imagen:", e);
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none'; // Ocultar imagen en error
+            }}
+          />
           <AvatarFallback>{currentUser?.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
         </Avatar>
         <div className="relative flex-1">
