@@ -1,7 +1,6 @@
 
 import { Link } from "react-router-dom";
 import { Fragment, useMemo } from "react";
-import { AtSign } from "lucide-react";
 
 interface MentionsTextProps {
   content: string;

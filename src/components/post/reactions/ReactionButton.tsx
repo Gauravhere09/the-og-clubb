@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { reactionIcons, type ReactionType } from "./ReactionIcons";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -22,26 +22,55 @@ export function ReactionButton({ userReaction, onReactionClick, postId }: Reacti
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
+
+  const checkAuth = async () => {
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Debes iniciar sesión para reaccionar",
+        });
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Error checking auth:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Error al verificar tu sesión",
+      });
+      return false;
+    }
+  };
 
   const handleReactionClick = async (type: ReactionType) => {
     if (isSubmitting) return;
     
     try {
+      // Verify user is authenticated
+      const isAuthenticated = await checkAuth();
+      if (!isAuthenticated) return;
+      
       setIsSubmitting(true);
       
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Debes iniciar sesión para reaccionar");
+      const { data } = await supabase.auth.getSession();
+      if (!data.session?.user) {
+        throw new Error("Debes iniciar sesión para reaccionar");
+      }
 
       // We'll handle the UI update AFTER the database operation is complete
       // to prevent double counting
-
       if (userReaction === type) {
         // If the user clicks on their current reaction, remove it
         const { error } = await supabase
           .from('reactions')
           .delete()
           .eq('post_id', postId)
-          .eq('user_id', user.id);
+          .eq('user_id', data.session.user.id);
 
         if (error) throw error;
         
@@ -53,14 +82,14 @@ export function ReactionButton({ userReaction, onReactionClick, postId }: Reacti
           .from('reactions')
           .delete()
           .eq('post_id', postId)
-          .eq('user_id', user.id);
+          .eq('user_id', data.session.user.id);
 
         // Then insert the new reaction
         const { error } = await supabase
           .from('reactions')
           .insert({
             post_id: postId,
-            user_id: user.id,
+            user_id: data.session.user.id,
             reaction_type: type
           });
 
@@ -84,17 +113,39 @@ export function ReactionButton({ userReaction, onReactionClick, postId }: Reacti
       });
     } finally {
       setIsSubmitting(false);
+      setIsOpen(false);
+    }
+  };
+
+  const handleOpenChange = async (open: boolean) => {
+    if (open) {
+      const isAuthenticated = await checkAuth();
+      if (isAuthenticated) {
+        setIsOpen(true);
+      }
+    } else {
+      setIsOpen(false);
+    }
+  };
+
+  // Handle direct button click (for the current reaction)
+  const handleButtonClick = async () => {
+    if (userReaction) {
+      const isAuthenticated = await checkAuth();
+      if (isAuthenticated) {
+        handleReactionClick(userReaction);
+      }
     }
   };
 
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
           size="sm"
           className={`${userReaction ? reactionIcons[userReaction].color : ''} group`}
-          onClick={() => userReaction && handleReactionClick(userReaction)}
+          onClick={handleButtonClick}
           disabled={isSubmitting}
         >
           {userReaction ? (

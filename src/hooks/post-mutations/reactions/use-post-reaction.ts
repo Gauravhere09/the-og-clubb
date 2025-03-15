@@ -21,7 +21,7 @@ export function usePostReaction(postId: string, checkAuth: (showToast?: boolean)
       
       try {
         // Check authentication first
-        const isAuthenticated = await checkAuth();
+        const isAuthenticated = await checkAuth(true);
         
         if (!isAuthenticated) {
           throw new Error("Debes iniciar sesión para reaccionar");
