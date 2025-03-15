@@ -72,6 +72,8 @@ export function ReactionMenu({
       {Object.entries(reactionIcons).map(([type, { icon: Icon, color, label }]) => (
         <button
           key={type}
+          id={`reaction-${type}`}
+          name={`reaction-${type}`}
           data-reaction-type={type}
           className={cn(
             "p-2 mx-1 rounded-full transition-all duration-200",

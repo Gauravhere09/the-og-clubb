@@ -115,6 +115,8 @@ export function LongPressReactionButton({
         className={`${userReaction ? reactionIcons[userReaction].color : ''} group`}
         onClick={userReaction ? handleAuthClick : handleToggleMenu}
         disabled={isSubmitting}
+        id="reaction-button"
+        name="reaction-button"
       >
         {userReaction ? (
           <div className="flex items-center">

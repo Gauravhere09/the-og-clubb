@@ -15,7 +15,7 @@ export function useLongPress({
   const [activeReaction, setActiveReaction] = useState<ReactionType | null>(null);
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Modified to show reactions immediately on click instead of waiting
+  // Show reactions immediately on click
   const handlePressStart = useCallback(() => {
     setShowReactions(true);
   }, []);

@@ -31,7 +31,7 @@ export function useLongPressReaction({
   const [activeReactionState, setActiveReactionState] = useState<ReactionType | null>(null);
   const [showReactionsState, setShowReactionsState] = useState(false);
 
-  // Handle completed long press with reaction selection
+  // Handle completed reaction selection
   const handleReactionComplete = useCallback((selectedReaction: ReactionType | null) => {
     if (selectedReaction) {
       handleReactionClick(selectedReaction);
@@ -40,7 +40,7 @@ export function useLongPressReaction({
     setActiveReactionState(null);
   }, [handleReactionClick]);
 
-  // Use the long press hook
+  // Use the modified long press hook
   const {
     showReactions,
     activeReaction,
@@ -53,7 +53,7 @@ export function useLongPressReaction({
     onPressEnd: handleReactionComplete
   });
 
-  // Handle click on the main button (non-long press)
+  // Handle click on the main button (for existing reaction)
   const handleButtonClick = useCallback(async () => {
     if (userReaction) {
       handleReactionClick(userReaction);
