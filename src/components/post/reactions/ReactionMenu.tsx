@@ -53,12 +53,19 @@ export function ReactionMenu({
     }
   }, [setActiveReaction]);
 
+  // Handle click on a reaction
+  const handleReactionClick = useCallback((type: ReactionType) => {
+    onReactionSelected(type);
+    // Auto-close menu after selection
+    setTimeout(() => onPointerLeave(), 200);
+  }, [onReactionSelected, onPointerLeave]);
+
   if (!show) return null;
 
   return (
     <div 
       ref={menuRef}
-      className="absolute -top-16 left-0 flex p-2 bg-background border rounded-full shadow-lg z-50 transition-all duration-200 transform origin-bottom-left"
+      className="absolute -top-16 left-0 flex p-2 bg-background border rounded-full shadow-lg z-50 transition-all duration-200 transform origin-bottom-left animate-fade-in"
       onPointerMove={handlePointerMove}
       onPointerLeave={onPointerLeave}
     >
@@ -71,7 +78,7 @@ export function ReactionMenu({
             activeReaction === type ? "scale-125 bg-muted" : "hover:scale-110",
             activeReaction === type ? color : ""
           )}
-          onClick={() => onReactionSelected(type as ReactionType)}
+          onClick={() => handleReactionClick(type as ReactionType)}
         >
           <span className={cn("block h-6 w-6", activeReaction === type ? color : "")}>
             <Icon className="h-6 w-6" />

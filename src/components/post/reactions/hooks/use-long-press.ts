@@ -15,11 +15,10 @@ export function useLongPress({
   const [activeReaction, setActiveReaction] = useState<ReactionType | null>(null);
   const pressTimer = useRef<NodeJS.Timeout | null>(null);
 
+  // Modified to show reactions immediately on click instead of waiting
   const handlePressStart = useCallback(() => {
-    pressTimer.current = setTimeout(() => {
-      setShowReactions(true);
-    }, longPressThreshold);
-  }, [longPressThreshold]);
+    setShowReactions(true);
+  }, []);
 
   const handlePressEnd = useCallback(() => {
     if (pressTimer.current) {

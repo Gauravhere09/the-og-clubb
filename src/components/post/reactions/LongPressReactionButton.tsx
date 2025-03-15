@@ -64,49 +64,47 @@ export function LongPressReactionButton({
     postId
   });
 
-  // Handle pointer movement for tracking reactions
-  const handlePointerMove = useCallback((e: PointerEvent) => {
-    // This is handled inside the ReactionMenu component
-  }, []);
-
   // Use our pointer events hook
   const { handlePointerLeave } = useReactionPointerEvents({
     showReactions,
     activeReaction,
     handlePressEnd,
-    handlePointerMove
+    handlePointerMove: useCallback(() => {}, [])
   });
 
-  // Handle press start with auth check
-  const handleAuthPressStart = useCallback(async () => {
+  // Handle click with auth check to show reactions menu
+  const handleAuthClick = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     const isAuthenticated = await checkAuth();
     if (isAuthenticated) {
-      handlePressStart();
+      if (userReaction) {
+        // If user already has a reaction, toggle it directly
+        handleButtonClick();
+      } else {
+        // Show reaction menu
+        handlePressStart();
+      }
     }
-  }, [checkAuth, handlePressStart]);
-
-  // Button click with auth check
-  const handleAuthButtonClick = useCallback(async () => {
-    const isAuthenticated = await checkAuth();
-    if (isAuthenticated) {
-      handleButtonClick();
-    }
-  }, [checkAuth, handleButtonClick]);
-
-  // Touch event handlers that are properly typed
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    handleAuthPressStart();
-  }, [handleAuthPressStart]);
-
-  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
-    handlePressEnd();
-  }, [handlePressEnd]);
+  }, [checkAuth, handlePressStart, handleButtonClick, userReaction]);
 
   // Custom handler for pointer leave on reaction menu
   const handleMenuPointerLeave = useCallback(() => {
     handlePointerLeave();
     setShowReactions(false);
   }, [handlePointerLeave, setShowReactions]);
+
+  // Toggle menu instead of direct action
+  const handleToggleMenu = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const isAuthenticated = await checkAuth();
+    if (isAuthenticated) {
+      setShowReactions(prevState => !prevState);
+    }
+  }, [checkAuth, setShowReactions]);
 
   return (
     <div className="relative">
@@ -115,14 +113,8 @@ export function LongPressReactionButton({
         variant="ghost"
         size="sm"
         className={`${userReaction ? reactionIcons[userReaction].color : ''} group`}
-        onClick={handleAuthButtonClick}
+        onClick={userReaction ? handleAuthClick : handleToggleMenu}
         disabled={isSubmitting}
-        onPointerDown={handleAuthPressStart}
-        onPointerUp={handlePressEnd}
-        onPointerLeave={handlePressEnd}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
-        onTouchCancel={handleTouchEnd}
       >
         {userReaction ? (
           <div className="flex items-center">

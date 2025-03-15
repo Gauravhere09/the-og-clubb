@@ -55,10 +55,10 @@ export function useLongPressReaction({
 
   // Handle click on the main button (non-long press)
   const handleButtonClick = useCallback(async () => {
-    if (!showReactions && userReaction) {
+    if (userReaction) {
       handleReactionClick(userReaction);
     }
-  }, [handleReactionClick, showReactions, userReaction]);
+  }, [handleReactionClick, userReaction]);
 
   return {
     isSubmitting,
