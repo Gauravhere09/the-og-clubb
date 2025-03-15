@@ -24,11 +24,11 @@ export const GroupMessageItem = ({ message, currentUserId }: GroupMessageItemPro
         throw new Error("No tienes permiso para eliminar este mensaje");
       }
       
-      // Marcar el mensaje como eliminado
+      // Update the message content to indicate it was deleted
+      // Don't try to update is_deleted since it may not exist in the database
       const { error } = await supabase
         .from('group_messages')
         .update({
-          is_deleted: true,
           content: "Este mensaje ha sido eliminado"
         })
         .eq('id', message.id);
@@ -49,6 +49,9 @@ export const GroupMessageItem = ({ message, currentUserId }: GroupMessageItemPro
     }
   };
 
+  // Consider a message deleted if content indicates it was deleted
+  const isDeleted = message.is_deleted || message.content === "Este mensaje ha sido eliminado";
+
   return (
     <div className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}>
       <div className="flex gap-2">
@@ -62,14 +65,14 @@ export const GroupMessageItem = ({ message, currentUserId }: GroupMessageItemPro
           <div
             className={cn(
               "max-w-[80%] rounded-lg p-3",
-              message.is_deleted 
+              isDeleted 
                 ? "bg-muted/50 text-muted-foreground italic"
                 : isCurrentUser
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted"
             )}
           >
-            {message.is_deleted ? (
+            {isDeleted ? (
               <p>{message.content}</p>
             ) : message.type === 'audio' ? (
               <audio src={message.media_url || undefined} controls className="max-w-[200px]" />
@@ -90,7 +93,7 @@ export const GroupMessageItem = ({ message, currentUserId }: GroupMessageItemPro
           </div>
           
           {/* Opción para eliminar mensaje (solo para mensajes propios no eliminados) */}
-          {isCurrentUser && !message.is_deleted && (
+          {isCurrentUser && !isDeleted && (
             <DropdownMenu>
               <DropdownMenuTrigger className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                 <MoreVertical className={`h-4 w-4 ${
