@@ -11,7 +11,7 @@ import { PostActionButtons } from "./post/PostActionButtons";
 import { FilePreview } from "./post/FilePreview";
 import { VisibilitySelector } from "./post/VisibilitySelector";
 import { AtSign } from "lucide-react";
-import { useMentions } from "@/hooks/use-mentions";
+import { useMentions } from "@/hooks/mentions";
 import { MentionSuggestions } from "./mentions/MentionSuggestions";
 
 export function PostCreator() {

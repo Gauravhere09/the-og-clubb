@@ -2,12 +2,7 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
-
-interface MentionUser {
-  id: string;
-  username: string;
-  avatar_url: string | null;
-}
+import { MentionUser } from "@/hooks/mentions/types";
 
 interface MentionSuggestionsProps {
   users: MentionUser[];

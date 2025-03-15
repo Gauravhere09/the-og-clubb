@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useRef } from "react";
 import { X, AtSign } from "lucide-react";
-import { useMentions } from "@/hooks/use-mentions";
+import { useMentions } from "@/hooks/mentions";
 import { MentionSuggestions } from "@/components/mentions/MentionSuggestions";
 
 interface CommentInputProps {

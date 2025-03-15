@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send, Paperclip, Smile, Mic, Image, AtSign } from "lucide-react";
 import { useRef, useState } from "react";
-import { useMentions } from "@/hooks/use-mentions";
+import { useMentions } from "@/hooks/mentions";
 import { MentionSuggestions } from "@/components/mentions/MentionSuggestions";
 
 interface MessageInputProps {

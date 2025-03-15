@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Send, Mic, Square, Image as ImageIcon, AtSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useMentions } from "@/hooks/use-mentions";
+import { useMentions } from "@/hooks/mentions";
 import { MentionSuggestions } from "@/components/mentions/MentionSuggestions";
 
 interface GroupMessageInputProps {
