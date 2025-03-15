@@ -21,6 +21,7 @@ export function useReactionHandler({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Memoize the reaction handler to prevent unnecessary re-renders
   const handleReactionClick = useCallback(async (type: ReactionType) => {
@@ -28,13 +29,27 @@ export function useReactionHandler({
     
     try {
       setIsSubmitting(true);
+      setAuthError(null);
       
-      const user = await validateSession();
-      if (!user) {
+      // Directly check session with Supabase
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) {
+        setAuthError("Debes iniciar sesión para reaccionar");
         toast({
           variant: "destructive",
           title: "Error",
           description: "Debes iniciar sesión para reaccionar",
+        });
+        return;
+      }
+      
+      const user = sessionData.session.user;
+      if (!user) {
+        setAuthError("Error al verificar la sesión");
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Error al verificar la sesión",
         });
         return;
       }
@@ -90,10 +105,11 @@ export function useReactionHandler({
     } finally {
       setIsSubmitting(false);
     }
-  }, [isSubmitting, onReactionClick, postId, queryClient, toast, userReaction, validateSession]);
+  }, [isSubmitting, onReactionClick, postId, queryClient, toast, userReaction]);
 
   return {
     isSubmitting,
+    authError,
     handleReactionClick
   };
 }

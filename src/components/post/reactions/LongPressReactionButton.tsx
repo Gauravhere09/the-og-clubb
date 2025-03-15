@@ -1,5 +1,5 @@
 
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp } from "lucide-react";
 import { reactionIcons, type ReactionType } from "./ReactionIcons";
@@ -22,30 +22,7 @@ export function LongPressReactionButton({
 }: LongPressReactionButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { toast } = useToast();
-  
-  // Check authentication before any reaction action
-  const checkAuth = useCallback(async () => {
-    try {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Debes iniciar sesión para reaccionar",
-        });
-        return false;
-      }
-      return true;
-    } catch (error) {
-      console.error("Error checking auth:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Error al verificar tu sesión",
-      });
-      return false;
-    }
-  }, [toast]);
+  const [isAuthChecking, setIsAuthChecking] = useState(false);
   
   // Use our custom hook for reaction logic
   const {
@@ -57,12 +34,35 @@ export function LongPressReactionButton({
     handlePressStart,
     handlePressEnd,
     handleButtonClick,
-    handleReactionClick
+    handleReactionClick,
+    checkAuthentication
   } = useLongPressReaction({
     userReaction,
     onReactionClick,
     postId
   });
+
+  // Track authentication state 
+  const [isUserAuthenticated, setIsUserAuthenticated] = useState<boolean | null>(null);
+
+  // Check authentication on component mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      setIsUserAuthenticated(!!data.session);
+    };
+    
+    checkAuth();
+    
+    // Subscribe to auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsUserAuthenticated(!!session);
+    });
+    
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
 
   // Use our pointer events hook
   const { handlePointerLeave } = useReactionPointerEvents({
@@ -77,17 +77,38 @@ export function LongPressReactionButton({
     e.preventDefault();
     e.stopPropagation();
     
-    const isAuthenticated = await checkAuth();
-    if (isAuthenticated) {
-      if (userReaction) {
-        // If user already has a reaction, toggle it directly
-        handleButtonClick();
+    setIsAuthChecking(true);
+    try {
+      // Check auth directly from supabase
+      const { data } = await supabase.auth.getSession();
+      const isAuthenticated = !!data.session;
+      
+      if (isAuthenticated) {
+        if (userReaction) {
+          // If user already has a reaction, toggle it directly
+          handleButtonClick();
+        } else {
+          // Show reaction menu
+          handlePressStart();
+        }
       } else {
-        // Show reaction menu
-        handlePressStart();
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Debes iniciar sesión para reaccionar",
+        });
       }
+    } catch (error) {
+      console.error("Error checking auth:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Error al verificar tu sesión. Intenta de nuevo.",
+      });
+    } finally {
+      setIsAuthChecking(false);
     }
-  }, [checkAuth, handlePressStart, handleButtonClick, userReaction]);
+  }, [handlePressStart, handleButtonClick, userReaction, toast]);
 
   // Custom handler for pointer leave on reaction menu
   const handleMenuPointerLeave = useCallback(() => {
@@ -100,11 +121,32 @@ export function LongPressReactionButton({
     e.preventDefault();
     e.stopPropagation();
     
-    const isAuthenticated = await checkAuth();
-    if (isAuthenticated) {
-      setShowReactions(prevState => !prevState);
+    setIsAuthChecking(true);
+    try {
+      // Check auth directly with supabase
+      const { data } = await supabase.auth.getSession();
+      const isAuthenticated = !!data.session;
+      
+      if (isAuthenticated) {
+        setShowReactions(prevState => !prevState);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Debes iniciar sesión para reaccionar",
+        });
+      }
+    } catch (error) {
+      console.error("Error checking auth:", error);
+      toast({
+        variant: "destructive", 
+        title: "Error",
+        description: "Error al verificar tu sesión. Intenta de nuevo.",
+      });
+    } finally {
+      setIsAuthChecking(false);
     }
-  }, [checkAuth, setShowReactions]);
+  }, [setShowReactions, toast]);
 
   return (
     <div className="relative">
@@ -114,7 +156,7 @@ export function LongPressReactionButton({
         size="sm"
         className={`${userReaction ? reactionIcons[userReaction].color : ''} group`}
         onClick={userReaction ? handleAuthClick : handleToggleMenu}
-        disabled={isSubmitting}
+        disabled={isSubmitting || isAuthChecking}
         id="reaction-button"
         name="reaction-button"
       >
