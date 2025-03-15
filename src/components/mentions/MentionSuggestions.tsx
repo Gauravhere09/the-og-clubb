@@ -43,7 +43,7 @@ export function MentionSuggestions({
     // Show "No results" indicator instead of returning null
     return (
       <div
-        className="absolute z-50 bg-background border rounded-md shadow-md w-64 p-2 text-center"
+        className="fixed z-50 bg-background border rounded-md shadow-md w-64 p-2 text-center"
         style={{
           top: `${position.top}px`,
           left: `${position.left}px`
@@ -56,7 +56,7 @@ export function MentionSuggestions({
 
   return (
     <div
-      className="absolute z-50 bg-background border rounded-md shadow-md w-64 max-h-60 overflow-y-auto"
+      className="fixed z-50 bg-background border rounded-md shadow-md w-64 max-h-60 overflow-y-auto mention-list"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`
@@ -68,7 +68,7 @@ export function MentionSuggestions({
             key={user.id}
             className={cn(
               "flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent",
-              selectedIndex === index && "bg-accent"
+              selectedIndex === index ? "bg-accent mention-highlight" : ""
             )}
             onClick={() => onSelectUser(user)}
             onMouseEnter={() => onSetIndex(index)}

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./use-toast";
 
@@ -73,7 +73,7 @@ export function useMentions() {
       }
     };
 
-    // Only search if we have at least one character
+    // Always search if we have at least one character to make sure results show up
     if (mentionSearch.length > 0) {
       searchForUsers();
     }
@@ -97,6 +97,13 @@ export function useMentions() {
     if (startIndex > 0 && !/[\s\n]/.test(text[startIndex - 1])) {
       return null;
     }
+    
+    // Log the found indices for debugging
+    console.log("Found mention indices:", { 
+      start: startIndex, 
+      end: caretPos, 
+      query: text.substring(startIndex + 1, caretPos) 
+    });
     
     return {
       start: startIndex,
@@ -127,8 +134,12 @@ export function useMentions() {
       // Calculate position of mention list
       calculateMentionPosition(inputElement, mentionIndices.start);
     } else {
-      setMentionListVisible(false);
-      setMentionSearch("");
+      // Only hide the list if it's currently visible
+      if (mentionListVisible) {
+        console.log("Hiding mention list - no valid mention pattern");
+        setMentionListVisible(false);
+        setMentionSearch("");
+      }
     }
   };
 
@@ -139,57 +150,50 @@ export function useMentions() {
   ) => {
     if (!element) return;
     
+    // Get element metrics
     const inputRect = element.getBoundingClientRect();
-    const caretCoordinates = getCaretCoordinates(element, mentionStart);
+    const text = element.value.substring(0, mentionStart);
     
-    console.log("Input rect:", inputRect);
-    console.log("Caret coordinates:", caretCoordinates);
+    // Create a temporary hidden element to calculate text dimensions
+    const temp = document.createElement('div');
+    const style = window.getComputedStyle(element);
     
-    // Adjust position based on element type and scrolling
-    const top = inputRect.top + caretCoordinates.top + 20;
-    const left = inputRect.left + caretCoordinates.left;
+    // Copy all styles to ensure accurate measurement
+    temp.style.position = 'absolute';
+    temp.style.visibility = 'hidden';
+    temp.style.whiteSpace = element instanceof HTMLTextAreaElement ? 'pre-wrap' : 'pre';
+    temp.style.font = style.font;
+    temp.style.padding = style.padding;
+    temp.style.width = style.width;
+    temp.style.lineHeight = style.lineHeight;
+    temp.innerHTML = text.replace(/\n/g, '<br>').replace(/ /g, '&nbsp;');
     
-    console.log("Setting mention position:", { top, left });
+    document.body.appendChild(temp);
+    
+    // Calculate coordinates
+    const tempRect = temp.getBoundingClientRect();
+    
+    // Clean up
+    document.body.removeChild(temp);
+    
+    // The left offset is the width of the text up to the caret
+    // The top offset is the top of the input + the height of the text
+    const top = window.scrollY + inputRect.top + (tempRect.height > 0 ? tempRect.height : parseFloat(style.lineHeight));
+    const left = window.scrollX + inputRect.left + (text ? temp.clientWidth : 0);
+    
+    console.log("Mention position calculation:", {
+      inputRect,
+      tempRect,
+      scrollY: window.scrollY,
+      scrollX: window.scrollX,
+      calculatedTop: top,
+      calculatedLeft: left
+    });
     
     setMentionPosition({
       top: top,
       left: left
     });
-  };
-
-  // Get caret coordinates within the element
-  const getCaretCoordinates = (
-    element: HTMLTextAreaElement | HTMLInputElement, 
-    position: number
-  ) => {
-    // Simple version - could be enhanced for multi-line inputs
-    const text = element.value.substring(0, position);
-    const textWidth = getTextWidth(text, getComputedStyle(element).font);
-    
-    // For textarea, need to account for newlines
-    let lines = 0;
-    if (element instanceof HTMLTextAreaElement) {
-      lines = (text.match(/\n/g) || []).length;
-    }
-    
-    // Approximation of line height
-    const lineHeight = parseInt(getComputedStyle(element).lineHeight) || 20;
-    
-    return {
-      top: element.scrollTop + (lines * lineHeight),
-      left: textWidth
-    };
-  };
-
-  // Calculate text width for caret positioning
-  const getTextWidth = (text: string, font: string) => {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    if (context) {
-      context.font = font;
-      return context.measureText(text).width;
-    }
-    return 0;
   };
 
   // Insert selected mention into text
@@ -206,6 +210,12 @@ export function useMentions() {
     setMentionListVisible(false);
     setMentionSearch("");
     setMentionIndex(-1);
+    
+    console.log("Inserting mention:", { 
+      before, 
+      user: user.username, 
+      after
+    });
     
     return `${before}@${user.username} ${after}`;
   };

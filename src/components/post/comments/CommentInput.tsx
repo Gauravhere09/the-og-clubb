@@ -47,9 +47,34 @@ export function CommentInput({
     console.log("CommentInput mention state:", { 
       mentionListVisible, 
       mentionUsers: mentionUsers.length,
-      mentionPosition
+      mentionPosition,
+      caretPos: textareaRef.current?.selectionStart 
     });
   }, [mentionListVisible, mentionUsers, mentionPosition]);
+
+  // Update the cursor position whenever it changes
+  const handleSelectionChange = () => {
+    if (textareaRef.current) {
+      handleTextChange(
+        newComment, 
+        textareaRef.current.selectionStart, 
+        textareaRef.current
+      );
+    }
+  };
+
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.addEventListener('click', handleSelectionChange);
+      textarea.addEventListener('keyup', handleSelectionChange);
+      
+      return () => {
+        textarea.removeEventListener('click', handleSelectionChange);
+        textarea.removeEventListener('keyup', handleSelectionChange);
+      };
+    }
+  }, [newComment]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Submit comment when pressing Enter (without Shift)
@@ -84,6 +109,7 @@ export function CommentInput({
     const value = e.target.value;
     onNewCommentChange(value);
     
+    // Always trigger the mention handling when text changes
     if (textareaRef.current) {
       handleTextChange(value, textareaRef.current.selectionStart, textareaRef.current);
     }
@@ -151,28 +177,10 @@ export function CommentInput({
             className="resize-none min-h-[80px]"
             id="comment-textarea"
             name="comment-textarea"
-            onClick={() => {
-              if (textareaRef.current) {
-                handleTextChange(
-                  newComment, 
-                  textareaRef.current.selectionStart, 
-                  textareaRef.current
-                );
-              }
-            }}
           />
           <Button onClick={onSubmitComment} disabled={!newComment.trim()}>
             Comentar
           </Button>
-          
-          <MentionSuggestions
-            users={mentionUsers}
-            isVisible={mentionListVisible}
-            position={mentionPosition}
-            selectedIndex={mentionIndex}
-            onSelectUser={handleSelectMention}
-            onSetIndex={setMentionIndex}
-          />
         </div>
         <div className="flex justify-between items-center">
           <div className="text-xs text-muted-foreground">
@@ -189,6 +197,15 @@ export function CommentInput({
           </Button>
         </div>
       </div>
+      
+      <MentionSuggestions
+        users={mentionUsers}
+        isVisible={mentionListVisible}
+        position={mentionPosition}
+        selectedIndex={mentionIndex}
+        onSelectUser={handleSelectMention}
+        onSetIndex={setMentionIndex}
+      />
     </div>
   );
 }
