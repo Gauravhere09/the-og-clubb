@@ -22,6 +22,7 @@ export function CommentInput({
   onCancelReply
 }: CommentInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   const {
     mentionUsers,
@@ -41,11 +42,14 @@ export function CommentInput({
     }
   }, [replyTo]);
 
-  // Add debugging log
+  // Add debugging log for mention state
   useEffect(() => {
-    console.log("Mention list visible:", mentionListVisible);
-    console.log("Mention users:", mentionUsers);
-  }, [mentionListVisible, mentionUsers]);
+    console.log("CommentInput mention state:", { 
+      mentionListVisible, 
+      mentionUsers: mentionUsers.length,
+      mentionPosition
+    });
+  }, [mentionListVisible, mentionUsers, mentionPosition]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     // Submit comment when pressing Enter (without Shift)
@@ -111,13 +115,16 @@ export function CommentInput({
         if (textareaRef.current) {
           textareaRef.current.focus();
           textareaRef.current.setSelectionRange(cursorPos + 1, cursorPos + 1);
+          
+          // Trigger the text change handler manually
+          handleTextChange(newValue, cursorPos + 1, textareaRef.current);
         }
       }, 0);
     }
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" ref={containerRef}>
       {replyTo && (
         <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md text-sm">
           <span className="text-muted-foreground">
@@ -144,6 +151,15 @@ export function CommentInput({
             className="resize-none min-h-[80px]"
             id="comment-textarea"
             name="comment-textarea"
+            onClick={() => {
+              if (textareaRef.current) {
+                handleTextChange(
+                  newComment, 
+                  textareaRef.current.selectionStart, 
+                  textareaRef.current
+                );
+              }
+            }}
           />
           <Button onClick={onSubmitComment} disabled={!newComment.trim()}>
             Comentar

@@ -28,12 +28,31 @@ export function MentionSuggestions({
 }: MentionSuggestionsProps) {
   // Log visibility state and users to help debug
   useEffect(() => {
-    if (isVisible) {
-      console.log("Mention suggestions visible with users:", users);
-    }
-  }, [isVisible, users]);
+    console.log("MentionSuggestions render:", { 
+      isVisible, 
+      users: users.length,
+      position
+    });
+  }, [isVisible, users, position]);
 
-  if (!isVisible || users.length === 0) return null;
+  if (!isVisible) {
+    return null;
+  }
+  
+  if (users.length === 0) {
+    // Show "No results" indicator instead of returning null
+    return (
+      <div
+        className="absolute z-50 bg-background border rounded-md shadow-md w-64 p-2 text-center"
+        style={{
+          top: `${position.top}px`,
+          left: `${position.left}px`
+        }}
+      >
+        <span className="text-sm text-muted-foreground">No se encontraron usuarios</span>
+      </div>
+    );
+  }
 
   return (
     <div

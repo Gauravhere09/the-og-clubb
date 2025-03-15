@@ -18,6 +18,15 @@ export function useMentions() {
   const [caretPosition, setCaretPosition] = useState<number | null>(null);
   const { toast } = useToast();
 
+  // Debug state changes
+  useEffect(() => {
+    console.log("Mention state changed:", { 
+      mentionSearch, 
+      mentionListVisible, 
+      mentionUsers: mentionUsers.length 
+    });
+  }, [mentionSearch, mentionListVisible, mentionUsers.length]);
+
   // Search for users when mentionSearch changes
   useEffect(() => {
     if (mentionSearch.length === 0) {
@@ -30,6 +39,8 @@ export function useMentions() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
+        console.log("Searching for users with query:", mentionSearch);
+        
         // Fetch up to 5 users whose usernames match the search string
         const { data, error } = await supabase
           .from('profiles')
@@ -78,7 +89,12 @@ export function useMentions() {
     }
     
     // If we didn't find @ or it's not preceded by a space or start of text, no valid mention
-    if (startIndex < 0 || (startIndex > 0 && !/[\s\n]/.test(text[startIndex - 1]))) {
+    if (startIndex < 0) {
+      return null;
+    }
+    
+    // Make sure @ is at beginning of text or has a space/newline before it
+    if (startIndex > 0 && !/[\s\n]/.test(text[startIndex - 1])) {
       return null;
     }
     
@@ -95,6 +111,10 @@ export function useMentions() {
     caretPos: number, 
     inputElement: HTMLTextAreaElement | HTMLInputElement
   ) => {
+    // Always log caret position to help with debugging
+    console.log("Current caret position:", caretPos);
+    console.log("Current text:", text);
+    
     const mentionIndices = getMentionIndices(text, caretPos);
     
     if (mentionIndices) {
@@ -122,10 +142,18 @@ export function useMentions() {
     const inputRect = element.getBoundingClientRect();
     const caretCoordinates = getCaretCoordinates(element, mentionStart);
     
+    console.log("Input rect:", inputRect);
+    console.log("Caret coordinates:", caretCoordinates);
+    
     // Adjust position based on element type and scrolling
+    const top = inputRect.top + caretCoordinates.top + 20;
+    const left = inputRect.left + caretCoordinates.left;
+    
+    console.log("Setting mention position:", { top, left });
+    
     setMentionPosition({
-      top: inputRect.top + caretCoordinates.top + 20,
-      left: inputRect.left + caretCoordinates.left
+      top: top,
+      left: left
     });
   };
 
@@ -138,8 +166,17 @@ export function useMentions() {
     const text = element.value.substring(0, position);
     const textWidth = getTextWidth(text, getComputedStyle(element).font);
     
+    // For textarea, need to account for newlines
+    let lines = 0;
+    if (element instanceof HTMLTextAreaElement) {
+      lines = (text.match(/\n/g) || []).length;
+    }
+    
+    // Approximation of line height
+    const lineHeight = parseInt(getComputedStyle(element).lineHeight) || 20;
+    
     return {
-      top: element.scrollTop,
+      top: element.scrollTop + (lines * lineHeight),
       left: textWidth
     };
   };
