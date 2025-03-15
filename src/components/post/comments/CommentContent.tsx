@@ -27,7 +27,7 @@ export function CommentContent({
         <Input
           value={editedContent}
           onChange={(e) => onEditChange(e.target.value)}
-          className="flex-1 h-7 text-xs"
+          className="flex-1 h-7 text-xs comment-text-selectable"
         />
         <Button size="sm" className="h-7 text-xs py-0" onClick={onSaveEdit}>Guardar</Button>
       </div>
@@ -38,5 +38,5 @@ export function CommentContent({
     return <audio src={audioUrl || undefined} controls className="mt-1 max-w-[180px] h-8" />;
   }
 
-  return <p className="text-xs whitespace-pre-wrap break-words">{content}</p>;
+  return <p className="text-xs whitespace-pre-wrap break-words comment-text-selectable">{content}</p>;
 }

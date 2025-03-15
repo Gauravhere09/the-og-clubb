@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, X } from "lucide-react";
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback, memo, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { type Comment } from "@/hooks/use-story-comments";
 
@@ -68,10 +68,63 @@ const CommentsList = memo(({ comments }: { comments: Comment[] }) => {
 CommentsList.displayName = "CommentsList";
 
 const CommentItem = memo(({ comment }: { comment: Comment }) => {
+  const [isCopying, setIsCopying] = useState(false);
+  const longPressTimer = useRef<number | null>(null);
+
+  const handleLongPressStart = () => {
+    // Start a timer for long press
+    longPressTimer.current = window.setTimeout(() => {
+      setIsCopying(true);
+      copyCommentText();
+    }, 800); // 800ms for long press
+  };
+
+  const handleLongPressEnd = () => {
+    // Clear the timer if touch ends
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    setIsCopying(false);
+  };
+
+  const copyCommentText = () => {
+    // Create a temporary indicator
+    const indicator = document.createElement('div');
+    indicator.className = 'copying-indicator active';
+    indicator.textContent = 'Comentario copiado';
+    document.body.appendChild(indicator);
+    
+    // Copy to clipboard
+    try {
+      navigator.clipboard.writeText(comment.text).then(() => {
+        console.log('Copied to clipboard');
+        
+        // Remove the indicator after a delay
+        setTimeout(() => {
+          indicator.classList.remove('active');
+          setTimeout(() => {
+            document.body.removeChild(indicator);
+          }, 200);
+        }, 1500);
+      });
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   return (
-    <div className="flex gap-2">
+    <div 
+      className="flex gap-2"
+      onTouchStart={handleLongPressStart}
+      onTouchEnd={handleLongPressEnd}
+      onTouchCancel={handleLongPressEnd}
+      onMouseDown={handleLongPressStart}
+      onMouseUp={handleLongPressEnd}
+      onMouseLeave={handleLongPressEnd}
+    >
       <span className="font-semibold text-sm">{comment.username}:</span>
-      <span className="text-sm">{comment.text}</span>
+      <span className={`text-sm comment-text-selectable ${isCopying ? 'pulse-on-hold' : ''}`}>{comment.text}</span>
       {comment.timestamp && (
         <span className="text-xs text-muted-foreground ml-auto">
           {new Date(comment.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -95,7 +148,7 @@ const CommentInput = memo(({ comment, setComment, handleSend }: CommentInputProp
         placeholder="Añade un comentario..."
         value={comment}
         onChange={(e) => setComment(e.target.value)}
-        className="flex-1"
+        className="flex-1 comment-text-selectable"
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             handleSend();

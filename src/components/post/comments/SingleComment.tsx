@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import type { Comment } from "@/types/post";
 import type { ReactionType } from "@/types/database/social.types";
@@ -29,6 +30,9 @@ export function SingleComment({
   const { editComment } = useCommentMutations(comment.post_id);
   const [isAuthor, setIsAuthor] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCopying, setIsCopying] = useState(false);
+  const longPressTimer = useRef<number | null>(null);
+  const commentTextRef = useRef<HTMLDivElement>(null);
 
   // Check if the current user is the author of this comment
   useEffect(() => {
@@ -73,6 +77,53 @@ export function SingleComment({
     onReply(comment.id, comment.profiles?.username || '');
   };
 
+  // Long press handling for copy
+  const handleLongPressStart = () => {
+    if (isAudioComment) return; // Don't allow copying audio comments
+    
+    // Start a timer for long press
+    longPressTimer.current = window.setTimeout(() => {
+      setIsCopying(true);
+      copyCommentText();
+    }, 800); // 800ms for long press
+  };
+
+  const handleLongPressEnd = () => {
+    // Clear the timer if touch ends
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+    setIsCopying(false);
+  };
+
+  const copyCommentText = () => {
+    if (isAudioComment) return; // Don't copy audio comments
+    
+    // Create a temporary indicator
+    const indicator = document.createElement('div');
+    indicator.className = 'copying-indicator active';
+    indicator.textContent = 'Comentario copiado';
+    document.body.appendChild(indicator);
+    
+    // Copy to clipboard
+    try {
+      navigator.clipboard.writeText(comment.content).then(() => {
+        console.log('Copied to clipboard');
+        
+        // Remove the indicator after a delay
+        setTimeout(() => {
+          indicator.classList.remove('active');
+          setTimeout(() => {
+            document.body.removeChild(indicator);
+          }, 200);
+        }, 1500);
+      });
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
   return (
     <div className={`${isReply ? "ml-12" : ""} space-y-1`}>
       <div className="flex items-start gap-2">
@@ -82,7 +133,15 @@ export function SingleComment({
           avatarUrl={comment.profiles?.avatar_url}
         />
         <div className="flex-1 max-w-[70%]">
-          <div className="bg-muted p-1.5 rounded-lg">
+          <div 
+            className="bg-muted p-1.5 rounded-lg"
+            onTouchStart={handleLongPressStart}
+            onTouchEnd={handleLongPressEnd}
+            onTouchCancel={handleLongPressEnd}
+            onMouseDown={handleLongPressStart}
+            onMouseUp={handleLongPressEnd}
+            onMouseLeave={handleLongPressEnd}
+          >
             <div className="flex justify-between items-start">
               <Link 
                 to={`/profile/${comment.user_id}`}
@@ -97,15 +156,20 @@ export function SingleComment({
                 />
               )}
             </div>
-            <CommentContent
-              content={comment.content}
-              isAudio={isAudioComment}
-              audioUrl={audioUrl}
-              isEditing={isEditing}
-              editedContent={editedContent}
-              onEditChange={setEditedContent}
-              onSaveEdit={handleSaveEdit}
-            />
+            <div 
+              ref={commentTextRef} 
+              className={`${isCopying ? 'pulse-on-hold' : ''} ${!isAudioComment ? 'comment-text-selectable' : ''}`}
+            >
+              <CommentContent
+                content={comment.content}
+                isAudio={isAudioComment}
+                audioUrl={audioUrl}
+                isEditing={isEditing}
+                editedContent={editedContent}
+                onEditChange={setEditedContent}
+                onSaveEdit={handleSaveEdit}
+              />
+            </div>
           </div>
           <CommentFooter
             commentId={comment.id}
