@@ -1,18 +1,14 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPost } from "@/lib/api";
 import { PollCreator } from "./post/PollCreator";
-import { PostActionButtons } from "./post/PostActionButtons";
 import { FilePreview } from "./post/FilePreview";
-import { VisibilitySelector } from "./post/VisibilitySelector";
-import { supabase } from "@/integrations/supabase/client";
-import { PostContentInput } from "./post/PostContentInput";
 import { usePostCreator } from "@/hooks/use-post-creator";
-import { UserAvatarDisplay } from "./post/UserAvatarDisplay";
+import { PostHeader } from "./post/PostHeader";
+import { PostFooter } from "./post/PostFooter";
 
 export function PostCreator() {
   const {
@@ -20,15 +16,12 @@ export function PostCreator() {
     setContent,
     file, 
     setFile,
-    isUploading,
     showPollCreator, 
     setShowPollCreator,
     visibility, 
     setVisibility,
     currentUser,
     handleFileChange,
-    handleSubmitPost,
-    handlePollCreate,
     textareaRef,
     mentionUsers,
     mentionListVisible,
@@ -76,48 +69,30 @@ export function PostCreator() {
     },
   });
 
+  const handlePollCreate = (pollData: { question: string; options: string[] }) => {
+    submitPost(pollData);
+  };
+
   return (
     <Card className="p-4 space-y-4">
-      <div className="flex items-center gap-3 mb-2">
-        <UserAvatarDisplay currentUser={currentUser} />
-        
-        <PostContentInput
-          content={content}
-          textareaRef={textareaRef}
-          handleTextAreaChange={handleTextAreaChange}
-          handleKeyDown={handleKeyDown}
-          mentionUsers={mentionUsers}
-          mentionListVisible={mentionListVisible}
-          mentionPosition={mentionPosition}
-          mentionIndex={mentionIndex}
-          onSelectUser={handleSelectMention}
-          onSetIndex={setMentionIndex}
-        />
-      </div>
-      
-      <div className="flex items-center justify-between">
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          onClick={handleMentionClick}
-          className="text-sm flex items-center gap-1"
-        >
-          <span className="sr-only">Mencionar</span>
-          <AtSignButton />
-        </Button>
-        
-        <VisibilitySelector 
-          visibility={visibility} 
-          onVisibilityChange={setVisibility} 
-        />
-      </div>
+      <PostHeader 
+        currentUser={currentUser}
+        content={content}
+        textareaRef={textareaRef}
+        mentionUsers={mentionUsers}
+        mentionListVisible={mentionListVisible}
+        mentionPosition={mentionPosition}
+        mentionIndex={mentionIndex}
+        handleTextAreaChange={handleTextAreaChange}
+        handleKeyDown={handleKeyDown}
+        handleSelectMention={handleSelectMention}
+        handleMentionClick={handleMentionClick}
+        setMentionIndex={setMentionIndex}
+      />
       
       {showPollCreator && (
         <PollCreator
-          onPollCreate={(pollData) => {
-            handlePollCreate(pollData);
-            submitPost(pollData);
-          }}
+          onPollCreate={handlePollCreate}
           onCancel={() => setShowPollCreator(false)}
         />
       )}
@@ -129,27 +104,15 @@ export function PostCreator() {
         />
       )}
       
-      <div className="flex items-center justify-between">
-        <PostActionButtons 
-          onFileSelect={handleFileChange}
-          onPollCreate={() => setShowPollCreator(true)}
-          isPending={isPending}
-        />
-        <Button 
-          onClick={() => submitPost(undefined)}
-          disabled={isPending || (!content && !file)}
-        >
-          Publicar
-        </Button>
-      </div>
+      <PostFooter 
+        onFileSelect={handleFileChange}
+        onPollToggle={() => setShowPollCreator(true)}
+        onPublish={() => submitPost(undefined)}
+        isPending={isPending}
+        hasContent={!!content || !!file}
+        visibility={visibility}
+        onVisibilityChange={setVisibility}
+      />
     </Card>
   );
 }
-
-function AtSignButton() {
-  return (
-    <AtSign className="h-4 w-4" />
-  );
-}
-
-import { AtSign } from "lucide-react";
