@@ -39,15 +39,17 @@ export async function createPost({
       };
     }
 
-    // Create the data object with the right visibility type
-    // The types in our PostTable now match the UI
+    // Map the visibility value to match what's expected in the database
+    // UI uses "incognito" but database expects "private"
+    const dbVisibility = visibility === 'incognito' ? 'private' : visibility;
+
     const insertData = {
       content,
       media_url,
       media_type,
       poll,
       user_id: user.id,
-      visibility
+      visibility: dbVisibility
     };
 
     // First insert the post
@@ -92,6 +94,9 @@ export async function createPost({
         await sendNewPostNotifications(user.id, rawPost.id);
       }
 
+      // Map back from db visibility to UI visibility
+      const uiVisibility = rawPost.visibility === 'private' ? 'incognito' : rawPost.visibility;
+
       // Transform the raw post to match Post type
       const post: Post = {
         id: rawPost.id,
@@ -99,7 +104,7 @@ export async function createPost({
         user_id: rawPost.user_id,
         media_url: rawPost.media_url,
         media_type: rawPost.media_type as 'image' | 'video' | 'audio' | null,
-        visibility: rawPost.visibility as 'public' | 'friends' | 'incognito',
+        visibility: uiVisibility as 'public' | 'friends' | 'incognito',
         created_at: rawPost.created_at,
         updated_at: rawPost.updated_at,
         shared_from: null,
