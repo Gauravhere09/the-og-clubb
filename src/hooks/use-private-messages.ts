@@ -22,11 +22,11 @@ export function usePrivateMessages() {
     if (!selectedFriend || !currentUserId) return;
 
     try {
+      // Improve the query to correctly filter conversations between the two users
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`)
-        .or(`sender_id.eq.${selectedFriend.friend_id},receiver_id.eq.${selectedFriend.friend_id}`)
+        .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${selectedFriend.friend_id}),and(sender_id.eq.${selectedFriend.friend_id},receiver_id.eq.${currentUserId})`)
         .order('created_at', { ascending: true });
 
       if (error) throw error;

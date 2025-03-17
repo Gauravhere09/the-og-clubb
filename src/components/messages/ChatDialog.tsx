@@ -7,6 +7,7 @@ import { usePrivateMessages } from "@/hooks/use-private-messages";
 import { Friend } from "@/hooks/use-friends";
 import { X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface ChatDialogProps {
   isOpen: boolean;
@@ -66,6 +67,42 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
     const success = await sendMessage(newMessage, currentUserId, friend);
     if (success) {
       setNewMessage("");
+      
+      // Check if the friend relationship exists already
+      try {
+        // First, check if a friend relationship exists in either direction
+        const { data: existingFriendship, error: checkError } = await supabase
+          .from('friends')
+          .select('id')
+          .or(`user_id.eq.${currentUserId},user_id.eq.${targetUser.id}`)
+          .or(`friend_id.eq.${targetUser.id},friend_id.eq.${currentUserId}`)
+          .maybeSingle();
+          
+        if (checkError) {
+          console.error("Error checking friendship:", checkError);
+        }
+        
+        // If no friendship exists, create one in both directions
+        if (!existingFriendship) {
+          // Create friendship in one direction
+          await supabase
+            .from('friends')
+            .insert([
+              { user_id: currentUserId, friend_id: targetUser.id }
+            ]);
+            
+          // Create friendship in the other direction to ensure bidirectional visibility
+          await supabase
+            .from('friends')
+            .insert([
+              { user_id: targetUser.id, friend_id: currentUserId }
+            ]);
+            
+          console.log("Created new friendship relation");
+        }
+      } catch (error) {
+        console.error("Error managing friendship for chat:", error);
+      }
     }
   };
 
