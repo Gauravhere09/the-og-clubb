@@ -41,7 +41,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
     : stories;
 
   return (
-    <div className="mb-6">
+    <div className="mb-6 relative">
       {showStoryCreator && (
         <StoryCreator 
           onClose={handleStoryCreatorClose} 

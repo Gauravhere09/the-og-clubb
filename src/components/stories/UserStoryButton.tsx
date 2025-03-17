@@ -1,12 +1,13 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Eye, Upload } from "lucide-react";
+import { Eye, Upload, Plus } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 
 interface UserStoryButtonProps {
   currentUserId: string;
@@ -40,19 +41,19 @@ export function UserStoryButton({
               className="relative cursor-pointer group"
               onClick={hasStories ? handleViewStory : onCreateStory}
             >
-              <Avatar className={`w-16 h-16 border-2 ${hasStories ? 'border-primary' : 'border-muted'} p-1`}>
+              <Avatar className={`w-16 h-16 ${hasStories ? 'border-2 border-primary' : 'border-2 border-muted hover:border-primary/60'} p-1`}>
                 <AvatarImage src={userStory?.avatarUrl || undefined} />
                 <AvatarFallback>TU</AvatarFallback>
               </Avatar>
-              <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1 border-2 border-background">
+              <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1 border-2 border-background animate-pulse">
                 {hasStories ? (
                   <Eye className="h-4 w-4 text-primary-foreground" />
                 ) : (
-                  <Upload className="h-4 w-4 text-primary-foreground" />
+                  <Plus className="h-4 w-4 text-primary-foreground" />
                 )}
               </div>
             </div>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs font-medium text-primary">
               {hasStories ? 'Tu historia' : 'Crear historia'}
             </span>
           </div>
@@ -60,31 +61,37 @@ export function UserStoryButton({
         <PopoverContent className="w-40 p-2">
           <div className="flex flex-col gap-1">
             {!hasStories && (
-              <button
-                className="flex items-center gap-2 p-2 rounded-md hover:bg-accent text-sm"
+              <Button
+                variant="default"
+                size="sm"
+                className="flex items-center gap-2 w-full"
                 onClick={onCreateStory}
               >
-                <Upload className="h-4 w-4" />
-                Subir historia
-              </button>
+                <Plus className="h-4 w-4" />
+                Crear historia
+              </Button>
             )}
             
             {hasStories && (
               <>
-                <button
-                  className="flex items-center gap-2 p-2 rounded-md hover:bg-accent text-sm"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 w-full"
                   onClick={handleViewStory}
                 >
                   <Eye className="h-4 w-4" />
                   Ver tu historia
-                </button>
-                <button
-                  className="flex items-center gap-2 p-2 rounded-md hover:bg-accent text-sm"
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="flex items-center gap-2 w-full"
                   onClick={onCreateStory}
                 >
-                  <Upload className="h-4 w-4" />
+                  <Plus className="h-4 w-4" />
                   Agregar historia
-                </button>
+                </Button>
               </>
             )}
           </div>

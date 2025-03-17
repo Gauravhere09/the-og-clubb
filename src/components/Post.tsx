@@ -43,6 +43,8 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
         onDelete={onDeletePost}
         isAuthor={isCurrentUserAuthor}
         isHidden={isHidden}
+        // Add the required content prop with an empty string since it's not used in this context
+        content=""
       />
       
       {isSharedPost ? (
