@@ -1,7 +1,7 @@
 
 import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
-import { Feed } from "@/components/Feed";
+import { Feed } from "@/components/feed/Feed";
 import { StoryViewer } from "@/components/stories/StoryViewer";
 import { Home, Menu, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
