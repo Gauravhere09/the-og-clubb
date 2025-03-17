@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useProfileImage } from "@/hooks/use-profile-image";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 
 type Visibility = 'public' | 'friends' | 'select';
 
@@ -86,11 +88,37 @@ export function StoryCreator({ onClose, currentUserId }: StoryCreatorProps) {
     setIsUploading(true);
     
     try {
-      // En una implementación real, aquí subiríamos las imágenes a Supabase
-      // y las marcaríamos para que expiren después de 24 horas
-      
-      // Simulamos un tiempo de carga
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Upload each image and create a story for each
+      for (const file of files) {
+        // 1. Upload the image to storage
+        const fileName = `stories/${currentUserId}/${Date.now()}-${file.name}`;
+        const { error: uploadError, data: uploadData } = await supabase.storage
+          .from('media')
+          .upload(fileName, file);
+          
+        if (uploadError) throw uploadError;
+        
+        // 2. Get the public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('media')
+          .getPublicUrl(fileName);
+          
+        // 3. Create a story entry
+        // Calculate expiration time (24 hours from now)
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + 24);
+        
+        const { error: storyError } = await supabase
+          .from('stories')
+          .insert({
+            user_id: currentUserId,
+            image_url: publicUrl,
+            expires_at: expiresAt.toISOString(),
+            visibility: visibility
+          });
+          
+        if (storyError) throw storyError;
+      }
       
       toast({
         title: "¡Historia creada!",
@@ -99,6 +127,7 @@ export function StoryCreator({ onClose, currentUserId }: StoryCreatorProps) {
       
       onClose();
     } catch (error) {
+      console.error("Error creating story:", error);
       toast({
         variant: "destructive",
         title: "Error",

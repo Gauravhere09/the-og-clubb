@@ -1,5 +1,5 @@
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 interface StoryData {
@@ -14,6 +14,8 @@ interface StoryData {
 }
 
 export function useStory(storyId: string) {
+  const queryClient = useQueryClient();
+  
   const { data: storyData, isLoading } = useQuery({
     queryKey: ["story", storyId],
     queryFn: async () => {
@@ -37,16 +39,41 @@ export function useStory(storyId: string) {
         console.error("Error fetching profile:", profileError);
       }
       
-      // Record view if user is logged in
+      // Check if the current user is logged in
       const { data: { user } } = await supabase.auth.getUser();
+      
+      // Record the view if a user is logged in
       if (user) {
-        await supabase
+        const { error: viewError } = await supabase
           .from('story_views')
           .upsert({
             story_id: storyId,
-            viewer_id: user.id
+            viewer_id: user.id,
+            viewed_at: new Date().toISOString()
           }, { onConflict: 'story_id,viewer_id' });
+          
+        if (viewError) {
+          console.error("Error recording story view:", viewError);
+        } else {
+          // Invalidate stories query to update the UI with the new viewed status
+          queryClient.invalidateQueries({ queryKey: ["stories"] });
+          queryClient.invalidateQueries({ queryKey: ["viewed-stories", user.id] });
+        }
       }
+      
+      // Get all stories from this user to enable navigation
+      const { data: userStories, error: userStoriesError } = await supabase
+        .from('stories')
+        .select('id, image_url')
+        .eq('user_id', story.user_id)
+        .order('created_at', { ascending: true });
+        
+      if (userStoriesError) {
+        console.error("Error fetching user stories:", userStoriesError);
+      }
+      
+      // Map user stories to image URLs
+      const allImageUrls = userStories?.map(s => s.image_url) || [story.image_url];
       
       return {
         id: story.id,
@@ -55,7 +82,7 @@ export function useStory(storyId: string) {
           username: profile?.username || "Usuario",
           avatarUrl: profile?.avatar_url
         },
-        imageUrls: [story.image_url],
+        imageUrls: allImageUrls,
         createdAt: story.created_at
       };
     }

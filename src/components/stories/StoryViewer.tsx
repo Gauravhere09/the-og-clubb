@@ -16,11 +16,20 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
     viewingStory,
     setViewingStory,
     stories,
-    isLoading
+    isLoading,
+    refetchStories
   } = useStoryViewer(currentUserId);
 
+  // Find the current user's story
   const userStory = stories.find(story => story.userId === currentUserId);
   
+  // Handle story creation completion
+  const handleStoryCreatorClose = () => {
+    setShowStoryCreator(false);
+    refetchStories();
+  };
+  
+  // Create a placeholder array when loading
   const allStories = isLoading
     ? [{ 
         id: "0", 
@@ -35,7 +44,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
     <div className="mb-6">
       {showStoryCreator && (
         <StoryCreator 
-          onClose={() => setShowStoryCreator(false)} 
+          onClose={handleStoryCreatorClose} 
           currentUserId={currentUserId}
         />
       )}

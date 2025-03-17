@@ -1,11 +1,12 @@
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useStoryViewer(currentUserId: string) {
   const [showStoryCreator, setShowStoryCreator] = useState(false);
   const [viewingStory, setViewingStory] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { data: stories = [], isLoading } = useQuery({
     queryKey: ["stories"],
@@ -13,6 +14,7 @@ export function useStoryViewer(currentUserId: string) {
       const oneDayAgo = new Date();
       oneDayAgo.setDate(oneDayAgo.getDate() - 1);
       
+      // Fetch active stories (not expired)
       const { data: storiesData, error } = await supabase
         .from('stories')
         .select(`id, user_id, created_at`)
@@ -24,7 +26,10 @@ export function useStoryViewer(currentUserId: string) {
         return [];
       }
       
+      // Get unique user IDs from the stories
       const userIds = [...new Set(storiesData.map(story => story.user_id))];
+      
+      // Fetch user profiles for these IDs
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('id, username, avatar_url')
@@ -35,8 +40,10 @@ export function useStoryViewer(currentUserId: string) {
         return [];
       }
       
+      // Create a map for quick profile lookup
       const profilesMap = new Map(profiles.map(profile => [profile.id, profile]));
       
+      // Get the stories the current user has viewed
       const { data: views, error: viewsError } = await supabase
         .from('story_views')
         .select('story_id')
@@ -47,8 +54,10 @@ export function useStoryViewer(currentUserId: string) {
         return [];
       }
       
+      // Create a set of viewed story IDs for quick lookup
       const viewedStoryIds = new Set(views.map(view => view.story_id));
       
+      // Group stories by user
       const userStories: Record<string, any> = {};
       
       storiesData.forEach(story => {
@@ -58,6 +67,7 @@ export function useStoryViewer(currentUserId: string) {
         
         if (!userStories[userId]) {
           userStories[userId] = {
+            id: userId, // This is the user ID
             userId,
             username: profile?.username || 'Usuario',
             avatarUrl: profile?.avatar_url,
@@ -74,7 +84,7 @@ export function useStoryViewer(currentUserId: string) {
       
       return Object.values(userStories);
     },
-    refetchInterval: 60000
+    refetchInterval: 60000 // Refresh every minute
   });
 
   return {
@@ -83,6 +93,7 @@ export function useStoryViewer(currentUserId: string) {
     viewingStory,
     setViewingStory,
     stories,
-    isLoading
+    isLoading,
+    refetchStories: () => queryClient.invalidateQueries({ queryKey: ["stories"] })
   };
 }

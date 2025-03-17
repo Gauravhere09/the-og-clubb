@@ -9,6 +9,7 @@ interface Story {
   username: string;
   avatarUrl: string | null;
   hasUnseenStories: boolean;
+  storyIds?: string[];
 }
 
 interface StoriesListProps {
@@ -39,30 +40,40 @@ export function StoriesList({ stories, onStoryClick, currentUserId }: StoriesLis
     enabled: !!currentUserId
   });
   
+  // If there are no stories, show nothing
+  if (stories.length === 0) {
+    return null;
+  }
+  
   return (
     <>
       {stories.map((story) => {
-        // Determinar si esta historia ha sido vista o no
-        const isViewed = viewedStoryIds.includes(story.id);
+        // Select the first story ID to show when clicked
+        const firstStoryId = story.storyIds && story.storyIds.length > 0 
+          ? story.storyIds[0] 
+          : story.id; // Fallback to story.id for backward compatibility
+        
+        // Determine if this story has been viewed
+        const hasUnviewedStories = story.hasUnseenStories;
         
         return (
           <div 
             key={story.id}
             className="flex flex-col items-center space-y-1 cursor-pointer"
-            onClick={() => onStoryClick(story.id)}
+            onClick={() => onStoryClick(firstStoryId)}
           >
             <div>
               <Avatar className={`w-16 h-16 ${
-                !isViewed && story.hasUnseenStories 
+                hasUnviewedStories 
                   ? "border-2 border-primary p-[2px]" 
                   : "border-2 border-muted p-[2px]"
-              } ${story.userId === currentUserId ? "ring-2 ring-primary" : ""}`}>
+              }`}>
                 <AvatarImage src={story.avatarUrl || undefined} />
                 <AvatarFallback>{story.username[0].toUpperCase()}</AvatarFallback>
               </Avatar>
             </div>
             <span className="text-xs text-muted-foreground">
-              {story.userId === currentUserId ? "Tu historia" : story.username}
+              {story.username}
             </span>
           </div>
         );

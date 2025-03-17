@@ -21,17 +21,31 @@ export function UserStoryButton({
   onCreateStory, 
   onViewStory 
 }: UserStoryButtonProps) {
+  // Check if the user has stories and get the first story ID
+  const hasStories = userStory && userStory.storyIds && userStory.storyIds.length > 0;
+  const firstStoryId = hasStories ? userStory.storyIds[0] : null;
+  
+  const handleViewStory = () => {
+    if (firstStoryId) {
+      onViewStory(firstStoryId);
+    }
+  };
+
   return (
     <TooltipProvider>
       <Popover>
         <PopoverTrigger asChild>
           <div className="flex flex-col items-center space-y-1">
-            <div className="relative cursor-pointer group">
-              <Avatar className={`w-16 h-16 border-2 ${userStory ? 'border-primary' : 'border-muted'} p-1`}>
+            <div 
+              className="relative cursor-pointer group"
+              onClick={hasStories ? handleViewStory : onCreateStory}
+            >
+              <Avatar className={`w-16 h-16 border-2 ${hasStories ? 'border-primary' : 'border-muted'} p-1`}>
+                <AvatarImage src={userStory?.avatarUrl || undefined} />
                 <AvatarFallback>TU</AvatarFallback>
               </Avatar>
               <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1 border-2 border-background">
-                {userStory ? (
+                {hasStories ? (
                   <Eye className="h-4 w-4 text-primary-foreground" />
                 ) : (
                   <Upload className="h-4 w-4 text-primary-foreground" />
@@ -39,13 +53,13 @@ export function UserStoryButton({
               </div>
             </div>
             <span className="text-xs text-muted-foreground">
-              {userStory ? 'Tu historia' : 'Crear historia'}
+              {hasStories ? 'Tu historia' : 'Crear historia'}
             </span>
           </div>
         </PopoverTrigger>
         <PopoverContent className="w-40 p-2">
           <div className="flex flex-col gap-1">
-            {!userStory && (
+            {!hasStories && (
               <button
                 className="flex items-center gap-2 p-2 rounded-md hover:bg-accent text-sm"
                 onClick={onCreateStory}
@@ -55,14 +69,23 @@ export function UserStoryButton({
               </button>
             )}
             
-            {userStory && (
-              <button
-                className="flex items-center gap-2 p-2 rounded-md hover:bg-accent text-sm"
-                onClick={() => onViewStory(userStory.id)}
-              >
-                <Eye className="h-4 w-4" />
-                Ver tu historia
-              </button>
+            {hasStories && (
+              <>
+                <button
+                  className="flex items-center gap-2 p-2 rounded-md hover:bg-accent text-sm"
+                  onClick={handleViewStory}
+                >
+                  <Eye className="h-4 w-4" />
+                  Ver tu historia
+                </button>
+                <button
+                  className="flex items-center gap-2 p-2 rounded-md hover:bg-accent text-sm"
+                  onClick={onCreateStory}
+                >
+                  <Upload className="h-4 w-4" />
+                  Agregar historia
+                </button>
+              </>
             )}
           </div>
         </PopoverContent>
