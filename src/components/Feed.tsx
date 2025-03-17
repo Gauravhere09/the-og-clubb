@@ -6,6 +6,7 @@ import { Card } from "./ui/card";
 import { useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { PeopleYouMayKnow } from "@/components/friends/PeopleYouMayKnow";
+import { AdComponent } from "@/components/ads/AdComponent";
 
 interface FeedProps {
   userId?: string;
@@ -144,8 +145,12 @@ export function Feed({ userId }: FeedProps) {
       });
     }
     
+    feedContent.push(
+      <AdComponent key="ad-top" format="banner" className="mt-2 mb-4" />
+    );
+    
     const firstPosts = visiblePosts.slice(0, 3);
-    firstPosts.forEach(post => {
+    firstPosts.forEach((post, index) => {
       feedContent.push(
         <div key={post.id} className="mb-4">
           <Post post={post} />
@@ -157,15 +162,25 @@ export function Feed({ userId }: FeedProps) {
       feedContent.push(
         <PeopleYouMayKnow key="people-you-may-know" />
       );
+      
+      feedContent.push(
+        <AdComponent key="ad-middle" format="feed" />
+      );
     }
     
     const remainingPosts = visiblePosts.slice(3);
-    remainingPosts.forEach(post => {
+    remainingPosts.forEach((post, index) => {
       feedContent.push(
         <div key={post.id} className="mb-4">
           <Post post={post} />
         </div>
       );
+      
+      if ((index + 1) % 4 === 0 && index < remainingPosts.length - 1) {
+        feedContent.push(
+          <AdComponent key={`ad-${index}`} format="feed" />
+        );
+      }
     });
     
     return feedContent;

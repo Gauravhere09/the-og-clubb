@@ -1,4 +1,3 @@
-
 import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/Feed";
@@ -11,6 +10,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "next-themes";
 import { FriendSearch } from "@/components/FriendSearch";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
+import { AdComponent } from "@/components/ads/AdComponent";
+import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,62 +56,75 @@ const Index = () => {
       </div>
       
       <div className="flex-1 w-full md:ml-[70px] pb-16 md:pb-0">
-        <main className="max-w-2xl mx-auto px-4 py-4 md:py-8">
-          {/* Barra de navegación superior fija */}
-          <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2 -mx-4 px-4 pt-2">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Home className="h-5 w-5" />
-                <h1 className="text-xl md:text-2xl font-semibold">Feed</h1>
-              </div>
-              <div className="flex items-center gap-2">
-                <FriendSearch />
-                <NotificationDropdown />
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="rounded-full"
-                    >
-                      <Menu className="h-5 w-5" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-                      {theme === "dark" ? (
-                        <>
-                          <Sun className="mr-2 h-4 w-4" />
-                          <span>Modo claro</span>
-                        </>
-                      ) : (
-                        <>
-                          <Moon className="mr-2 h-4 w-4" />
-                          <span>Modo oscuro</span>
-                        </>
-                      )}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Cerrar sesión
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+        <div className="max-w-screen-xl mx-auto px-4 py-4 md:py-8 md:flex">
+          <main className="w-full md:w-2/3 md:pr-4">
+            <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2 -mx-4 px-4 pt-2">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Home className="h-5 w-5" />
+                  <h1 className="text-xl md:text-2xl font-semibold">Feed</h1>
+                </div>
+                <div className="flex items-center gap-2">
+                  <FriendSearch />
+                  <NotificationDropdown />
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="rounded-full"
+                      >
+                        <Menu className="h-5 w-5" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+                        {theme === "dark" ? (
+                          <>
+                            <Sun className="mr-2 h-4 w-4" />
+                            <span>Modo claro</span>
+                          </>
+                        ) : (
+                          <>
+                            <Moon className="mr-2 h-4 w-4" />
+                            <span>Modo oscuro</span>
+                          </>
+                        )}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Cerrar sesión
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* El contenido que se desplaza */}
-          <div className="space-y-4 md:space-y-6">
-            {currentUserId && (
-              <StoryViewer currentUserId={currentUserId} />
-            )}
-            
-            <PostCreator />
-            
-            <Feed />
-          </div>
-        </main>
+            <div className="space-y-4 md:space-y-6">
+              {currentUserId && (
+                <StoryViewer currentUserId={currentUserId} />
+              )}
+              
+              <PostCreator />
+              
+              <Feed />
+            </div>
+          </main>
+          
+          <aside className="hidden md:block md:w-1/3 md:pl-4 space-y-4">
+            <div className="sticky top-20">
+              <AdComponent format="sidebar" className="mb-4" />
+              <Card className="p-4 mb-4">
+                <h3 className="font-medium mb-2">Publicidad</h3>
+                <p className="text-sm text-muted-foreground">
+                  Anuncios personalizados basados en tus intereses
+                </p>
+              </Card>
+              <AdComponent format="sidebar" />
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   );
