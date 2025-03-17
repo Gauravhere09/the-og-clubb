@@ -43,15 +43,15 @@ export function UserStoryButton({
                   className="relative cursor-pointer group transition-all"
                   onClick={hasStories ? handleViewStory : onCreateStory}
                 >
-                  <Avatar className={`w-16 h-16 ${hasStories ? 'border-2 border-primary' : 'border-2 border-muted hover:border-primary/60'} p-1 transition-all`}>
+                  <Avatar className={`w-16 h-16 ${hasStories ? 'border-2 border-primary' : 'border-2 border-primary/40'} p-1 transition-all hover:border-primary`}>
                     <AvatarImage src={userStory?.avatarUrl || undefined} />
                     <AvatarFallback className="bg-primary/10 text-primary font-semibold">TU</AvatarFallback>
                   </Avatar>
-                  <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1 border-2 border-background animate-pulse">
+                  <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1 border-2 border-background">
                     {hasStories ? (
                       <Eye className="h-4 w-4 text-primary-foreground" />
                     ) : (
-                      <Upload className="h-4 w-4 text-primary-foreground" />
+                      <Plus className="h-4 w-4 text-primary-foreground" />
                     )}
                   </div>
                 </div>

@@ -33,7 +33,7 @@ export function StoryFileSelector({
     <div className="space-y-4">
       {previewUrls.length === 0 ? (
         <div 
-          className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 text-center hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-all cursor-pointer"
+          className="border-2 border-dashed border-primary/30 hover:border-primary/60 dark:border-primary/20 dark:hover:border-primary/40 rounded-lg p-8 text-center hover:bg-primary/5 dark:hover:bg-primary/10 transition-all cursor-pointer"
           onClick={() => fileInputRef?.current?.click()}
         >
           <input
@@ -44,12 +44,13 @@ export function StoryFileSelector({
             multiple
             className="hidden"
           />
-          <div className="flex flex-col items-center gap-2">
-            <div className="rounded-full bg-primary/10 p-3">
-              <Upload className="h-6 w-6 text-primary" />
+          <div className="flex flex-col items-center gap-3">
+            <div className="rounded-full bg-primary/10 p-4">
+              <Upload className="h-8 w-8 text-primary" />
             </div>
+            <h3 className="text-lg font-medium">Sube tu historia</h3>
             <Button 
-              variant="outline"
+              variant="default"
               className="mb-2 flex items-center gap-2"
             >
               <Image className="h-4 w-4" />
@@ -68,7 +69,7 @@ export function StoryFileSelector({
                 <img 
                   src={url} 
                   alt={`Preview ${index + 1}`} 
-                  className="h-24 w-24 object-cover rounded-lg"
+                  className="h-24 w-24 object-cover rounded-lg border border-border"
                 />
                 <button
                   onClick={() => onRemoveImage(index)}
@@ -80,9 +81,9 @@ export function StoryFileSelector({
             ))}
             <button
               onClick={onAddMore}
-              className="h-24 w-24 flex items-center justify-center border border-dashed border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+              className="h-24 w-24 flex items-center justify-center border border-dashed border-primary/40 hover:border-primary rounded-lg hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors"
             >
-              <Plus className="h-6 w-6 text-gray-400" />
+              <Plus className="h-6 w-6 text-primary" />
             </button>
           </div>
           
