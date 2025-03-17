@@ -5,7 +5,7 @@ import { StoryView } from "./StoryView";
 import { UserStoryButton } from "./UserStoryButton";
 import { useStoryViewer } from "@/hooks/use-story-viewer";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Image } from "lucide-react";
 
 interface StoryViewerProps {
   currentUserId: string;
@@ -67,7 +67,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
           className="flex items-center gap-1"
           onClick={() => setShowStoryCreator(true)}
         >
-          <Plus className="h-4 w-4" />
+          <Image className="h-4 w-4" />
           <span>Crear historia</span>
         </Button>
       </div>

@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { X, Plus, Eye, Upload } from "lucide-react";
+import { X, Plus, Eye, Upload, Image } from "lucide-react";
 import { RefObject } from "react";
 
 interface StoryFileSelectorProps {
@@ -46,9 +46,9 @@ export function StoryFileSelector({
           <Button 
             onClick={() => fileInputRef?.current?.click()}
             variant="outline"
-            className="mb-2"
+            className="mb-2 flex items-center gap-2"
           >
-            <Upload className="h-4 w-4 mr-2" />
+            <Image className="h-4 w-4" />
             Seleccionar imágenes
           </Button>
           <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -82,8 +82,8 @@ export function StoryFileSelector({
           </div>
           
           <div className="mt-4">
-            <Button onClick={onViewStory} variant="outline" className="w-full">
-              <Eye className="h-4 w-4 mr-2" />
+            <Button onClick={onViewStory} variant="outline" className="w-full flex items-center gap-2">
+              <Eye className="h-4 w-4" />
               Previsualizar historia
             </Button>
             
