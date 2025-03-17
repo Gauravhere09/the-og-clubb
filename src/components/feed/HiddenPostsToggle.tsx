@@ -19,8 +19,8 @@ export function HiddenPostsToggle({
         className="text-sm text-primary hover:underline px-3 py-1.5 rounded-full bg-primary/5"
       >
         {showHidden 
-          ? "Ocultar publicaciones filtradas" 
-          : `Mostrar ${hiddenPostsCount} publicaciones ocultas`}
+          ? "Ocultar filtradas" 
+          : `Mostrar ${hiddenPostsCount} ${hiddenPostsCount === 1 ? 'publicación oculta' : 'publicaciones ocultas'}`}
       </button>
     </div>
   );

@@ -49,8 +49,8 @@ export function FeedContent({
         </div>
       );
       
-      // Add an ad after every 3 posts that looks like a post
-      if ((i + 1) % 3 === 0 && i < allPosts.length - 1) {
+      // Add an ad after every 3 posts that looks like a post (reduce frequency on mobile)
+      if ((i + 1) % (isMobile ? 4 : 3) === 0 && i < allPosts.length - 1) {
         feedContent.push(
           <div key={`ad-${i}`} className="mb-3 post-style-ad">
             <AdComponent format="feed" className="w-full rounded-lg overflow-hidden" />
@@ -58,19 +58,12 @@ export function FeedContent({
         );
       }
       
-      // Add People You May Know after 5 posts
-      if (i === 4 && !isMobile) {
+      // Add People You May Know after 5 posts on desktop, after 6 on mobile
+      if ((isMobile ? i === 6 : i === 4) && !feedContent.some(item => item.key === "people-you-may-know")) {
         feedContent.push(
           <PeopleYouMayKnow key="people-you-may-know" />
         );
       }
-    }
-    
-    // Add People You May Know for mobile at the end
-    if (isMobile && visiblePosts.length >= 3) {
-      feedContent.push(
-        <PeopleYouMayKnow key="people-you-may-know-mobile" />
-      );
     }
     
     return feedContent;
