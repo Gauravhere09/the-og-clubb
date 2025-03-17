@@ -18,7 +18,7 @@ export interface Post {
   user_id: string;
   media_url: string | null;
   media_type: 'image' | 'video' | 'audio' | null;
-  visibility: 'public' | 'friends' | 'private';
+  visibility: 'public' | 'friends' | 'incognito';
   created_at: string;
   updated_at: string;
   poll?: Poll | null;

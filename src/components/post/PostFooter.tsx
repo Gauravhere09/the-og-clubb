@@ -9,8 +9,8 @@ interface PostFooterProps {
   onPublish: () => void;
   isPending: boolean;
   hasContent: boolean;
-  visibility: 'public' | 'friends' | 'private';
-  onVisibilityChange: (visibility: 'public' | 'friends' | 'private') => void;
+  visibility: 'public' | 'friends' | 'incognito';
+  onVisibilityChange: (visibility: 'public' | 'friends' | 'incognito') => void;
 }
 
 export function PostFooter({

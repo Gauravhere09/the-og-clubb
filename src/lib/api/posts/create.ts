@@ -86,7 +86,9 @@ export async function createPost({
       await sendMentionNotifications(content, rawPost.id, null, user.id);
 
       // Send notifications to friends
-      await sendNewPostNotifications(user.id, rawPost.id);
+      if (visibility !== 'incognito') {
+        await sendNewPostNotifications(user.id, rawPost.id);
+      }
 
       // Transform the raw post to match Post type
       const post: Post = {
@@ -95,11 +97,14 @@ export async function createPost({
         user_id: rawPost.user_id,
         media_url: rawPost.media_url,
         media_type: rawPost.media_type as 'image' | 'video' | 'audio' | null,
-        visibility: rawPost.visibility as 'public' | 'friends' | 'private',
+        visibility: rawPost.visibility as 'public' | 'friends' | 'incognito',
         created_at: rawPost.created_at,
         updated_at: rawPost.updated_at,
         shared_from: null,
-        profiles: profileData,
+        profiles: visibility === 'incognito' ? {
+          username: 'Anónimo',
+          avatar_url: null
+        } : profileData,
         poll: transformPoll(rawPost.poll),
         reactions: { count: 0, by_type: {} },
         reactions_count: 0,

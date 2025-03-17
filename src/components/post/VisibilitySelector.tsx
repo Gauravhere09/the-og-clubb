@@ -1,5 +1,5 @@
 
-import { Globe, Users } from "lucide-react";
+import { Globe, Users, EyeOff } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type Visibility = 'public' | 'friends' | 'private';
+type Visibility = 'public' | 'friends' | 'incognito';
 
 interface VisibilitySelectorProps {
   visibility: Visibility;
@@ -20,7 +20,7 @@ export function VisibilitySelector({ visibility, onVisibilityChange }: Visibilit
     switch(visibility) {
       case 'public': return <Globe className="h-4 w-4 mr-2" />;
       case 'friends': return <Users className="h-4 w-4 mr-2" />;
-      case 'private': return <span className="mr-2">🔒</span>;
+      case 'incognito': return <EyeOff className="h-4 w-4 mr-2" />;
       default: return <Globe className="h-4 w-4 mr-2" />;
     }
   };
@@ -50,10 +50,10 @@ export function VisibilitySelector({ visibility, onVisibilityChange }: Visibilit
               <span>Seguidores</span>
             </div>
           </SelectItem>
-          <SelectItem value="private">
+          <SelectItem value="incognito">
             <div className="flex items-center">
-              <span className="mr-2">🔒</span>
-              <span>Privado</span>
+              <EyeOff className="h-4 w-4 mr-2" />
+              <span>Incógnito</span>
             </div>
           </SelectItem>
         </SelectContent>

@@ -9,7 +9,7 @@ export function usePostCreator() {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [showPollCreator, setShowPollCreator] = useState(false);
-  const [visibility, setVisibility] = useState<'public' | 'friends' | 'private'>('public');
+  const [visibility, setVisibility] = useState<'public' | 'friends' | 'incognito'>('public');
   const [currentUser, setCurrentUser] = useState<{ id: string, avatar_url: string | null, username: string | null } | null>(null);
   const { toast } = useToast();
   const textareaRef = useRef<HTMLTextAreaElement>(null);

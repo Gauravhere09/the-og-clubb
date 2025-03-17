@@ -6,7 +6,7 @@ export interface PostTable {
     user_id: string;
     media_url: string | null;
     media_type: 'image' | 'video' | 'audio' | null;
-    visibility: 'public' | 'friends' | 'private';
+    visibility: 'public' | 'friends' | 'incognito';
     poll: {
       question: string;
       options: Array<{
@@ -39,7 +39,7 @@ export interface PostTable {
       total_votes: number;
       user_vote: string | null;
     } | null;
-    visibility?: 'public' | 'friends' | 'private';
+    visibility?: 'public' | 'friends' | 'incognito';
     created_at?: string;
     updated_at?: string;
     shared_from?: string | null;
@@ -62,7 +62,7 @@ export interface PostTable {
       total_votes: number;
       user_vote: string | null;
     } | null;
-    visibility?: 'public' | 'friends' | 'private';
+    visibility?: 'public' | 'friends' | 'incognito';
     created_at?: string;
     updated_at?: string;
     shared_from?: string | null;

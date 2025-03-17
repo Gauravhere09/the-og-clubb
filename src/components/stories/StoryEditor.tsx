@@ -8,7 +8,8 @@ import {
   UserPlus, 
   Volume2, 
   Cog, 
-  ChevronRight 
+  ChevronRight,
+  EyeOff
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StoryVisibility } from "./utils/story-utils";
@@ -82,7 +83,12 @@ export function StoryEditor({
             <SelectContent>
               <SelectItem value="public">Público</SelectItem>
               <SelectItem value="friends">Amigos</SelectItem>
-              <SelectItem value="select">Seleccionar</SelectItem>
+              <SelectItem value="select">
+                <div className="flex items-center">
+                  <EyeOff className="h-4 w-4 mr-2" />
+                  <span>Incógnito</span>
+                </div>
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
