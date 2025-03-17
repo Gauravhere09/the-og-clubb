@@ -22,7 +22,7 @@ export function usePrivateMessages() {
     if (!selectedFriend || !currentUserId) return;
 
     try {
-      // Improve the query to correctly filter conversations between the two users
+      // Improved query to correctly filter conversations between the two users
       const { data, error } = await supabase
         .from('messages')
         .select('*')
@@ -32,7 +32,7 @@ export function usePrivateMessages() {
       if (error) throw error;
       setMessages(data as Message[] || []);
       
-      // Marcar mensajes como leídos
+      // Mark messages as read
       const unreadMessages = data?.filter(msg => 
         msg.receiver_id === currentUserId && 
         msg.sender_id === selectedFriend.friend_id && 
@@ -88,7 +88,7 @@ export function usePrivateMessages() {
   
   const deleteMessage = async (messageId: string, currentUserId: string) => {
     try {
-      // Verificar que el mensaje pertenece al usuario actual
+      // Verify the message belongs to the current user
       const messageToDelete = messages.find(msg => msg.id === messageId);
       
       if (!messageToDelete) {
@@ -109,7 +109,7 @@ export function usePrivateMessages() {
         
       if (error) throw error;
       
-      // Actualizar el estado local
+      // Update local state
       setMessages(prev => prev.map(msg => 
         msg.id === messageId 
           ? { ...msg, content: "Este mensaje ha sido eliminado" } 
@@ -149,7 +149,7 @@ export function usePrivateMessages() {
         schema: 'public',
         table: 'messages'
       }, (payload) => {
-        // Si se actualiza un mensaje, actualizamos el estado
+        // Update the state when a message is updated
         const updatedMessage = payload.new as Message;
         setMessages(prev => prev.map(msg => 
           msg.id === updatedMessage.id ? updatedMessage : msg

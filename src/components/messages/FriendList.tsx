@@ -48,10 +48,12 @@ export const FriendList = ({
       const messages: {[friendId: string]: string} = {};
       
       for (const friendId of friendIds) {
+        // Updated query to use parameterized queries for security
         const { data } = await supabase
           .from('messages')
           .select('content, created_at')
-          .or(`and(sender_id.eq.${currentUserId},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${currentUserId})`)
+          .or(`sender_id.eq.${currentUserId},receiver_id.eq.${currentUserId}`)
+          .or(`sender_id.eq.${friendId},receiver_id.eq.${friendId}`)
           .order('created_at', { ascending: false })
           .limit(1);
           

@@ -33,7 +33,30 @@ export function FriendsList() {
         return;
       }
       
-      // Get all message conversations the user has participated in
+      // First get all formal friend relationships
+      let allFriends: Friend[] = [];
+      
+      const { data: formalFriends, error: formalFriendsError } = await supabase
+        .from('friends')
+        .select('friend_id, friend_username:profiles!friends_friend_id_fkey(username, avatar_url)')
+        .eq('user_id', currentUserId);
+        
+      if (formalFriendsError) throw formalFriendsError;
+      
+      // Add friends from the formal friends list
+      if (formalFriends) {
+        formalFriends.forEach(friend => {
+          if (friend.friend_id && friend.friend_username) {
+            allFriends.push({
+              id: friend.friend_id,
+              username: friend.friend_username.username || 'Usuario',
+              avatar_url: friend.friend_username.avatar_url
+            });
+          }
+        });
+      }
+      
+      // Then get all message conversations the user has participated in
       const { data: messagesData, error: messagesError } = await supabase
         .from('messages')
         .select('sender_id, receiver_id')
@@ -48,51 +71,31 @@ export function FriendsList() {
         uniqueUserIds.add(otherUserId);
       });
       
-      // Get traditional friends list
-      const { data: friendsData, error: friendsError } = await supabase
-        .from('friends')
-        .select('friend_id, friend_username:profiles!friends_friend_id_fkey(username, avatar_url)')
-        .eq('user_id', currentUserId);
+      // Get profiles for conversation partners who aren't formal friends
+      if (uniqueUserIds.size > 0) {
+        const userIdsToQuery = Array.from(uniqueUserIds).filter(
+          id => !allFriends.some(friend => friend.id === id)
+        );
         
-      if (friendsError) throw friendsError;
-      
-      // Combine both sources
-      const allFriends: Friend[] = [];
-      
-      // Add friends from traditional friends list
-      if (friendsData) {
-        friendsData.forEach(friend => {
-          if (friend.friend_id && friend.friend_username) {
-            allFriends.push({
-              id: friend.friend_id,
-              username: friend.friend_username.username || 'Usuario',
-              avatar_url: friend.friend_username.avatar_url
+        if (userIdsToQuery.length > 0) {
+          const { data: profilesData, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url')
+            .in('id', userIdsToQuery);
+            
+          if (profilesError) throw profilesError;
+          
+          if (profilesData) {
+            profilesData.forEach(profile => {
+              if (!allFriends.some(f => f.id === profile.id)) {
+                allFriends.push({
+                  id: profile.id,
+                  username: profile.username || 'Usuario',
+                  avatar_url: profile.avatar_url
+                });
+              }
             });
           }
-        });
-      }
-      
-      // Add users from message conversations if not already in friends list
-      if (uniqueUserIds.size > 0) {
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url')
-          .in('id', Array.from(uniqueUserIds));
-          
-        if (profilesError) throw profilesError;
-        
-        if (profilesData) {
-          profilesData.forEach(profile => {
-            // Check if this user is already in our friends list
-            const existingFriend = allFriends.find(f => f.id === profile.id);
-            if (!existingFriend) {
-              allFriends.push({
-                id: profile.id,
-                username: profile.username || 'Usuario',
-                avatar_url: profile.avatar_url
-              });
-            }
-          });
         }
       }
       

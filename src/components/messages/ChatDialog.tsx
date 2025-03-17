@@ -35,7 +35,7 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
       loadMessages(currentUserId, friend);
     }
 
-    // Ocultar la navegación cuando el chat está abierto en móvil
+    // Hide navigation when chat is open on mobile
     const nav = document.querySelector('nav');
     if (nav) {
       if (isOpen && window.innerWidth < 768) {
@@ -46,7 +46,7 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
     }
 
     return () => {
-      // Restaurar la navegación cuando se cierra el chat
+      // Restore navigation when chat is closed
       const nav = document.querySelector('nav');
       if (nav) {
         nav.style.display = 'flex';
@@ -68,14 +68,12 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
     if (success) {
       setNewMessage("");
       
-      // Check if the friend relationship exists already
       try {
-        // First, check if a friend relationship exists in either direction
+        // First check if there's an existing friendship between these users
         const { data: existingFriendship, error: checkError } = await supabase
           .from('friends')
           .select('id')
-          .or(`user_id.eq.${currentUserId},user_id.eq.${targetUser.id}`)
-          .or(`friend_id.eq.${targetUser.id},friend_id.eq.${currentUserId}`)
+          .or(`and(user_id.eq.${currentUserId},friend_id.eq.${targetUser.id}),and(user_id.eq.${targetUser.id},friend_id.eq.${currentUserId})`)
           .maybeSingle();
           
         if (checkError) {
@@ -84,21 +82,33 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
         
         // If no friendship exists, create one in both directions
         if (!existingFriendship) {
-          // Create friendship in one direction
-          await supabase
-            .from('friends')
-            .insert([
-              { user_id: currentUserId, friend_id: targetUser.id }
+          // Get the current user's profile info to store in the other user's friendship entry
+          const { data: currentUserProfile } = await supabase
+            .from('profiles')
+            .select('username, avatar_url')
+            .eq('id', currentUserId)
+            .single();
+          
+          if (currentUserProfile) {
+            // Create friendship entries in both directions for full visibility
+            await supabase.from('friends').insert([
+              { 
+                user_id: currentUserId, 
+                friend_id: targetUser.id,
+                friend_username: targetUser.username
+              }
             ]);
             
-          // Create friendship in the other direction to ensure bidirectional visibility
-          await supabase
-            .from('friends')
-            .insert([
-              { user_id: targetUser.id, friend_id: currentUserId }
+            await supabase.from('friends').insert([
+              { 
+                user_id: targetUser.id, 
+                friend_id: currentUserId,
+                friend_username: currentUserProfile.username
+              }
             ]);
             
-          console.log("Created new friendship relation");
+            console.log("Created new friendship relation");
+          }
         }
       } catch (error) {
         console.error("Error managing friendship for chat:", error);
