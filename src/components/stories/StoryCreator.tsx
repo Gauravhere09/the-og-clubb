@@ -1,7 +1,7 @@
 
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { X, Image } from "lucide-react";
+import { X, Image, Upload } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useStoryCreator } from "@/hooks/use-story-creator";
 import { StoryFileSelector } from "./StoryFileSelector";
@@ -55,7 +55,7 @@ export function StoryCreator({ onClose, currentUserId }: StoryCreatorProps) {
           <>
             <DialogHeader className="p-4 border-b">
               <DialogTitle className="flex items-center gap-2">
-                <Image className="h-5 w-5" />
+                <Upload className="h-5 w-5 text-primary" />
                 Crear historia
               </DialogTitle>
             </DialogHeader>
@@ -80,6 +80,7 @@ export function StoryCreator({ onClose, currentUserId }: StoryCreatorProps) {
                     disabled={isUploading}
                     className="flex items-center gap-2"
                   >
+                    <Upload className="h-4 w-4" />
                     {isUploading ? "Subiendo..." : "Publicar historia"}
                   </Button>
                 )}

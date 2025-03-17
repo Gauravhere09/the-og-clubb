@@ -1,6 +1,6 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Eye, Plus, Image, Camera } from "lucide-react";
+import { Eye, Plus, Upload, Camera } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -51,7 +51,7 @@ export function UserStoryButton({
                     {hasStories ? (
                       <Eye className="h-4 w-4 text-primary-foreground" />
                     ) : (
-                      <Camera className="h-4 w-4 text-primary-foreground" />
+                      <Upload className="h-4 w-4 text-primary-foreground" />
                     )}
                   </div>
                 </div>
@@ -70,7 +70,7 @@ export function UserStoryButton({
                   className="flex items-center gap-2 w-full"
                   onClick={onCreateStory}
                 >
-                  <Camera className="h-4 w-4" />
+                  <Upload className="h-4 w-4" />
                   Crear historia
                 </Button>
               )}
@@ -92,7 +92,7 @@ export function UserStoryButton({
                     className="flex items-center gap-2 w-full"
                     onClick={onCreateStory}
                   >
-                    <Plus className="h-4 w-4" />
+                    <Upload className="h-4 w-4" />
                     Agregar historia
                   </Button>
                 </>

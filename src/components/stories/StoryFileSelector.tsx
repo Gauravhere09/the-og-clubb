@@ -33,7 +33,8 @@ export function StoryFileSelector({
     <div className="space-y-4">
       {previewUrls.length === 0 ? (
         <div 
-          className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 text-center"
+          className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 text-center hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-all cursor-pointer"
+          onClick={() => fileInputRef?.current?.click()}
         >
           <input
             type="file"
@@ -43,17 +44,21 @@ export function StoryFileSelector({
             multiple
             className="hidden"
           />
-          <Button 
-            onClick={() => fileInputRef?.current?.click()}
-            variant="outline"
-            className="mb-2 flex items-center gap-2"
-          >
-            <Image className="h-4 w-4" />
-            Seleccionar imágenes
-          </Button>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Formatos soportados: JPG, PNG, GIF
-          </p>
+          <div className="flex flex-col items-center gap-2">
+            <div className="rounded-full bg-primary/10 p-3">
+              <Upload className="h-6 w-6 text-primary" />
+            </div>
+            <Button 
+              variant="outline"
+              className="mb-2 flex items-center gap-2"
+            >
+              <Image className="h-4 w-4" />
+              Seleccionar imágenes
+            </Button>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Formatos soportados: JPG, PNG, GIF
+            </p>
+          </div>
         </div>
       ) : (
         <div>
