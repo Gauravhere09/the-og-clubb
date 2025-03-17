@@ -3,7 +3,7 @@ import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/Feed";
 import { StoryViewer } from "@/components/stories/StoryViewer";
-import { Home, Menu, LogOut, Moon, Sun, Plus } from "lucide-react";
+import { Home, Menu, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,11 +54,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row bg-background">
-      <div className="fixed bottom-0 left-0 right-0 md:static md:left-0 z-10">
+      <div className="fixed bottom-0 left-0 right-0 md:static md:left-0 z-10 fixed-bottom-nav">
         <Navigation />
       </div>
       
-      <div className="flex-1 w-full md:ml-[70px] pb-16 md:pb-0">
+      <div className="flex-1 w-full md:ml-[70px] pb-16 md:pb-0 content-with-bottom-nav">
         <div className="max-w-screen-xl mx-auto px-4 py-4 md:py-8 md:flex">
           <main className={`w-full ${!isMobile ? "md:w-2/3 md:pr-4" : ""}`}>
             <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2 -mx-4 px-4 pt-2">
@@ -133,6 +133,6 @@ const Index = () => {
       </div>
     </div>
   );
-};
+}
 
 export default Index;

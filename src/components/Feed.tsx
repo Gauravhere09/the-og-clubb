@@ -1,4 +1,3 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { Post } from "@/components/Post";
 import { getPosts, getHiddenPosts } from "@/lib/api";
@@ -151,64 +150,37 @@ export function Feed({ userId }: FeedProps) {
     // Insert banner ad at the top on mobile only
     if (isMobile) {
       feedContent.push(
-        <AdComponent key="ad-top-mobile" format="banner" className="mt-2 mb-4" />
+        <AdComponent key="ad-top-mobile" format="banner" className="mt-2 mb-4 ad-component-mobile" />
       );
     }
     
-    // First batch of posts (2 posts)
-    const firstPosts = visiblePosts.slice(0, 2);
-    firstPosts.forEach((post, index) => {
+    // Distribute posts and ads together
+    const allPosts = visiblePosts.slice();
+    
+    for (let i = 0; i < allPosts.length; i++) {
+      // Add a post
       feedContent.push(
-        <div key={post.id} className="mb-4">
-          <Post post={post} />
-        </div>
-      );
-    });
-    
-    // Insert first in-feed ad after 2 posts
-    feedContent.push(
-      <AdComponent key="ad-first" format="feed" className="mb-4" />
-    );
-    
-    // Second batch of posts (3 posts)
-    const secondPosts = visiblePosts.slice(2, 5);
-    secondPosts.forEach((post, index) => {
-      feedContent.push(
-        <div key={post.id} className="mb-4">
-          <Post post={post} />
-        </div>
-      );
-    });
-    
-    // Insert People you may know after 5 posts
-    if (visiblePosts.length >= 5 && !isMobile) {
-      feedContent.push(
-        <PeopleYouMayKnow key="people-you-may-know" />
-      );
-    }
-    
-    // Insert second in-feed ad
-    feedContent.push(
-      <AdComponent key="ad-middle" format="feed" className="mb-4" />
-    );
-    
-    // Remaining posts with ads inserted every 4 posts
-    const remainingPosts = visiblePosts.slice(5);
-    remainingPosts.forEach((post, index) => {
-      feedContent.push(
-        <div key={post.id} className="mb-4">
-          <Post post={post} />
+        <div key={allPosts[i].id} className="mb-4">
+          <Post post={allPosts[i]} />
         </div>
       );
       
-      if ((index + 1) % 4 === 0 && index < remainingPosts.length - 1) {
+      // Add an ad after every 3 posts
+      if ((i + 1) % 3 === 0 && i < allPosts.length - 1) {
         feedContent.push(
-          <AdComponent key={`ad-${index}`} format="feed" className="mb-4" />
+          <AdComponent key={`ad-${i}`} format="feed" className="mb-4 mx-auto" />
         );
       }
-    });
+      
+      // Add People You May Know after 5 posts
+      if (i === 4 && !isMobile) {
+        feedContent.push(
+          <PeopleYouMayKnow key="people-you-may-know" />
+        );
+      }
+    }
     
-    // Add People You May Know for mobile after all posts
+    // Add People You May Know for mobile at the end
     if (isMobile && visiblePosts.length >= 3) {
       feedContent.push(
         <PeopleYouMayKnow key="people-you-may-know-mobile" />

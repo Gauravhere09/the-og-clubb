@@ -27,18 +27,18 @@ export function AdComponent({ format = "feed", className = "" }: AdComponentProp
   
   const getAdStyle = () => {
     if (isMobile) {
-      return "min-height-[120px] w-full";
+      return format === "banner" ? "min-height-[90px]" : "min-height-[120px]";
     }
     
     switch (format) {
       case "feed":
-        return "min-height-[180px] w-full"; 
+        return "min-height-[180px]"; 
       case "sidebar":
-        return "min-height-[250px] w-full";
+        return "min-height-[250px]";
       case "banner":
-        return "min-height-[90px] w-full";
+        return "min-height-[90px]";
       default:
-        return "min-height-[180px] w-full";
+        return "min-height-[180px]";
     }
   };
   
@@ -57,7 +57,7 @@ export function AdComponent({ format = "feed", className = "" }: AdComponentProp
   };
   
   return (
-    <Card className={`overflow-hidden ${className} ad-container mb-4 p-0 ${format === "feed" ? "max-w-full rounded-lg shadow" : ""}`}>
+    <Card className={`overflow-hidden ${className} ad-container ${format === "feed" ? "max-w-full rounded-lg shadow-sm post-like" : ""}`}>
       <div className="text-xs text-muted-foreground p-1.5 px-3 border-b border-border flex items-center">
         <span className="mr-1">Publicidad</span>
       </div>

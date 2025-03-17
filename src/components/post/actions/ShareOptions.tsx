@@ -1,11 +1,11 @@
 
 import { Link2, Share } from "lucide-react";
 import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,11 +15,11 @@ import type { Post } from "@/types/post";
 
 interface ShareOptionsProps {
   post: Post;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  children: React.ReactNode;
+  onLongPress?: () => void;
 }
 
-export function ShareOptions({ post, open, onOpenChange }: ShareOptionsProps) {
+export function ShareOptions({ post, children, onLongPress }: ShareOptionsProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -30,7 +30,6 @@ export function ShareOptions({ post, open, onOpenChange }: ShareOptionsProps) {
       title: "Enlace copiado",
       description: "El enlace ha sido copiado al portapapeles",
     });
-    onOpenChange(false);
   };
 
   const handleShare = async () => {
@@ -98,7 +97,6 @@ export function ShareOptions({ post, open, onOpenChange }: ShareOptionsProps) {
           title: "¡Publicación compartida!",
           description: "La publicación ha sido compartida en tu perfil",
         });
-        onOpenChange(false);
       }
     } catch (error) {
       console.error("Error in share function:", error);
@@ -111,29 +109,26 @@ export function ShareOptions({ post, open, onOpenChange }: ShareOptionsProps) {
   };
 
   return (
-    <DropdownMenu open={open} onOpenChange={onOpenChange}>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="flex-1">
-          <Share className="h-4 w-4 mr-2" />
-          Compartir
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuItem onClick={handleShareToProfile}>
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        {children}
+      </ContextMenuTrigger>
+      <ContextMenuContent className="w-56">
+        <ContextMenuItem onClick={handleShareToProfile}>
           <Share className="h-4 w-4 mr-2" />
           Compartir en mi perfil
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleCopyLink}>
+        </ContextMenuItem>
+        <ContextMenuItem onClick={handleCopyLink}>
           <Link2 className="h-4 w-4 mr-2" />
           Copiar enlace
-        </DropdownMenuItem>
+        </ContextMenuItem>
         {navigator.share && (
-          <DropdownMenuItem onClick={handleShare}>
+          <ContextMenuItem onClick={handleShare}>
             <Share className="h-4 w-4 mr-2" />
             Compartir con...
-          </DropdownMenuItem>
+          </ContextMenuItem>
         )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }

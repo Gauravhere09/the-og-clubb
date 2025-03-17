@@ -8,6 +8,8 @@ import { ReactionSummaryDialog } from "./actions/ReactionSummaryDialog";
 import { CommentsCount } from "./actions/CommentsCount";
 import { CommentButton } from "./actions/CommentButton";
 import { LongPressReactionButton } from "./reactions/LongPressReactionButton";
+import { Share } from "lucide-react";
+import { useLongPress } from "./reactions/hooks/use-long-press";
 
 interface PostActionsProps {
   post: Post;
@@ -28,7 +30,6 @@ export function PostActions({
   const userReaction = post.user_reaction as ReactionType | undefined;
   const totalReactions = Object.values(reactionsByType).reduce((sum, count) => sum + count, 0);
   const commentCount = post.comments_count || 0;
-  const [showShareOptions, setShowShareOptions] = React.useState(false);
 
   // Manejador local para evitar duplicación de actualizaciones de UI
   const handleReaction = (type: ReactionType) => {
@@ -53,7 +54,7 @@ export function PostActions({
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-1 border-t border-b py-1">
+      <div className="flex gap-1 border-t border-b py-1 post-actions">
         <LongPressReactionButton 
           userReaction={userReaction} 
           onReactionClick={handleReaction}
@@ -62,11 +63,12 @@ export function PostActions({
 
         <CommentButton onToggleComments={onToggleComments} />
 
-        <ShareOptions 
-          post={post} 
-          open={showShareOptions} 
-          onOpenChange={setShowShareOptions} 
-        />
+        <ShareOptions post={post}>
+          <Button variant="ghost" size="sm" className="flex-1 post-action-button">
+            <Share className="h-4 w-4 mr-2" />
+            Compartir
+          </Button>
+        </ShareOptions>
       </div>
     </div>
   );
