@@ -18,7 +18,9 @@ export function CareerSelect({ form }: CareerSelectProps) {
         <FormItem>
           <FormLabel htmlFor="career">Carrera</FormLabel>
           <Select
-            onValueChange={field.onChange}
+            onValueChange={(value) => {
+              field.onChange(value);
+            }}
             defaultValue={field.value}
           >
             <FormControl>

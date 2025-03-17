@@ -113,7 +113,15 @@ export function RegisterForm({ loading, setLoading, sendVerificationEmail }: Reg
         <label htmlFor="career" className="block text-sm font-medium mb-1">
           Carrera estudiada
         </label>
-        <Select value={career} onValueChange={setCareer} disabled={loading} name="career">
+        <Select 
+          value={career} 
+          onValueChange={(value) => {
+            console.log("Carrera seleccionada:", value);
+            setCareer(value);
+          }} 
+          disabled={loading} 
+          name="career"
+        >
           <SelectTrigger id="career" name="career">
             <SelectValue placeholder="Selecciona tu carrera" />
           </SelectTrigger>
@@ -131,7 +139,15 @@ export function RegisterForm({ loading, setLoading, sendVerificationEmail }: Reg
         <label htmlFor="semester" className="block text-sm font-medium mb-1">
           Semestre actual
         </label>
-        <Select value={semester} onValueChange={setSemester} disabled={loading} name="semester">
+        <Select 
+          value={semester} 
+          onValueChange={(value) => {
+            console.log("Semestre seleccionado:", value);
+            setSemester(value);
+          }} 
+          disabled={loading} 
+          name="semester"
+        >
           <SelectTrigger id="semester" name="semester">
             <SelectValue placeholder="Selecciona tu semestre" />
           </SelectTrigger>
