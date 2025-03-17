@@ -39,14 +39,18 @@ export async function createPost({
       };
     }
 
+    // Map the visibility value to match what's expected in the database
+    // This ensures compatibility with the database schema
+    const dbVisibility = visibility;
+
     const insertData = {
       content,
       media_url,
       media_type,
       poll,
       user_id: user.id,
-      visibility
-    } as Tables['posts']['Insert'];
+      visibility: dbVisibility
+    };
 
     // First insert the post
     try {
