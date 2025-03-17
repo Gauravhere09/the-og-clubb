@@ -37,7 +37,7 @@ export function UserStoryButton({
       <Tooltip>
         <Popover>
           <PopoverTrigger asChild>
-            <div className="flex flex-col items-center space-y-1">
+            <div className="flex flex-col items-center space-y-1 min-w-[64px]">
               <TooltipTrigger asChild>
                 <div 
                   className="relative cursor-pointer group transition-all"
@@ -45,7 +45,7 @@ export function UserStoryButton({
                 >
                   <Avatar className={`w-16 h-16 ${hasStories ? 'border-2 border-primary' : 'border-2 border-muted hover:border-primary/60'} p-1 transition-all`}>
                     <AvatarImage src={userStory?.avatarUrl || undefined} />
-                    <AvatarFallback>TU</AvatarFallback>
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">TU</AvatarFallback>
                   </Avatar>
                   <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1 border-2 border-background animate-pulse">
                     {hasStories ? (

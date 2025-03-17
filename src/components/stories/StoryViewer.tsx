@@ -43,7 +43,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
     : stories;
 
   return (
-    <div className="mb-6 relative bg-background/80 rounded-lg p-4 shadow-sm border border-border/50">
+    <div className="mb-6 relative bg-background rounded-lg p-4 shadow border border-border">
       {showStoryCreator && (
         <StoryCreator 
           onClose={handleStoryCreatorClose} 
@@ -58,12 +58,12 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         />
       )}
       
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between">
         <h3 className="text-lg font-medium">Historias</h3>
         
         <Button 
           size="sm" 
-          variant="outline" 
+          variant="default" 
           className="flex items-center gap-1"
           onClick={() => setShowStoryCreator(true)}
         >
@@ -72,7 +72,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         </Button>
       </div>
       
-      <div className="flex w-max space-x-4 overflow-x-auto pb-2">
+      <div className="flex w-full overflow-x-auto pb-2 space-x-4">
         <UserStoryButton
           currentUserId={currentUserId}
           userStory={userStory}
