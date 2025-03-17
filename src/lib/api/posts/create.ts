@@ -41,7 +41,10 @@ export async function createPost({
 
     // Map the visibility value to match what's expected in the database
     // UI uses "incognito" but database expects "private"
-    const dbVisibility = visibility === 'incognito' ? 'private' : visibility;
+    const dbVisibility: 'public' | 'friends' | 'private' = 
+      visibility === 'incognito' ? 'private' : 
+      visibility === 'public' ? 'public' : 
+      'friends';
 
     const insertData = {
       content,
