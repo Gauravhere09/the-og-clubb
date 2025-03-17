@@ -29,7 +29,7 @@ export function Feed({ userId }: FeedProps) {
   }
 
   return (
-    <div className="space-y-0">
+    <div className="space-y-0 feed-container">
       <HiddenPostsToggle 
         hiddenPostsCount={hiddenPosts.length}
         showHidden={showHidden}

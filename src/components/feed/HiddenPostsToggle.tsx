@@ -16,7 +16,7 @@ export function HiddenPostsToggle({
     <div className="flex justify-center mb-2">
       <button 
         onClick={onToggleHidden}
-        className="text-sm text-primary hover:underline"
+        className="text-sm text-primary hover:underline px-3 py-1.5 rounded-full bg-primary/5"
       >
         {showHidden 
           ? "Ocultar publicaciones filtradas" 

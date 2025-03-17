@@ -59,15 +59,15 @@ const Index = () => {
       </div>
       
       <div className="flex-1 w-full md:ml-[70px] pb-16 md:pb-0 content-with-bottom-nav">
-        <div className="max-w-screen-xl mx-auto px-4 py-4 md:py-8 md:flex">
+        <div className="max-w-screen-xl mx-auto px-2 py-2 md:px-4 md:py-8 md:flex">
           <main className={`w-full ${!isMobile ? "md:w-2/3 md:pr-4" : ""}`}>
-            <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2 -mx-4 px-4 pt-2">
-              <div className="flex items-center justify-between mb-4">
+            <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2 -mx-2 md:mx-0 px-2 md:px-0 pt-2">
+              <div className="flex items-center justify-between mb-2 md:mb-4">
                 <div className="flex items-center gap-2">
                   <Home className="h-5 w-5" />
-                  <h1 className="text-xl md:text-2xl font-semibold">Feed</h1>
+                  <h1 className="text-lg md:text-2xl font-semibold">Feed</h1>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 md:gap-2">
                   <FriendSearch />
                   <NotificationDropdown />
                   <DropdownMenu>
@@ -75,9 +75,9 @@ const Index = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="rounded-full"
+                        className="h-8 w-8 rounded-full"
                       >
-                        <Menu className="h-5 w-5" />
+                        <Menu className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -104,7 +104,7 @@ const Index = () => {
               </div>
             </div>
 
-            <div className="space-y-4 md:space-y-6 feed-container">
+            <div className="space-y-3 md:space-y-4">
               {currentUserId && (
                 <StoryViewer currentUserId={currentUserId} />
               )}

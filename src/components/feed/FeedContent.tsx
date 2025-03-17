@@ -21,7 +21,7 @@ export function FeedContent({
     if (!showHidden || hiddenPosts.length === 0) return null;
     
     return hiddenPosts.map(post => (
-      <div key={post.id} className="relative mb-4">
+      <div key={post.id} className="relative mb-3">
         <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 opacity-10 z-0 pointer-events-none"></div>
         <Post key={post.id} post={post} isHidden={true} />
       </div>
@@ -34,7 +34,7 @@ export function FeedContent({
     // Insert banner ad at the top on mobile only
     if (isMobile) {
       feedContent.push(
-        <AdComponent key="ad-top-mobile" format="banner" className="mt-2 mb-4 ad-component-mobile" />
+        <AdComponent key="ad-top-mobile" format="banner" className="my-2 ad-component-mobile" />
       );
     }
     
@@ -44,15 +44,17 @@ export function FeedContent({
     for (let i = 0; i < allPosts.length; i++) {
       // Add a post
       feedContent.push(
-        <div key={allPosts[i].id} className="mb-4">
+        <div key={allPosts[i].id} className="mb-3">
           <Post post={allPosts[i]} />
         </div>
       );
       
-      // Add an ad after every 3 posts
+      // Add an ad after every 3 posts that looks like a post
       if ((i + 1) % 3 === 0 && i < allPosts.length - 1) {
         feedContent.push(
-          <AdComponent key={`ad-${i}`} format="feed" className="mb-4 mx-auto" />
+          <div key={`ad-${i}`} className="mb-3 post-style-ad">
+            <AdComponent format="feed" className="w-full rounded-lg overflow-hidden" />
+          </div>
         );
       }
       
@@ -75,9 +77,9 @@ export function FeedContent({
   };
 
   return (
-    <>
+    <div className="space-y-0">
       {renderHiddenPosts()}
       {renderFeedPosts()}
-    </>
+    </div>
   );
 }
