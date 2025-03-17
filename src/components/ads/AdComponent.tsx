@@ -1,6 +1,6 @@
 
 import { Card } from "@/components/ui/card";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AdComponentProps {
@@ -10,20 +10,22 @@ interface AdComponentProps {
 
 export function AdComponent({ format = "feed", className = "" }: AdComponentProps) {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [adKey, setAdKey] = useState(Math.random().toString(36).substring(2, 11));
+  const adRef = useRef<HTMLDivElement>(null);
+  const adInitialized = useRef(false);
   const isMobile = useIsMobile();
   
   useEffect(() => {
-    // Load the ad after component mounts
-    if (window.adsbygoogle) {
+    // Only initialize the ad once per instance
+    if (!adInitialized.current && adRef.current && window.adsbygoogle) {
       try {
-        setIsLoaded(true);
+        adInitialized.current = true;
         (window.adsbygoogle = window.adsbygoogle || []).push({});
+        setIsLoaded(true);
       } catch (e) {
         console.error("AdSense error:", e);
       }
     }
-  }, [adKey]);
+  }, []);
   
   const getAdStyle = () => {
     if (isMobile) {
@@ -62,19 +64,20 @@ export function AdComponent({ format = "feed", className = "" }: AdComponentProp
         <span className="mr-1">Publicidad</span>
       </div>
       <div className={`${getAdStyle()} flex items-center justify-center`}>
-        <ins
-          className="adsbygoogle"
-          style={{ 
-            display: "block", 
-            minHeight: format === "banner" ? "90px" : isMobile ? "120px" : "180px", 
-            width: "100%" 
-          }}
-          data-ad-client="ca-pub-9230569145726089"
-          data-ad-slot={getAdSlot()}
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-          key={adKey}
-        />
+        <div ref={adRef}>
+          <ins
+            className="adsbygoogle"
+            style={{ 
+              display: "block", 
+              minHeight: format === "banner" ? "90px" : isMobile ? "120px" : "180px", 
+              width: "100%" 
+            }}
+            data-ad-client="ca-pub-9230569145726089"
+            data-ad-slot={getAdSlot()}
+            data-ad-format="auto"
+            data-full-width-responsive="true"
+          />
+        </div>
       </div>
     </Card>
   );
