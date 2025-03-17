@@ -2,13 +2,15 @@
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AudioRecorder } from "../AudioRecorder";
-import { Image, Video, BarChart, MousePointerClick } from "lucide-react";
+import { Image, Video, BarChart, MousePointerClick, PlusCircle } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuItem
 } from "@/components/ui/dropdown-menu";
+import { StoryCreator } from "../stories/StoryCreator";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PostActionButtonsProps {
   onFileSelect: (file: File) => void;
@@ -19,6 +21,19 @@ interface PostActionButtonsProps {
 export function PostActionButtons({ onFileSelect, onPollCreate, isPending }: PostActionButtonsProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
+  const [showStoryCreator, setShowStoryCreator] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Obtener el ID del usuario actual al cargar el componente
+  useState(() => {
+    async function getUserId() {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) {
+        setCurrentUserId(data.user.id);
+      }
+    }
+    getUserId();
+  });
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -30,6 +45,10 @@ export function PostActionButtons({ onFileSelect, onPollCreate, isPending }: Pos
   const handleMediaSelect = (type: 'image' | 'video') => {
     setMediaType(type);
     fileInputRef.current?.click();
+  };
+
+  const handleStoryClick = () => {
+    setShowStoryCreator(true);
   };
 
   return (
@@ -68,6 +87,10 @@ export function PostActionButtons({ onFileSelect, onPollCreate, isPending }: Pos
               <BarChart className="h-4 w-4 mr-2" />
               <span>Encuesta</span>
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleStoryClick}>
+              <PlusCircle className="h-4 w-4 mr-2" />
+              <span>Historia</span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -100,6 +123,13 @@ export function PostActionButtons({ onFileSelect, onPollCreate, isPending }: Pos
           <BarChart className="h-4 w-4" />
         </Button>
       </div>
+
+      {showStoryCreator && currentUserId && (
+        <StoryCreator
+          onClose={() => setShowStoryCreator(false)}
+          currentUserId={currentUserId}
+        />
+      )}
     </div>
   );
 }
