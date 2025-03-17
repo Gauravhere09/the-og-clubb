@@ -69,10 +69,10 @@ export function FriendsList() {
       // First get all formal friend relationships
       let allFriends: Friend[] = [];
       
-      // Modified query to resolve the TypeScript error
+      // Get all friend IDs from friends table
       const { data: friendsData, error: friendsError } = await supabase
         .from('friends')
-        .select('friend_id, user_id')
+        .select('friend_id')
         .eq('user_id', currentUserId);
         
       if (friendsError) throw friendsError;
@@ -177,7 +177,14 @@ export function FriendsList() {
               <AvatarFallback>{friend.username[0]}</AvatarFallback>
             </Avatar>
             <div>
-              <div className="font-medium">{friend.username}</div>
+              <div className="font-medium">
+                <Link 
+                  to={`/profile/${friend.id}`} 
+                  className="hover:underline"
+                >
+                  {friend.username}
+                </Link>
+              </div>
             </div>
           </div>
           <Link to={`/messages?user=${friend.id}`}>

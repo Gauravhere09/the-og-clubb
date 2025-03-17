@@ -1,7 +1,9 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
 interface Friend {
   friend_id: string;
@@ -116,7 +118,15 @@ export const FriendList = ({
               <AvatarFallback>{friend.friend_username[0]}</AvatarFallback>
             </Avatar>
             <div className="flex-1 text-left">
-              <div className="font-medium">{friend.friend_username}</div>
+              <div className="font-medium">
+                <Link 
+                  to={`/profile/${friend.friend_id}`} 
+                  className="hover:underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {friend.friend_username}
+                </Link>
+              </div>
               {lastMessages[friend.friend_id] && (
                 <div className="text-sm text-muted-foreground truncate">
                   {lastMessages[friend.friend_id]}

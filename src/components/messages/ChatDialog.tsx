@@ -9,6 +9,7 @@ import { X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 export interface ChatDialogProps {
   isOpen: boolean;
@@ -66,61 +67,11 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
       status: 'friends'
     };
 
+    console.log("Sending message to:", targetUser.username, "with ID:", targetUser.id);
     const success = await sendMessage(newMessage, currentUserId, friend);
+    
     if (success) {
       setNewMessage("");
-      
-      try {
-        // First check if there's an existing friendship between these users
-        const { data: existingFriendship, error: checkError } = await supabase
-          .from('friends')
-          .select('id')
-          .or(`and(user_id.eq.${currentUserId},friend_id.eq.${targetUser.id}),and(user_id.eq.${targetUser.id},friend_id.eq.${currentUserId})`)
-          .maybeSingle();
-          
-        if (checkError) {
-          console.error("Error checking friendship:", checkError);
-        }
-        
-        // If no friendship exists, create one in both directions
-        if (!existingFriendship) {
-          // Get the current user's profile info to store in the other user's friendship entry
-          const { data: currentUserProfile } = await supabase
-            .from('profiles')
-            .select('username, avatar_url')
-            .eq('id', currentUserId)
-            .single();
-          
-          if (currentUserProfile) {
-            // Create friendship entries in both directions for full visibility
-            await supabase.from('friends').insert([
-              { 
-                user_id: currentUserId, 
-                friend_id: targetUser.id,
-                friend_username: targetUser.username
-              }
-            ]);
-            
-            await supabase.from('friends').insert([
-              { 
-                user_id: targetUser.id, 
-                friend_id: currentUserId,
-                friend_username: currentUserProfile.username
-              }
-            ]);
-            
-            console.log("Created new friendship relation");
-            
-            // Notificar al usuario que el chat ha sido añadido a su lista
-            toast({
-              title: "Chat añadido",
-              description: `Se ha añadido un nuevo chat con ${targetUser.username}`,
-            });
-          }
-        }
-      } catch (error) {
-        console.error("Error managing friendship for chat:", error);
-      }
     }
   };
 
@@ -137,7 +88,15 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
               <AvatarImage src={targetUser.avatar_url || undefined} />
               <AvatarFallback>{targetUser.username?.[0] || '?'}</AvatarFallback>
             </Avatar>
-            <div className="font-medium">{targetUser.username || "Usuario"}</div>
+            <div className="font-medium">
+              <Link 
+                to={`/profile/${targetUser.id}`} 
+                className="hover:underline"
+                onClick={() => onClose()}
+              >
+                {targetUser.username || "Usuario"}
+              </Link>
+            </div>
           </div>
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <X className="h-5 w-5" />

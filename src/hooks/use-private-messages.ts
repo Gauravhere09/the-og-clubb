@@ -81,6 +81,10 @@ export function usePrivateMessages() {
       
       console.log("Message sent successfully");
       setMessages(prev => [...prev, data as Message]);
+
+      // After sending a message, make sure to create a friendship entry if it doesn't exist
+      await ensureFriendshipExists(currentUserId, selectedFriend);
+      
       return true;
     } catch (error) {
       console.error('Error sending message:', error);
@@ -90,6 +94,71 @@ export function usePrivateMessages() {
         description: "No se pudo enviar el mensaje",
       });
       return false;
+    }
+  };
+  
+  const ensureFriendshipExists = async (currentUserId: string, targetUser: Friend) => {
+    try {
+      // Check if there's already a friendship entry
+      const { data: existingFriendship, error: checkError } = await supabase
+        .from('friends')
+        .select('id')
+        .eq('user_id', currentUserId)
+        .eq('friend_id', targetUser.friend_id)
+        .maybeSingle();
+      
+      if (checkError) {
+        console.error("Error checking friendship:", checkError);
+        return;
+      }
+      
+      // If no friendship exists, create one
+      if (!existingFriendship) {
+        console.log("Creating friendship entry for current user");
+        const { error: insertError } = await supabase
+          .from('friends')
+          .insert({
+            user_id: currentUserId,
+            friend_id: targetUser.friend_id,
+            friend_username: targetUser.friend_username,
+            friend_avatar_url: targetUser.friend_avatar_url || null
+          });
+        
+        if (insertError) {
+          console.error("Error creating friendship entry:", insertError);
+          return;
+        }
+
+        // Also create the reverse entry for the other user
+        // Get current user's profile info
+        const { data: currentUserProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('username, avatar_url')
+          .eq('id', currentUserId)
+          .single();
+        
+        if (profileError) {
+          console.error("Error fetching current user profile:", profileError);
+          return;
+        }
+        
+        // Create the reverse friendship entry
+        if (currentUserProfile) {
+          console.log("Creating reverse friendship entry for the other user");
+          await supabase
+            .from('friends')
+            .insert({
+              user_id: targetUser.friend_id,
+              friend_id: currentUserId,
+              friend_username: currentUserProfile.username,
+              friend_avatar_url: currentUserProfile.avatar_url
+            });
+        }
+
+        console.log("Friendship entries created successfully");
+      }
+    } catch (error) {
+      console.error("Error managing friendship entries:", error);
     }
   };
   
