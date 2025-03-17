@@ -36,24 +36,32 @@ export function FriendsList() {
       // First get all formal friend relationships
       let allFriends: Friend[] = [];
       
-      const { data: formalFriends, error: formalFriendsError } = await supabase
+      // Modified query to resolve the TypeScript error
+      const { data: friendsData, error: friendsError } = await supabase
         .from('friends')
-        .select('friend_id, friend_username:profiles!friends_friend_id_fkey(username, avatar_url)')
+        .select('friend_id, user_id')
         .eq('user_id', currentUserId);
         
-      if (formalFriendsError) throw formalFriendsError;
+      if (friendsError) throw friendsError;
       
-      // Add friends from the formal friends list
-      if (formalFriends) {
-        formalFriends.forEach(friend => {
-          if (friend.friend_id && friend.friend_username) {
-            allFriends.push({
-              id: friend.friend_id,
-              username: friend.friend_username.username || 'Usuario',
-              avatar_url: friend.friend_username.avatar_url
-            });
-          }
-        });
+      // Fetch profiles for the friends
+      if (friendsData && friendsData.length > 0) {
+        const friendIds = friendsData.map(friend => friend.friend_id);
+        
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', friendIds);
+          
+        if (profilesError) throw profilesError;
+        
+        if (profilesData) {
+          allFriends = profilesData.map(profile => ({
+            id: profile.id,
+            username: profile.username || 'Usuario',
+            avatar_url: profile.avatar_url
+          }));
+        }
       }
       
       // Then get all message conversations the user has participated in
