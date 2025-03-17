@@ -11,7 +11,7 @@ export interface Message {
   receiver_id: string;
   created_at: string;
   read_at: string | null;
-  is_deleted: boolean;
+  is_deleted?: boolean; // Make this optional
 }
 
 export function usePrivateMessages() {
@@ -60,13 +60,13 @@ export function usePrivateMessages() {
     if (!content.trim() || !selectedFriend || !currentUserId) return false;
 
     try {
+      // Removed the is_deleted field from the insert object
       const { data, error } = await supabase
         .from('messages')
         .insert({
           content,
           sender_id: currentUserId,
-          receiver_id: selectedFriend.friend_id,
-          is_deleted: false
+          receiver_id: selectedFriend.friend_id
         })
         .select()
         .single();
@@ -99,11 +99,10 @@ export function usePrivateMessages() {
         throw new Error("No tienes permiso para eliminar este mensaje");
       }
       
-      // Marcar el mensaje como eliminado en lugar de borrarlo
+      // Update message content instead of using is_deleted field
       const { error } = await supabase
         .from('messages')
         .update({
-          is_deleted: true,
           content: "Este mensaje ha sido eliminado"
         })
         .eq('id', messageId);
@@ -113,7 +112,7 @@ export function usePrivateMessages() {
       // Actualizar el estado local
       setMessages(prev => prev.map(msg => 
         msg.id === messageId 
-          ? { ...msg, is_deleted: true, content: "Este mensaje ha sido eliminado" } 
+          ? { ...msg, content: "Este mensaje ha sido eliminado" } 
           : msg
       ));
       
@@ -150,7 +149,7 @@ export function usePrivateMessages() {
         schema: 'public',
         table: 'messages'
       }, (payload) => {
-        // Si se actualiza un mensaje (como marcar como eliminado), actualizamos el estado
+        // Si se actualiza un mensaje, actualizamos el estado
         const updatedMessage = payload.new as Message;
         setMessages(prev => prev.map(msg => 
           msg.id === updatedMessage.id ? updatedMessage : msg

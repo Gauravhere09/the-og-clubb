@@ -92,7 +92,9 @@ function MessageItem({
   const longPressTimer = useRef<number | null>(null);
 
   const handleLongPressStart = () => {
-    if (message.is_deleted) return;
+    // Check if message contains "Este mensaje ha sido eliminado"
+    const isDeleted = message.content === "Este mensaje ha sido eliminado" || message.is_deleted;
+    if (isDeleted) return;
     
     // Start a timer for long press
     longPressTimer.current = window.setTimeout(() => {
@@ -111,7 +113,8 @@ function MessageItem({
   };
 
   const copyMessageText = () => {
-    if (message.is_deleted) return;
+    const isDeleted = message.content === "Este mensaje ha sido eliminado" || message.is_deleted;
+    if (isDeleted) return;
     
     // Create a temporary indicator
     const indicator = document.createElement('div');
@@ -137,6 +140,8 @@ function MessageItem({
     }
   };
 
+  const isDeleted = message.content === "Este mensaje ha sido eliminado" || message.is_deleted;
+
   return (
     <div className={cn(
       "relative group",
@@ -145,7 +150,7 @@ function MessageItem({
       <div
         className={cn(
           "rounded-lg px-3 py-2 text-sm",
-          message.is_deleted
+          isDeleted
             ? "bg-muted/50 text-muted-foreground italic"
             : isCurrentUser
               ? "bg-primary text-primary-foreground"
@@ -167,7 +172,7 @@ function MessageItem({
       </span>
       
       {/* Opción para eliminar mensaje (solo para mensajes propios no eliminados) */}
-      {isCurrentUser && !message.is_deleted && onDeleteMessage && (
+      {isCurrentUser && !isDeleted && onDeleteMessage && (
         <DropdownMenu>
           <DropdownMenuTrigger className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
             <MoreVertical className="h-4 w-4 text-primary-foreground hover:text-white" />
