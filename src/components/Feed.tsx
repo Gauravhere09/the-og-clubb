@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { Post } from "@/components/Post";
 import { getPosts, getHiddenPosts } from "@/lib/api";
@@ -7,6 +8,7 @@ import { useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { PeopleYouMayKnow } from "@/components/friends/PeopleYouMayKnow";
 import { AdComponent } from "@/components/ads/AdComponent";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FeedProps {
   userId?: string;
@@ -31,6 +33,7 @@ export function Feed({ userId }: FeedProps) {
   const showNew = searchParams.get("new") === "true";
   const [hiddenPostIds, setHiddenPostIds] = useState<string[]>([]);
   const [showHidden, setShowHidden] = useState(false);
+  const isMobile = useIsMobile();
 
   const { data: hiddenPosts = [] } = useQuery({
     queryKey: ["hidden-posts"],
@@ -145,11 +148,15 @@ export function Feed({ userId }: FeedProps) {
       });
     }
     
-    feedContent.push(
-      <AdComponent key="ad-top" format="banner" className="mt-2 mb-4" />
-    );
+    // Insert banner ad at the top on mobile only
+    if (isMobile) {
+      feedContent.push(
+        <AdComponent key="ad-top-mobile" format="banner" className="mt-2 mb-4" />
+      );
+    }
     
-    const firstPosts = visiblePosts.slice(0, 3);
+    // First batch of posts (2 posts)
+    const firstPosts = visiblePosts.slice(0, 2);
     firstPosts.forEach((post, index) => {
       feedContent.push(
         <div key={post.id} className="mb-4">
@@ -158,17 +165,35 @@ export function Feed({ userId }: FeedProps) {
       );
     });
     
-    if (visiblePosts.length >= 3) {
+    // Insert first in-feed ad after 2 posts
+    feedContent.push(
+      <AdComponent key="ad-first" format="feed" className="mb-4" />
+    );
+    
+    // Second batch of posts (3 posts)
+    const secondPosts = visiblePosts.slice(2, 5);
+    secondPosts.forEach((post, index) => {
+      feedContent.push(
+        <div key={post.id} className="mb-4">
+          <Post post={post} />
+        </div>
+      );
+    });
+    
+    // Insert People you may know after 5 posts
+    if (visiblePosts.length >= 5 && !isMobile) {
       feedContent.push(
         <PeopleYouMayKnow key="people-you-may-know" />
       );
-      
-      feedContent.push(
-        <AdComponent key="ad-middle" format="feed" />
-      );
     }
     
-    const remainingPosts = visiblePosts.slice(3);
+    // Insert second in-feed ad
+    feedContent.push(
+      <AdComponent key="ad-middle" format="feed" className="mb-4" />
+    );
+    
+    // Remaining posts with ads inserted every 4 posts
+    const remainingPosts = visiblePosts.slice(5);
     remainingPosts.forEach((post, index) => {
       feedContent.push(
         <div key={post.id} className="mb-4">
@@ -178,10 +203,17 @@ export function Feed({ userId }: FeedProps) {
       
       if ((index + 1) % 4 === 0 && index < remainingPosts.length - 1) {
         feedContent.push(
-          <AdComponent key={`ad-${index}`} format="feed" />
+          <AdComponent key={`ad-${index}`} format="feed" className="mb-4" />
         );
       }
     });
+    
+    // Add People You May Know for mobile after all posts
+    if (isMobile && visiblePosts.length >= 3) {
+      feedContent.push(
+        <PeopleYouMayKnow key="people-you-may-know-mobile" />
+      );
+    }
     
     return feedContent;
   };

@@ -63,6 +63,24 @@
     margin-bottom: 0.5rem;
     padding: 0.5rem 0.75rem;
   }
+
+  /* Adjust ad display on mobile */
+  .ad-container {
+    margin-left: -0.5rem;
+    margin-right: -0.5rem;
+    width: calc(100% + 1rem);
+    border-radius: 0;
+  }
+  
+  /* Feed adjustments */
+  .feed-container {
+    padding: 0;
+  }
+  
+  /* Improve button spacing in posts */
+  .post-actions {
+    justify-content: space-around;
+  }
 }
 
 /* Fixed navigation for mobile */
@@ -78,5 +96,10 @@
   /* Add padding to bottom content to prevent overlap with fixed navigation */
   .content-with-bottom-nav {
     padding-bottom: 4rem;
+  }
+
+  /* Make sure the content doesn't get hidden behind the navigation */
+  main {
+    padding-bottom: 60px;
   }
 }

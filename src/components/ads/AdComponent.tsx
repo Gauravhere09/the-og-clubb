@@ -1,6 +1,7 @@
 
 import { Card } from "@/components/ui/card";
 import { useState, useEffect } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface AdComponentProps {
   format?: "feed" | "sidebar" | "banner";
@@ -10,6 +11,7 @@ interface AdComponentProps {
 export function AdComponent({ format = "feed", className = "" }: AdComponentProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [adKey, setAdKey] = useState(Math.random().toString(36).substring(2, 11));
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     // Load the ad after component mounts
@@ -24,15 +26,19 @@ export function AdComponent({ format = "feed", className = "" }: AdComponentProp
   }, [adKey]);
   
   const getAdStyle = () => {
+    if (isMobile) {
+      return "min-height-[120px] w-full";
+    }
+    
     switch (format) {
       case "feed":
-        return "min-height-[150px] w-full"; 
+        return "min-height-[180px] w-full"; 
       case "sidebar":
         return "min-height-[250px] w-full";
       case "banner":
         return "min-height-[90px] w-full";
       default:
-        return "min-height-[150px] w-full";
+        return "min-height-[180px] w-full";
     }
   };
   
@@ -51,14 +57,18 @@ export function AdComponent({ format = "feed", className = "" }: AdComponentProp
   };
   
   return (
-    <Card className={`overflow-hidden ${className} ad-container mb-4 p-0`}>
-      <div className="text-xs text-muted-foreground p-1 border-b border-border">
-        Publicidad
+    <Card className={`overflow-hidden ${className} ad-container mb-4 p-0 ${format === "feed" ? "max-w-full rounded-lg shadow" : ""}`}>
+      <div className="text-xs text-muted-foreground p-1.5 px-3 border-b border-border flex items-center">
+        <span className="mr-1">Publicidad</span>
       </div>
       <div className={`${getAdStyle()} flex items-center justify-center`}>
         <ins
           className="adsbygoogle"
-          style={{ display: "block", minHeight: format === "banner" ? "90px" : "200px", width: "100%" }}
+          style={{ 
+            display: "block", 
+            minHeight: format === "banner" ? "90px" : isMobile ? "120px" : "180px", 
+            width: "100%" 
+          }}
           data-ad-client="ca-pub-9230569145726089"
           data-ad-slot={getAdSlot()}
           data-ad-format="auto"
