@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { PostActionButtons } from "./PostActionButtons";
 import { VisibilitySelector } from "./VisibilitySelector";
 import { PlusCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { StoryCreator } from "../stories/StoryCreator";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -29,8 +29,8 @@ export function PostFooter({
   const [showStoryCreator, setShowStoryCreator] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Obtener el ID del usuario actual al cargar el componente
-  useState(() => {
+  // Get current user ID when component loads
+  useEffect(() => {
     async function getUserId() {
       const { data } = await supabase.auth.getUser();
       if (data?.user) {
@@ -38,7 +38,7 @@ export function PostFooter({
       }
     }
     getUserId();
-  });
+  }, []);
 
   const handleStoryClick = () => {
     setShowStoryCreator(true);

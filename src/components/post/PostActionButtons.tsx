@@ -1,5 +1,5 @@
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AudioRecorder } from "../AudioRecorder";
 import { Image, Video, BarChart, MousePointerClick, PlusCircle } from "lucide-react";
@@ -24,8 +24,8 @@ export function PostActionButtons({ onFileSelect, onPollCreate, isPending }: Pos
   const [showStoryCreator, setShowStoryCreator] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Obtener el ID del usuario actual al cargar el componente
-  useState(() => {
+  // Get current user ID when component loads
+  useEffect(() => {
     async function getUserId() {
       const { data } = await supabase.auth.getUser();
       if (data?.user) {
@@ -33,7 +33,7 @@ export function PostActionButtons({ onFileSelect, onPollCreate, isPending }: Pos
       }
     }
     getUserId();
-  });
+  }, []);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
