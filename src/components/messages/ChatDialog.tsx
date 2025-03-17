@@ -84,10 +84,12 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
       <DialogContent className="max-w-md p-0 gap-0 h-[100dvh] md:h-[600px] flex flex-col bg-background">
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Avatar>
-              <AvatarImage src={targetUser.avatar_url || undefined} />
-              <AvatarFallback>{targetUser.username?.[0] || '?'}</AvatarFallback>
-            </Avatar>
+            <Link to={`/profile/${targetUser.id}`} onClick={onClose}>
+              <Avatar className="hover:opacity-80 transition-opacity">
+                <AvatarImage src={targetUser.avatar_url || undefined} />
+                <AvatarFallback>{targetUser.username?.[0] || '?'}</AvatarFallback>
+              </Avatar>
+            </Link>
             <div className="font-medium">
               <Link 
                 to={`/profile/${targetUser.id}`} 

@@ -6,6 +6,7 @@ import { PostContentInput } from "./PostContentInput";
 import { RefObject } from "react";
 import { MentionPosition, MentionUser } from "@/hooks/mentions/types";
 import { Post } from "@/types/post";
+import { Link } from "react-router-dom";
 
 interface PostHeaderProps {
   currentUser?: { 
@@ -57,15 +58,19 @@ export function PostHeader({
       <div className="flex items-center justify-between mb-2">
         {/* Render Post-specific header content */}
         <div className="flex items-center gap-2">
-          <UserAvatarDisplay 
-            currentUser={post.profiles ? {
-              id: post.user_id,
-              avatar_url: post.profiles.avatar_url,
-              username: post.profiles.username
-            } : null} 
-          />
+          <Link to={`/profile/${post.user_id}`}>
+            <UserAvatarDisplay 
+              currentUser={post.profiles ? {
+                id: post.user_id,
+                avatar_url: post.profiles.avatar_url,
+                username: post.profiles.username
+              } : null} 
+            />
+          </Link>
           <div>
-            <p className="font-medium">{post.profiles?.username || 'Usuario'}</p>
+            <Link to={`/profile/${post.user_id}`} className="font-medium hover:underline">
+              {post.profiles?.username || 'Usuario'}
+            </Link>
             <p className="text-xs text-muted-foreground">
               {new Date(post.created_at).toLocaleDateString()}
             </p>

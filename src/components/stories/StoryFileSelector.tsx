@@ -1,8 +1,7 @@
 
-import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Camera, Image, Plus, X } from "lucide-react";
-import { validateStoryFile } from "./utils/story-utils";
+import { X, Plus, Eye, Upload } from "lucide-react";
+import { RefObject } from "react";
 
 interface StoryFileSelectorProps {
   previewUrls: string[];
@@ -10,6 +9,7 @@ interface StoryFileSelectorProps {
   onAddMore: () => void;
   onViewStory: () => void;
   onRemoveImage: (index: number) => void;
+  fileInputRef?: RefObject<HTMLInputElement>;
 }
 
 export function StoryFileSelector({
@@ -17,98 +17,87 @@ export function StoryFileSelector({
   onFilesSelected,
   onAddMore,
   onViewStory,
-  onRemoveImage
+  onRemoveImage,
+  fileInputRef
 }: StoryFileSelectorProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) {
-      return;
-    }
-
-    const newFiles: File[] = [];
-    const newPreviewUrls: string[] = [];
-
-    Array.from(e.target.files).forEach(file => {
-      if (validateStoryFile(file)) {
-        newFiles.push(file);
-      }
-    });
-
-    if (newFiles.length > 0) {
-      onFilesSelected(newFiles);
+    if (e.target.files && e.target.files.length > 0) {
+      // Convert FileList to array
+      const filesArray = Array.from(e.target.files);
+      onFilesSelected(filesArray);
     }
   };
 
-  if (previewUrls.length > 0) {
-    return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-2 max-h-[60vh] overflow-y-auto">
-          {previewUrls.map((url, index) => (
-            <div key={index} className="relative">
-              <img 
-                src={url} 
-                alt={`Preview ${index + 1}`} 
-                className="w-full h-32 object-cover rounded-md cursor-pointer" 
-                onClick={() => onViewStory()}
-              />
-              <Button 
-                variant="destructive" 
-                size="icon" 
-                className="absolute top-1 right-1 h-6 w-6"
-                onClick={() => onRemoveImage(index)}
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
-        </div>
-        
-        <Button 
-          variant="outline" 
-          className="w-full"
-          onClick={onAddMore}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Añadir más imágenes
-        </Button>
-
-        <Button 
-          variant="default"
-          className="w-full"
-          onClick={onViewStory}
-        >
-          Ver historia
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col items-center justify-center h-60 bg-muted rounded-md border-2 border-dashed border-muted-foreground/25">
-      <div className="flex flex-col items-center justify-center space-y-2">
-        <Image className="h-10 w-10 text-muted-foreground" />
-        <p className="text-sm text-muted-foreground">
-          Arrastra imágenes o haz clic para subirlas
-        </p>
-        <Button 
-          variant="secondary" 
-          size="sm"
-          onClick={() => fileInputRef.current?.click()}
+    <div className="space-y-4">
+      {previewUrls.length === 0 ? (
+        <div 
+          className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-8 text-center"
         >
-          <Camera className="mr-2 h-4 w-4" />
-          Seleccionar imágenes
-        </Button>
-      </div>
-      <input
-        ref={fileInputRef}
-        id="story-file"
-        type="file"
-        accept="image/*"
-        multiple
-        className="hidden"
-        onChange={handleFileChange}
-      />
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            ref={fileInputRef}
+            multiple
+            className="hidden"
+          />
+          <Button 
+            onClick={() => fileInputRef?.current?.click()}
+            variant="outline"
+            className="mb-2"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Seleccionar imágenes
+          </Button>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Formatos soportados: JPG, PNG, GIF
+          </p>
+        </div>
+      ) : (
+        <div>
+          <div className="flex flex-wrap gap-2">
+            {previewUrls.map((url, index) => (
+              <div key={index} className="relative group">
+                <img 
+                  src={url} 
+                  alt={`Preview ${index + 1}`} 
+                  className="h-24 w-24 object-cover rounded-lg"
+                />
+                <button
+                  onClick={() => onRemoveImage(index)}
+                  className="absolute top-1 right-1 bg-black/70 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={onAddMore}
+              className="h-24 w-24 flex items-center justify-center border border-dashed border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+            >
+              <Plus className="h-6 w-6 text-gray-400" />
+            </button>
+          </div>
+          
+          <div className="mt-4">
+            <Button onClick={onViewStory} variant="outline" className="w-full">
+              <Eye className="h-4 w-4 mr-2" />
+              Previsualizar historia
+            </Button>
+            
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              ref={fileInputRef}
+              multiple
+              className="hidden"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -57,13 +57,14 @@ export function StoryCreator({ onClose, currentUserId }: StoryCreatorProps) {
               <DialogTitle>Crear historia</DialogTitle>
             </DialogHeader>
             
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 p-4">
               <StoryFileSelector
                 previewUrls={previewUrls}
                 onFilesSelected={addFiles}
                 onAddMore={handleAddMore}
                 onViewStory={() => setIsEditing(true)}
                 onRemoveImage={removeImage}
+                fileInputRef={fileInputRef}
               />
               
               <div className="flex justify-end gap-2">
