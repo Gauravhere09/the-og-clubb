@@ -8,6 +8,7 @@ import { Friend } from "@/hooks/use-friends";
 import { X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export interface ChatDialogProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export interface ChatDialogProps {
 export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatDialogProps) => {
   const [newMessage, setNewMessage] = useState("");
   const { messages, loadMessages, sendMessage, deleteMessage } = usePrivateMessages();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (isOpen && currentUserId && targetUser) {
@@ -52,7 +54,7 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
         nav.style.display = 'flex';
       }
     };
-  }, [isOpen, currentUserId, targetUser]);
+  }, [isOpen, currentUserId, targetUser, loadMessages]);
 
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
@@ -108,6 +110,12 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
             ]);
             
             console.log("Created new friendship relation");
+            
+            // Notificar al usuario que el chat ha sido añadido a su lista
+            toast({
+              title: "Chat añadido",
+              description: `Se ha añadido un nuevo chat con ${targetUser.username}`,
+            });
           }
         }
       } catch (error) {

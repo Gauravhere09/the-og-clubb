@@ -22,6 +22,8 @@ export function usePrivateMessages() {
     if (!selectedFriend || !currentUserId) return;
 
     try {
+      console.log("Loading messages between", currentUserId, "and", selectedFriend.friend_id);
+      
       // Improved query to correctly filter conversations between the two users
       const { data, error } = await supabase
         .from('messages')
@@ -30,6 +32,8 @@ export function usePrivateMessages() {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
+      
+      console.log("Messages loaded:", data ? data.length : 0);
       setMessages(data as Message[] || []);
       
       // Mark messages as read
@@ -60,6 +64,8 @@ export function usePrivateMessages() {
     if (!content.trim() || !selectedFriend || !currentUserId) return false;
 
     try {
+      console.log("Sending message to", selectedFriend.friend_username);
+      
       // Removed the is_deleted field from the insert object
       const { data, error } = await supabase
         .from('messages')
@@ -73,6 +79,7 @@ export function usePrivateMessages() {
       
       if (error) throw error;
       
+      console.log("Message sent successfully");
       setMessages(prev => [...prev, data as Message]);
       return true;
     } catch (error) {
@@ -142,6 +149,7 @@ export function usePrivateMessages() {
         table: 'messages' 
       }, (payload) => {
         const newMessage = payload.new as Message;
+        console.log("New message received via subscription:", newMessage);
         setMessages(prev => [...prev, newMessage]);
       })
       .on('postgres_changes', {
@@ -158,7 +166,7 @@ export function usePrivateMessages() {
       .subscribe();
 
     return () => {
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, []);
 

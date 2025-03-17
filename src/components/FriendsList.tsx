@@ -20,6 +20,37 @@ export function FriendsList() {
 
   useEffect(() => {
     loadFriends();
+
+    // Suscribirse a cambios en la tabla de friends para actualizar la lista automáticamente
+    const friendsChannel = supabase
+      .channel('friends-changes')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'friends' 
+      }, () => {
+        console.log("Friends table changed, reloading friends");
+        loadFriends();
+      })
+      .subscribe();
+
+    // Suscribirse a cambios en la tabla de messages para actualizar la lista cuando hay nuevos mensajes
+    const messagesChannel = supabase
+      .channel('messages-changes')
+      .on('postgres_changes', { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'messages' 
+      }, () => {
+        console.log("New message detected, refreshing friends list");
+        loadFriends();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(friendsChannel);
+      supabase.removeChannel(messagesChannel);
+    };
   }, []);
 
   const loadFriends = async () => {
@@ -32,6 +63,8 @@ export function FriendsList() {
         setLoading(false);
         return;
       }
+      
+      console.log("Loading friends for user:", currentUserId);
       
       // First get all formal friend relationships
       let allFriends: Friend[] = [];
@@ -47,6 +80,7 @@ export function FriendsList() {
       // Fetch profiles for the friends
       if (friendsData && friendsData.length > 0) {
         const friendIds = friendsData.map(friend => friend.friend_id);
+        console.log("Found friend relationships:", friendIds.length);
         
         const { data: profilesData, error: profilesError } = await supabase
           .from('profiles')
@@ -79,6 +113,8 @@ export function FriendsList() {
         uniqueUserIds.add(otherUserId);
       });
       
+      console.log("Found message conversations with:", uniqueUserIds.size, "users");
+      
       // Get profiles for conversation partners who aren't formal friends
       if (uniqueUserIds.size > 0) {
         const userIdsToQuery = Array.from(uniqueUserIds).filter(
@@ -86,6 +122,8 @@ export function FriendsList() {
         );
         
         if (userIdsToQuery.length > 0) {
+          console.log("Fetching profiles for users from conversations:", userIdsToQuery.length);
+          
           const { data: profilesData, error: profilesError } = await supabase
             .from('profiles')
             .select('id, username, avatar_url')
@@ -107,6 +145,7 @@ export function FriendsList() {
         }
       }
       
+      console.log("Total friends loaded:", allFriends.length);
       setFriends(allFriends);
     } catch (error: any) {
       console.error("Error loading friends:", error);
