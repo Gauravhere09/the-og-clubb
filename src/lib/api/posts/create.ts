@@ -39,17 +39,15 @@ export async function createPost({
       };
     }
 
-    // Map the visibility value to match what's expected in the database
-    // This ensures compatibility with the database schema
-    const dbVisibility = visibility;
-
+    // Create the data object with the right visibility type
+    // The types in our PostTable now match the UI
     const insertData = {
       content,
       media_url,
       media_type,
       poll,
       user_id: user.id,
-      visibility: dbVisibility
+      visibility
     };
 
     // First insert the post
