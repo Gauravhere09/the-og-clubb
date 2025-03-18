@@ -28,12 +28,12 @@ export function usePosts(userId?: string) {
             username,
             avatar_url
           ),
-          reactions:post_reactions (
+          reactions (
             id,
             type,
             user_id
           ),
-          comments:post_comments (
+          post_comments:comments (
             id
           )
         `)
@@ -87,7 +87,7 @@ export function usePosts(userId?: string) {
               {}
           },
           reactions_count: Array.isArray(post.reactions) ? post.reactions.length : 0,
-          comments_count: Array.isArray(post.comments) ? post.comments.length : 0
+          comments_count: Array.isArray(post.post_comments) ? post.post_comments.length : 0
         };
       });
 
