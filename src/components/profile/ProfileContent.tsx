@@ -48,7 +48,8 @@ export function ProfileContent({ profileId }: ProfileContentProps) {
         <TabsTrigger value="friends">Amigos ({friends.length})</TabsTrigger>
       </TabsList>
       <TabsContent value="feed">
-        <Feed userId={profileId} />
+        {/* Pass excludeIncognito to hide incognito posts on profile pages */}
+        <Feed userId={profileId} excludeIncognito={true} />
       </TabsContent>
       <TabsContent value="friends">
         <Card className="p-4">
