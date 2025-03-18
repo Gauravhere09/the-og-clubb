@@ -1,12 +1,8 @@
 
-import { useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { X, Image, Upload } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useStoryCreator } from "@/hooks/use-story-creator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { StoryFileSelector } from "./StoryFileSelector";
 import { StoryEditor } from "./StoryEditor";
-import { StoryVisibility } from "./utils/story-utils";
+import { useStoryCreator } from "@/hooks/use-story-creator";
 
 interface StoryCreatorProps {
   onClose: () => void;
@@ -14,80 +10,49 @@ interface StoryCreatorProps {
 }
 
 export function StoryCreator({ onClose, currentUserId }: StoryCreatorProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  const {
+  const { 
+    files,
     previewUrls,
     isUploading,
     currentPreviewIndex,
+    setCurrentPreviewIndex,
     visibility,
     setVisibility,
     isEditing,
     setIsEditing,
+    userProfile,
     addFiles,
     removeImage,
     handleSubmit
   } = useStoryCreator(currentUserId, onClose);
 
-  const handleAddMore = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  const handlePrivacyChange = (value: StoryVisibility) => {
-    setVisibility(value);
-  };
-
   return (
-    <Dialog open={true} onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-md p-0 h-[90vh] max-h-[700px] overflow-hidden">
-        {isEditing && previewUrls.length > 0 ? (
-          <StoryEditor
-            previewUrl={previewUrls[currentPreviewIndex]}
-            visibility={visibility}
-            onVisibilityChange={handlePrivacyChange}
-            onClose={() => setIsEditing(false)}
-            onSubmit={handleSubmit}
-            isUploading={isUploading}
-          />
-        ) : (
-          <>
-            <DialogHeader className="p-4 border-b">
-              <DialogTitle className="flex items-center gap-2">
-                <Upload className="h-5 w-5 text-primary" />
-                Crear historia
-              </DialogTitle>
-            </DialogHeader>
-            
-            <div className="flex flex-col gap-4 p-4">
-              <StoryFileSelector
-                previewUrls={previewUrls}
-                onFilesSelected={addFiles}
-                onAddMore={handleAddMore}
-                onViewStory={() => setIsEditing(true)}
-                onRemoveImage={removeImage}
-                fileInputRef={fileInputRef}
-              />
-              
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={onClose}>
-                  Cancelar
-                </Button>
-                {previewUrls.length > 0 && (
-                  <Button 
-                    onClick={handleSubmit} 
-                    disabled={isUploading}
-                    className="flex items-center gap-2"
-                  >
-                    <Upload className="h-4 w-4" />
-                    {isUploading ? "Subiendo..." : "Publicar historia"}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </>
-        )}
+    <Dialog open={true} onOpenChange={(open) => !open && !isUploading && onClose()}>
+      <DialogContent className="max-w-[90vw] h-[90vh] md:max-w-xl md:h-[80vh] p-0">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Crear historia</DialogTitle>
+          <DialogDescription>
+            Sube fotos o videos para compartir con tus amigos
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="h-full flex flex-col">
+          {isEditing ? (
+            <StoryEditor
+              previewUrls={previewUrls}
+              currentIndex={currentPreviewIndex}
+              onIndexChange={setCurrentPreviewIndex}
+              onRemoveImage={removeImage}
+              visibility={visibility}
+              onVisibilityChange={setVisibility}
+              onSubmit={handleSubmit}
+              isUploading={isUploading}
+              userProfile={userProfile}
+            />
+          ) : (
+            <StoryFileSelector onFilesSelected={addFiles} />
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -1,7 +1,8 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { StoryVisibility, uploadStory, validateStoryFile } from "@/components/stories/utils/story-utils";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useStoryCreator(currentUserId: string, onComplete: () => void) {
   const [files, setFiles] = useState<File[]>([]);
@@ -10,7 +11,34 @@ export function useStoryCreator(currentUserId: string, onComplete: () => void) {
   const [currentPreviewIndex, setCurrentPreviewIndex] = useState(0);
   const [visibility, setVisibility] = useState<StoryVisibility>('public');
   const [isEditing, setIsEditing] = useState(false);
+  const [userProfile, setUserProfile] = useState<{username: string; avatarUrl: string | null}>({
+    username: '',
+    avatarUrl: null
+  });
   const { toast } = useToast();
+
+  useEffect(() => {
+    async function fetchUserProfile() {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('username, avatar_url')
+          .eq('id', currentUserId)
+          .single();
+          
+        if (error) throw error;
+        
+        setUserProfile({
+          username: data.username,
+          avatarUrl: data.avatar_url
+        });
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    }
+    
+    fetchUserProfile();
+  }, [currentUserId]);
 
   const addFiles = (newFiles: File[]) => {
     const validFiles: File[] = [];
@@ -89,6 +117,7 @@ export function useStoryCreator(currentUserId: string, onComplete: () => void) {
     setVisibility,
     isEditing,
     setIsEditing,
+    userProfile,
     addFiles,
     removeImage,
     handleSubmit

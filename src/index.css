@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -85,6 +86,37 @@
 .copying-indicator.active {
   display: block;
   animation: fadeIn 0.2s ease-in-out;
+}
+
+/* Custom scrollbar for stories */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Stories styling */
+.story-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 8px;
+}
+
+.story-item {
+  transition: transform 0.2s ease;
+}
+
+.story-item:hover {
+  transform: translateY(-4px);
+}
+
+.story-border {
+  background: linear-gradient(45deg, #833AB4, #FD1D1D, #FCB045);
+  padding: 2px;
+  border-radius: 9999px;
 }
 
 @keyframes fadeIn {

@@ -19,7 +19,7 @@ interface StoriesListProps {
 }
 
 export function StoriesList({ stories, onStoryClick, currentUserId }: StoriesListProps) {
-  // Consulta a la base de datos para ver qué historias ha visto el usuario actual
+  // Query the database to see which stories the current user has viewed
   const { data: viewedStoryIds = [] } = useQuery({
     queryKey: ["viewed-stories", currentUserId],
     queryFn: async () => {
@@ -59,20 +59,20 @@ export function StoriesList({ stories, onStoryClick, currentUserId }: StoriesLis
         return (
           <div 
             key={story.id}
-            className="flex flex-col items-center space-y-1 cursor-pointer"
+            className="flex flex-col items-center space-y-1 cursor-pointer min-w-[80px] max-w-[80px]"
             onClick={() => onStoryClick(firstStoryId)}
           >
-            <div>
-              <Avatar className={`w-16 h-16 ${
-                hasUnviewedStories 
-                  ? "border-2 border-primary p-[2px]" 
-                  : "border-2 border-muted p-[2px]"
-              }`}>
-                <AvatarImage src={story.avatarUrl || undefined} />
-                <AvatarFallback>{story.username[0].toUpperCase()}</AvatarFallback>
-              </Avatar>
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+              hasUnviewedStories ? 'border-2 border-primary' : 'border-2 border-muted'
+            } p-[2px]`}>
+              <div className="w-full h-full bg-black/5 dark:bg-black/20 rounded-full overflow-hidden">
+                <Avatar className="w-full h-full">
+                  <AvatarImage src={story.avatarUrl || undefined} />
+                  <AvatarFallback>{story.username[0].toUpperCase()}</AvatarFallback>
+                </Avatar>
+              </div>
             </div>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-center truncate w-full">
               {story.username}
             </span>
           </div>
