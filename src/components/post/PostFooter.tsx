@@ -2,9 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { PostActionButtons } from "./PostActionButtons";
 import { VisibilitySelector } from "./VisibilitySelector";
-import { PlusCircle } from "lucide-react";
 import { useState, useEffect } from "react";
-import { StoryCreator } from "../stories/StoryCreator";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PostFooterProps {
@@ -26,64 +24,27 @@ export function PostFooter({
   visibility,
   onVisibilityChange
 }: PostFooterProps) {
-  const [showStoryCreator, setShowStoryCreator] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-
-  // Get current user ID when component loads
-  useEffect(() => {
-    async function getUserId() {
-      const { data } = await supabase.auth.getUser();
-      if (data?.user) {
-        setCurrentUserId(data.user.id);
-      }
-    }
-    getUserId();
-  }, []);
-
-  const handleStoryClick = () => {
-    setShowStoryCreator(true);
-  };
-
   return (
-    <>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <PostActionButtons 
-            onFileSelect={onFileSelect}
-            onPollCreate={onPollToggle}
-            isPending={isPending}
-          />
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleStoryClick}
-            className="text-primary hover:text-primary/90 flex items-center gap-1 hidden md:flex"
-          >
-            <PlusCircle className="h-4 w-4" />
-            <span>Historia</span>
-          </Button>
-          
-          <VisibilitySelector 
-            visibility={visibility} 
-            onVisibilityChange={onVisibilityChange} 
-          />
-        </div>
-        
-        <Button 
-          onClick={onPublish}
-          disabled={isPending || !hasContent}
-        >
-          Publicar
-        </Button>
-      </div>
-
-      {showStoryCreator && currentUserId && (
-        <StoryCreator
-          onClose={() => setShowStoryCreator(false)}
-          currentUserId={currentUserId}
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <PostActionButtons 
+          onFileSelect={onFileSelect}
+          onPollCreate={onPollToggle}
+          isPending={isPending}
         />
-      )}
-    </>
+        
+        <VisibilitySelector 
+          visibility={visibility} 
+          onVisibilityChange={onVisibilityChange} 
+        />
+      </div>
+      
+      <Button 
+        onClick={onPublish}
+        disabled={isPending || !hasContent}
+      >
+        Publicar
+      </Button>
+    </div>
   );
 }
