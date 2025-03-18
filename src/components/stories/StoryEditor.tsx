@@ -44,9 +44,9 @@ export function StoryEditor({
           <span className="font-medium">{userProfile.username || 'Usuario'}</span>
         </div>
         
-        {/* Fixed the type comparison issue here */}
+        {/* Fixed the type casting issue here */}
         <VisibilitySelector 
-          visibility={visibility === 'friends' ? 'friends' : visibility === 'incognito' ? 'incognito' : 'public'} 
+          visibility={visibility as 'public' | 'friends' | 'incognito'} 
           onVisibilityChange={(v) => onVisibilityChange(v as StoryVisibility)} 
         />
       </div>
