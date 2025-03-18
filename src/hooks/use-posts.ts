@@ -51,16 +51,22 @@ export function usePosts(userId?: string) {
       }
 
       // Transformar los datos al formato requerido para Post[]
-      const formattedPosts: Post[] = data.map((post) => {
+      const formattedPosts: Post[] = data.map((post: any) => {
         // Manejar posts incógnito para mostrarlos anónimamente
         const isIncognito = post.visibility === 'private';
+        
+        // Ensure media_type is one of the allowed values or null
+        const mediaType = post.media_type ? 
+          (post.media_type === 'image' || post.media_type === 'video' || post.media_type === 'audio' ? 
+            post.media_type as 'image' | 'video' | 'audio' : null) : 
+          null;
         
         return {
           id: post.id,
           content: post.content,
           user_id: post.user_id,
           media_url: post.media_url,
-          media_type: post.media_type,
+          media_type: mediaType,
           visibility: isIncognito ? 'incognito' : post.visibility,
           created_at: post.created_at,
           updated_at: post.updated_at,
@@ -72,16 +78,16 @@ export function usePosts(userId?: string) {
           } : post.profiles,
           poll: post.poll,
           reactions: {
-            count: post.reactions ? post.reactions.length : 0,
-            by_type: post.reactions ? 
-              post.reactions.reduce((acc: any, reaction: any) => {
+            count: Array.isArray(post.reactions) ? post.reactions.length : 0,
+            by_type: Array.isArray(post.reactions) ? 
+              post.reactions.reduce((acc: Record<string, number>, reaction: any) => {
                 acc[reaction.type] = (acc[reaction.type] || 0) + 1;
                 return acc;
               }, {}) : 
               {}
           },
-          reactions_count: post.reactions ? post.reactions.length : 0,
-          comments_count: post.comments ? post.comments.length : 0
+          reactions_count: Array.isArray(post.reactions) ? post.reactions.length : 0,
+          comments_count: Array.isArray(post.comments) ? post.comments.length : 0
         };
       });
 
