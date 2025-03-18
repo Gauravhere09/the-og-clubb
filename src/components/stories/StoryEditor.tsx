@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { VisibilitySelector } from "../post/VisibilitySelector";
 import { StoryVisibility } from "./utils/story-utils";
-import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import { ChevronLeft, ChevronRight, Trash2, Upload } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -44,7 +43,6 @@ export function StoryEditor({
           <span className="font-medium">{userProfile.username || 'Usuario'}</span>
         </div>
         
-        {/* Fixed the type casting issue here */}
         <VisibilitySelector 
           visibility={visibility as 'public' | 'friends' | 'incognito'} 
           onVisibilityChange={(v) => onVisibilityChange(v as StoryVisibility)} 

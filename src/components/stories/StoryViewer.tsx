@@ -4,7 +4,6 @@ import { StoriesList } from "./StoriesList";
 import { StoryView } from "./StoryView";
 import { UserStoryButton } from "./UserStoryButton";
 import { useStoryViewer } from "@/hooks/use-story-viewer";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 
@@ -44,7 +43,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
     : stories;
 
   return (
-    <div className="mb-6 relative bg-background rounded-lg p-4 shadow border border-border overflow-hidden">
+    <div className="mb-4 relative bg-background rounded-lg p-4 shadow border border-border overflow-hidden">
       {showStoryCreator && (
         <StoryCreator 
           onClose={handleStoryCreatorClose} 
@@ -59,19 +58,19 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         />
       )}
       
-      <div className="mb-4 md:mb-0 md:absolute md:right-4 md:top-4 md:z-10">
+      <div className="mb-3 flex justify-between items-center">
+        <h3 className="text-sm font-medium text-foreground">Historias</h3>
         <Button 
           size="sm" 
-          variant="default" 
-          className="flex items-center gap-2 bg-primary hover:bg-primary/90"
+          variant="ghost" 
+          className="flex items-center gap-1 text-xs text-primary hover:text-primary/90"
           onClick={() => setShowStoryCreator(true)}
         >
-          <Plus className="h-4 w-4" />
-          <span className="md:hidden">Crear historia</span>
+          Crear historia
         </Button>
       </div>
       
-      <div className="flex w-full overflow-x-auto py-1 space-x-2 scrollbar-hide">
+      <div className="flex w-full overflow-x-auto pb-2 pt-1 space-x-3 scrollbar-hide">
         <UserStoryButton
           currentUserId={currentUserId}
           userStory={userStory}
