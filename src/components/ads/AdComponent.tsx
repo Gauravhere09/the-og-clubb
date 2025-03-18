@@ -10,42 +10,31 @@ interface AdComponentProps {
 
 export function AdComponent({ format = "feed", className = "" }: AdComponentProps) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const [adVisible, setAdVisible] = useState(false);
   const adRef = useRef<HTMLDivElement>(null);
   const adInitialized = useRef(false);
   const isMobile = useIsMobile();
   
-  useEffect(() => {
-    // Only initialize the ad once per instance
-    if (!adInitialized.current && adRef.current && window.adsbygoogle) {
-      try {
-        adInitialized.current = true;
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-        setIsLoaded(true);
-      } catch (e) {
-        console.error("AdSense error:", e);
-      }
-    }
-  }, []);
-  
-  const getAdStyle = () => {
+  // Get minimum height based on format and device
+  const getMinHeight = () => {
     if (isMobile) {
-      return format === "banner" ? "min-height-[90px]" : "min-height-[120px]";
+      return format === "banner" ? "90px" : "120px";
     }
     
     switch (format) {
       case "feed":
-        return "min-height-[180px]"; 
+        return "180px"; 
       case "sidebar":
-        return "min-height-[250px]";
+        return "250px";
       case "banner":
-        return "min-height-[90px]";
+        return "90px";
       default:
-        return "min-height-[180px]";
+        return "180px";
     }
   };
   
+  // Get ad slot based on format
   const getAdSlot = () => {
-    // You can customize the ad slots based on format
     switch (format) {
       case "feed":
         return "1234567890"; // Replace with your actual ad slot ID
@@ -58,26 +47,68 @@ export function AdComponent({ format = "feed", className = "" }: AdComponentProp
     }
   };
   
+  useEffect(() => {
+    // Wait for the component to be properly rendered
+    // and have actual dimensions before initializing ads
+    const timeoutId = setTimeout(() => {
+      setAdVisible(true);
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
+  }, []);
+  
+  useEffect(() => {
+    // Only initialize ad when component is visible and has dimensions
+    if (adVisible && adRef.current && window.adsbygoogle && !adInitialized.current) {
+      const adElement = adRef.current.querySelector('.adsbygoogle');
+      
+      if (adElement && adElement.getBoundingClientRect().width > 0) {
+        try {
+          adInitialized.current = true;
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+          setIsLoaded(true);
+        } catch (e) {
+          console.error("AdSense error:", e);
+        }
+      } else {
+        // If ad container still doesn't have width, retry after a short delay
+        const retryTimeoutId = setTimeout(() => {
+          setAdVisible(false);
+          setTimeout(() => setAdVisible(true), 10);
+        }, 200);
+        
+        return () => clearTimeout(retryTimeoutId);
+      }
+    }
+  }, [adVisible]);
+  
+  const minHeight = getMinHeight();
+  
   return (
     <Card className={`overflow-hidden ${className} ad-container ${format === "feed" ? "max-w-full rounded-lg shadow-sm post-like" : ""}`}>
       <div className="text-xs text-muted-foreground p-1.5 px-3 border-b border-border flex items-center">
         <span className="mr-1">Publicidad</span>
       </div>
-      <div className={`${getAdStyle()} flex items-center justify-center`}>
-        <div ref={adRef}>
-          <ins
-            className="adsbygoogle"
-            style={{ 
-              display: "block", 
-              minHeight: format === "banner" ? "90px" : isMobile ? "120px" : "180px", 
-              width: "100%" 
-            }}
-            data-ad-client="ca-pub-9230569145726089"
-            data-ad-slot={getAdSlot()}
-            data-ad-format="auto"
-            data-full-width-responsive="true"
-          />
-        </div>
+      <div 
+        className="flex items-center justify-center"
+        style={{ minHeight }}
+      >
+        {adVisible && (
+          <div ref={adRef} style={{ width: '100%', minHeight }}>
+            <ins
+              className="adsbygoogle"
+              style={{ 
+                display: "block", 
+                minHeight,
+                width: "100%" 
+              }}
+              data-ad-client="ca-pub-9230569145726089"
+              data-ad-slot={getAdSlot()}
+              data-ad-format="auto"
+              data-full-width-responsive="true"
+            />
+          </div>
+        )}
       </div>
     </Card>
   );
