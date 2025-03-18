@@ -1,26 +1,26 @@
 
 interface HiddenPostsToggleProps {
-  count: number;
+  hiddenPostsCount: number;
   showHidden: boolean;
-  onToggle: () => void;
+  onToggleHidden: () => void;
 }
 
 export function HiddenPostsToggle({ 
-  count, 
+  hiddenPostsCount, 
   showHidden, 
-  onToggle 
+  onToggleHidden 
 }: HiddenPostsToggleProps) {
-  if (count === 0) return null;
+  if (hiddenPostsCount === 0) return null;
   
   return (
-    <div className="flex justify-center">
+    <div className="flex justify-center mb-2">
       <button 
-        onClick={onToggle}
+        onClick={onToggleHidden}
         className="text-sm text-primary hover:underline px-3 py-1.5 rounded-full bg-primary/5"
       >
         {showHidden 
           ? "Ocultar filtradas" 
-          : `Mostrar ${count} ${count === 1 ? 'publicación oculta' : 'publicaciones ocultas'}`}
+          : `Mostrar ${hiddenPostsCount} ${hiddenPostsCount === 1 ? 'publicación oculta' : 'publicaciones ocultas'}`}
       </button>
     </div>
   );
