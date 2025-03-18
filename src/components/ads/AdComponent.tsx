@@ -52,7 +52,7 @@ export function AdComponent({ format = "feed", className = "" }: AdComponentProp
     // and have actual dimensions before initializing ads
     const timeoutId = setTimeout(() => {
       setAdVisible(true);
-    }, 100);
+    }, 200); // Increased timeout for better initial rendering
     
     return () => clearTimeout(timeoutId);
   }, []);
@@ -74,8 +74,8 @@ export function AdComponent({ format = "feed", className = "" }: AdComponentProp
         // If ad container still doesn't have width, retry after a short delay
         const retryTimeoutId = setTimeout(() => {
           setAdVisible(false);
-          setTimeout(() => setAdVisible(true), 10);
-        }, 200);
+          setTimeout(() => setAdVisible(true), 50); // Increased retry timing
+        }, 300);
         
         return () => clearTimeout(retryTimeoutId);
       }
@@ -91,10 +91,10 @@ export function AdComponent({ format = "feed", className = "" }: AdComponentProp
       </div>
       <div 
         className="flex items-center justify-center"
-        style={{ minHeight }}
+        style={{ minHeight, width: "100%" }}
       >
         {adVisible && (
-          <div ref={adRef} style={{ width: '100%', minHeight }}>
+          <div ref={adRef} style={{ width: '100%', minHeight, overflow: 'hidden' }}>
             <ins
               className="adsbygoogle"
               style={{ 
