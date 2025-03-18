@@ -5,9 +5,10 @@ import { GroupMessageList } from "./group-chat/GroupMessageList";
 import { GroupMessageInput } from "./group-chat/GroupMessageInput";
 import type { GroupMessage } from "@/hooks/use-group-messages";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { useAudioRecorder } from "@/hooks/use-audio-recorder";
+import { useAuthCheck } from "@/hooks/use-auth-check";
 
 interface GroupChatProps {
   messages: GroupMessage[];
@@ -17,42 +18,13 @@ interface GroupChatProps {
 }
 
 export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: GroupChatProps) => {
-  const [isRecording, setIsRecording] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const mediaRecorder = useRef<MediaRecorder | null>(null);
-  const audioChunks = useRef<BlobPart[]>([]);
+  const { isAuthenticated } = useAuthCheck();
+  const { isRecording, startRecording, stopRecording } = useAudioRecorder();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isMobile = useIsMobile();
   const { toast } = useToast();
   const navigate = useNavigate();
-
-  // Check authentication status on mount
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data } = await supabase.auth.getSession();
-      setIsAuthenticated(!!data.session);
-      
-      if (!data.session) {
-        toast({
-          variant: "destructive",
-          title: "Error de autenticación",
-          description: "Debes iniciar sesión para acceder al chat grupal",
-        });
-      }
-    };
-    
-    checkAuth();
-    
-    // Subscribe to auth changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(!!session);
-    });
-    
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [toast]);
 
   // Hide navigation on mobile
   useEffect(() => {
@@ -127,7 +99,7 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
     }
   };
 
-  const startRecording = async () => {
+  const handleStartRecording = async () => {
     if (!isAuthenticated || !currentUserId) {
       toast({
         variant: "destructive",
@@ -137,49 +109,26 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
       return;
     }
     
+    const stream = await startRecording();
+    if (!stream) return;
+  };
+
+  const handleStopRecording = async () => {
+    const audioBlob = await stopRecording();
+    if (!audioBlob) return;
+    
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder.current = new MediaRecorder(stream);
-      audioChunks.current = [];
-
-      mediaRecorder.current.ondataavailable = (event) => {
-        audioChunks.current.push(event.data);
-      };
-
-      mediaRecorder.current.onstop = async () => {
-        const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
-        try {
-          setIsSending(true);
-          await onSendMessage('', 'audio', audioBlob);
-        } catch (error) {
-          console.error('Error sending audio message:', error);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "No se pudo enviar el mensaje de audio",
-          });
-        } finally {
-          setIsSending(false);
-        }
-        stream.getTracks().forEach(track => track.stop());
-      };
-
-      mediaRecorder.current.start();
-      setIsRecording(true);
+      setIsSending(true);
+      await onSendMessage('', 'audio', audioBlob);
     } catch (error) {
-      console.error('Error starting recording:', error);
+      console.error('Error sending audio message:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo iniciar la grabación",
+        description: "No se pudo enviar el mensaje de audio",
       });
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorder.current && isRecording) {
-      mediaRecorder.current.stop();
-      setIsRecording(false);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -196,8 +145,8 @@ export const GroupChat = ({ messages, currentUserId, onSendMessage, onClose }: G
         isRecording={isRecording}
         isSending={isSending}
         fileInputRef={fileInputRef}
-        onStartRecording={startRecording}
-        onStopRecording={stopRecording}
+        onStartRecording={handleStartRecording}
+        onStopRecording={handleStopRecording}
         onSendMessage={handleSendMessage}
         onImageUpload={handleImageUpload}
       />
