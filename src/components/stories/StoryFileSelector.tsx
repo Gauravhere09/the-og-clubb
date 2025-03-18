@@ -30,7 +30,7 @@ export function StoryFileSelector({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="p-4 space-y-4">
       {previewUrls.length === 0 ? (
         <div 
           className="border-2 border-dashed border-primary/30 hover:border-primary/60 dark:border-primary/20 dark:hover:border-primary/40 rounded-lg p-8 text-center hover:bg-primary/5 dark:hover:bg-primary/10 transition-all cursor-pointer"

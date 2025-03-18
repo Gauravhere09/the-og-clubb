@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { StoryFileSelector } from "./StoryFileSelector";
 import { StoryEditor } from "./StoryEditor";
 import { useStoryCreator } from "@/hooks/use-story-creator";
+import { useRef } from "react";
 
 interface StoryCreatorProps {
   onClose: () => void;
@@ -10,6 +11,8 @@ interface StoryCreatorProps {
 }
 
 export function StoryCreator({ onClose, currentUserId }: StoryCreatorProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const { 
     files,
     previewUrls,
@@ -25,6 +28,16 @@ export function StoryCreator({ onClose, currentUserId }: StoryCreatorProps) {
     removeImage,
     handleSubmit
   } = useStoryCreator(currentUserId, onClose);
+
+  const handleViewStory = () => {
+    // Preview functionality - switches to editor mode
+    setIsEditing(true);
+  };
+
+  const handleAddMore = () => {
+    // Trigger file input click
+    fileInputRef.current?.click();
+  };
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && !isUploading && onClose()}>
@@ -50,7 +63,14 @@ export function StoryCreator({ onClose, currentUserId }: StoryCreatorProps) {
               userProfile={userProfile}
             />
           ) : (
-            <StoryFileSelector onFilesSelected={addFiles} />
+            <StoryFileSelector 
+              previewUrls={previewUrls}
+              onFilesSelected={addFiles}
+              onAddMore={handleAddMore}
+              onViewStory={handleViewStory}
+              onRemoveImage={removeImage}
+              fileInputRef={fileInputRef}
+            />
           )}
         </div>
       </DialogContent>
