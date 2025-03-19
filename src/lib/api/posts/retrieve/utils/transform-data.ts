@@ -38,8 +38,23 @@ export async function transformPostsData(
     // Update poll data with user votes
     updatePollsWithUserVotes(rawPosts, votesMap);
 
+    // Para publicaciones incógnito, reemplazar información del perfil
+    const processedPosts = rawPosts.map(post => {
+      if (post.visibility === 'private') {  // 'private' en BD = 'incognito' en UI
+        return {
+          ...post,
+          visibility: 'incognito',  // Convertimos a formato UI
+          profiles: {
+            username: 'Anónimo',
+            avatar_url: null
+          }
+        };
+      }
+      return post;
+    });
+
     // Transform posts data using the shared utility
-    return transformPostsToObjects(rawPosts, reactionsMap, commentsCountMap, userReactionsMap);
+    return transformPostsToObjects(processedPosts, reactionsMap, commentsCountMap, userReactionsMap);
   } catch (error) {
     console.error('Error transforming posts data:', error);
     throw error;

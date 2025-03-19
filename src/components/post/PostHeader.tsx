@@ -51,7 +51,7 @@ export function PostHeader({
   isAuthor,
   isHidden
 }: PostHeaderProps) {
-  // Si post es incógnito (visibilidad 'private' en la base de datos o 'incognito' en la UI)
+  // Determinar si la publicación es incógnito
   const isIncognito = post?.visibility === 'incognito';
 
   // If post is provided, this is being used in Post.tsx context

@@ -99,6 +99,9 @@ export async function createPost({
 
       // Map back from db visibility to UI visibility
       const uiVisibility = rawPost.visibility === 'private' ? 'incognito' : rawPost.visibility;
+      
+      // Determinar si esta es una publicación incógnito
+      const isIncognito = uiVisibility === 'incognito';
 
       // Transform the raw post to match Post type
       const post: Post = {
@@ -111,8 +114,8 @@ export async function createPost({
         created_at: rawPost.created_at,
         updated_at: rawPost.updated_at,
         shared_from: null,
-        // Para publicaciones incógnito, cambiamos el perfil por uno anónimo
-        profiles: visibility === 'incognito' ? {
+        // Para publicaciones incógnito, siempre aseguramos que el perfil sea anónimo
+        profiles: isIncognito ? {
           username: 'Anónimo',
           avatar_url: null
         } : profileData,
