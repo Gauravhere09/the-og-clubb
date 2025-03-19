@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 
 interface PasswordResetErrorProps {
   errorMessage: string;
@@ -62,27 +64,33 @@ export function PasswordResetError({ errorMessage }: PasswordResetErrorProps) {
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
       <div className="w-full max-w-md space-y-6 bg-background rounded-lg shadow-sm p-6 sm:p-8 text-center">
         <div className="mx-auto w-12 h-12 bg-destructive/15 rounded-xl flex items-center justify-center mb-4">
-          <span className="text-2xl font-bold text-destructive">!</span>
+          <AlertTriangle className="h-6 w-6 text-destructive" />
         </div>
         <h2 className="text-2xl font-semibold">Error de restablecimiento</h2>
-        <p className="text-muted-foreground mt-2">{errorMessage}</p>
+        
+        <Alert variant="destructive" className="text-left">
+          <AlertTitle>No se pudo restablecer la contraseña</AlertTitle>
+          <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
         
         <div className="mt-6">
           <h3 className="text-lg font-medium mb-4">¿Quieres solicitar un nuevo enlace?</h3>
           
           {resetSent ? (
             <div className="text-center py-4">
-              <p className="text-green-600 dark:text-green-400 font-medium mb-2">
-                ¡Correo enviado!
-              </p>
-              <p className="text-muted-foreground">
-                Revisa tu bandeja de entrada para continuar con el proceso.
-              </p>
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900 rounded-lg p-4 mb-4">
+                <p className="text-green-600 dark:text-green-400 font-medium mb-2">
+                  ¡Correo enviado!
+                </p>
+                <p className="text-muted-foreground">
+                  Revisa tu bandeja de entrada para continuar con el proceso.
+                </p>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleRequestResetLink} className="space-y-4">
               <div>
-                <label htmlFor="reset-email" className="block text-sm font-medium mb-1">
+                <label htmlFor="reset-email" className="block text-sm font-medium mb-1 text-left">
                   Email
                 </label>
                 <Input
