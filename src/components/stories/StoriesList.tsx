@@ -53,9 +53,6 @@ export function StoriesList({ stories, onStoryClick, currentUserId }: StoriesLis
           ? story.storyIds[0] 
           : story.id;
         
-        // Determine if this story has been viewed
-        const hasUnviewedStories = story.hasUnseenStories;
-        
         return (
           <div 
             key={story.id}
@@ -63,7 +60,7 @@ export function StoriesList({ stories, onStoryClick, currentUserId }: StoriesLis
             onClick={() => onStoryClick(firstStoryId)}
           >
             <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-              hasUnviewedStories ? 'border-2 border-primary' : ''
+              story.hasUnseenStories ? 'border-2 border-primary' : ''
             } p-[2px]`}>
               <Avatar className="w-full h-full border-2 border-background">
                 <AvatarImage src={story.avatarUrl || undefined} />

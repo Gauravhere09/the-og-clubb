@@ -1,10 +1,11 @@
-
+import { useState } from "react";
 import { StoryCreator } from "./StoryCreator";
 import { StoriesList } from "./StoriesList";
 import { StoryView } from "./StoryView";
 import { useStoryViewer } from "@/hooks/use-story-viewer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus } from "lucide-react";
+import { UserStoryButton } from "./UserStoryButton";
 
 interface StoryViewerProps {
   currentUserId: string;
@@ -46,23 +47,16 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         />
       )}
       
-      <div className="flex w-full overflow-x-auto scrollbar-hide gap-4 pb-2">
-        {/* Create story button */}
-        <div 
-          className="flex flex-col items-center gap-1 cursor-pointer min-w-[80px]"
-          onClick={() => setShowStoryCreator(true)}
-        >
-          <div className="w-16 h-16 rounded-full relative bg-primary/10 flex items-center justify-center">
-            <div className="w-[58px] h-[58px] bg-background rounded-full flex items-center justify-center">
-              <Plus className="w-6 h-6 text-primary" />
-            </div>
-          </div>
-          <span className="text-xs font-medium text-center">
-            Crear historia
-          </span>
-        </div>
+      <div className="flex w-full overflow-x-auto gap-4 pb-2">
+        {/* User's own story button - always visible */}
+        <UserStoryButton
+          currentUserId={currentUserId}
+          userStory={userStory}
+          onCreateStory={() => setShowStoryCreator(true)}
+          onViewStory={(storyId) => setViewingStory(storyId)}
+        />
 
-        {/* User stories */}
+        {/* Other users' stories */}
         {!isLoading && stories.length > 0 && (
           <StoriesList 
             stories={stories.filter(story => story.userId !== currentUserId)} 
