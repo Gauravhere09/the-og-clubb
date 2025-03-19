@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,11 @@ export default function ResetPassword() {
     const errorDescription = query.get('error_description');
     
     if (errorParam) {
-      setTokenError(errorDescription || 'Error en el enlace de restablecimiento');
+      if (errorParam === 'access_denied' && query.get('error_code') === 'otp_expired') {
+        setTokenError('El enlace de restablecimiento ha expirado. Por favor, solicita un nuevo enlace.');
+      } else {
+        setTokenError(errorDescription || 'Error en el enlace de restablecimiento');
+      }
       return;
     }
     
@@ -38,7 +41,14 @@ export default function ResetPassword() {
     if (accessToken) {
       setAccessToken(accessToken);
     } else {
-      // Coming from direct navigation, probably just entered the page manually
+      // If we have type=recovery in the URL, it means we need to show the form to request a reset
+      const type = query.get('type');
+      if (type === 'recovery') {
+        // This is a valid flow, don't show error
+        return;
+      }
+      
+      // Otherwise, coming from direct navigation, probably just entered the page manually
       setTokenError('No se encontró un token válido. Por favor, solicita un nuevo enlace de restablecimiento.');
     }
   }, [location]);
@@ -97,18 +107,98 @@ export default function ResetPassword() {
     }
   };
 
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetSent, setResetSent] = useState(false);
+
+  const handleRequestResetLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) {
+      setError("Por favor, ingresa tu correo electrónico");
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Correo enviado",
+        description: "Se ha enviado un correo electrónico con instrucciones para restablecer tu contraseña",
+      });
+      
+      setResetSent(true);
+    } catch (error: any) {
+      setError(error.message || "Ocurrió un error al enviar el correo de restablecimiento");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Ocurrió un error al enviar el correo de restablecimiento",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // If there was an error with the token
   if (tokenError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
         <div className="w-full max-w-md space-y-6 bg-background rounded-lg shadow-sm p-6 sm:p-8 text-center">
-          <div className="mx-auto w-12 h-12 bg-destructive rounded-xl flex items-center justify-center mb-4">
-            <span className="text-2xl font-bold text-destructive-foreground">!</span>
+          <div className="mx-auto w-12 h-12 bg-destructive/15 rounded-xl flex items-center justify-center mb-4">
+            <span className="text-2xl font-bold text-destructive">!</span>
           </div>
           <h2 className="text-2xl font-semibold">Error de restablecimiento</h2>
           <p className="text-muted-foreground mt-2">{tokenError}</p>
+          
+          <div className="mt-6">
+            <h3 className="text-lg font-medium mb-4">¿Quieres solicitar un nuevo enlace?</h3>
+            
+            {resetSent ? (
+              <div className="text-center py-4">
+                <p className="text-green-600 dark:text-green-400 font-medium mb-2">
+                  ¡Correo enviado!
+                </p>
+                <p className="text-muted-foreground">
+                  Revisa tu bandeja de entrada para continuar con el proceso.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleRequestResetLink} className="space-y-4">
+                <div>
+                  <label htmlFor="reset-email" className="block text-sm font-medium mb-1">
+                    Email
+                  </label>
+                  <Input
+                    id="reset-email"
+                    type="email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    placeholder="tu@email.com"
+                    required
+                    disabled={loading}
+                  />
+                </div>
+                
+                {error && (
+                  <div className="text-sm text-destructive">{error}</div>
+                )}
+                
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Enviando..." : "Enviar nuevo enlace"}
+                </Button>
+              </form>
+            )}
+          </div>
+          
           <Button 
             onClick={() => navigate("/auth")} 
+            variant="outline"
             className="w-full mt-4"
           >
             Volver a inicio de sesión

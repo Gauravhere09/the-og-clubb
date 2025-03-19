@@ -50,8 +50,11 @@ export function LoginForm({ loading, setLoading }: LoginFormProps) {
     setLoading(true);
     
     try {
+      // Get the full origin URL to use as redirect
+      const origin = window.location.origin;
+      
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${origin}/reset-password`,
       });
       
       if (error) throw error;
