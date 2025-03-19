@@ -1,7 +1,7 @@
-
 import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/feed/Feed";
+import { StoryViewer } from "@/components/stories/StoryViewer";
 import { StoryBanner } from "@/components/stories/StoryBanner";
 import { Home, Menu, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useEffect, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useMessageNotifications } from "@/components/messages/MessageNotification";
 
 const Index = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -29,7 +28,6 @@ const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
-  const [hasNewPosts, setHasNewPosts] = useState(false);
 
   useEffect(() => {
     const loadCurrentUser = async () => {
@@ -40,43 +38,6 @@ const Index = () => {
     };
     loadCurrentUser();
   }, []);
-
-  // Configurar notificaciones de mensajes en tiempo real
-  useMessageNotifications(currentUserId);
-
-  // Suscribirse a actualizaciones en tiempo real para nuevas publicaciones
-  useEffect(() => {
-    if (!currentUserId) return;
-    
-    const postsChannel = supabase
-      .channel('new-posts-notification')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'posts'
-        },
-        (payload) => {
-          // Solo mostrar notificación si no es una publicación propia
-          if (payload.new && payload.new.user_id !== currentUserId) {
-            setHasNewPosts(true);
-            
-            // Mostrar notificación toast
-            toast({
-              title: "Nueva publicación",
-              description: "Hay nuevas publicaciones disponibles",
-              duration: 4000,
-            });
-          }
-        }
-      )
-      .subscribe();
-      
-    return () => {
-      supabase.removeChannel(postsChannel);
-    };
-  }, [currentUserId, toast]);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -89,13 +50,6 @@ const Index = () => {
     } else {
       navigate("/auth");
     }
-  };
-  
-  const refreshFeed = () => {
-    setHasNewPosts(false);
-    window.scrollTo(0, 0);
-    // La lógica de recargar el feed está implementada internamente en el componente Feed
-    // Aquí solo reseteamos el indicador y hacemos scroll hacia arriba
   };
 
   return (
@@ -155,16 +109,6 @@ const Index = () => {
               
               {currentUserId && (
                 <StoryBanner currentUserId={currentUserId} />
-              )}
-              
-              {hasNewPosts && (
-                <Button 
-                  variant="outline" 
-                  className="w-full bg-primary/5 hover:bg-primary/10 text-primary border-primary/20 font-medium shadow-sm"
-                  onClick={refreshFeed}
-                >
-                  Ver nuevas publicaciones
-                </Button>
               )}
               
               <Feed />

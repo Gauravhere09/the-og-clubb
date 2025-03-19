@@ -33,7 +33,7 @@ export function StoryBanner({ currentUserId }: StoryBannerProps) {
   const userStory = stories.find(story => story.userId === currentUserId);
 
   return (
-    <Card className="p-3 md:p-4 mb-3 md:mb-4 relative overflow-hidden">
+    <Card className="p-4 mb-4 relative overflow-hidden">
       {showStoryCreator && (
         <StoryCreator 
           onClose={handleStoryCreatorClose} 
@@ -48,19 +48,19 @@ export function StoryBanner({ currentUserId }: StoryBannerProps) {
         />
       )}
 
-      <div className="flex w-full overflow-x-auto scrollbar-hide gap-3 md:gap-4 pb-1 md:pb-2">
+      <div className="flex w-full overflow-x-auto scrollbar-hide gap-4 pb-2">
         {/* Create story button */}
         <div 
-          className="flex flex-col items-center gap-1 cursor-pointer min-w-[70px] md:min-w-[76px] transition-transform active:scale-95 touch-manipulation"
+          className="flex flex-col items-center gap-1 cursor-pointer min-w-[76px]"
           onClick={() => setShowStoryCreator(true)}
         >
-          <div className="w-14 h-14 md:w-16 md:h-16 bg-primary/10 rounded-full flex items-center justify-center">
-            <div className="w-12 h-12 md:w-14 md:h-14 bg-background rounded-full flex items-center justify-center">
-              <Plus className="w-5 h-5 md:w-6 md:h-6 text-primary" />
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+            <div className="w-14 h-14 bg-background rounded-full flex items-center justify-center">
+              <Plus className="w-6 h-6 text-primary" />
             </div>
           </div>
           <span className="text-xs font-medium text-center">
-            Crear
+            Crear historia
           </span>
         </div>
 
@@ -76,10 +76,10 @@ export function StoryBanner({ currentUserId }: StoryBannerProps) {
               return (
                 <div 
                   key={story.id}
-                  className="flex flex-col items-center gap-1 cursor-pointer min-w-[70px] md:min-w-[76px] transition-transform active:scale-95 touch-manipulation"
+                  className="flex flex-col items-center gap-1 cursor-pointer min-w-[76px]"
                   onClick={() => setViewingStory(firstStoryId)}
                 >
-                  <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center ${
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
                     hasUnseenStories ? 'border-2 border-primary p-[2px]' : 'p-0'
                   }`}>
                     <Avatar className="w-full h-full border-2 border-background">
@@ -99,9 +99,9 @@ export function StoryBanner({ currentUserId }: StoryBannerProps) {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="self-center min-w-[40px] h-14 md:h-16 rounded-full bg-muted/50"
+                className="self-center min-w-[40px] h-16 rounded-full bg-muted/50"
               >
-                <ChevronRight className="h-5 w-5 md:h-6 md:w-6" />
+                <ChevronRight className="h-6 w-6" />
               </Button>
             )}
           </>
@@ -111,9 +111,9 @@ export function StoryBanner({ currentUserId }: StoryBannerProps) {
         {isLoading && (
           <>
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex flex-col items-center gap-1 min-w-[70px] md:min-w-[76px]">
-                <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-muted animate-pulse" />
-                <div className="w-14 md:w-16 h-2 bg-muted animate-pulse rounded" />
+              <div key={i} className="flex flex-col items-center gap-1 min-w-[76px]">
+                <div className="w-16 h-16 rounded-full bg-muted animate-pulse" />
+                <div className="w-16 h-2 bg-muted animate-pulse rounded" />
               </div>
             ))}
           </>
