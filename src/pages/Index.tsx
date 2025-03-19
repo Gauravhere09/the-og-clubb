@@ -108,7 +108,9 @@ const Index = () => {
               <PostCreator />
               
               {currentUserId && (
-                <StoryBanner currentUserId={currentUserId} />
+                <div className="bg-background rounded-lg overflow-hidden mb-4">
+                  <StoryBanner currentUserId={currentUserId} />
+                </div>
               )}
               
               <Feed />
