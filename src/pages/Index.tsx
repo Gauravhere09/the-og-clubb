@@ -1,8 +1,8 @@
+
 import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/feed/Feed";
 import { StoryViewer } from "@/components/stories/StoryViewer";
-import { StoryBanner } from "@/components/stories/StoryBanner";
 import { Home, Menu, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -108,7 +108,7 @@ const Index = () => {
               <PostCreator />
               
               {currentUserId && (
-                <StoryBanner currentUserId={currentUserId} />
+                <StoryViewer currentUserId={currentUserId} />
               )}
               
               <Feed />
