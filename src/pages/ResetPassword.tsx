@@ -21,14 +21,19 @@ export default function ResetPassword() {
   useEffect(() => {
     // Extract the hash fragment from the URL
     const hashFragment = window.location.hash;
+    console.log("Hash fragment:", hashFragment);
+    
     const query = new URLSearchParams(hashFragment.replace('#', ''));
     
     // Check for errors in the URL
     const errorParam = query.get('error');
+    const errorCode = query.get('error_code');
     const errorDescription = query.get('error_description');
     
     if (errorParam) {
-      if (errorParam === 'access_denied' && query.get('error_code') === 'otp_expired') {
+      console.log("Error detected:", errorParam, errorCode, errorDescription);
+      
+      if (errorParam === 'access_denied' && errorCode === 'otp_expired') {
         setTokenError('El enlace de restablecimiento ha expirado. Por favor, solicita un nuevo enlace.');
       } else {
         setTokenError(errorDescription || 'Error en el enlace de restablecimiento');
@@ -39,16 +44,19 @@ export default function ResetPassword() {
     // This means we're coming from an email link with a valid access token
     const accessToken = query.get('access_token');
     if (accessToken) {
+      console.log("Valid access token found");
       setAccessToken(accessToken);
     } else {
       // If we have type=recovery in the URL, it means we need to show the form to request a reset
       const type = query.get('type');
       if (type === 'recovery') {
         // This is a valid flow, don't show error
+        console.log("Recovery type detected, valid flow");
         return;
       }
       
       // Otherwise, coming from direct navigation, probably just entered the page manually
+      console.log("No valid token or type parameter found");
       setTokenError('No se encontró un token válido. Por favor, solicita un nuevo enlace de restablecimiento.');
     }
   }, [location]);
@@ -76,6 +84,8 @@ export default function ResetPassword() {
     try {
       // If we have an access token from the URL (coming from email link)
       if (accessToken) {
+        console.log("Updating password with access token");
+        
         // Update the user's password
         const { error } = await supabase.auth.updateUser({
           password: newPassword
@@ -96,6 +106,7 @@ export default function ResetPassword() {
         throw new Error("No se encontró un token válido");
       }
     } catch (error: any) {
+      console.error("Password reset error:", error);
       setError(error.message || "Ocurrió un error al restablecer la contraseña");
       toast({
         variant: "destructive",
@@ -121,8 +132,11 @@ export default function ResetPassword() {
     setError(null);
     
     try {
+      const origin = window.location.origin;
+      console.log("Requesting password reset with redirectTo:", `${origin}/reset-password`);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${origin}/reset-password`,
       });
       
       if (error) throw error;
@@ -134,6 +148,7 @@ export default function ResetPassword() {
       
       setResetSent(true);
     } catch (error: any) {
+      console.error("Error requesting reset link:", error);
       setError(error.message || "Ocurrió un error al enviar el correo de restablecimiento");
       toast({
         variant: "destructive",
