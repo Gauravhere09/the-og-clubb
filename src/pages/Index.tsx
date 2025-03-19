@@ -2,7 +2,7 @@
 import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/feed/Feed";
-import { StoryBanner } from "@/components/stories/StoryBanner";
+import { StoryViewer } from "@/components/stories/StoryViewer";
 import { Home, Menu, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -108,10 +108,8 @@ const Index = () => {
               <PostCreator />
               
               {currentUserId && (
-                <Card className="overflow-hidden">
-                  <div className="px-0 py-0">
-                    <StoryBanner currentUserId={currentUserId} />
-                  </div>
+                <Card className="border rounded-lg bg-card text-card-foreground">
+                  <StoryViewer currentUserId={currentUserId} />
                 </Card>
               )}
               

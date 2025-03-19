@@ -2,9 +2,8 @@
 import { StoryCreator } from "./StoryCreator";
 import { StoriesList } from "./StoriesList";
 import { StoryView } from "./StoryView";
-import { UserStoryButton } from "./UserStoryButton";
 import { useStoryViewer } from "@/hooks/use-story-viewer";
-import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Plus } from "lucide-react";
 
 interface StoryViewerProps {
@@ -30,20 +29,9 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
     setShowStoryCreator(false);
     refetchStories();
   };
-  
-  // Create a placeholder array when loading
-  const allStories = isLoading
-    ? [{ 
-        id: "0", 
-        userId: currentUserId, 
-        username: "Tu", 
-        avatarUrl: null, 
-        hasUnseenStories: false 
-      }]
-    : stories;
 
   return (
-    <div className="mb-4 relative bg-background rounded-lg p-4 shadow border border-border overflow-hidden">
+    <div className="p-4 relative overflow-hidden">
       {showStoryCreator && (
         <StoryCreator 
           onClose={handleStoryCreatorClose} 
@@ -58,31 +46,42 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         />
       )}
       
-      <div className="mb-3 flex justify-between items-center">
-        <h3 className="text-sm font-medium text-foreground">Historias</h3>
-        <Button 
-          size="sm" 
-          variant="ghost" 
-          className="flex items-center gap-1 text-xs text-primary hover:text-primary/90"
+      <div className="flex w-full overflow-x-auto scrollbar-hide gap-4 pb-2">
+        {/* Create story button */}
+        <div 
+          className="flex flex-col items-center gap-1 cursor-pointer min-w-[80px]"
           onClick={() => setShowStoryCreator(true)}
         >
-          Crear historia
-        </Button>
-      </div>
-      
-      <div className="flex w-full overflow-x-auto pb-2 pt-1 space-x-3 scrollbar-hide">
-        <UserStoryButton
-          currentUserId={currentUserId}
-          userStory={userStory}
-          onCreateStory={() => setShowStoryCreator(true)}
-          onViewStory={(storyId) => setViewingStory(storyId)}
-        />
+          <div className="w-16 h-16 rounded-full relative bg-primary/10 flex items-center justify-center">
+            <div className="w-[58px] h-[58px] bg-background rounded-full flex items-center justify-center">
+              <Plus className="w-6 h-6 text-primary" />
+            </div>
+          </div>
+          <span className="text-xs font-medium text-center">
+            Crear historia
+          </span>
+        </div>
 
-        <StoriesList 
-          stories={allStories.filter(story => story.userId !== currentUserId)} 
-          onStoryClick={(storyId) => setViewingStory(storyId)}
-          currentUserId={currentUserId}
-        />
+        {/* User stories */}
+        {!isLoading && stories.length > 0 && (
+          <StoriesList 
+            stories={stories.filter(story => story.userId !== currentUserId)} 
+            onStoryClick={(storyId) => setViewingStory(storyId)}
+            currentUserId={currentUserId}
+          />
+        )}
+        
+        {/* Loading placeholders */}
+        {isLoading && (
+          <>
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex flex-col items-center gap-1 min-w-[80px]">
+                <div className="w-16 h-16 rounded-full bg-muted animate-pulse" />
+                <div className="w-16 h-2 bg-muted animate-pulse rounded" />
+              </div>
+            ))}
+          </>
+        )}
       </div>
     </div>
   );

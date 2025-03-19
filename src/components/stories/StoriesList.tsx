@@ -51,7 +51,7 @@ export function StoriesList({ stories, onStoryClick, currentUserId }: StoriesLis
         // Select the first story ID to show when clicked
         const firstStoryId = story.storyIds && story.storyIds.length > 0 
           ? story.storyIds[0] 
-          : story.id; // Fallback to story.id for backward compatibility
+          : story.id;
         
         // Determine if this story has been viewed
         const hasUnviewedStories = story.hasUnseenStories;
@@ -59,20 +59,18 @@ export function StoriesList({ stories, onStoryClick, currentUserId }: StoriesLis
         return (
           <div 
             key={story.id}
-            className="flex flex-col items-center space-y-1 cursor-pointer min-w-[80px] max-w-[80px]"
+            className="flex flex-col items-center gap-1 cursor-pointer min-w-[80px]"
             onClick={() => onStoryClick(firstStoryId)}
           >
             <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-              hasUnviewedStories ? 'border-2 border-primary' : 'border-2 border-muted'
+              hasUnviewedStories ? 'border-2 border-primary' : ''
             } p-[2px]`}>
-              <div className="w-full h-full bg-black/5 dark:bg-black/20 rounded-full overflow-hidden">
-                <Avatar className="w-full h-full">
-                  <AvatarImage src={story.avatarUrl || undefined} />
-                  <AvatarFallback>{story.username[0].toUpperCase()}</AvatarFallback>
-                </Avatar>
-              </div>
+              <Avatar className="w-full h-full border-2 border-background">
+                <AvatarImage src={story.avatarUrl || undefined} />
+                <AvatarFallback>{story.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+              </Avatar>
             </div>
-            <span className="text-xs text-center truncate w-full">
+            <span className="text-xs font-medium text-center truncate w-full">
               {story.username}
             </span>
           </div>
