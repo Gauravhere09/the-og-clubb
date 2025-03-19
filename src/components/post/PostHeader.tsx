@@ -51,6 +51,9 @@ export function PostHeader({
   isAuthor,
   isHidden
 }: PostHeaderProps) {
+  // Si post es incógnito (visibilidad 'private' en la base de datos o 'incognito' en la UI)
+  const isIncognito = post?.visibility === 'incognito';
+
   // If post is provided, this is being used in Post.tsx context
   if (post) {
     // Render the Post header UI
@@ -58,23 +61,41 @@ export function PostHeader({
       <div className="flex items-center justify-between mb-2">
         {/* Render Post-specific header content */}
         <div className="flex items-center gap-2">
-          <Link to={`/profile/${post.user_id}`}>
-            <UserAvatarDisplay 
-              currentUser={post.profiles ? {
-                id: post.user_id,
-                avatar_url: post.profiles.avatar_url,
-                username: post.profiles.username
-              } : null} 
-            />
-          </Link>
-          <div>
-            <Link to={`/profile/${post.user_id}`} className="font-medium hover:underline">
-              {post.profiles?.username || 'Usuario'}
-            </Link>
-            <p className="text-xs text-muted-foreground">
-              {new Date(post.created_at).toLocaleDateString()}
-            </p>
-          </div>
+          {isIncognito ? (
+            // Para publicaciones incógnito
+            <>
+              <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-400">
+                <span className="text-sm">?</span>
+              </div>
+              <div>
+                <p className="font-medium">Anónimo</p>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(post.created_at).toLocaleDateString()}
+                </p>
+              </div>
+            </>
+          ) : (
+            // Para publicaciones normales
+            <>
+              <Link to={`/profile/${post.user_id}`}>
+                <UserAvatarDisplay 
+                  currentUser={post.profiles ? {
+                    id: post.user_id,
+                    avatar_url: post.profiles.avatar_url,
+                    username: post.profiles.username
+                  } : null} 
+                />
+              </Link>
+              <div>
+                <Link to={`/profile/${post.user_id}`} className="font-medium hover:underline">
+                  {post.profiles?.username || 'Usuario'}
+                </Link>
+                <p className="text-xs text-muted-foreground">
+                  {new Date(post.created_at).toLocaleDateString()}
+                </p>
+              </div>
+            </>
+          )}
         </div>
         
         {isAuthor && !isHidden && (

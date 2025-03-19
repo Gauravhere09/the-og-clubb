@@ -50,7 +50,9 @@ export async function fetchRawPosts(userId: string | undefined, hasSharedFromCol
 
     // Add user filter if specified
     if (userId) {
-      query.eq('user_id', userId);
+      // Si estamos viendo un perfil, excluir las publicaciones incógnito
+      query.eq('user_id', userId)
+           .neq('visibility', 'private'); // excluye publicaciones incógnito en perfiles
     }
 
     // Execute the query

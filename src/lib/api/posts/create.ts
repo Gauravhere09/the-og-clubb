@@ -111,6 +111,7 @@ export async function createPost({
         created_at: rawPost.created_at,
         updated_at: rawPost.updated_at,
         shared_from: null,
+        // Para publicaciones incógnito, cambiamos el perfil por uno anónimo
         profiles: visibility === 'incognito' ? {
           username: 'Anónimo',
           avatar_url: null
