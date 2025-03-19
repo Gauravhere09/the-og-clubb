@@ -36,8 +36,8 @@ export async function uploadStory(
       .insert({
         user_id: userId,
         image_url: publicUrl,
-        expires_at: expiresAt.toISOString(),
-        visibility: visibility
+        expires_at: expiresAt.toISOString()
+        // Eliminamos el campo visibility ya que no existe en la tabla
       });
       
     if (storyError) throw storyError;
