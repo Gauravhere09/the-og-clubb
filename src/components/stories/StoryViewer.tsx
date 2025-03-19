@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { StoryCreator } from "./StoryCreator";
 import { StoriesList } from "./StoriesList";
@@ -32,7 +33,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
   };
 
   return (
-    <div className="p-4 relative overflow-hidden">
+    <div className="relative overflow-hidden">
       {showStoryCreator && (
         <StoryCreator 
           onClose={handleStoryCreatorClose} 
@@ -47,7 +48,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         />
       )}
       
-      <div className="flex w-full overflow-x-auto gap-4 pb-2">
+      <div className="flex overflow-x-auto gap-1 py-4 px-2 scrollbar-hide">
         {/* User's own story button - always visible */}
         <UserStoryButton
           currentUserId={currentUserId}
@@ -69,9 +70,9 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         {isLoading && (
           <>
             {[1, 2, 3].map((i) => (
-              <div key={i} className="flex flex-col items-center gap-1 min-w-[80px]">
+              <div key={i} className="flex flex-col items-center gap-1 min-w-[80px] mx-1">
                 <div className="w-16 h-16 rounded-full bg-muted animate-pulse" />
-                <div className="w-16 h-2 bg-muted animate-pulse rounded" />
+                <div className="w-16 h-2 bg-muted animate-pulse rounded mt-1" />
               </div>
             ))}
           </>

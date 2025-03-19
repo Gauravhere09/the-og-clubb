@@ -56,12 +56,12 @@ export function StoriesList({ stories, onStoryClick, currentUserId }: StoriesLis
         return (
           <div 
             key={story.id}
-            className="flex flex-col items-center gap-1 cursor-pointer min-w-[80px]"
+            className="flex flex-col items-center gap-1 cursor-pointer min-w-[80px] mx-1"
             onClick={() => onStoryClick(firstStoryId)}
           >
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
-              story.hasUnseenStories ? 'border-2 border-primary' : ''
-            } p-[2px]`}>
+            <div className={`w-16 h-16 rounded-full p-[2px] ${
+              story.hasUnseenStories ? 'bg-primary' : 'bg-muted'
+            } flex items-center justify-center`}>
               <Avatar className="w-full h-full border-2 border-background">
                 <AvatarImage src={story.avatarUrl || undefined} />
                 <AvatarFallback>{story.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>

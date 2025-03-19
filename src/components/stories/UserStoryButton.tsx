@@ -29,23 +29,25 @@ export function UserStoryButton({
 
   return (
     <div 
-      className="flex flex-col items-center gap-1 cursor-pointer min-w-[80px]"
+      className="flex flex-col items-center gap-1 cursor-pointer min-w-[80px] mx-1"
       onClick={handleClick}
     >
-      <div className="w-16 h-16 rounded-full relative bg-primary/10 flex items-center justify-center">
-        <div className={`w-[58px] h-[58px] rounded-full flex items-center justify-center ${hasStories ? 'border-2 border-primary' : 'bg-background'}`}>
-          {hasStories ? (
-            <Avatar className="w-full h-full">
-              <AvatarImage src={userStory?.avatarUrl || undefined} />
-              <AvatarFallback>{userStory?.username?.[0]?.toUpperCase() || 'TU'}</AvatarFallback>
-            </Avatar>
-          ) : (
-            <Plus className="w-6 h-6 text-primary" />
-          )}
-        </div>
+      <div className={`relative w-16 h-16 rounded-full ${hasStories ? 'bg-primary p-[2px]' : ''} flex items-center justify-center`}>
+        {hasStories ? (
+          <Avatar className="w-full h-full border-2 border-background">
+            <AvatarImage src={userStory?.avatarUrl || undefined} />
+            <AvatarFallback>{userStory?.username?.[0]?.toUpperCase() || 'TU'}</AvatarFallback>
+          </Avatar>
+        ) : (
+          <div className="w-16 h-16 rounded-full flex items-center justify-center bg-muted">
+            <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center">
+              <Plus className="w-6 h-6 text-white" />
+            </div>
+          </div>
+        )}
       </div>
       <span className="text-xs font-medium text-center">
-        {hasStories ? 'Tu historia' : 'Crear historia'}
+        {hasStories ? (userStory?.username || 'Tu historia') : 'Crear historia'}
       </span>
     </div>
   );

@@ -108,7 +108,7 @@ const Index = () => {
               <PostCreator />
               
               {currentUserId && (
-                <Card className="border rounded-lg bg-card text-card-foreground overflow-hidden">
+                <Card className="overflow-hidden">
                   <StoryViewer currentUserId={currentUserId} />
                 </Card>
               )}
