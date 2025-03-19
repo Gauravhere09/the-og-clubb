@@ -11,7 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "next-themes";
 import { FriendSearch } from "@/components/FriendSearch";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
-import { AdComponent } from "@/components/ads/AdComponent";
 import { Card } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -60,7 +59,7 @@ const Index = () => {
       
       <div className="flex-1 w-full md:ml-[70px] pb-16 md:pb-0 content-with-bottom-nav">
         <div className="max-w-screen-xl mx-auto px-2 py-2 md:px-4 md:py-8 md:flex">
-          <main className={`w-full ${!isMobile ? "md:w-2/3 md:pr-4" : ""}`}>
+          <main className="w-full">
             <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2 -mx-2 md:mx-0 px-2 md:px-0 pt-2">
               <div className="flex items-center justify-between mb-2 md:mb-4">
                 <div className="flex items-center gap-2">
@@ -116,21 +115,6 @@ const Index = () => {
               <Feed />
             </div>
           </main>
-          
-          {!isMobile && (
-            <aside className="hidden md:block md:w-1/3 md:pl-4 space-y-4">
-              <div className="sticky top-20">
-                <AdComponent format="sidebar" className="mb-4" />
-                <Card className="p-4 mb-4">
-                  <h3 className="font-medium mb-2">Publicidad</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Anuncios personalizados basados en tus intereses
-                  </p>
-                </Card>
-                <AdComponent format="sidebar" />
-              </div>
-            </aside>
-          )}
         </div>
       </div>
     </div>

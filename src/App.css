@@ -131,6 +131,48 @@
     min-width: 150px;
     z-index: 100;
   }
+  
+  /* Ranking list styles for mobile */
+  .popularity-table {
+    font-size: 0.875rem;
+  }
+  
+  .ranking-avatar {
+    width: 2rem;
+    height: 2rem;
+  }
+  
+  .ranking-username {
+    font-weight: 600;
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .bg-gold {
+    background-color: #FFD700;
+  }
+  
+  .bg-silver {
+    background-color: #C0C0C0;
+  }
+  
+  .bg-bronze {
+    background-color: #CD7F32;
+  }
+  
+  .text-gold {
+    color: #FFD700;
+  }
+  
+  .text-silver {
+    color: #C0C0C0;
+  }
+  
+  .text-bronze {
+    color: #CD7F32;
+  }
 }
 
 /* Fixed navigation for mobile */
@@ -181,4 +223,14 @@
 
 .long-press-active .long-press-indicator {
   opacity: 1;
+}
+
+/* Scrollbar hide utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
 }
