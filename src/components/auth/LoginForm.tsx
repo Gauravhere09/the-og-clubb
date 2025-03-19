@@ -50,11 +50,13 @@ export function LoginForm({ loading, setLoading }: LoginFormProps) {
     setLoading(true);
     
     try {
-      // Use the current window location's origin for the redirectTo URL
-      const origin = window.location.origin;
+      // Always use the full public-facing URL for the site, not just origin
+      // This is important for production deployments with Lovable
+      const redirectUrl = "https://preview--hsocial-com-83.lovable.app/reset-password";
+      console.log("Using redirect URL:", redirectUrl);
       
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${origin}/reset-password`,
+        redirectTo: redirectUrl,
       });
       
       if (error) throw error;

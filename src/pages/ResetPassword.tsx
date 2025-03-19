@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -132,11 +133,12 @@ export default function ResetPassword() {
     setError(null);
     
     try {
-      const origin = window.location.origin;
-      console.log("Requesting password reset with redirectTo:", `${origin}/reset-password`);
+      // Always use the full public-facing URL for redirects
+      const redirectUrl = "https://preview--hsocial-com-83.lovable.app/reset-password";
+      console.log("Requesting password reset with redirectTo:", redirectUrl);
       
       const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${origin}/reset-password`,
+        redirectTo: redirectUrl,
       });
       
       if (error) throw error;
