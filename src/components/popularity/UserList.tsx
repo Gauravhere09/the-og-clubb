@@ -33,8 +33,8 @@ export const UserList = ({ users, onProfileClick, startRank = 4 }: UserListProps
         {isMobile && (
           <div className="text-sm font-semibold mb-2 px-2 grid grid-cols-12 gap-2">
             <div className="col-span-1">#</div>
-            <div className="col-span-6">Usuario</div>
-            <div className="col-span-5 text-right flex items-center justify-end">
+            <div className="col-span-7">Usuario</div>
+            <div className="col-span-4 text-right flex items-center justify-end">
               <Heart className="h-4 w-4 text-red-500 fill-red-500 mr-1" />
             </div>
           </div>
@@ -56,7 +56,7 @@ export const UserList = ({ users, onProfileClick, startRank = 4 }: UserListProps
                 <div className="col-span-1 font-medium text-muted-foreground">
                   {startRank + index}
                 </div>
-                <div className="col-span-6">
+                <div className="col-span-7">
                   <div className="flex items-center space-x-2">
                     <Avatar 
                       className="h-8 w-8 cursor-pointer"
@@ -68,18 +68,12 @@ export const UserList = ({ users, onProfileClick, startRank = 4 }: UserListProps
                     </Avatar>
                     <div className="font-medium truncate">
                       {user.username || "Usuario"}
-                      {careerValue && (
-                        <div className="text-xs text-muted-foreground truncate">
-                          {semesterValue ? `Semestre ${semesterValue}` : "No especificado"}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
-                <div className="col-span-5 flex items-center justify-end">
+                <div className="col-span-4 flex items-center justify-end">
                   <div className="flex items-center">
-                    <span className="font-semibold">{user.followers_count}</span>
-                    <Heart className="h-4 w-4 text-red-500 fill-red-500 mx-2" />
+                    <Heart className="h-4 w-4 text-red-500 fill-red-500 mr-1" />
                     <span className="font-semibold">{user.hearts_count || 0}</span>
                   </div>
                 </div>

@@ -1,5 +1,4 @@
 
-import { AdComponent } from "@/components/ads/AdComponent";
 import { Post } from "@/components/Post";
 import { PeopleYouMayKnow } from "@/components/friends/PeopleYouMayKnow";
 import type { Post as PostType } from "@/types/post";
@@ -31,14 +30,7 @@ export function FeedContent({
   const renderFeedPosts = () => {
     const feedContent = [];
     
-    // Insert banner ad at the top on mobile only
-    if (isMobile) {
-      feedContent.push(
-        <AdComponent key="ad-top-mobile" format="banner" className="my-2 ad-component-mobile" />
-      );
-    }
-    
-    // Distribute posts and ads together
+    // Distribute posts without ads
     const allPosts = visiblePosts.slice();
     
     for (let i = 0; i < allPosts.length; i++) {
@@ -48,15 +40,6 @@ export function FeedContent({
           <Post post={allPosts[i]} />
         </div>
       );
-      
-      // Add an ad after every 3 posts that looks like a post (reduce frequency on mobile)
-      if ((i + 1) % (isMobile ? 4 : 3) === 0 && i < allPosts.length - 1) {
-        feedContent.push(
-          <div key={`ad-${i}`} className="mb-3 post-style-ad">
-            <AdComponent format="feed" className="w-full rounded-lg overflow-hidden" />
-          </div>
-        );
-      }
       
       // Add People You May Know after 5 posts on desktop, after 6 on mobile
       if ((isMobile ? i === 6 : i === 4) && !feedContent.some(item => item.key === "people-you-may-know")) {
