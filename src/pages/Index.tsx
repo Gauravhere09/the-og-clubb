@@ -3,7 +3,7 @@ import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/feed/Feed";
 import { StoryViewer } from "@/components/stories/StoryViewer";
-import { UserMenu } from "@/components/UserMenu";
+import { UserMenu } from "@/components/user-menu/UserMenu";
 import { LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, Link } from "react-router-dom";
