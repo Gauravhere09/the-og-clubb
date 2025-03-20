@@ -43,11 +43,11 @@ export function StoryPrivacySettings({ open, onOpenChange }: StoryPrivacySetting
   async function fetchPrivacySettings(userId: string) {
     setIsLoading(true);
     try {
-      // Fix the RPC call with type assertion
-      const { data, error } = await supabase
-        .rpc('get_user_story_privacy', {
-          user_id_input: userId 
-        } as any);
+      // Use a more generic type for the RPC call to avoid type errors
+      const { data, error } = await supabase.rpc(
+        'get_user_story_privacy',
+        { user_id_input: userId }
+      ) as { data: unknown, error: unknown };
       
       if (error) throw error;
       

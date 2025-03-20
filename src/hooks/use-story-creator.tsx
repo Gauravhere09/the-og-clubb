@@ -34,11 +34,11 @@ export function useStoryCreator(currentUserId: string, onComplete: () => void) {
           avatarUrl: profileData.avatar_url
         });
         
-        // Fix the RPC call with type assertion
-        const { data: privacyData, error: privacyError } = await supabase
-          .rpc('get_user_story_privacy', { 
-            user_id_input: currentUserId 
-          } as any);
+        // Use a more generic type for the RPC call to avoid type errors
+        const { data: privacyData, error: privacyError } = await supabase.rpc(
+          'get_user_story_privacy', 
+          { user_id_input: currentUserId }
+        ) as { data: unknown, error: unknown };
         
         // Validate the data is a valid StoryVisibility value
         if (!privacyError && privacyData && typeof privacyData === 'string' && 
