@@ -138,8 +138,13 @@ export async function getUserStoryPrivacySetting(userId: string): Promise<StoryV
       return 'public';
     }
     
-    // Explicitly cast the string result to StoryVisibility type
-    return (data as string as StoryVisibility) || 'public';
+    if (typeof data === 'string') {
+      // Handle the case where data is a string
+      return data as StoryVisibility;
+    }
+    
+    // Default fallback
+    return 'public';
   } catch (error) {
     console.error("Error obteniendo configuración de privacidad:", error);
     return 'public';
@@ -158,7 +163,7 @@ export async function saveUserStoryPrivacySetting(
     const { error } = await supabase
       .rpc('save_user_story_privacy', { 
         user_id_input: userId,
-        privacy_setting: privacySetting as string
+        privacy_setting: privacySetting 
       });
       
     if (error) {
