@@ -65,7 +65,7 @@ const Index = () => {
               <div className="flex items-center justify-between gap-2 mb-4">
                 <div className="flex items-center">
                   {isMobile ? (
-                    <Link to="/" className="relative w-8 h-8 bg-primary rounded-xl flex items-center justify-center transform transition-transform shadow-md mr-1">
+                    <Link to="/" className="relative w-8 h-8 bg-primary rounded-xl flex items-center justify-center transform transition-transform shadow-md mr-2">
                       <span className="text-xl font-bold text-primary-foreground">H</span>
                       <div className="absolute -inset-0.5 bg-primary/20 rounded-xl blur-sm -z-10" />
                     </Link>
@@ -74,7 +74,7 @@ const Index = () => {
                   )}
                 </div>
                 
-                <div className="flex-1 flex justify-center max-w-[200px] mx-auto">
+                <div className="flex-1 flex justify-center">
                   <FriendSearch />
                 </div>
                 
