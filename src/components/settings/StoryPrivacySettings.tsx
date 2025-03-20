@@ -51,6 +51,7 @@ export function StoryPrivacySettings({ open, onOpenChange }: StoryPrivacySetting
       if (error) throw error;
       
       if (data) {
+        // Ensure data is cast to the StoryVisibility type
         setVisibility(data as StoryVisibility);
       }
     } catch (error) {

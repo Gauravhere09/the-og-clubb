@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { StoryVisibility, uploadStory, validateStoryFile, getUserStoryPrivacySetting } from "@/components/stories/utils/story-utils";
+import { StoryVisibility, uploadStory, validateStoryFile } from "@/components/stories/utils/story-utils";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useStoryCreator(currentUserId: string, onComplete: () => void) {
@@ -41,6 +41,7 @@ export function useStoryCreator(currentUserId: string, onComplete: () => void) {
           });
         
         if (!privacyError && privacyData) {
+          // Ensure data is cast to the StoryVisibility type
           setVisibility(privacyData as StoryVisibility);
         } else {
           // Default to public if there's an error or no setting

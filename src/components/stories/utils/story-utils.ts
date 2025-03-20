@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -137,8 +136,7 @@ export async function getUserStoryPrivacySetting(userId: string): Promise<StoryV
       return 'public';
     }
     
-    // The stored procedure should return the story_privacy value
-    // If it doesn't exist, default to 'public'
+    // Ensure the data is cast to the StoryVisibility type
     return (data as StoryVisibility) || 'public';
   } catch (error) {
     console.error("Error obteniendo configuración de privacidad:", error);
@@ -158,7 +156,7 @@ export async function saveUserStoryPrivacySetting(
     const { error } = await supabase
       .rpc('save_user_story_privacy', { 
         user_id_input: userId,
-        privacy_setting: privacySetting as string
+        privacy_setting: privacySetting
       });
       
     if (error) {
