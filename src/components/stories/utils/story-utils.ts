@@ -93,3 +93,25 @@ export function validateStoryFile(file: File): boolean {
 
   return true;
 }
+
+/**
+ * Elimina las historias expiradas
+ */
+export async function cleanupExpiredStories(): Promise<number> {
+  try {
+    const now = new Date().toISOString();
+    
+    const { error, count } = await supabase
+      .from('stories')
+      .delete()
+      .lt('expires_at', now)
+      .select('count');
+      
+    if (error) throw error;
+    
+    return count || 0;
+  } catch (error) {
+    console.error("Error cleaning up expired stories:", error);
+    return 0;
+  }
+}

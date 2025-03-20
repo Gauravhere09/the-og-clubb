@@ -1,4 +1,3 @@
-
 import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/feed/Feed";
@@ -21,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useEffect, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useStoryCleanup } from "@/hooks/use-story-cleanup";
 
 const Index = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -28,6 +28,8 @@ const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  
+  useStoryCleanup();
 
   useEffect(() => {
     const loadCurrentUser = async () => {

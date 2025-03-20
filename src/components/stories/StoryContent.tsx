@@ -56,7 +56,7 @@ export function StoryContent({
           className="max-h-full max-w-full object-contain animate-fade-in"
           autoPlay
           playsInline
-          muted
+          controls
           loop
           key={currentItem.url} // Key for resetting the video when changed
         />
