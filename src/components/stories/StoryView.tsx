@@ -15,7 +15,7 @@ import { StoryProgress } from "./StoryProgress";
 import { useStoryComments } from "@/hooks/use-story-comments";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Pause, Play, Trash2 } from "lucide-react";
+import { Pause, Play } from "lucide-react";
 import { Button } from "../ui/button";
 
 interface StoryViewProps {
@@ -187,7 +187,7 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
             />
           )}
 
-          <div className="absolute right-4 top-16 z-20 flex flex-col gap-2">
+          <div className="absolute right-4 top-16 z-20">
             <Button
               size="icon"
               variant="ghost"
@@ -197,18 +197,6 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
             >
               {isPaused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
             </Button>
-            
-            {canDeleteStory && (
-              <Button
-                size="icon"
-                variant="ghost"
-                className="bg-background/20 text-destructive hover:bg-destructive/20"
-                onClick={() => setShowDeleteConfirm(true)}
-                title="Eliminar historia"
-              >
-                <Trash2 className="h-5 w-5" />
-              </Button>
-            )}
           </div>
 
           <StoryActions 
@@ -216,6 +204,8 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
             toggleLike={toggleLike}
             toggleComments={toggleComments}
             toggleReactions={toggleReactions}
+            onDeleteStory={() => setShowDeleteConfirm(true)}
+            canDelete={canDeleteStory}
             className={cn(
               "animate-in slide-in-from-bottom duration-300",
               isExiting && "animate-out slide-out-to-bottom duration-300"
