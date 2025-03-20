@@ -141,7 +141,7 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
       <Dialog open={true} onOpenChange={() => handleClose()}>
         <DialogContent 
           className={cn(
-            "p-0 max-w-md h-[80vh] max-h-[600px] flex flex-col",
+            "p-0 max-w-md h-[80vh] max-h-[600px] flex flex-col bg-black",
             "animate-in fade-in-0 zoom-in-95 duration-300",
             isExiting && "animate-out fade-out-0 zoom-out-95 duration-300"
           )}
@@ -183,7 +183,7 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
               storyId={storyId}
               userId={currentUser.id}
               showReactions={showReactions}
-              className="absolute bottom-16 left-0 right-0 px-4 py-2 bg-background/30 backdrop-blur-sm"
+              className="absolute bottom-16 left-0 right-0 px-4 py-2"
             />
           )}
 
@@ -191,7 +191,7 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
             <Button
               size="icon"
               variant="ghost"
-              className="bg-background/20 text-foreground hover:bg-background/40"
+              className="bg-black/50 text-white hover:bg-black/70"
               onClick={togglePause}
               title={isPaused ? "Reanudar" : "Pausar"}
             >

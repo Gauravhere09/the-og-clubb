@@ -34,7 +34,7 @@ export function StoryActions({
       <Button
         variant="ghost"
         size="icon"
-        className="text-white hover:text-white hover:bg-white/20"
+        className="text-white hover:text-white hover:bg-white/20 dark:text-white"
         onClick={toggleComments}
       >
         <MessageCircle className="h-6 w-6" />
@@ -45,13 +45,13 @@ export function StoryActions({
           <Button
             variant="ghost"
             size="icon"
-            className="text-white hover:text-white hover:bg-white/20"
+            className="text-white hover:text-white hover:bg-white/20 dark:text-white"
           >
             <MoreHorizontal className="h-6 w-6" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="bg-gray-900 text-white border-gray-800 w-72 p-0">
-          <DropdownMenuItem className="py-3 px-4 hover:bg-gray-800 cursor-pointer flex items-center gap-3">
+        <DropdownMenuContent align="end" className="bg-gray-900 text-white border-gray-800 dark:bg-gray-900 w-72 p-0">
+          <DropdownMenuItem className="py-3 px-4 hover:bg-gray-800 cursor-pointer flex items-center gap-3 text-white dark:text-white">
             <Link className="h-5 w-5" />
             <div className="flex flex-col">
               <span className="font-medium">Copiar enlace para compartir esta historia</span>
@@ -69,7 +69,7 @@ export function StoryActions({
             </DropdownMenuItem>
           )}
           
-          <DropdownMenuItem className="py-3 px-4 hover:bg-gray-800 cursor-pointer flex items-center gap-3">
+          <DropdownMenuItem className="py-3 px-4 hover:bg-gray-800 cursor-pointer flex items-center gap-3 text-white dark:text-white">
             <Bug className="h-5 w-5" />
             <span className="font-medium">Algo no funciona</span>
           </DropdownMenuItem>

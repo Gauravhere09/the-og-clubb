@@ -12,10 +12,10 @@ export function CommentButton({ onToggleComments, isExpanded = false }: CommentB
     <Button
       variant="ghost"
       size="sm"
-      className={`flex-1 ${isExpanded ? 'text-primary' : ''}`}
+      className={`flex-1 ${isExpanded ? 'text-primary dark:text-primary' : 'text-foreground dark:text-foreground'}`}
       onClick={onToggleComments}
     >
-      <MessagesSquare className={`h-4 w-4 mr-2 ${isExpanded ? 'text-primary' : ''}`} />
+      <MessagesSquare className={`h-4 w-4 mr-2 ${isExpanded ? 'text-primary dark:text-primary' : 'text-foreground dark:text-foreground'}`} />
       Comentar
     </Button>
   );

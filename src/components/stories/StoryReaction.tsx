@@ -60,14 +60,14 @@ export function StoryReaction({ storyId, userId, showReactions, className }: Sto
   if (!showReactions) return null;
 
   return (
-    <div className={`${className} bg-background/80 dark:bg-background/40 backdrop-blur-sm rounded-full p-2 shadow-md border border-border`}>
+    <div className={`${className} bg-black/70 dark:bg-background/40 backdrop-blur-sm rounded-full p-2 shadow-md border border-gray-700 dark:border-border`}>
       <div className="flex justify-center space-x-2">
         {(Object.entries(reactionIcons) as [ReactionType, any][]).map(([type, { icon: Icon, color, label }]) => (
           <Button
             key={type}
             variant="ghost"
             size="sm"
-            className={`hover:bg-primary/10 rounded-full ${selectedReaction === type ? color : ''}`}
+            className={`hover:bg-primary/10 rounded-full text-white ${selectedReaction === type ? color : ''}`}
             onClick={() => handleReaction(type)}
             title={label}
           >

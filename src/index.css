@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -188,7 +189,7 @@
 }
 
 .story-reaction-container.light-mode {
-  @apply bg-white/80 border-gray-200 shadow-md;
+  @apply bg-black/70 border-gray-700 shadow-md;
 }
 
 .story-reaction-container.dark-mode {
@@ -200,77 +201,69 @@
 }
 
 .story-reaction-summary.light-mode {
-  @apply bg-gray-800/70 border border-gray-600;
+  @apply bg-black/70 border border-gray-600;
 }
 
 .story-reaction-summary.dark-mode {
   @apply bg-black/60 border border-white/10;
 }
 
-/* Fix reaction icon visibility in light mode */
-.light .reaction-icon {
-  @apply text-gray-800;
+/* Enhanced visibility for reaction icons in all modes */
+.reaction-icon {
+  @apply text-white;
 }
 
-.light .text-blue-500 {
-  @apply text-blue-600;
+.light .reaction-icon,
+.dark .reaction-icon {
+  @apply text-white;
 }
 
-.light .text-red-500 {
-  @apply text-red-600;
+.story-content-container {
+  background-color: #000;
 }
 
-.light .text-yellow-500 {
-  @apply text-yellow-600;
+/* Story actions and buttons */
+.story-action-button {
+  @apply text-white bg-black/50 hover:bg-black/70;
 }
 
-.light .text-yellow-400 {
-  @apply text-yellow-600;
+/* Story dialog background */
+.story-dialog {
+  @apply bg-black;
 }
 
-.light .text-yellow-300 {
-  @apply text-yellow-600;
+/* Story comments container */
+.story-comments {
+  @apply bg-gray-900 text-white;
 }
 
-.light .text-orange-500 {
-  @apply text-orange-600;
+/* Improved reaction colors for visibility */
+.text-blue-reaction {
+  color: #3b82f6 !important;
 }
 
-/* Dark mode reaction icons colors */
-.dark .text-blue-500 {
-  color: #3b82f6;
+.text-red-reaction {
+  color: #ef4444 !important;
 }
 
-.dark .text-red-500 {
-  color: #ef4444;
+.text-yellow-reaction {
+  color: #eab308 !important;
 }
 
-.dark .text-yellow-500 {
-  color: #eab308;
+.text-orange-reaction {
+  color: #f97316 !important;
 }
 
-.dark .text-yellow-400 {
-  color: #facc15;
+.text-purple-reaction {
+  color: #a855f7 !important;
 }
 
-.dark .text-yellow-300 {
-  color: #fde047;
+.text-rose-reaction {
+  color: #f43f5e !important;
 }
 
-.dark .text-orange-500 {
-  color: #f97316;
-}
-
-.dark .text-purple-500 {
-  color: #a855f7;
-}
-
-.dark .text-rose-500 {
-  color: #f43f5e;
-}
-
-.dark .text-amber-400 {
-  color: #fbbf24;
+.text-amber-reaction {
+  color: #fbbf24 !important;
 }
 
 /* Long press indicator */
@@ -282,4 +275,17 @@
 
 .pulse-on-hold {
   animation: pulse 1s infinite;
+}
+
+/* Story reaction buttons */
+.story-reactions-bar {
+  @apply bg-black/70 backdrop-blur-sm py-3 px-2 border-t border-gray-800;
+}
+
+.story-reaction-emoji-button {
+  @apply w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors;
+}
+
+.story-reaction-emoji {
+  @apply text-3xl;
 }
