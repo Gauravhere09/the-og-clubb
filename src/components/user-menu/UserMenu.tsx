@@ -11,10 +11,11 @@ import { useToast } from "@/hooks/use-toast";
 import { MenuHeader } from "./MenuHeader";
 import { MenuOptions } from "./MenuOptions";
 import { useUserProfile } from "./hooks/useUserProfile";
+import { UserProfileDropdown } from "./UserProfileDropdown";
 
 export function UserMenu() {
   const [open, setOpen] = useState(false);
-  const { username, avatarUrl, userId } = useUserProfile();
+  const { username, avatarUrl, userId, isLoading } = useUserProfile();
   const { toast } = useToast();
 
   const createProfileLink = () => {
@@ -51,9 +52,17 @@ export function UserMenu() {
           {/* Header */}
           <MenuHeader onClose={handleClose} />
           
+          {/* User Profile Dropdown */}
+          <UserProfileDropdown 
+            username={username}
+            avatarUrl={avatarUrl}
+            userId={userId}
+            isLoading={isLoading}
+          />
+          
           {/* Content */}
           <div className="flex-1 overflow-y-auto py-2">
-            {/* Main Menu Options - Now includes the AccountSwitcher */}
+            {/* Main Menu Options */}
             <MenuOptions 
               userId={userId} 
               onClose={handleClose} 
