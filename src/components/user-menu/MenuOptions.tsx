@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useTheme } from "next-themes";
 import { Switch } from "@/components/ui/switch";
+import { AccountSwitcher } from "./AccountSwitcher";
 
 interface MenuOptionsProps {
   userId: string | null;
@@ -58,6 +59,11 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
 
   return (
     <div className="grid gap-2 px-4">
+      {/* Account Switcher */}
+      <div className="bg-white dark:bg-card shadow rounded-md mb-2">
+        <AccountSwitcher currentUserId={userId} />
+      </div>
+      
       {/* Create New Account */}
       <Button
         variant="outline"
@@ -65,7 +71,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
         onClick={() => handleNavigate("/auth?tab=register")}
       >
         <UserPlus className="mr-3 h-5 w-5 text-green-500" />
-        <span>Crear nueva cuenta</span>
+        <span>Crear nuevo perfil</span>
       </Button>
       
       {/* Invite Friends */}

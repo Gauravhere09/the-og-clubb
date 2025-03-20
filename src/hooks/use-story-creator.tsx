@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { StoryVisibility, uploadStory, validateStoryFile, getUserStoryPrivacySetting } from "@/components/stories/utils/story-utils";
@@ -33,9 +34,18 @@ export function useStoryCreator(currentUserId: string, onComplete: () => void) {
           avatarUrl: profileData.avatar_url
         });
         
-        // Fetch user's privacy setting
-        const privacySetting = await getUserStoryPrivacySetting(currentUserId);
-        setVisibility(privacySetting);
+        // Fetch user's privacy setting using RPC
+        const { data: privacyData, error: privacyError } = await supabase
+          .rpc('get_user_story_privacy', { 
+            user_id_input: currentUserId 
+          });
+        
+        if (!privacyError && privacyData) {
+          setVisibility(privacyData as StoryVisibility);
+        } else {
+          // Default to public if there's an error or no setting
+          setVisibility('public');
+        }
       } catch (error) {
         console.error('Error fetching user data:', error);
       }

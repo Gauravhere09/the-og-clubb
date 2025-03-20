@@ -102,18 +102,18 @@ export async function cleanupExpiredStories(): Promise<number> {
   try {
     const now = new Date().toISOString();
     
-    // Fix: Remove the count selection since it's causing the error
+    // Delete expired stories
     const { error, data } = await supabase
       .from('stories')
       .delete()
-      .lt('expires_at', now);
+      .lt('expires_at', now)
+      .select();
       
     if (error) throw error;
     
-    // Return an approximate count if available, or 0
-    // Fix for TypeScript error: Explicitly cast data to any[] type when we know it's an array
+    // Return count
     if (data && Array.isArray(data)) {
-      return (data as any[]).length;
+      return data.length;
     }
     return 0;
   } catch (error) {
@@ -127,19 +127,48 @@ export async function cleanupExpiredStories(): Promise<number> {
  */
 export async function getUserStoryPrivacySetting(userId: string): Promise<StoryVisibility> {
   try {
+    // Create explicit RPC call to a stored procedure that handles this
+    // This avoids TS errors with direct table access
     const { data, error } = await supabase
-      .from('user_settings')
-      .select('story_privacy')
-      .eq('user_id', userId)
-      .single();
+      .rpc('get_user_story_privacy', { user_id_input: userId });
       
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       console.error("Error obteniendo configuración de privacidad:", error);
+      return 'public';
     }
     
-    return data?.story_privacy as StoryVisibility || 'public';
+    // The stored procedure should return the story_privacy value
+    // If it doesn't exist, default to 'public'
+    return (data as StoryVisibility) || 'public';
   } catch (error) {
     console.error("Error obteniendo configuración de privacidad:", error);
     return 'public';
+  }
+}
+
+/**
+ * Guarda la configuración de privacidad de historias del usuario
+ */
+export async function saveUserStoryPrivacySetting(
+  userId: string, 
+  privacySetting: StoryVisibility
+): Promise<boolean> {
+  try {
+    // Call RPC to create or update user settings
+    const { error } = await supabase
+      .rpc('save_user_story_privacy', { 
+        user_id_input: userId,
+        privacy_setting: privacySetting
+      });
+      
+    if (error) {
+      console.error("Error guardando configuración de privacidad:", error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error guardando configuración de privacidad:", error);
+    return false;
   }
 }
