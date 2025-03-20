@@ -22,6 +22,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
 
   // Find the current user's story
   const userStory = stories.find(story => story.userId === currentUserId);
+  const hasUserStory = userStory && userStory.storyIds && userStory.storyIds.length > 0;
   
   // Handle story creation completion
   const handleStoryCreatorClose = () => {
@@ -46,13 +47,25 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
       )}
       
       <div className="flex overflow-x-auto gap-1 py-4 px-2 scrollbar-hide">
-        {/* User's own story button - always visible */}
+        {/* Create Story button - always visible first */}
         <UserStoryButton
           currentUserId={currentUserId}
-          userStory={userStory}
+          userStory={null}
           onCreateStory={() => setShowStoryCreator(true)}
-          onViewStory={(storyId) => setViewingStory(storyId)}
+          onViewStory={() =>  {}}
+          isCreateButton={true}
         />
+
+        {/* User's story button - only if they have a story */}
+        {hasUserStory && (
+          <UserStoryButton
+            currentUserId={currentUserId}
+            userStory={userStory}
+            onCreateStory={() => setShowStoryCreator(true)}
+            onViewStory={(storyId) => setViewingStory(storyId)}
+            isCreateButton={false}
+          />
+        )}
 
         {/* Other users' stories */}
         {!isLoading && stories.length > 0 && (
