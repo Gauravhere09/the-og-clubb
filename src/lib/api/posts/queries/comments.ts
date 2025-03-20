@@ -1,6 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Comment } from "@/types/post";
+import type { ReactionType } from "@/types/database/social.types";
 
 export async function fetchPostsComments(postIds: string[]) {
   if (!postIds.length) return [];
@@ -43,7 +44,7 @@ export async function fetchComments(postId: string): Promise<Comment[]> {
     
     // Get user reaction if logged in
     const { data: { user } } = await supabase.auth.getUser();
-    let userReactions: Record<string, string> = {};
+    let userReactions: Record<string, ReactionType | null> = {};
     
     if (user) {
       const { data: userReactionsData } = await supabase
@@ -54,7 +55,8 @@ export async function fetchComments(postId: string): Promise<Comment[]> {
         
       if (userReactionsData) {
         userReactionsData.forEach(reaction => {
-          userReactions[reaction.comment_id] = reaction.reaction_type;
+          // Cast the reaction_type to ensure it's a valid ReactionType
+          userReactions[reaction.comment_id] = reaction.reaction_type as ReactionType;
         });
       }
     }

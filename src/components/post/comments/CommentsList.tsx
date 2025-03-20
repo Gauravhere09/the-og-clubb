@@ -32,7 +32,7 @@ export function CommentsList({
           comment={comment}
           onReaction={onReaction}
           onReply={onReply}
-          onDeleteComment={onDeleteComment}
+          onDelete={onDeleteComment}
         />
       ))}
     </div>
