@@ -24,7 +24,11 @@ export function UserProfile({ username, avatarUrl, userId, onClose }: UserProfil
 
   return (
     <div className="bg-white dark:bg-card m-4 rounded-lg shadow">
-      <div className="flex items-center justify-between p-4">
+      <Button
+        variant="ghost"
+        className="w-full flex items-center justify-between p-4 rounded-lg hover:bg-gray-100 dark:hover:bg-card/80"
+        onClick={handleProfileClick}
+      >
         <div className="flex items-center gap-3">
           <Avatar className="h-12 w-12">
             <AvatarImage src={avatarUrl || undefined} />
@@ -35,17 +39,6 @@ export function UserProfile({ username, avatarUrl, userId, onClose }: UserProfil
           <h3 className="text-lg font-semibold">{username}</h3>
         </div>
         <ChevronDown className="h-5 w-5 text-muted-foreground" />
-      </div>
-      <Separator />
-      <Button
-        variant="ghost"
-        className="w-full justify-start rounded-none py-5 px-4 text-muted-foreground gap-3"
-        onClick={handleProfileClick}
-      >
-        <User className="h-5 w-5 text-muted-foreground" />
-        <div className="flex flex-col items-start">
-          <span>Ver tu perfil</span>
-        </div>
       </Button>
     </div>
   );

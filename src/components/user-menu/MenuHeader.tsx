@@ -19,9 +19,10 @@ export function MenuHeader({ onClose }: MenuHeaderProps) {
         </Button>
         <h2 className="text-xl font-bold">Menú</h2>
       </div>
-      <Button variant="ghost" size="icon">
+      {/* Aumentar el espacio entre los elementos o quitar el botón de búsqueda si no es necesario */}
+      {/* <Button variant="ghost" size="icon">
         <Search className="h-5 w-5" />
-      </Button>
+      </Button> */}
     </div>
   );
 }

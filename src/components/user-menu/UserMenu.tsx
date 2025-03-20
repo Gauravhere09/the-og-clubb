@@ -53,8 +53,8 @@ export function UserMenu() {
           <MenuHeader onClose={handleClose} />
           
           {/* Content */}
-          <div className="flex-1 overflow-y-auto">
-            {/* User Profile Section */}
+          <div className="flex-1 overflow-y-auto py-2">
+            {/* User Profile Section - Ya incluye la funcionalidad para ver el perfil */}
             <UserProfile 
               username={username} 
               avatarUrl={avatarUrl} 
