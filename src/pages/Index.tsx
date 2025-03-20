@@ -3,7 +3,8 @@ import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/feed/Feed";
 import { StoryViewer } from "@/components/stories/StoryViewer";
-import { Menu, LogOut, Moon, Sun } from "lucide-react";
+import { UserMenu } from "@/components/UserMenu";
+import { LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,14 +76,19 @@ const Index = () => {
                 <div className="flex items-center gap-1 md:gap-2">
                   <FriendSearch />
                   <NotificationDropdown />
+                  <UserMenu />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 rounded-full"
+                        className="h-8 w-8 rounded-full md:flex hidden"
                       >
-                        <Menu className="h-4 w-4" />
+                        {theme === "dark" ? (
+                          <Moon className="h-4 w-4" />
+                        ) : (
+                          <Sun className="h-4 w-4" />
+                        )}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -98,10 +104,6 @@ const Index = () => {
                             <span>Modo oscuro</span>
                           </>
                         )}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Cerrar sesión
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
