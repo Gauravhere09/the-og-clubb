@@ -18,7 +18,8 @@ import {
   Search, 
   Shield, 
   User,
-  UserCog
+  UserCog,
+  Lock
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -181,6 +182,16 @@ export function UserMenu() {
               >
                 <UserCog className="mr-3 h-5 w-5 text-primary" />
                 <span>Datos personales</span>
+              </Button>
+
+              {/* Password and Security - NEW OPTION */}
+              <Button
+                variant="outline"
+                className="justify-start h-14 bg-white dark:bg-card shadow"
+                onClick={() => navigate("/settings/security")}
+              >
+                <Lock className="mr-3 h-5 w-5 text-purple-light" />
+                <span>Contraseña y seguridad</span>
               </Button>
 
               {/* Email */}
