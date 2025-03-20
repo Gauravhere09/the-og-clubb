@@ -110,7 +110,11 @@ export async function cleanupExpiredStories(): Promise<number> {
     if (error) throw error;
     
     // Return an approximate count if available, or 0
-    return data && Array.isArray(data) ? data.length : 0;
+    // Fix for TypeScript error: Check if data exists and is an array with a more explicit type guard
+    if (data && Array.isArray(data)) {
+      return data.length;
+    }
+    return 0;
   } catch (error) {
     console.error("Error cleaning up expired stories:", error);
     return 0;
