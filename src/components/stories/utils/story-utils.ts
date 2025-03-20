@@ -1,8 +1,7 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-// Define StoryVisibility as a proper union type of string literals
+// Define StoryVisibility type properly with string literal union
 export type StoryVisibility = 'public' | 'friends' | 'select' | 'except';
 
 /**
@@ -129,7 +128,6 @@ export async function cleanupExpiredStories(): Promise<number> {
 export async function getUserStoryPrivacySetting(userId: string): Promise<StoryVisibility> {
   try {
     // Create explicit RPC call to a stored procedure that handles this
-    // This avoids TS errors with direct table access
     const { data, error } = await supabase
       .rpc('get_user_story_privacy', { user_id_input: userId });
       
@@ -138,9 +136,9 @@ export async function getUserStoryPrivacySetting(userId: string): Promise<StoryV
       return 'public';
     }
     
+    // Check if data is a valid StoryVisibility value
     if (typeof data === 'string' && 
         (data === 'public' || data === 'friends' || data === 'select' || data === 'except')) {
-      // Verify it's a valid StoryVisibility value before casting
       return data as StoryVisibility;
     }
     
@@ -164,7 +162,7 @@ export async function saveUserStoryPrivacySetting(
     const { error } = await supabase
       .rpc('save_user_story_privacy', { 
         user_id_input: userId,
-        privacy_setting: privacySetting 
+        privacy_setting: privacySetting as string
       });
       
     if (error) {

@@ -40,10 +40,10 @@ export function useStoryCreator(currentUserId: string, onComplete: () => void) {
             user_id_input: currentUserId 
           });
         
+        // Validate the data is a valid StoryVisibility value
         if (!privacyError && privacyData && typeof privacyData === 'string' && 
             (privacyData === 'public' || privacyData === 'friends' || 
              privacyData === 'select' || privacyData === 'except')) {
-          // Safely cast string to StoryVisibility after validation
           setVisibility(privacyData as StoryVisibility);
         } else {
           // Default to public if there's an error or no setting
