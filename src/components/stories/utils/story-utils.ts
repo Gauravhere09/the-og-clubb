@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/use-toast";
 
 // Define StoryVisibility type properly with string literal union
 export type StoryVisibility = 'public' | 'friends' | 'select' | 'except';
@@ -134,7 +134,7 @@ export async function getUserStoryPrivacySetting(userId: string): Promise<StoryV
     }
     
     const { data, error } = await supabase
-      .rpc<string, StoryPrivacyRpcParams>('get_user_story_privacy', {
+      .rpc('get_user_story_privacy', {
         user_id_input: userId 
       });
       
@@ -172,7 +172,7 @@ export async function saveUserStoryPrivacySetting(
     }
     
     const { error } = await supabase
-      .rpc<null, SavePrivacyRpcParams>('save_user_story_privacy', {
+      .rpc('save_user_story_privacy', {
         user_id_input: userId,
         privacy_setting: privacySetting
       });

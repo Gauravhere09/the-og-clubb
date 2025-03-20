@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { StoryVisibility, uploadStory, validateStoryFile } from "@/components/stories/utils/story-utils";
@@ -40,7 +39,7 @@ export function useStoryCreator(currentUserId: string, onComplete: () => void) {
         }
         
         const { data: privacyData, error: privacyError } = await supabase
-          .rpc<string, StoryPrivacyRpcParams>('get_user_story_privacy', { 
+          .rpc('get_user_story_privacy', { 
             user_id_input: currentUserId 
           });
         

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -49,7 +48,7 @@ export function StoryPrivacySettings({ open, onOpenChange }: StoryPrivacySetting
       }
       
       const { data, error } = await supabase
-        .rpc<string, StoryPrivacyRpcParams>('get_user_story_privacy', {
+        .rpc('get_user_story_privacy', {
           user_id_input: userId 
         });
       
