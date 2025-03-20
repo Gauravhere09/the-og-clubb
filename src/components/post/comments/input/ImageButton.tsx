@@ -13,38 +13,38 @@ export function ImageButton({ onImageChange, fileInputRef }: ImageButtonProps) {
       fileInputRef={fileInputRef}
       onAttachmentChange={(files) => {
         if (files && files.length > 0 && onImageChange) {
-          // Create a more complete synthetic event that better matches React.ChangeEvent<HTMLInputElement>
-          const syntheticEvent = {
-            target: {
-              files: {
-                0: files[0],
-                length: 1,
-                item: (index: number) => files[index]
-              }
-            },
-            // Add minimal required properties to pass type checking
-            currentTarget: {
-              files: {
-                0: files[0],
-                length: 1,
-                item: (index: number) => files[index]
-              }
-            },
-            preventDefault: () => {},
-            stopPropagation: () => {},
-            nativeEvent: new Event('change'),
-            bubbles: true,
-            cancelable: true,
-            defaultPrevented: false,
-            isDefaultPrevented: () => false,
+          // Instead of creating our own synthetic event which would be complex and error-prone,
+          // we can create a new File input element, set its files property, and dispatch a change event
+          const fileInput = document.createElement('input');
+          fileInput.type = 'file';
+          
+          // Use the DataTransfer API to set files
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(files[0]);
+          fileInput.files = dataTransfer.files;
+          
+          // Create a proper React ChangeEvent
+          const nativeEvent = new Event('change', { bubbles: true });
+          const reactChangeEvent = {
+            nativeEvent,
+            currentTarget: fileInput,
+            target: fileInput,
+            bubbles: nativeEvent.bubbles,
+            cancelable: nativeEvent.cancelable,
+            defaultPrevented: nativeEvent.defaultPrevented,
+            eventPhase: nativeEvent.eventPhase,
+            isTrusted: nativeEvent.isTrusted,
+            preventDefault: () => nativeEvent.preventDefault(),
+            isDefaultPrevented: () => nativeEvent.defaultPrevented,
+            stopPropagation: () => nativeEvent.stopPropagation(),
             isPropagationStopped: () => false,
             persist: () => {},
-            timeStamp: Date.now(),
-            type: 'change',
-            isTrusted: true
-          } as React.ChangeEvent<HTMLInputElement>;
+            timeStamp: nativeEvent.timeStamp,
+            type: nativeEvent.type
+          } as unknown as React.ChangeEvent<HTMLInputElement>;
           
-          onImageChange(syntheticEvent);
+          // Pass the event to the handler
+          onImageChange(reactChangeEvent);
         }
       }}
       showLabel={true}
