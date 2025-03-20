@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -42,11 +43,11 @@ export function StoryPrivacySettings({ open, onOpenChange }: StoryPrivacySetting
   async function fetchPrivacySettings(userId: string) {
     setIsLoading(true);
     try {
-      // Use RPC with type assertion
+      // Fix the RPC call by omitting type parameters
       const { data, error } = await supabase
         .rpc('get_user_story_privacy', {
           user_id_input: userId 
-        } as any);
+        });
       
       if (error) throw error;
       

@@ -1,5 +1,6 @@
+
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 // Define StoryVisibility type properly with string literal union
 export type StoryVisibility = 'public' | 'friends' | 'select' | 'except';
@@ -58,6 +59,7 @@ export async function uploadStory(
  */
 export function validateStoryFile(file: File): boolean {
   const fileSize = 15 * 1024 * 1024; // 15MB limit
+  const { toast } = useToast();
   
   if (file.size > fileSize) {
     toast({
@@ -127,10 +129,11 @@ export async function cleanupExpiredStories(): Promise<number> {
  */
 export async function getUserStoryPrivacySetting(userId: string): Promise<StoryVisibility> {
   try {
+    // Fix the RPC call with empty type parameters
     const { data, error } = await supabase
       .rpc('get_user_story_privacy', {
         user_id_input: userId 
-      } as any);
+      });
       
     if (error) {
       console.error("Error obteniendo configuración de privacidad:", error);
@@ -159,11 +162,12 @@ export async function saveUserStoryPrivacySetting(
   privacySetting: StoryVisibility
 ): Promise<boolean> {
   try {
+    // Fix the RPC call with empty type parameters
     const { error } = await supabase
       .rpc('save_user_story_privacy', {
         user_id_input: userId,
         privacy_setting: privacySetting
-      } as any);
+      });
       
     if (error) {
       console.error("Error guardando configuración de privacidad:", error);

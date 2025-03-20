@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { StoryVisibility, uploadStory, validateStoryFile } from "@/components/stories/utils/story-utils";
@@ -33,11 +34,11 @@ export function useStoryCreator(currentUserId: string, onComplete: () => void) {
           avatarUrl: profileData.avatar_url
         });
         
-        // Fetch user's privacy setting using RPC with type assertion
+        // Fix the RPC call by omitting type parameters
         const { data: privacyData, error: privacyError } = await supabase
           .rpc('get_user_story_privacy', { 
             user_id_input: currentUserId 
-          } as any);
+          });
         
         // Validate the data is a valid StoryVisibility value
         if (!privacyError && privacyData && typeof privacyData === 'string' && 
