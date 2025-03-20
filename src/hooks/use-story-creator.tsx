@@ -35,10 +35,14 @@ export function useStoryCreator(currentUserId: string, onComplete: () => void) {
         });
         
         // Fetch user's privacy setting using RPC
+        type StoryPrivacyRpcParams = {
+          user_id_input: string;
+        };
+        
         const { data: privacyData, error: privacyError } = await supabase
-          .rpc('get_user_story_privacy', { 
+          .rpc<string>('get_user_story_privacy', { 
             user_id_input: currentUserId 
-          });
+          } as StoryPrivacyRpcParams);
         
         // Validate the data is a valid StoryVisibility value
         if (!privacyError && privacyData && typeof privacyData === 'string' && 
