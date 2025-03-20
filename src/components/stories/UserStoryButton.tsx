@@ -47,7 +47,7 @@ export function UserStoryButton({
         )}
       </div>
       <span className="text-xs font-medium text-center">
-        {hasStories ? (userStory?.username || 'Tu historia') : 'Crear historia'}
+        {hasStories ? 'Tu historia' : 'Crear historia'}
       </span>
     </div>
   );

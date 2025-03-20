@@ -1,11 +1,8 @@
-
 import { useState } from "react";
 import { StoryCreator } from "./StoryCreator";
 import { StoriesList } from "./StoriesList";
 import { StoryView } from "./StoryView";
 import { useStoryViewer } from "@/hooks/use-story-viewer";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Plus } from "lucide-react";
 import { UserStoryButton } from "./UserStoryButton";
 
 interface StoryViewerProps {
