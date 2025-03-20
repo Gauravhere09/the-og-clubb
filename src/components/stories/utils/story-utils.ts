@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -132,7 +131,7 @@ export async function getUserStoryPrivacySetting(userId: string): Promise<StoryV
     const { data, error } = await supabase
       .rpc('get_user_story_privacy', { 
         user_id_input: userId 
-      } as { user_id_input: string });
+      });
       
     if (error) {
       console.error("Error obteniendo configuración de privacidad:", error);
@@ -166,7 +165,7 @@ export async function saveUserStoryPrivacySetting(
       .rpc('save_user_story_privacy', { 
         user_id_input: userId,
         privacy_setting: privacySetting
-      } as { user_id_input: string, privacy_setting: string });
+      });
       
     if (error) {
       console.error("Error guardando configuración de privacidad:", error);

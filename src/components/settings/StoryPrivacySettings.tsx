@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -46,7 +45,7 @@ export function StoryPrivacySettings({ open, onOpenChange }: StoryPrivacySetting
       // Use RPC instead of direct table access
       const { data, error } = await supabase.rpc('get_user_story_privacy', { 
         user_id_input: userId 
-      } as { user_id_input: string });
+      });
       
       if (error) throw error;
       
