@@ -2,7 +2,7 @@
 import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AudioRecorder } from "../AudioRecorder";
-import { Image, Video, BarChart, MousePointerClick, PlusCircle } from "lucide-react";
+import { MousePointerClick, PlusCircle } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { StoryCreator } from "../stories/StoryCreator";
 import { supabase } from "@/integrations/supabase/client";
+import { AttachmentInput } from "@/components/AttachmentInput";
 
 interface PostActionButtonsProps {
   onFileSelect: (file: File) => void;
@@ -19,8 +20,6 @@ interface PostActionButtonsProps {
 }
 
 export function PostActionButtons({ onFileSelect, onPollCreate, isPending }: PostActionButtonsProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [mediaType, setMediaType] = useState<'image' | 'video'>('image');
   const [showStoryCreator, setShowStoryCreator] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -35,16 +34,10 @@ export function PostActionButtons({ onFileSelect, onPollCreate, isPending }: Pos
     getUserId();
   }, []);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      onFileSelect(file);
+  const handleFileSelect = (files: File[] | null) => {
+    if (files && files.length > 0) {
+      onFileSelect(files[0]);
     }
-  };
-
-  const handleMediaSelect = (type: 'image' | 'video') => {
-    setMediaType(type);
-    fileInputRef.current?.click();
   };
 
   const handleStoryClick = () => {
@@ -53,14 +46,6 @@ export function PostActionButtons({ onFileSelect, onPollCreate, isPending }: Pos
 
   return (
     <div className="flex gap-2">
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept={mediaType === 'image' ? "image/*" : "video/*,audio/*"}
-        className="hidden"
-      />
-
       {/* Mobile dropdown menu with click icon */}
       <div className="md:hidden">
         <DropdownMenu>
@@ -75,21 +60,34 @@ export function PostActionButtons({ onFileSelect, onPollCreate, isPending }: Pos
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="bg-background border-border">
-            <DropdownMenuItem onClick={() => handleMediaSelect('image')}>
-              <Image className="h-4 w-4 mr-2" />
-              <span>Imagen</span>
+            <DropdownMenuItem>
+              <AttachmentInput
+                type="image"
+                onAttachmentChange={handleFileSelect}
+                showLabel={true}
+                buttonVariant="ghost"
+                buttonClassName="w-full flex justify-start"
+              />
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleMediaSelect('video')}>
-              <Video className="h-4 w-4 mr-2" />
-              <span>Video</span>
+            <DropdownMenuItem>
+              <AttachmentInput
+                type="video"
+                onAttachmentChange={handleFileSelect}
+                showLabel={true}
+                buttonVariant="ghost"
+                buttonClassName="w-full flex justify-start"
+              />
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onPollCreate}>
-              <BarChart className="h-4 w-4 mr-2" />
-              <span>Encuesta</span>
+              <Button variant="ghost" className="w-full flex justify-start">
+                Encuesta
+              </Button>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleStoryClick}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              <span>Historia</span>
+              <Button variant="ghost" className="w-full flex justify-start">
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Historia
+              </Button>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -97,22 +95,22 @@ export function PostActionButtons({ onFileSelect, onPollCreate, isPending }: Pos
 
       {/* Desktop buttons */}
       <div className="hidden md:flex gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => handleMediaSelect('image')}
+        <AttachmentInput
+          type="image"
+          onAttachmentChange={handleFileSelect}
+          showLabel={false}
+          buttonSize="icon"
+          buttonVariant="ghost"
           disabled={isPending}
-        >
-          <Image className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => handleMediaSelect('video')}
+        />
+        <AttachmentInput
+          type="video"
+          onAttachmentChange={handleFileSelect}
+          showLabel={false}
+          buttonSize="icon"
+          buttonVariant="ghost"
           disabled={isPending}
-        >
-          <Video className="h-4 w-4" />
-        </Button>
+        />
         <AudioRecorder onRecordingComplete={(blob) => onFileSelect(new File([blob], "audio.webm", { type: "audio/webm" }))} />
         <Button
           variant="ghost"
@@ -120,7 +118,7 @@ export function PostActionButtons({ onFileSelect, onPollCreate, isPending }: Pos
           onClick={onPollCreate}
           disabled={isPending}
         >
-          <BarChart className="h-4 w-4" />
+          Encuesta
         </Button>
       </div>
 

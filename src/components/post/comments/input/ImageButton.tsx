@@ -1,7 +1,5 @@
 
-import { ImageIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useRef } from "react";
+import { AttachmentInput } from "@/components/AttachmentInput";
 
 interface ImageButtonProps {
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -9,28 +7,28 @@ interface ImageButtonProps {
 }
 
 export function ImageButton({ onImageChange, fileInputRef }: ImageButtonProps) {
-  const handleImageClick = () => {
-    fileInputRef.current?.click();
-  };
-
   return (
-    <>
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        onClick={handleImageClick}
-        className="text-xs flex items-center gap-1"
-      >
-        <ImageIcon className="h-3 w-3" />
-        Imagen
-      </Button>
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={onImageChange}
-        accept="image/*"
-        className="hidden"
-      />
-    </>
+    <AttachmentInput
+      type="image"
+      fileInputRef={fileInputRef}
+      onAttachmentChange={(files) => {
+        if (files && files.length > 0 && onImageChange) {
+          // Create a synthetic event to match the expected format
+          const syntheticEvent = {
+            target: {
+              files: {
+                0: files[0],
+                length: 1,
+                item: (index: number) => files[index]
+              }
+            }
+          } as React.ChangeEvent<HTMLInputElement>;
+          
+          onImageChange(syntheticEvent);
+        }
+      }}
+      showLabel={true}
+      buttonSize="sm"
+    />
   );
 }

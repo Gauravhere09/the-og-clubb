@@ -1,5 +1,5 @@
 
-import { Button } from "@/components/ui/button";
+import { AttachmentPreview } from "@/components/AttachmentPreview";
 
 interface FilePreviewProps {
   file?: File | null;
@@ -14,71 +14,58 @@ interface FilePreviewProps {
 export function FilePreview({ file, onRemove, url, type, isModalOpen, setIsModalOpen }: FilePreviewProps) {
   // If file is provided (for PostCreator)
   if (file) {
+    // Create a preview URL from the file
+    const preview = file.type.startsWith('image/') ? URL.createObjectURL(file) : '';
+    
     return (
-      <div className="relative">
-        {file.type.startsWith('image/') && (
-          <img
-            src={URL.createObjectURL(file)}
-            alt="Preview"
-            className="w-full h-48 object-cover rounded-lg"
-          />
-        )}
-        {file.type.startsWith('video/') && (
-          <video
-            src={URL.createObjectURL(file)}
-            controls
-            className="w-full rounded-lg"
-          />
-        )}
-        {file.type.startsWith('audio/') && (
-          <audio
-            src={URL.createObjectURL(file)}
-            controls
-            className="w-full"
-          />
-        )}
-        {onRemove && (
-          <Button
-            variant="secondary"
-            size="sm"
-            className="absolute top-2 right-2"
-            onClick={onRemove}
-          >
-            Eliminar
-          </Button>
-        )}
-      </div>
+      <AttachmentPreview
+        previews={[preview]}
+        files={[file]}
+        onRemove={() => onRemove && onRemove()}
+        className="w-full"
+        previewClassName="w-full h-48 object-cover"
+      />
     );
   }
 
   // If url/type is provided (for PostContent)
   if (url && type) {
-    return (
-      <div className="relative">
-        {type.startsWith('image') && (
+    // Create a placeholder file to use with AttachmentPreview
+    const placeholderFile = new File([], "media", { type });
+    
+    // For non-image types, we need to handle differently
+    if (type.startsWith('image')) {
+      return (
+        <div className="relative">
           <img
             src={url}
             alt="Media"
             className="w-full max-h-96 object-contain rounded-lg cursor-pointer"
             onClick={() => setIsModalOpen && setIsModalOpen(true)}
           />
-        )}
-        {type.startsWith('video') && (
+        </div>
+      );
+    } else if (type.startsWith('video')) {
+      return (
+        <div className="relative">
           <video
             src={url}
             controls
             className="w-full rounded-lg"
           />
-        )}
-        {type.startsWith('audio') && (
+        </div>
+      );
+    } else if (type.startsWith('audio')) {
+      return (
+        <div className="relative">
           <audio
             src={url}
             controls
             className="w-full"
           />
-        )}
-      </div>
-    );
+        </div>
+      );
+    }
   }
   
   return null;

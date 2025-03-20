@@ -1,6 +1,5 @@
 
-import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { AttachmentPreview } from "@/components/AttachmentPreview";
 
 interface ImagePreviewProps {
   imagePreview: string | null;
@@ -10,21 +9,14 @@ interface ImagePreviewProps {
 export function ImagePreview({ imagePreview, onRemoveImage }: ImagePreviewProps) {
   if (!imagePreview) return null;
   
+  // Create a placeholder file object since we don't have the original file here
+  const imageFile = new File([], "preview.jpg", { type: "image/jpeg" });
+  
   return (
-    <div className="relative">
-      <img 
-        src={imagePreview} 
-        alt="Vista previa" 
-        className="max-h-60 rounded-md object-contain"
-      />
-      <Button
-        variant="destructive"
-        size="icon"
-        className="absolute top-2 right-2 h-6 w-6 rounded-full"
-        onClick={onRemoveImage}
-      >
-        <X className="h-3 w-3" />
-      </Button>
-    </div>
+    <AttachmentPreview
+      previews={[imagePreview]}
+      files={[imageFile]}
+      onRemove={() => onRemoveImage()}
+    />
   );
 }

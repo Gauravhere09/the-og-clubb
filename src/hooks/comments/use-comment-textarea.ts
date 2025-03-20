@@ -42,10 +42,12 @@ export function useCommentTextarea({
     if (mentionListVisible && mentionUsers.length > 0) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setMentionIndex(prev => (prev + 1) % mentionUsers.length);
+        const newIndex = (mentionIndex + 1) % mentionUsers.length;
+        setMentionIndex(newIndex);
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
-        setMentionIndex(prev => (prev <= 0 ? mentionUsers.length - 1 : prev - 1));
+        const newIndex = (mentionIndex <= 0) ? mentionUsers.length - 1 : mentionIndex - 1;
+        setMentionIndex(newIndex);
       } else if (e.key === 'Enter' || e.key === 'Tab') {
         e.preventDefault();
         if (mentionIndex >= 0 && mentionIndex < mentionUsers.length) {
