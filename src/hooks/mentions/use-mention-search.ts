@@ -23,23 +23,16 @@ export function useMentionSearch() {
 
         console.log("Searching for users with query:", mentionSearch);
         
-        // Fetch up to 5 users whose usernames match the search string
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url')
-          .neq('id', user.id)
-          .ilike('username', `%${mentionSearch}%`)
-          .order('username')
-          .limit(5);
-
-        if (error) {
-          console.error("Error fetching users for mention:", error);
-          throw error;
-        }
+        // Primero buscar entre amigos y seguidores
+        const friendsAndFollowers = await fetchFriendsAndFollowers(user.id, mentionSearch);
         
-        // Log results to help debugging
-        console.log("Mention search results:", data);
-        setMentionUsers(data || []);
+        // Si no hay suficientes resultados, complementar con otros usuarios
+        if (friendsAndFollowers.length < 5) {
+          const otherUsers = await fetchOtherUsers(user.id, mentionSearch, 5 - friendsAndFollowers.length);
+          setMentionUsers([...friendsAndFollowers, ...otherUsers]);
+        } else {
+          setMentionUsers(friendsAndFollowers);
+        }
       } catch (error) {
         console.error('Error searching for users:', error);
         toast({
@@ -55,6 +48,94 @@ export function useMentionSearch() {
       searchForUsers();
     }
   }, [mentionSearch, toast]);
+
+  // Función para obtener amigos y seguidores que coincidan con la búsqueda
+  const fetchFriendsAndFollowers = async (userId: string, query: string): Promise<MentionUser[]> => {
+    const results: MentionUser[] = [];
+    
+    // 1. Obtener amigos (relaciones aceptadas donde el usuario es el iniciador)
+    const { data: friends, error: friendsError } = await supabase
+      .from('friendships')
+      .select(`
+        friend:profiles!friendships_friend_id_fkey (
+          id, username, avatar_url
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('status', 'accepted');
+      
+    if (friendsError) {
+      console.error("Error fetching friends:", friendsError);
+    } else {
+      const filteredFriends = friends
+        .filter(f => f.friend.username?.toLowerCase().includes(query.toLowerCase()))
+        .map(f => ({
+          id: f.friend.id,
+          username: f.friend.username || '',
+          avatar_url: f.friend.avatar_url,
+          relationship: 'Amigo'
+        }));
+      results.push(...filteredFriends);
+    }
+    
+    // 2. Obtener seguidores (relaciones donde el usuario es el objetivo)
+    const { data: followers, error: followersError } = await supabase
+      .from('friendships')
+      .select(`
+        user:profiles!friendships_user_id_fkey (
+          id, username, avatar_url
+        )
+      `)
+      .eq('friend_id', userId)
+      .eq('status', 'accepted');
+      
+    if (followersError) {
+      console.error("Error fetching followers:", followersError);
+    } else {
+      // Excluir usuarios que ya son amigos (ya incluidos arriba)
+      const friendIds = new Set(results.map(r => r.id));
+      
+      const filteredFollowers = followers
+        .filter(f => 
+          !friendIds.has(f.user.id) && 
+          f.user.username?.toLowerCase().includes(query.toLowerCase())
+        )
+        .map(f => ({
+          id: f.user.id,
+          username: f.user.username || '',
+          avatar_url: f.user.avatar_url,
+          relationship: 'Seguidor'
+        }));
+      results.push(...filteredFollowers);
+    }
+    
+    return results.slice(0, 5); // Limitar a 5 resultados máximo
+  };
+  
+  // Función para obtener otros usuarios si no hay suficientes amigos/seguidores
+  const fetchOtherUsers = async (userId: string, query: string, limit: number): Promise<MentionUser[]> => {
+    if (limit <= 0) return [];
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, username, avatar_url')
+      .neq('id', userId)
+      .ilike('username', `%${query}%`)
+      .order('username')
+      .limit(limit);
+
+    if (error) {
+      console.error("Error fetching other users:", error);
+      return [];
+    }
+    
+    return (data || []).map(user => ({
+      id: user.id,
+      username: user.username || '',
+      avatar_url: user.avatar_url,
+      relationship: null
+    }));
+  };
 
   return {
     mentionUsers,

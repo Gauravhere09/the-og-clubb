@@ -3,6 +3,7 @@ export interface MentionUser {
   id: string;
   username: string;
   avatar_url: string | null;
+  relationship?: string | null;
 }
 
 export interface MentionIndices {

@@ -46,6 +46,8 @@ export interface Comment {
   parent_id: string | null;
   created_at: string;
   updated_at: string;
+  media_url?: string | null;
+  media_type?: string | null;
   profiles?: {
     username: string;
     avatar_url: string;

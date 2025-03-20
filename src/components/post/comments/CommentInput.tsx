@@ -2,9 +2,10 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useRef } from "react";
-import { X, AtSign } from "lucide-react";
+import { X, AtSign, ImageIcon } from "lucide-react";
 import { useMentions } from "@/hooks/mentions";
 import { MentionSuggestions } from "@/components/mentions/MentionSuggestions";
+import { useToast } from "@/hooks/use-toast";
 
 interface CommentInputProps {
   newComment: string;
@@ -23,6 +24,10 @@ export function CommentInput({
 }: CommentInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const { toast } = useToast();
   
   const {
     mentionUsers,
@@ -41,16 +46,6 @@ export function CommentInput({
       textareaRef.current.focus();
     }
   }, [replyTo]);
-
-  // Add debugging log for mention state
-  useEffect(() => {
-    console.log("CommentInput mention state:", { 
-      mentionListVisible, 
-      mentionUsers: mentionUsers.length,
-      mentionPosition,
-      caretPos: textareaRef.current?.selectionStart 
-    });
-  }, [mentionListVisible, mentionUsers, mentionPosition]);
 
   // Update the cursor position whenever it changes
   const handleSelectionChange = () => {
@@ -149,6 +144,46 @@ export function CommentInput({
     }
   };
 
+  const handleImageClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Verificar que sea una imagen
+    if (!file.type.startsWith('image/')) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "El archivo debe ser una imagen"
+      });
+      return;
+    }
+
+    // Verificar tamaño máximo (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "La imagen no debe exceder 5MB"
+      });
+      return;
+    }
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="space-y-2" ref={containerRef}>
       {replyTo && (
@@ -166,6 +201,25 @@ export function CommentInput({
           </Button>
         </div>
       )}
+      
+      {imagePreview && (
+        <div className="relative">
+          <img 
+            src={imagePreview} 
+            alt="Vista previa" 
+            className="max-h-60 rounded-md object-contain"
+          />
+          <Button
+            variant="destructive"
+            size="icon"
+            className="absolute top-2 right-2 h-6 w-6 rounded-full"
+            onClick={handleRemoveImage}
+          >
+            <X className="h-3 w-3" />
+          </Button>
+        </div>
+      )}
+      
       <div className="flex gap-2 flex-col">
         <div className="flex items-center gap-2 relative">
           <Textarea
@@ -178,7 +232,7 @@ export function CommentInput({
             id="comment-textarea"
             name="comment-textarea"
           />
-          <Button onClick={onSubmitComment} disabled={!newComment.trim()}>
+          <Button onClick={onSubmitComment} disabled={!newComment.trim() && !imageFile}>
             Comentar
           </Button>
         </div>
@@ -186,15 +240,33 @@ export function CommentInput({
           <div className="text-xs text-muted-foreground">
             Presiona Enter para enviar, Shift+Enter para nueva línea
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleMentionClick}
-            className="text-xs flex items-center gap-1"
-          >
-            <AtSign className="h-3 w-3" />
-            Mencionar
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleMentionClick}
+              className="text-xs flex items-center gap-1"
+            >
+              <AtSign className="h-3 w-3" />
+              Mencionar
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleImageClick}
+              className="text-xs flex items-center gap-1"
+            >
+              <ImageIcon className="h-3 w-3" />
+              Imagen
+            </Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              accept="image/*"
+              className="hidden"
+            />
+          </div>
         </div>
       </div>
       
