@@ -1,5 +1,4 @@
-
-import { ChevronRight, Facebook, Mail, Calendar, UserX } from "lucide-react";
+import { ChevronRight, Heading, Mail, Calendar, UserX } from "lucide-react";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -99,7 +98,7 @@ export function PersonalDataSettings() {
 
           <button className="w-full flex items-center justify-between p-4 border-b border-border hover:bg-muted/50 transition-colors">
             <div className="flex items-center gap-3">
-              <Facebook className="h-5 w-5 text-blue-600" />
+              <Heading className="h-5 w-5 text-blue-600" />
               <div>
                 <h3 className="font-medium text-left">Confirmación de identidad</h3>
                 <p className="text-sm text-muted-foreground text-left">Próximamente</p>
