@@ -14,6 +14,8 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          media_type: string | null
+          media_url: string | null
           parent_id: string | null
           post_id: string
           updated_at: string
@@ -23,6 +25,8 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          media_type?: string | null
+          media_url?: string | null
           parent_id?: string | null
           post_id: string
           updated_at?: string
@@ -32,6 +36,8 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          media_type?: string | null
+          media_url?: string | null
           parent_id?: string | null
           post_id?: string
           updated_at?: string

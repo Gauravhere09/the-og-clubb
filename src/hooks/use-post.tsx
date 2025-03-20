@@ -8,6 +8,7 @@ import { fetchComments } from "@/lib/api/posts/queries";
 import { Post, Comment } from "@/types/post";
 import { sendMentionNotifications } from "@/lib/api/posts/notifications";
 import { ReactionType } from "@/types/database/social.types";
+import { uploadMediaFile, getMediaType } from "@/lib/api/posts/storage";
 
 export function usePost(post: Post, hideComments = false) {
   const [showComments, setShowComments] = useState(false);
@@ -127,6 +128,15 @@ export function usePost(post: Post, hideComments = false) {
     }
     
     try {
+      let mediaUrl = null;
+      let mediaType = null;
+      
+      if (commentImage) {
+        // Subir la imagen al storage
+        mediaUrl = await uploadMediaFile(commentImage);
+        mediaType = getMediaType(commentImage);
+      }
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Debes iniciar sesión para comentar");
       
@@ -136,7 +146,9 @@ export function usePost(post: Post, hideComments = false) {
           post_id: post.id,
           user_id: user.id,
           content: newComment,
-          parent_id: replyTo?.id || null
+          parent_id: replyTo?.id || null,
+          media_url: mediaUrl,
+          media_type: mediaType
         })
         .select()
         .single();

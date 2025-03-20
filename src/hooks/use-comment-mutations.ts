@@ -3,15 +3,37 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createComment } from "@/lib/api/comments";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadMediaFile, getMediaType } from "@/lib/api/posts/storage";
 
 export function useCommentMutations(postId: string) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const { mutate: submitComment } = useMutation({
-    mutationFn: async ({ content, replyToId }: { content: string; replyToId?: string }) => {
-      if (!content.trim()) throw new Error("El comentario no puede estar vacío");
-      return createComment(postId, content, replyToId);
+    mutationFn: async ({ 
+      content, 
+      replyToId, 
+      image 
+    }: { 
+      content: string; 
+      replyToId?: string; 
+      image?: File | null 
+    }) => {
+      // Si no hay contenido ni imagen, mostrar error
+      if (!content.trim() && !image) {
+        throw new Error("El comentario no puede estar vacío");
+      }
+
+      let mediaUrl = null;
+      let mediaType = null;
+
+      // Si hay una imagen, subir al almacenamiento
+      if (image) {
+        mediaUrl = await uploadMediaFile(image);
+        mediaType = getMediaType(image);
+      }
+
+      return createComment(postId, content, replyToId, mediaUrl, mediaType);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["comments", postId] });

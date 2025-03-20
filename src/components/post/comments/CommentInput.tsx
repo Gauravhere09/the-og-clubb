@@ -18,6 +18,8 @@ interface CommentInputProps {
   onSubmitComment: () => void;
   replyTo: { id: string; username: string } | null;
   onCancelReply: () => void;
+  commentImage?: File | null;
+  setCommentImage?: (file: File | null) => void;
 }
 
 export function CommentInput({ 
@@ -25,13 +27,14 @@ export function CommentInput({
   onNewCommentChange, 
   onSubmitComment, 
   replyTo,
-  onCancelReply
+  onCancelReply,
+  commentImage,
+  setCommentImage
 }: CommentInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const { toast } = useToast();
   
   const {
@@ -51,6 +54,18 @@ export function CommentInput({
       textareaRef.current.focus();
     }
   }, [replyTo]);
+
+  // Actualizar la vista previa cuando cambia la imagen
+  useEffect(() => {
+    if (commentImage) {
+      setImagePreview(URL.createObjectURL(commentImage));
+      return () => {
+        if (imagePreview) URL.revokeObjectURL(imagePreview);
+      };
+    } else {
+      setImagePreview(null);
+    }
+  }, [commentImage]);
 
   // Update the cursor position whenever it changes
   const handleSelectionChange = () => {
@@ -173,12 +188,15 @@ export function CommentInput({
       return;
     }
 
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    if (setCommentImage) {
+      setCommentImage(file);
+    }
   };
 
   const handleRemoveImage = () => {
-    setImageFile(null);
+    if (setCommentImage) {
+      setCommentImage(null);
+    }
     setImagePreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -202,7 +220,7 @@ export function CommentInput({
           />
           <SubmitButton 
             onClick={onSubmitComment} 
-            disabled={!newComment.trim() && !imageFile}
+            disabled={!newComment.trim() && !commentImage}
           />
         </div>
         <CommentInputHelper>

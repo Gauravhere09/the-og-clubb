@@ -28,6 +28,7 @@ export function SingleComment({ comment, onReaction, onReply, onDelete }: Single
   
   // Determine if the comment has an attached image
   const hasImage = comment.media_url && comment.media_type?.startsWith('image');
+  const isAudio = comment.media_type === 'audio';
 
   // Check if user is the author of the comment
   useState(() => {
@@ -110,8 +111,8 @@ export function SingleComment({ comment, onReaction, onReply, onDelete }: Single
           
           <CommentContent
             content={comment.content}
-            isAudio={comment.media_type === 'audio'}
-            audioUrl={comment.media_type === 'audio' ? comment.media_url : null}
+            isAudio={isAudio}
+            audioUrl={isAudio ? comment.media_url : null}
             isEditing={isEditing}
             editedContent={editedContent}
             onEditChange={setEditedContent}

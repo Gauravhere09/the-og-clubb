@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Comment } from "@/types/post";
 import { sendMentionNotifications } from "./posts/notifications";
 
-export async function createComment(postId: string, content: string, parentId?: string) {
+export async function createComment(postId: string, content: string, parentId?: string, mediaUrl?: string, mediaType?: string) {
   const { data: sessionData } = await supabase.auth.getSession();
   if (!sessionData.session?.user) throw new Error("Usuario no autenticado");
 
@@ -13,7 +13,9 @@ export async function createComment(postId: string, content: string, parentId?: 
       post_id: postId,
       content,
       parent_id: parentId,
-      user_id: sessionData.session.user.id
+      user_id: sessionData.session.user.id,
+      media_url: mediaUrl,
+      media_type: mediaType
     })
     .select('*, profiles(username, avatar_url)')
     .single();

@@ -1,3 +1,4 @@
+
 import { Card } from "@/components/ui/card";
 import { Comments } from "@/components/post/Comments";
 import { PostActions } from "@/components/post/PostActions";
@@ -19,6 +20,8 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
     showComments,
     comments,
     newComment,
+    commentImage,
+    setCommentImage,
     replyTo,
     isCurrentUserAuthor,
     onDeletePost,
@@ -72,6 +75,8 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
           replyTo={replyTo}
           onCancelReply={handleCancelReply}
           showComments={showComments}
+          commentImage={commentImage}
+          setCommentImage={setCommentImage}
         />
       )}
     </PostWrapper>

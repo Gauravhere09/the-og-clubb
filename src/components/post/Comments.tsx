@@ -3,7 +3,6 @@ import { CommentsList } from "./comments/CommentsList";
 import { CommentInput } from "./comments/CommentInput";
 import type { Comment } from "@/types/post";
 import type { ReactionType } from "@/types/database/social.types";
-import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 
 interface CommentsProps {
   postId: string;
@@ -17,6 +16,8 @@ interface CommentsProps {
   replyTo: { id: string; username: string } | null;
   onCancelReply: () => void;
   showComments: boolean;
+  commentImage?: File | null;
+  setCommentImage?: (file: File | null) => void;
 }
 
 export function Comments({
@@ -30,7 +31,9 @@ export function Comments({
   onNewCommentChange,
   replyTo,
   onCancelReply,
-  showComments
+  showComments,
+  commentImage,
+  setCommentImage
 }: CommentsProps) {
   // Solo renderizamos los comentarios si showComments es true
   if (!showComments) return null;
@@ -50,6 +53,8 @@ export function Comments({
         onSubmitComment={onSubmitComment}
         replyTo={replyTo}
         onCancelReply={onCancelReply}
+        commentImage={commentImage}
+        setCommentImage={setCommentImage}
       />
     </div>
   );
