@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./use-toast";
@@ -10,7 +9,6 @@ import { sendMentionNotifications } from "@/lib/api/posts/notifications";
 import { ReactionType } from "@/types/database/social.types";
 
 export function usePost(post: Post, hideComments = false) {
-  // Inicializamos showComments como false para que no se muestren automáticamente
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [commentImage, setCommentImage] = useState<File | null>(null);
@@ -21,7 +19,6 @@ export function usePost(post: Post, hideComments = false) {
   const { toast } = useToast();
   const { submitComment, deleteComment } = useCommentMutations(post.id);
   
-  // Check if current user is the author of the post
   useEffect(() => {
     const checkAuthor = async () => {
       const { data } = await supabase.auth.getUser();
@@ -33,20 +30,17 @@ export function usePost(post: Post, hideComments = false) {
     checkAuthor();
   }, [post.user_id]);
   
-  // Fetch comments for this post
   const { data: comments = [] } = useQuery({
     queryKey: ["comments", post.id],
     queryFn: () => fetchComments(post.id),
     enabled: showComments
   });
   
-  // Reaction mutation
   const { mutate: reactToPost } = useMutation({
     mutationFn: async ({ postId, type }: { postId: string; type: ReactionType }) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Debes iniciar sesión para reaccionar");
       
-      // Check if user already reacted with the same type
       const { data: existingReaction } = await supabase
         .from("reactions")
         .select("id, reaction_type")
@@ -56,20 +50,17 @@ export function usePost(post: Post, hideComments = false) {
       
       if (existingReaction) {
         if (existingReaction.reaction_type === type) {
-          // Remove reaction if same type clicked again
           await supabase
             .from("reactions")
             .delete()
             .eq("id", existingReaction.id);
         } else {
-          // Update to new reaction type
           await supabase
             .from("reactions")
             .update({ reaction_type: type })
             .eq("id", existingReaction.id);
         }
       } else {
-        // Create new reaction
         await supabase
           .from("reactions")
           .insert({
@@ -135,7 +126,6 @@ export function usePost(post: Post, hideComments = false) {
     }
     
     try {
-      // Upload image if present
       let mediaUrl = null;
       
       if (commentImage) {
@@ -146,7 +136,6 @@ export function usePost(post: Post, hideComments = false) {
         
         if (uploadError) throw uploadError;
         
-        // Get the public URL
         const { data: { publicUrl } } = supabase.storage
           .from('comment-images')
           .getPublicUrl(fileName);
@@ -154,7 +143,6 @@ export function usePost(post: Post, hideComments = false) {
         mediaUrl = publicUrl;
       }
       
-      // Create the comment
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Debes iniciar sesión para comentar");
       
@@ -172,7 +160,6 @@ export function usePost(post: Post, hideComments = false) {
       
       if (commentError) throw commentError;
       
-      // Process mentions in the comment and send notifications
       if (newComment.includes('@')) {
         await sendMentionNotifications(
           newComment, 
@@ -182,12 +169,10 @@ export function usePost(post: Post, hideComments = false) {
         );
       }
       
-      // Reset state
       setNewComment("");
       setCommentImage(null);
       setReplyTo(null);
       
-      // Refresh comments
       queryClient.invalidateQueries({ queryKey: ["comments", post.id] });
       
       toast({
@@ -205,7 +190,6 @@ export function usePost(post: Post, hideComments = false) {
   };
   
   const handleCommentReaction = (commentId: string, type: ReactionType) => {
-    // Handle comment reactions through API
   };
   
   const handleReply = (id: string, username: string) => {
