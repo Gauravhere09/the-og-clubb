@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -128,15 +127,10 @@ export async function cleanupExpiredStories(): Promise<number> {
  */
 export async function getUserStoryPrivacySetting(userId: string): Promise<StoryVisibility> {
   try {
-    // Create explicit RPC call to a stored procedure that handles this
-    interface StoryPrivacyRpcParams {
-      user_id_input: string;
-    }
-    
     const { data, error } = await supabase
       .rpc('get_user_story_privacy', {
         user_id_input: userId 
-      });
+      } as any);
       
     if (error) {
       console.error("Error obteniendo configuración de privacidad:", error);
@@ -165,17 +159,11 @@ export async function saveUserStoryPrivacySetting(
   privacySetting: StoryVisibility
 ): Promise<boolean> {
   try {
-    // Call RPC to create or update user settings
-    interface SavePrivacyRpcParams {
-      user_id_input: string;
-      privacy_setting: string;
-    }
-    
     const { error } = await supabase
       .rpc('save_user_story_privacy', {
         user_id_input: userId,
         privacy_setting: privacySetting
-      });
+      } as any);
       
     if (error) {
       console.error("Error guardando configuración de privacidad:", error);
