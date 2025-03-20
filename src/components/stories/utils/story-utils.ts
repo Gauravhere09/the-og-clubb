@@ -138,8 +138,9 @@ export async function getUserStoryPrivacySetting(userId: string): Promise<StoryV
       return 'public';
     }
     
-    if (typeof data === 'string') {
-      // Handle the case where data is a string
+    if (typeof data === 'string' && 
+        (data === 'public' || data === 'friends' || data === 'select' || data === 'except')) {
+      // Verify it's a valid StoryVisibility value before casting
       return data as StoryVisibility;
     }
     

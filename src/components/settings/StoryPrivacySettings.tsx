@@ -50,8 +50,9 @@ export function StoryPrivacySettings({ open, onOpenChange }: StoryPrivacySetting
       
       if (error) throw error;
       
-      if (data && typeof data === 'string') {
-        // Safely cast string to our StoryVisibility type
+      if (data && typeof data === 'string' && 
+          (data === 'public' || data === 'friends' || data === 'select' || data === 'except')) {
+        // Safely cast string to our StoryVisibility type after validation
         setVisibility(data as StoryVisibility);
       }
     } catch (error) {
