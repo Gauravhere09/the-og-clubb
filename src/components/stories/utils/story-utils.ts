@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
-export type StoryVisibility = 'public' | 'friends' | 'select';
+export type StoryVisibility = 'public' | 'friends' | 'select' | 'except';
 
 /**
  * Uploads a story to Supabase
@@ -40,7 +40,8 @@ export async function uploadStory(
         user_id: userId,
         image_url: publicUrl,
         expires_at: expiresAt.toISOString(),
-        media_type: isVideo ? 'video' : 'image'
+        media_type: isVideo ? 'video' : 'image',
+        visibility: visibility
       });
       
     if (storyError) throw storyError;
@@ -118,5 +119,27 @@ export async function cleanupExpiredStories(): Promise<number> {
   } catch (error) {
     console.error("Error cleaning up expired stories:", error);
     return 0;
+  }
+}
+
+/**
+ * Obtiene la configuración de privacidad de historias del usuario
+ */
+export async function getUserStoryPrivacySetting(userId: string): Promise<StoryVisibility> {
+  try {
+    const { data, error } = await supabase
+      .from('user_settings')
+      .select('story_privacy')
+      .eq('user_id', userId)
+      .single();
+      
+    if (error && error.code !== 'PGRST116') {
+      console.error("Error obteniendo configuración de privacidad:", error);
+    }
+    
+    return data?.story_privacy as StoryVisibility || 'public';
+  } catch (error) {
+    console.error("Error obteniendo configuración de privacidad:", error);
+    return 'public';
   }
 }

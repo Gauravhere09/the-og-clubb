@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { StoryVisibility, uploadStory, validateStoryFile } from "@/components/stories/utils/story-utils";
+import { StoryVisibility, uploadStory, validateStoryFile, getUserStoryPrivacySetting } from "@/components/stories/utils/story-utils";
 import { supabase } from "@/integrations/supabase/client";
 
 export function useStoryCreator(currentUserId: string, onComplete: () => void) {
@@ -18,26 +17,31 @@ export function useStoryCreator(currentUserId: string, onComplete: () => void) {
   const { toast } = useToast();
 
   useEffect(() => {
-    async function fetchUserProfile() {
+    async function fetchUserData() {
       try {
-        const { data, error } = await supabase
+        // Fetch user profile data
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('username, avatar_url')
           .eq('id', currentUserId)
           .single();
           
-        if (error) throw error;
+        if (profileError) throw profileError;
         
         setUserProfile({
-          username: data.username,
-          avatarUrl: data.avatar_url
+          username: profileData.username,
+          avatarUrl: profileData.avatar_url
         });
+        
+        // Fetch user's privacy setting
+        const privacySetting = await getUserStoryPrivacySetting(currentUserId);
+        setVisibility(privacySetting);
       } catch (error) {
-        console.error('Error fetching user profile:', error);
+        console.error('Error fetching user data:', error);
       }
     }
     
-    fetchUserProfile();
+    fetchUserData();
   }, [currentUserId]);
 
   const addFiles = (newFiles: File[]) => {

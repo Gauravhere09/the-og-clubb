@@ -1,13 +1,13 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Globe, Users, UserMinus, UserCog } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-type PrivacyOption = "public" | "friends" | "except" | "custom";
+import { supabase } from "@/integrations/supabase/client";
+import { StoryVisibility } from "@/components/stories/utils/story-utils";
 
 interface StoryPrivacySettingsProps {
   open: boolean;
@@ -15,16 +15,78 @@ interface StoryPrivacySettingsProps {
 }
 
 export function StoryPrivacySettings({ open, onOpenChange }: StoryPrivacySettingsProps) {
-  const [selectedOption, setSelectedOption] = useState<PrivacyOption>("custom");
+  const [selectedOption, setSelectedOption] = useState<StoryVisibility>("public");
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleSave = () => {
-    // This would typically save to a database in a real implementation
-    toast({
-      title: "Configuración guardada",
-      description: "Tu configuración de privacidad ha sido actualizada",
-    });
-    onOpenChange(false);
+  // Cargar configuración de privacidad guardada
+  useEffect(() => {
+    const loadPrivacySettings = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data, error } = await supabase
+            .from('user_settings')
+            .select('story_privacy')
+            .eq('user_id', user.id)
+            .single();
+            
+          if (error && error.code !== 'PGRST116') { // PGRST116 es "no se encontraron resultados"
+            throw error;
+          }
+          
+          if (data?.story_privacy) {
+            setSelectedOption(data.story_privacy as StoryVisibility);
+          }
+        }
+      } catch (error) {
+        console.error("Error cargando configuración de privacidad:", error);
+      }
+    };
+    
+    if (open) {
+      loadPrivacySettings();
+    }
+  }, [open]);
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        throw new Error("Usuario no autenticado");
+      }
+      
+      // Upsert: inserta si no existe, actualiza si existe
+      const { error } = await supabase
+        .from('user_settings')
+        .upsert({ 
+          user_id: user.id, 
+          story_privacy: selectedOption,
+          updated_at: new Date().toISOString()
+        });
+        
+      if (error) throw error;
+      
+      toast({
+        title: "Configuración guardada",
+        description: "Tu configuración de privacidad ha sido actualizada",
+      });
+      
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error guardando configuración:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo guardar la configuración. Inténtalo de nuevo.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -38,7 +100,7 @@ export function StoryPrivacySettings({ open, onOpenChange }: StoryPrivacySetting
         </DialogHeader>
 
         <div className="py-4">
-          <RadioGroup value={selectedOption} onValueChange={(value) => setSelectedOption(value as PrivacyOption)}>
+          <RadioGroup value={selectedOption} onValueChange={(value) => setSelectedOption(value as StoryVisibility)}>
             <div className="flex items-center space-x-3 py-3 border-b border-border">
               <div className="flex items-center justify-center h-10 w-10 rounded-full bg-secondary">
                 <Globe className="h-5 w-5" />
@@ -67,9 +129,9 @@ export function StoryPrivacySettings({ open, onOpenChange }: StoryPrivacySetting
               </div>
               <div className="flex-1">
                 <Label htmlFor="except" className="font-medium mb-1 block">Amigos, excepto...</Label>
-                <p className="text-sm text-muted-foreground">Amigos, excepto: Jesús, Yulian Smith De La Rosa, Juan Carlos Perea, Angélica González, Robert Machacon y 2 personas más</p>
+                <p className="text-sm text-muted-foreground">Amigos, excepto algunos usuarios específicos</p>
               </div>
-              <RadioGroupItem value="except" id="except" />
+              <RadioGroupItem value="except" id="except" disabled />
             </div>
 
             <div className="flex items-center space-x-3 py-3">
@@ -77,10 +139,10 @@ export function StoryPrivacySettings({ open, onOpenChange }: StoryPrivacySetting
                 <UserCog className="h-5 w-5" />
               </div>
               <div className="flex-1">
-                <Label htmlFor="custom" className="font-medium mb-1 block">Personalizado</Label>
-                <p className="text-sm text-muted-foreground">Daniel Quintero</p>
+                <Label htmlFor="select" className="font-medium mb-1 block">Personalizado</Label>
+                <p className="text-sm text-muted-foreground">Solo usuarios específicos</p>
               </div>
-              <RadioGroupItem value="custom" id="custom" />
+              <RadioGroupItem value="select" id="select" />
             </div>
           </RadioGroup>
         </div>
@@ -89,7 +151,9 @@ export function StoryPrivacySettings({ open, onOpenChange }: StoryPrivacySetting
           <DialogClose asChild>
             <Button variant="outline">Cancelar</Button>
           </DialogClose>
-          <Button onClick={handleSave}>Listo</Button>
+          <Button onClick={handleSave} disabled={isLoading}>
+            {isLoading ? "Guardando..." : "Listo"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

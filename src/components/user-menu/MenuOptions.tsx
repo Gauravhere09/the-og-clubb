@@ -9,7 +9,8 @@ import {
   Phone, 
   LogOut,
   Moon,
-  Sun
+  Sun,
+  UserPlus
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -57,6 +58,16 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
 
   return (
     <div className="grid gap-2 px-4">
+      {/* Create New Account */}
+      <Button
+        variant="outline"
+        className="justify-start h-14 bg-white dark:bg-card shadow"
+        onClick={() => handleNavigate("/auth?tab=register")}
+      >
+        <UserPlus className="mr-3 h-5 w-5 text-green-500" />
+        <span>Crear nueva cuenta</span>
+      </Button>
+      
       {/* Invite Friends */}
       <Button
         variant="outline"
