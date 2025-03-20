@@ -13,7 +13,7 @@ export function ImageButton({ onImageChange, fileInputRef }: ImageButtonProps) {
       fileInputRef={fileInputRef}
       onAttachmentChange={(files) => {
         if (files && files.length > 0 && onImageChange) {
-          // Create a synthetic event to match the expected format
+          // Create a more complete synthetic event that better matches React.ChangeEvent<HTMLInputElement>
           const syntheticEvent = {
             target: {
               files: {
@@ -21,7 +21,27 @@ export function ImageButton({ onImageChange, fileInputRef }: ImageButtonProps) {
                 length: 1,
                 item: (index: number) => files[index]
               }
-            }
+            },
+            // Add minimal required properties to pass type checking
+            currentTarget: {
+              files: {
+                0: files[0],
+                length: 1,
+                item: (index: number) => files[index]
+              }
+            },
+            preventDefault: () => {},
+            stopPropagation: () => {},
+            nativeEvent: new Event('change'),
+            bubbles: true,
+            cancelable: true,
+            defaultPrevented: false,
+            isDefaultPrevented: () => false,
+            isPropagationStopped: () => false,
+            persist: () => {},
+            timeStamp: Date.now(),
+            type: 'change',
+            isTrusted: true
           } as React.ChangeEvent<HTMLInputElement>;
           
           onImageChange(syntheticEvent);

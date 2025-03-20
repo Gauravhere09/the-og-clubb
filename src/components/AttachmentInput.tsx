@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useAttachment, AttachmentType, UseAttachmentOptions } from "@/hooks/use-attachment";
-import { useEffect } from "react";
+import { useEffect, RefObject } from "react";
 import { ImageIcon, FileIcon, MusicIcon, XIcon } from "lucide-react";
 
 interface AttachmentInputProps extends UseAttachmentOptions {
@@ -11,6 +11,8 @@ interface AttachmentInputProps extends UseAttachmentOptions {
   buttonClassName?: string;
   showLabel?: boolean;
   label?: string;
+  disabled?: boolean;
+  fileInputRef?: RefObject<HTMLInputElement>;
 }
 
 export function AttachmentInput({
@@ -22,10 +24,12 @@ export function AttachmentInput({
   buttonSize = "sm",
   buttonClassName = "",
   showLabel = true,
-  label
+  label,
+  disabled = false,
+  fileInputRef: externalFileInputRef
 }: AttachmentInputProps) {
   const {
-    fileInputRef,
+    fileInputRef: internalFileInputRef,
     handleAttachmentChange,
     cleanup
   } = useAttachment({
@@ -34,6 +38,9 @@ export function AttachmentInput({
     validation,
     onAttachmentChange
   });
+  
+  // Use external ref if provided, otherwise use the internal one
+  const fileInputRef = externalFileInputRef || internalFileInputRef;
   
   // Clean up on unmount
   useEffect(() => {
@@ -90,6 +97,7 @@ export function AttachmentInput({
         size={buttonSize} 
         onClick={handleClick}
         className={`flex items-center gap-1 ${buttonClassName}`}
+        disabled={disabled}
       >
         {getIcon()}
         {showLabel && <span>{getLabel()}</span>}
