@@ -1,11 +1,16 @@
 
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect, useRef } from "react";
-import { X, AtSign, ImageIcon } from "lucide-react";
 import { useMentions } from "@/hooks/mentions";
 import { MentionSuggestions } from "@/components/mentions/MentionSuggestions";
 import { useToast } from "@/hooks/use-toast";
+import { CommentTextarea } from "./input/CommentTextarea";
+import { ReplyBadge } from "./input/ReplyBadge";
+import { ImagePreview } from "./input/ImagePreview";
+import { CommentInputHelper } from "./input/CommentInputHelper";
+import { MentionButton } from "./input/MentionButton";
+import { ImageButton } from "./input/ImageButton";
+import { SubmitButton } from "./input/SubmitButton";
 
 interface CommentInputProps {
   newComment: string;
@@ -144,10 +149,6 @@ export function CommentInput({
     }
   };
 
-  const handleImageClick = () => {
-    fileInputRef.current?.click();
-  };
-
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -186,88 +187,31 @@ export function CommentInput({
 
   return (
     <div className="space-y-2" ref={containerRef}>
-      {replyTo && (
-        <div className="flex items-center justify-between bg-muted/30 p-2 rounded-md text-sm">
-          <span className="text-muted-foreground">
-            Respondiendo a <span className="font-medium text-foreground">@{replyTo.username}</span>
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 rounded-full"
-            onClick={onCancelReply}
-          >
-            <X className="h-3 w-3" />
-          </Button>
-        </div>
-      )}
+      <ReplyBadge replyTo={replyTo} onCancelReply={onCancelReply} />
       
-      {imagePreview && (
-        <div className="relative">
-          <img 
-            src={imagePreview} 
-            alt="Vista previa" 
-            className="max-h-60 rounded-md object-contain"
-          />
-          <Button
-            variant="destructive"
-            size="icon"
-            className="absolute top-2 right-2 h-6 w-6 rounded-full"
-            onClick={handleRemoveImage}
-          >
-            <X className="h-3 w-3" />
-          </Button>
-        </div>
-      )}
+      <ImagePreview imagePreview={imagePreview} onRemoveImage={handleRemoveImage} />
       
       <div className="flex gap-2 flex-col">
         <div className="flex items-center gap-2 relative">
-          <Textarea
+          <CommentTextarea
             ref={textareaRef}
             value={newComment}
             onChange={handleTextAreaChange}
             onKeyDown={handleKeyDown}
             placeholder={replyTo ? `Escribe tu respuesta para ${replyTo.username}...` : "Escribe un comentario..."}
-            className="resize-none min-h-[80px]"
-            id="comment-textarea"
-            name="comment-textarea"
           />
-          <Button onClick={onSubmitComment} disabled={!newComment.trim() && !imageFile}>
-            Comentar
-          </Button>
+          <SubmitButton 
+            onClick={onSubmitComment} 
+            disabled={!newComment.trim() && !imageFile}
+          />
         </div>
-        <div className="flex justify-between items-center">
-          <div className="text-xs text-muted-foreground">
-            Presiona Enter para enviar, Shift+Enter para nueva línea
-          </div>
-          <div className="flex gap-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleMentionClick}
-              className="text-xs flex items-center gap-1"
-            >
-              <AtSign className="h-3 w-3" />
-              Mencionar
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleImageClick}
-              className="text-xs flex items-center gap-1"
-            >
-              <ImageIcon className="h-3 w-3" />
-              Imagen
-            </Button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleImageChange}
-              accept="image/*"
-              className="hidden"
-            />
-          </div>
-        </div>
+        <CommentInputHelper>
+          <MentionButton onClick={handleMentionClick} />
+          <ImageButton 
+            onImageChange={handleImageChange}
+            fileInputRef={fileInputRef}
+          />
+        </CommentInputHelper>
       </div>
       
       <MentionSuggestions
