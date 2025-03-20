@@ -14,10 +14,11 @@ interface PollDisplayProps {
   poll: Poll;
   onVote?: (optionId: string) => Promise<void>;
   disabled?: boolean;
+  userVote?: string | null; // Added this prop
 }
 
-export function PollDisplay({ postId, poll, onVote, disabled = false }: PollDisplayProps) {
-  const [selectedOption, setSelectedOption] = useState<string | null>(poll.user_vote);
+export function PollDisplay({ postId, poll, onVote, disabled = false, userVote }: PollDisplayProps) {
+  const [selectedOption, setSelectedOption] = useState<string | null>(userVote || poll.user_vote);
   const [showVotesDialog, setShowVotesDialog] = useState(false);
   const [votes, setVotes] = useState<VoteWithUser[]>([]);
   const { toast } = useToast();
@@ -90,7 +91,7 @@ export function PollDisplay({ postId, poll, onVote, disabled = false }: PollDisp
         <h3 className="text-xl font-semibold">
           {poll.question}
         </h3>
-        {!poll.user_vote && !disabled && (
+        {!poll.user_vote && !userVote && !disabled && (
           <p className="text-sm text-muted-foreground">
             Selecciona una opción.
           </p>
@@ -106,14 +107,14 @@ export function PollDisplay({ postId, poll, onVote, disabled = false }: PollDisp
             votes={option.votes || 0}
             percentage={getPercentage(option.votes || 0)}
             isSelected={option.id === selectedOption}
-            hasVoted={poll.user_vote !== null || disabled}
+            hasVoted={poll.user_vote !== null || userVote !== null || disabled}
             isVoting={isPending}
             onVote={handleVote}
           />
         ))}
       </div>
 
-      {poll.user_vote && (
+      {(poll.user_vote || userVote) && (
         <div className="flex items-center justify-between text-sm text-muted-foreground pt-2">
           <span>{poll.total_votes} {poll.total_votes === 1 ? "voto" : "votos"}</span>
           <VotesDialog

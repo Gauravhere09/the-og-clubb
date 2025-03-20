@@ -64,3 +64,41 @@ export async function sendMentionNotifications(
     console.error("Error processing mentions:", error);
   }
 }
+
+// Add the missing function for sending post notifications to friends
+export async function sendNewPostNotifications(userId: string, postId: string) {
+  try {
+    // Get user's friends
+    const { data: friends, error: friendsError } = await supabase
+      .from('friends')
+      .select('friend_id')
+      .eq('user_id', userId);
+    
+    if (friendsError) {
+      console.error("Error fetching friends:", friendsError);
+      return;
+    }
+    
+    if (!friends || friends.length === 0) return; // No friends
+    
+    // Create notifications for each friend
+    const notifications = friends.map(friend => ({
+      type: 'new_post',
+      sender_id: userId,
+      receiver_id: friend.friend_id,
+      post_id: postId,
+      message: 'ha creado una nueva publicación'
+    }));
+    
+    // Insert all notifications
+    const { error: notifyError } = await supabase
+      .from('notifications')
+      .insert(notifications);
+    
+    if (notifyError) {
+      console.error("Error sending notifications:", notifyError);
+    }
+  } catch (error) {
+    console.error("Error in sendNewPostNotifications:", error);
+  }
+}

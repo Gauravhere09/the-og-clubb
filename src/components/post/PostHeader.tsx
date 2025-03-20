@@ -12,6 +12,18 @@ interface PostHeaderProps {
   isAuthor?: boolean;
   isHidden?: boolean;
   content?: string;
+  // Add new props for PostCreator component
+  currentUser?: { id: string; avatar_url: string | null; username: string | null };
+  textareaRef?: React.RefObject<HTMLTextAreaElement>;
+  mentionUsers?: any[];
+  mentionListVisible?: boolean;
+  mentionPosition?: any;
+  mentionIndex?: number;
+  handleTextAreaChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  handleKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
+  handleSelectMention?: (user: any) => void;
+  handleMentionClick?: () => void;
+  setMentionIndex?: React.Dispatch<React.SetStateAction<number>>;
 }
 
 export function PostHeader({ 
@@ -19,7 +31,18 @@ export function PostHeader({
   onDelete, 
   isAuthor = false,
   isHidden = false,
-  content
+  content,
+  currentUser,
+  textareaRef,
+  mentionUsers,
+  mentionListVisible,
+  mentionPosition,
+  mentionIndex,
+  handleTextAreaChange,
+  handleKeyDown,
+  handleSelectMention,
+  handleMentionClick,
+  setMentionIndex
 }: PostHeaderProps) {
   const { created_at, user_id } = post;
   const username = post.profiles?.username || "";
