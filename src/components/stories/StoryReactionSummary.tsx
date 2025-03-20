@@ -41,7 +41,7 @@ export function StoryReactionSummary({ storyId }: StoryReactionSummaryProps) {
   const totalReactions = reactions.length;
   
   return (
-    <div className="flex items-center gap-1 text-xs bg-black/70 dark:bg-black/70 text-white px-2 py-1 rounded-full backdrop-blur-sm border border-white/10">
+    <div className="flex items-center gap-1 text-xs bg-black/80 dark:bg-black/80 text-white px-2 py-1 rounded-full backdrop-blur-sm border border-white/10">
       <div className="flex -space-x-1 mr-1">
         {Object.entries(reactionCounts)
           .sort((a, b) => b[1] - a[1])

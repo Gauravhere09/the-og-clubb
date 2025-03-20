@@ -30,7 +30,7 @@ export function StoryActions({
   canDelete = false
 }: StoryActionsProps) {
   return (
-    <div className={cn("p-4 flex justify-between items-center bg-background/10 backdrop-blur-sm", className)}>
+    <div className={cn("p-4 flex justify-between items-center bg-black/80 backdrop-blur-sm", className)}>
       <Button
         variant="ghost"
         size="icon"

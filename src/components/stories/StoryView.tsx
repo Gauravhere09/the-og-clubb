@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { StoryHeader } from "./StoryHeader";
@@ -24,6 +23,7 @@ interface StoryViewProps {
 }
 
 export function StoryView({ storyId, onClose }: StoryViewProps) {
+  
   const [isPaused, setIsPaused] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
@@ -183,7 +183,7 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
               storyId={storyId}
               userId={currentUser.id}
               showReactions={showReactions}
-              className="absolute bottom-16 left-0 right-0 px-4 py-2"
+              className="absolute bottom-24 left-0 right-0 px-4 py-2"
             />
           )}
 
@@ -199,6 +199,17 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
             </Button>
           </div>
 
+          <div className="absolute left-0 right-0 bottom-0">
+            <form className="flex items-center px-4 py-2 bg-black/80 backdrop-blur-sm">
+              <input
+                type="text"
+                placeholder="Responder..."
+                className="w-full bg-transparent text-white border-none focus:outline-none placeholder:text-gray-400"
+                onClick={() => setIsPaused(true)}
+              />
+            </form>
+          </div>
+
           <StoryActions 
             isLiked={isLiked}
             toggleLike={toggleLike}
@@ -207,7 +218,7 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
             onDeleteStory={() => setShowDeleteConfirm(true)}
             canDelete={canDeleteStory}
             className={cn(
-              "animate-in slide-in-from-bottom duration-300",
+              "absolute bottom-12 left-0 right-0 animate-in slide-in-from-bottom duration-300",
               isExiting && "animate-out slide-out-to-bottom duration-300"
             )}
           />

@@ -17,6 +17,9 @@ export function StoryReaction({ storyId, userId, showReactions, className }: Sto
   const [selectedReaction, setSelectedReaction] = useState<ReactionType | null>(null);
   const { toast } = useToast();
 
+  // Define the order of reactions to match the image
+  const orderedReactionTypes: ReactionType[] = ['like', 'love', 'haha', 'wow', 'sad', 'angry'];
+
   const handleReaction = async (reaction: ReactionType) => {
     try {
       const { data: existingReaction } = await supabase
@@ -60,20 +63,23 @@ export function StoryReaction({ storyId, userId, showReactions, className }: Sto
   if (!showReactions) return null;
 
   return (
-    <div className={`${className} bg-black/70 dark:bg-background/40 backdrop-blur-sm rounded-full p-2 shadow-md border border-gray-700 dark:border-border`}>
+    <div className={`${className} bg-black/80 dark:bg-background/40 backdrop-blur-sm rounded-full p-2 shadow-md border border-gray-700 dark:border-border`}>
       <div className="flex justify-center space-x-2">
-        {(Object.entries(reactionIcons) as [ReactionType, any][]).map(([type, { icon: Icon, color, label }]) => (
-          <Button
-            key={type}
-            variant="ghost"
-            size="sm"
-            className={`hover:bg-primary/10 rounded-full text-white ${selectedReaction === type ? color : ''}`}
-            onClick={() => handleReaction(type)}
-            title={label}
-          >
-            <Icon className="h-5 w-5" />
-          </Button>
-        ))}
+        {orderedReactionTypes.map((type) => {
+          const { icon: Icon, color, label } = reactionIcons[type];
+          return (
+            <Button
+              key={type}
+              variant="ghost"
+              size="sm"
+              className={`hover:bg-primary/10 rounded-full text-white ${selectedReaction === type ? color : ''}`}
+              onClick={() => handleReaction(type)}
+              title={label}
+            >
+              <Icon className="h-5 w-5" />
+            </Button>
+          );
+        })}
       </div>
     </div>
   );
