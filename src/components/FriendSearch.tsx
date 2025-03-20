@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useDebounce } from "@/hooks/use-debounce";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function FriendSearch() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,6 +18,7 @@ export function FriendSearch() {
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -78,14 +80,14 @@ export function FriendSearch() {
   };
 
   return (
-    <div ref={searchRef} className="relative w-full max-w-sm">
+    <div ref={searchRef} className={`relative ${isMobile ? 'w-full mx-2' : 'max-w-sm'}`}>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Buscar usuarios..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-9 pr-4"
+          className="pl-9 pr-4 rounded-full border-gray-200 dark:border-gray-700 shadow-sm"
         />
       </div>
       {searchResults.length > 0 && (

@@ -62,10 +62,10 @@ const Index = () => {
         <div className="max-w-screen-xl mx-auto px-2 py-2 md:px-4 md:py-8 md:flex">
           <main className="w-full">
             <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2 -mx-2 md:mx-0 px-2 md:px-0 pt-2">
-              <div className="flex items-center justify-between mb-2 md:mb-4">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center mb-2 md:mb-4">
+                <div className="flex items-center flex-1">
                   {isMobile ? (
-                    <Link to="/" className="relative w-8 h-8 bg-primary rounded-xl flex items-center justify-center transform transition-transform shadow-md">
+                    <Link to="/" className="relative w-8 h-8 bg-primary rounded-xl flex items-center justify-center transform transition-transform shadow-md mr-2">
                       <span className="text-xl font-bold text-primary-foreground">H</span>
                       <div className="absolute -inset-0.5 bg-primary/20 rounded-xl blur-sm -z-10" />
                     </Link>
@@ -73,8 +73,13 @@ const Index = () => {
                     <h1 className="text-lg md:text-2xl font-semibold">Feed</h1>
                   )}
                 </div>
-                <div className="flex items-center gap-1 md:gap-2">
+              </div>
+              
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex-1">
                   <FriendSearch />
+                </div>
+                <div className="flex items-center">
                   <NotificationDropdown />
                   <UserMenu />
                   <DropdownMenu>
