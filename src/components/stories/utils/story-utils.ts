@@ -158,7 +158,7 @@ export async function saveUserStoryPrivacySetting(
     const { error } = await supabase
       .rpc('save_user_story_privacy', { 
         user_id_input: userId,
-        privacy_setting: privacySetting
+        privacy_setting: privacySetting as string
       });
       
     if (error) {
