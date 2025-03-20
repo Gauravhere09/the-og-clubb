@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { 
   Heart, 
@@ -7,11 +6,15 @@ import {
   Lock, 
   Mail, 
   Phone, 
-  LogOut 
+  LogOut,
+  Moon,
+  Sun
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useTheme } from "next-themes";
+import { Switch } from "@/components/ui/switch";
 
 interface MenuOptionsProps {
   userId: string | null;
@@ -22,6 +25,7 @@ interface MenuOptionsProps {
 export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -44,6 +48,10 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
   const handleNavigate = (path: string) => {
     navigate(path);
     onClose();
+  };
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
   };
 
   return (
@@ -107,6 +115,22 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
         <Phone className="mr-3 h-5 w-5 text-green-500" />
         <span>Agregar número de teléfono</span>
       </Button>
+
+      {/* Dark Mode Toggle */}
+      <div className="flex items-center justify-between h-14 px-4 bg-white dark:bg-card shadow rounded-md mt-4">
+        <div className="flex items-center">
+          {theme === "dark" ? (
+            <Moon className="mr-3 h-5 w-5 text-purple-light" />
+          ) : (
+            <Sun className="mr-3 h-5 w-5 text-amber-500" />
+          )}
+          <span>{theme === "dark" ? "Modo oscuro" : "Modo claro"}</span>
+        </div>
+        <Switch 
+          checked={theme === "dark"}
+          onCheckedChange={toggleTheme}
+        />
+      </div>
 
       {/* Logout Button */}
       <Button
