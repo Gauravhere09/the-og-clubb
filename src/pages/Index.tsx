@@ -3,7 +3,7 @@ import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/feed/Feed";
 import { StoryViewer } from "@/components/stories/StoryViewer";
-import { Home, Menu, LogOut, Moon, Sun } from "lucide-react";
+import { Menu, LogOut, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,8 +63,14 @@ const Index = () => {
             <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2 -mx-2 md:mx-0 px-2 md:px-0 pt-2">
               <div className="flex items-center justify-between mb-2 md:mb-4">
                 <div className="flex items-center gap-2">
-                  <Home className="h-5 w-5" />
-                  <h1 className="text-lg md:text-2xl font-semibold">Feed</h1>
+                  {isMobile ? (
+                    <Link to="/" className="relative w-8 h-8 bg-primary rounded-xl flex items-center justify-center transform transition-transform shadow-md">
+                      <span className="text-xl font-bold text-primary-foreground">H</span>
+                      <div className="absolute -inset-0.5 bg-primary/20 rounded-xl blur-sm -z-10" />
+                    </Link>
+                  ) : (
+                    <h1 className="text-lg md:text-2xl font-semibold">Feed</h1>
+                  )}
                 </div>
                 <div className="flex items-center gap-1 md:gap-2">
                   <FriendSearch />

@@ -85,30 +85,35 @@ export function Navigation() {
       to: "/",
       icon: Home, 
       label: "Inicio",
+      hideLabel: true, // Hide label on mobile
       onClick: handleHomeClick,
       badge: newPosts > 0 ? newPosts : null 
     },
     { 
       to: "/messages", 
       icon: MessageCircle, 
-      label: "Mensajes" 
+      label: "Mensajes",
+      hideLabel: true // Hide label on mobile
     },
     {
       to: "/friends/requests",
       icon: UserPlus,
       label: "Solicitudes",
+      hideLabel: true, // Hide label on mobile
       badge: pendingRequestsCount > 0 ? pendingRequestsCount : null,
       badgeVariant: "secondary"
     },
     {
       to: "/popularity",
       icon: Heart,
-      label: "Popularidad"
+      label: "Popularidad",
+      hideLabel: true // Hide label on mobile
     },
     { 
       to: currentUserId ? `/profile/${currentUserId}` : "/auth", 
       icon: User, 
-      label: "Perfil" 
+      label: "Perfil",
+      hideLabel: true // Hide label on mobile
     }
   ];
 

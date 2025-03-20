@@ -2,9 +2,11 @@
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import type { NavigationLink } from "./types";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export function NavigationItem({ link, isActive }: { link: NavigationLink; isActive: boolean }) {
   const Icon = link.icon;
+  const isMobile = useIsMobile();
 
   const handleClick = (e: React.MouseEvent) => {
     if (link.onClick) {
@@ -20,8 +22,10 @@ export function NavigationItem({ link, isActive }: { link: NavigationLink; isAct
       className={`flex items-center justify-center py-4 px-2 transition-colors relative ${
         isActive ? "text-primary" : "text-muted-foreground"
       }`}
+      aria-label={link.label}
     >
       <Icon strokeWidth={1.5} className="w-6 h-6" />
+      {!link.hideLabel && !isMobile && <span className="ml-2">{link.label}</span>}
       {link.badge && (
         <Badge 
           variant={link.badgeVariant || "destructive"} 
