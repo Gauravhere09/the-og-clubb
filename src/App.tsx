@@ -18,6 +18,8 @@ import Friends from "@/pages/Friends";
 import NotFound from "@/pages/NotFound";
 import FriendRequestsPage from "./pages/FriendRequestsPage";
 import ResetPassword from "./pages/ResetPassword";
+import PrivacySettings from "./pages/settings/PrivacySettings";
+import AccountSettings from "./pages/settings/AccountSettings";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +41,8 @@ function App() {
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/friends/requests" element={<FriendRequestsPage />} />
+            <Route path="/settings/privacy" element={<PrivacySettings />} />
+            <Route path="/settings/account" element={<AccountSettings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
