@@ -41,8 +41,8 @@ export function useStoryCreator(currentUserId: string, onComplete: () => void) {
           });
         
         if (!privacyError && privacyData) {
-          // Ensure data is cast to the StoryVisibility type
-          setVisibility(privacyData as StoryVisibility);
+          // Explicitly cast string to StoryVisibility
+          setVisibility(privacyData as string as StoryVisibility);
         } else {
           // Default to public if there's an error or no setting
           setVisibility('public');

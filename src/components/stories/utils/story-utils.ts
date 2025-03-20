@@ -1,6 +1,8 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
+// Define StoryVisibility as a proper union type of string literals
 export type StoryVisibility = 'public' | 'friends' | 'select' | 'except';
 
 /**
@@ -136,8 +138,8 @@ export async function getUserStoryPrivacySetting(userId: string): Promise<StoryV
       return 'public';
     }
     
-    // Ensure the data is cast to the StoryVisibility type
-    return (data as StoryVisibility) || 'public';
+    // Explicitly cast the string result to StoryVisibility type
+    return (data as string as StoryVisibility) || 'public';
   } catch (error) {
     console.error("Error obteniendo configuración de privacidad:", error);
     return 'public';
@@ -156,7 +158,7 @@ export async function saveUserStoryPrivacySetting(
     const { error } = await supabase
       .rpc('save_user_story_privacy', { 
         user_id_input: userId,
-        privacy_setting: privacySetting
+        privacy_setting: privacySetting as string
       });
       
     if (error) {

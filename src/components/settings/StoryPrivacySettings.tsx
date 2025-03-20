@@ -51,8 +51,8 @@ export function StoryPrivacySettings({ open, onOpenChange }: StoryPrivacySetting
       if (error) throw error;
       
       if (data) {
-        // Ensure data is cast to the StoryVisibility type
-        setVisibility(data as StoryVisibility);
+        // Explicitly cast string to StoryVisibility
+        setVisibility(data as string as StoryVisibility);
       }
     } catch (error) {
       console.error("Error fetching privacy settings:", error);
