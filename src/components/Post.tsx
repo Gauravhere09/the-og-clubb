@@ -54,7 +54,7 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
       
       <PostActions 
         post={post} 
-        onReaction={onReaction} 
+        onReaction={(type) => onReaction(post.id, type)} 
         onToggleComments={toggleComments}
         onCommentsClick={toggleComments}
         commentsExpanded={showComments}

@@ -131,10 +131,11 @@ export function SingleComment({ comment, onReaction, onReply, onDelete }: Single
         </div>
         
         <CommentFooter
-          comment={comment}
+          commentId={comment.id}
+          userReaction={comment.user_reaction}
+          reactionsCount={comment.likes_count || 0}
           onReaction={onReaction}
           onReply={handleReplyClick}
-          userReaction={comment.user_reaction}
         />
         
         {comment.replies && comment.replies.length > 0 && (
