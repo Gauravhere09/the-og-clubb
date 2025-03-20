@@ -643,6 +643,7 @@ export type Database = {
           image_url: string
           media_type: string | null
           user_id: string
+          visibility: string
         }
         Insert: {
           created_at?: string
@@ -651,6 +652,7 @@ export type Database = {
           image_url: string
           media_type?: string | null
           user_id: string
+          visibility?: string
         }
         Update: {
           created_at?: string
@@ -659,6 +661,7 @@ export type Database = {
           image_url?: string
           media_type?: string | null
           user_id?: string
+          visibility?: string
         }
         Relationships: []
       }
@@ -758,7 +761,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_story_privacy: {
+        Args: {
+          user_id_input: string
+        }
+        Returns: string
+      }
+      save_user_story_privacy: {
+        Args: {
+          user_id_input: string
+          privacy_setting: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       post_visibility: "public" | "friends" | "private"

@@ -20,7 +20,7 @@ import { useStoryDeletion } from "@/hooks/use-story-deletion";
 interface StoryViewProps {
   storyId: string;
   onClose: () => void;
-  userId?: string; // Make it optional to fix the TypeScript error
+  userId?: string;
 }
 
 export function StoryView({ storyId, onClose, userId }: StoryViewProps) {

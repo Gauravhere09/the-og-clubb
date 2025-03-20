@@ -68,6 +68,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
       const userIds = [currentUserId, ...friendIds];
       
       // Get stories from these users, excluding expired ones
+      // Modified query to not try to join with profiles directly
       const { data, error } = await supabase
         .from('stories')
         .select(`
@@ -75,17 +76,29 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
           image_url,
           created_at,
           user_id,
-          media_type,
-          profiles(
-            username,
-            avatar_url
-          )
+          media_type
         `)
         .in('user_id', userIds)
         .gte('expires_at', now)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
+      
+      // Get user profiles separately
+      const uniqueUserIds = [...new Set(data?.map(story => story.user_id) || [])];
+      
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', uniqueUserIds);
+      
+      if (profilesError) throw profilesError;
+      
+      // Create a map for easier profile lookup
+      const profilesMap = new Map();
+      profilesData?.forEach(profile => {
+        profilesMap.set(profile.id, profile);
+      });
       
       // Get story views to mark seen stories
       const { data: viewsData } = await supabase
@@ -101,17 +114,13 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
       if (data) {
         data.forEach(story => {
           const userId = story.user_id;
-          
-          // Safely extract profile data
-          const profileData = story.profiles as any;
-          const username = profileData?.username || 'Usuario';
-          const avatarUrl = profileData?.avatar_url || null;
+          const profile = profilesMap.get(userId);
           
           if (!usersMap.has(userId)) {
             usersMap.set(userId, {
               userId,
-              username,
-              avatarUrl,
+              username: profile?.username || 'Usuario',
+              avatarUrl: profile?.avatar_url || null,
               hasUnviewed: false,
               storyIds: []
             });
@@ -222,6 +231,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
         <StoryView 
           storyId={viewStoryId} 
           onClose={handleCloseStory}
+          userId={currentUserId}
         />
       )}
     </>
