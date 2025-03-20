@@ -137,7 +137,6 @@ export function usePost(post: Post, hideComments = false) {
     try {
       // Upload image if present
       let mediaUrl = null;
-      let mediaType = null;
       
       if (commentImage) {
         const fileName = `${Date.now()}_${commentImage.name.replace(/\s+/g, '_')}`;
@@ -153,7 +152,6 @@ export function usePost(post: Post, hideComments = false) {
           .getPublicUrl(fileName);
         
         mediaUrl = publicUrl;
-        mediaType = commentImage.type;
       }
       
       // Create the comment
@@ -167,8 +165,7 @@ export function usePost(post: Post, hideComments = false) {
           user_id: user.id,
           content: newComment,
           parent_id: replyTo?.id || null,
-          media_url: mediaUrl,
-          media_type: mediaType
+          media_url: mediaUrl
         })
         .select()
         .single();
