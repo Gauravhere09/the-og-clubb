@@ -1,76 +1,66 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-// Función para enviar notificaciones a amigos sobre nueva publicación
-export async function sendNewPostNotifications(userId: string, postId: string) {
-  // Get all friends to notify about new post
-  const { data: friendships } = await supabase
-    .from('friendships')
-    .select('friend_id')
-    .eq('user_id', userId)
-    .eq('status', 'accepted');
-
-  if (friendships && friendships.length > 0) {
-    const notifications = friendships.map(friendship => ({
-      type: 'new_post',
-      sender_id: userId,
-      receiver_id: friendship.friend_id,
-      post_id: postId,
-      message: 'Ha realizado una nueva publicación',
-      read: false
-    }));
-
-    await supabase
-      .from('notifications')
-      .insert(notifications);
-  }
-}
-
-// Nueva función para enviar notificaciones de menciones
 export async function sendMentionNotifications(
-  contentText: string, 
-  postId: string | null = null,
-  commentId: string | null = null,
-  senderId: string
+  content: string,
+  postId?: string,
+  commentId?: string,
+  senderId?: string
 ) {
-  try {
-    // Expresión regular para detectar menciones
-    const mentionRegex = /@(\w+)/g;
-    let match;
-    const mentionedUsernames = [];
+  if (!senderId) {
+    const { data } = await supabase.auth.getUser();
+    senderId = data.user?.id;
     
-    // Extraer todos los nombres de usuario mencionados
-    while ((match = mentionRegex.exec(contentText)) !== null) {
-      mentionedUsernames.push(match[1]);
+    if (!senderId) return; // No authenticated user
+  }
+  
+  try {
+    // Extract mentions from content using regex
+    const mentionRegex = /@(\w+)/g;
+    const mentions = [];
+    let match;
+    
+    while ((match = mentionRegex.exec(content)) !== null) {
+      mentions.push(match[1]); // Extract username
     }
     
-    if (mentionedUsernames.length === 0) return;
+    if (mentions.length === 0) return; // No mentions found
     
-    // Buscar IDs de los usuarios mencionados
-    const { data: users, error } = await supabase
+    console.log("Found mentions:", mentions);
+    
+    // Get user IDs for the mentioned usernames
+    const { data: mentionedUsers, error } = await supabase
       .from('profiles')
       .select('id, username')
-      .in('username', mentionedUsernames);
+      .in('username', mentions);
     
-    if (error || !users || users.length === 0) return;
+    if (error) {
+      console.error("Error fetching mentioned users:", error);
+      return;
+    }
     
-    // Generar notificaciones para cada usuario mencionado
-    const notifications = users
-      .filter(user => user.id !== senderId) // No notificar al propio autor
-      .map(user => ({
-        type: 'mention',
-        sender_id: senderId,
-        receiver_id: user.id,
-        post_id: postId,
-        comment_id: commentId,
-        message: `te ha mencionado en una ${postId ? 'publicación' : 'comentario'}`,
-        read: false
-      }));
+    console.log("Mentioned users data:", mentionedUsers);
     
-    if (notifications.length > 0) {
-      await supabase.from('notifications').insert(notifications);
+    // Create notifications for each mentioned user
+    for (const user of mentionedUsers) {
+      // Skip notification if the sender is mentioning themselves
+      if (user.id === senderId) continue;
+      
+      const notificationType = commentId ? 'comment_mention' : 'post_mention';
+      
+      // Create notification
+      await supabase
+        .from('notifications')
+        .insert({
+          type: notificationType,
+          sender_id: senderId,
+          receiver_id: user.id,
+          post_id: postId,
+          comment_id: commentId,
+          message: `te ha mencionado en ${commentId ? 'un comentario' : 'una publicación'}`
+        });
     }
   } catch (error) {
-    console.error('Error sending mention notifications:', error);
+    console.error("Error processing mentions:", error);
   }
 }

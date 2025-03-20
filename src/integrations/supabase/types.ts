@@ -216,6 +216,27 @@ export type Database = {
           },
         ]
       }
+      hidden_users: {
+        Row: {
+          created_at: string
+          hidden_user_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          hidden_user_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          hidden_user_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       likes: {
         Row: {
           comment_id: string | null
@@ -407,6 +428,38 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_interests: {
+        Row: {
+          created_at: string
+          id: string
+          interest_level: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interest_level: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interest_level?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_interests_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
             referencedColumns: ["id"]
           },
         ]

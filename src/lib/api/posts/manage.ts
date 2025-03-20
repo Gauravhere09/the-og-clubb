@@ -108,3 +108,77 @@ export async function getHiddenPosts() {
     return [];
   }
 }
+
+export async function setPostInterest(postId: string, interestLevel: 'interested' | 'not_interested') {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuario no autenticado');
+  
+  // Check if interest already exists
+  const { data: existingInterest } = await supabase
+    .from('post_interests')
+    .select('id')
+    .eq('post_id', postId)
+    .eq('user_id', user.id)
+    .single();
+  
+  if (existingInterest) {
+    // Update existing interest
+    const { error } = await supabase
+      .from('post_interests')
+      .update({ interest_level: interestLevel })
+      .eq('id', existingInterest.id);
+    
+    if (error) throw error;
+  } else {
+    // Create new interest
+    const { error } = await supabase
+      .from('post_interests')
+      .insert({
+        post_id: postId,
+        user_id: user.id,
+        interest_level: interestLevel
+      });
+    
+    if (error) throw error;
+  }
+}
+
+export async function hideUser(userId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuario no autenticado');
+  
+  // Check if already hidden
+  const { data: existingHidden } = await supabase
+    .from('hidden_users')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('hidden_user_id', userId)
+    .single();
+  
+  if (existingHidden) {
+    return; // Already hidden
+  }
+  
+  // Add to hidden users
+  const { error } = await supabase
+    .from('hidden_users')
+    .insert({
+      user_id: user.id,
+      hidden_user_id: userId
+    });
+  
+  if (error) throw error;
+}
+
+export async function unhideUser(userId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Usuario no autenticado');
+  
+  const { error } = await supabase
+    .from('hidden_users')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('hidden_user_id', userId);
+  
+  if (error) throw error;
+}

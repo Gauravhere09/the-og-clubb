@@ -1,13 +1,12 @@
 
+import { useRef, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
-import { useEffect } from "react";
-import { MentionUser } from "@/hooks/mentions/types";
+import type { MentionUser, MentionPosition } from "@/hooks/mentions/types";
 
 interface MentionSuggestionsProps {
   users: MentionUser[];
   isVisible: boolean;
-  position: { top: number; left: number };
+  position: MentionPosition;
   selectedIndex: number;
   onSelectUser: (user: MentionUser) => void;
   onSetIndex: (index: number) => void;
@@ -21,69 +20,55 @@ export function MentionSuggestions({
   onSelectUser,
   onSetIndex
 }: MentionSuggestionsProps) {
-  // Log visibility state and users to help debug
+  const menuRef = useRef<HTMLDivElement>(null);
+  
+  // Scroll selected item into view
   useEffect(() => {
-    console.log("MentionSuggestions render:", { 
-      isVisible, 
-      users: users.length,
-      position
-    });
-  }, [isVisible, users, position]);
-
-  if (!isVisible) {
+    if (isVisible && menuRef.current && selectedIndex >= 0) {
+      const selectedElement = menuRef.current.children[selectedIndex] as HTMLElement;
+      if (selectedElement) {
+        selectedElement.scrollIntoView({
+          block: 'nearest',
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, [selectedIndex, isVisible]);
+  
+  if (!isVisible || users.length === 0) {
     return null;
   }
   
-  if (users.length === 0) {
-    // Show "No results" indicator instead of returning null
-    return (
-      <div
-        className="fixed z-50 bg-background border rounded-md shadow-md w-64 p-2 text-center"
-        style={{
-          top: `${position.top}px`,
-          left: `${position.left}px`
-        }}
-      >
-        <span className="text-sm text-muted-foreground">No se encontraron usuarios</span>
-      </div>
-    );
-  }
-
   return (
     <div
-      className="fixed z-50 bg-background border rounded-md shadow-md w-64 max-h-60 overflow-y-auto mention-list"
+      ref={menuRef}
+      className="absolute z-50 bg-background border rounded-lg shadow-md max-h-[200px] w-[250px] overflow-y-auto"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`
       }}
     >
-      <div className="py-1">
-        {users.map((user, index) => (
-          <div
-            key={user.id}
-            className={cn(
-              "flex items-center gap-2 px-3 py-2 cursor-pointer hover:bg-accent",
-              selectedIndex === index ? "bg-accent mention-highlight" : ""
-            )}
-            onClick={() => onSelectUser(user)}
-            onMouseEnter={() => onSetIndex(index)}
-          >
-            <Avatar className="h-6 w-6">
-              <AvatarImage 
-                src={user.avatar_url || undefined} 
-                alt={user.username}
-                onError={(e) => {
-                  console.log("Error cargando avatar en menciones:", e);
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none'; // Ocultar imagen en error
-                }}
-              />
-              <AvatarFallback>{user.username[0]?.toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <span className="text-sm font-medium">{user.username}</span>
-          </div>
-        ))}
-      </div>
+      {users.map((user, index) => (
+        <div
+          key={user.id}
+          onClick={() => onSelectUser(user)}
+          onMouseEnter={() => onSetIndex(index)}
+          className={`flex items-center gap-2 p-2 cursor-pointer hover:bg-muted transition-colors ${
+            index === selectedIndex ? 'bg-muted' : ''
+          }`}
+        >
+          <Avatar className="h-7 w-7">
+            <AvatarImage src={user.avatar_url || ""} alt={user.username} />
+            <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <span className="font-medium">@{user.username}</span>
+        </div>
+      ))}
+      {users.length === 0 && (
+        <div className="p-2 text-sm text-muted-foreground">
+          No se encontraron usuarios
+        </div>
+      )}
     </div>
   );
 }

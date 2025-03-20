@@ -1,6 +1,7 @@
 
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { MentionsText } from "../MentionsText";
 
 interface CommentContentProps {
   content: string;
@@ -12,31 +13,43 @@ interface CommentContentProps {
   onSaveEdit: () => void;
 }
 
-export function CommentContent({ 
-  content, 
-  isAudio, 
-  audioUrl, 
-  isEditing, 
-  editedContent, 
-  onEditChange, 
-  onSaveEdit 
+export function CommentContent({
+  content,
+  isAudio,
+  audioUrl,
+  isEditing,
+  editedContent,
+  onEditChange,
+  onSaveEdit
 }: CommentContentProps) {
   if (isEditing) {
     return (
-      <div className="mt-1 flex gap-2">
-        <Input
+      <div className="space-y-2">
+        <Textarea
           value={editedContent}
           onChange={(e) => onEditChange(e.target.value)}
-          className="flex-1 h-7 text-xs comment-text-selectable"
+          className="min-h-[80px] text-sm"
         />
-        <Button size="sm" className="h-7 text-xs py-0" onClick={onSaveEdit}>Guardar</Button>
+        <div className="flex justify-end">
+          <Button size="sm" onClick={onSaveEdit} disabled={!editedContent.trim()}>
+            Guardar
+          </Button>
+        </div>
       </div>
     );
   }
 
   if (isAudio && audioUrl) {
-    return <audio src={audioUrl} controls className="mt-1 max-w-[180px] h-8" />;
+    return (
+      <div className="mt-2">
+        <audio controls src={audioUrl} className="w-full h-8" />
+      </div>
+    );
   }
 
-  return <p className="text-xs whitespace-pre-wrap break-words comment-text-selectable">{content}</p>;
+  return (
+    <div className="mt-1 text-sm">
+      <MentionsText content={content} />
+    </div>
+  );
 }
