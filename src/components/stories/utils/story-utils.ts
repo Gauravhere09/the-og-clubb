@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
@@ -128,11 +127,11 @@ export async function cleanupExpiredStories(): Promise<number> {
  */
 export async function getUserStoryPrivacySetting(userId: string): Promise<StoryVisibility> {
   try {
-    // Use a more generic type for the RPC call to avoid type errors
-    const { data, error } = await supabase.rpc(
-      'get_user_story_privacy', 
-      { user_id_input: userId }
-    ) as { data: unknown, error: unknown };
+    // Use casting to bypass type checking for RPC call
+    const rpcCall = supabase.rpc as any;
+    const { data, error } = await rpcCall('get_user_story_privacy', { 
+      user_id_input: userId 
+    });
       
     if (error) {
       console.error("Error obteniendo configuración de privacidad:", error);
@@ -161,14 +160,12 @@ export async function saveUserStoryPrivacySetting(
   privacySetting: StoryVisibility
 ): Promise<boolean> {
   try {
-    // Use a more generic type for the RPC call to avoid type errors
-    const { error } = await supabase.rpc(
-      'save_user_story_privacy', 
-      {
-        user_id_input: userId,
-        privacy_setting: privacySetting
-      }
-    ) as { error: unknown };
+    // Use casting to bypass type checking for RPC call
+    const rpcCall = supabase.rpc as any;
+    const { error } = await rpcCall('save_user_story_privacy', {
+      user_id_input: userId,
+      privacy_setting: privacySetting
+    });
       
     if (error) {
       console.error("Error guardando configuración de privacidad:", error);
