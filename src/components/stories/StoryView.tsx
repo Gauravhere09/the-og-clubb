@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { StoryHeader } from "./StoryHeader";
@@ -21,9 +20,10 @@ import { useStoryDeletion } from "@/hooks/use-story-deletion";
 interface StoryViewProps {
   storyId: string;
   onClose: () => void;
+  userId?: string; // Make it optional to fix the TypeScript error
 }
 
-export function StoryView({ storyId, onClose }: StoryViewProps) {
+export function StoryView({ storyId, onClose, userId }: StoryViewProps) {
   
   const [isPaused, setIsPaused] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
@@ -62,7 +62,7 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
     canDeleteStory
   } = useStoryDeletion({
     storyId,
-    userId: currentUser?.id,
+    userId: userId || currentUser?.id,
     ownerId: storyData.user.id,
     onClose
   });

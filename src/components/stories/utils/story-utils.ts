@@ -101,15 +101,16 @@ export async function cleanupExpiredStories(): Promise<number> {
   try {
     const now = new Date().toISOString();
     
-    const { error, count } = await supabase
+    // Fix: Remove the count selection since it's causing the error
+    const { error, data } = await supabase
       .from('stories')
       .delete()
-      .lt('expires_at', now)
-      .select('count');
+      .lt('expires_at', now);
       
     if (error) throw error;
     
-    return count || 0;
+    // Return an approximate count if available, or 0
+    return Array.isArray(data) ? data.length : 0;
   } catch (error) {
     console.error("Error cleaning up expired stories:", error);
     return 0;

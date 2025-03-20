@@ -76,7 +76,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
           created_at,
           user_id,
           media_type,
-          profiles:user_id (
+          profiles(
             username,
             avatar_url
           )
@@ -98,27 +98,34 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
       // Group stories by user
       const usersMap = new Map();
       
-      data?.forEach(story => {
-        const userId = story.user_id;
-        
-        if (!usersMap.has(userId)) {
-          usersMap.set(userId, {
-            userId,
-            username: story.profiles?.username || 'Usuario',
-            avatarUrl: story.profiles?.avatar_url,
-            hasUnviewed: false,
-            storyIds: []
-          });
-        }
-        
-        const user = usersMap.get(userId);
-        user.storyIds.push(story.id);
-        
-        // Mark if user has any unviewed stories
-        if (!viewedStoryIds.includes(story.id)) {
-          user.hasUnviewed = true;
-        }
-      });
+      if (data) {
+        data.forEach(story => {
+          const userId = story.user_id;
+          
+          // Safely extract profile data
+          const profileData = story.profiles as any;
+          const username = profileData?.username || 'Usuario';
+          const avatarUrl = profileData?.avatar_url || null;
+          
+          if (!usersMap.has(userId)) {
+            usersMap.set(userId, {
+              userId,
+              username,
+              avatarUrl,
+              hasUnviewed: false,
+              storyIds: []
+            });
+          }
+          
+          const user = usersMap.get(userId);
+          user.storyIds.push(story.id);
+          
+          // Mark if user has any unviewed stories
+          if (!viewedStoryIds.includes(story.id)) {
+            user.hasUnviewed = true;
+          }
+        });
+      }
       
       // Order by: current user first, then users with unseen stories, then rest
       const userStories = Array.from(usersMap.values());
@@ -214,8 +221,7 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
       {viewStoryId && (
         <StoryView 
           storyId={viewStoryId} 
-          onClose={handleCloseStory} 
-          userId={currentUserId}
+          onClose={handleCloseStory}
         />
       )}
     </>
