@@ -3,6 +3,7 @@ import { CommentsList } from "./comments/CommentsList";
 import { CommentInput } from "./comments/CommentInput";
 import type { Comment } from "@/types/post";
 import type { ReactionType } from "@/types/database/social.types";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 
 interface CommentsProps {
   postId: string;
@@ -15,6 +16,7 @@ interface CommentsProps {
   onNewCommentChange: (value: string) => void;
   replyTo: { id: string; username: string } | null;
   onCancelReply: () => void;
+  showComments: boolean;
 }
 
 export function Comments({
@@ -27,8 +29,12 @@ export function Comments({
   newComment,
   onNewCommentChange,
   replyTo,
-  onCancelReply
+  onCancelReply,
+  showComments
 }: CommentsProps) {
+  // Solo renderizamos los comentarios si showComments es true
+  if (!showComments) return null;
+
   return (
     <div className="mt-4 space-y-4">
       <CommentsList 

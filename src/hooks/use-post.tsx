@@ -10,7 +10,8 @@ import { sendMentionNotifications } from "@/lib/api/posts/notifications";
 import { ReactionType } from "@/types/database/social.types";
 
 export function usePost(post: Post, hideComments = false) {
-  const [showComments, setShowComments] = useState(!hideComments);
+  // Inicializamos showComments como false para que no se muestren automáticamente
+  const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [commentImage, setCommentImage] = useState<File | null>(null);
   const [replyTo, setReplyTo] = useState<{ id: string; username: string } | null>(null);

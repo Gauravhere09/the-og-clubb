@@ -61,7 +61,10 @@ export function PostActions({
           postId={post.id}
         />
 
-        <CommentButton onToggleComments={onToggleComments} />
+        <CommentButton 
+          onToggleComments={onToggleComments} 
+          isExpanded={commentsExpanded}
+        />
 
         <ShareOptions post={post}>
           <Button variant="ghost" size="sm" className="flex-1 post-action-button">

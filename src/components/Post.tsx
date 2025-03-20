@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Comments } from "@/components/post/Comments";
 import { PostActions } from "@/components/post/PostActions";
@@ -60,7 +59,7 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
         commentsExpanded={showComments}
       />
       
-      {!hideComments && showComments && (
+      {!hideComments && (
         <Comments 
           postId={post.id}
           comments={comments}
@@ -72,6 +71,7 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
           onNewCommentChange={setNewComment}
           replyTo={replyTo}
           onCancelReply={handleCancelReply}
+          showComments={showComments}
         />
       )}
     </PostWrapper>

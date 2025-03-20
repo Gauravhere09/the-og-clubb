@@ -4,17 +4,18 @@ import { Button } from "@/components/ui/button";
 
 interface CommentButtonProps {
   onToggleComments: () => void;
+  isExpanded?: boolean;
 }
 
-export function CommentButton({ onToggleComments }: CommentButtonProps) {
+export function CommentButton({ onToggleComments, isExpanded = false }: CommentButtonProps) {
   return (
     <Button
       variant="ghost"
       size="sm"
-      className="flex-1"
+      className={`flex-1 ${isExpanded ? 'text-primary' : ''}`}
       onClick={onToggleComments}
     >
-      <MessagesSquare className="h-4 w-4 mr-2" />
+      <MessagesSquare className={`h-4 w-4 mr-2 ${isExpanded ? 'text-primary' : ''}`} />
       Comentar
     </Button>
   );
