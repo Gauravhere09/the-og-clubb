@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "./use-toast";
@@ -126,23 +127,6 @@ export function usePost(post: Post, hideComments = false) {
     }
     
     try {
-      let mediaUrl = null;
-      
-      if (commentImage) {
-        const fileName = `${Date.now()}_${commentImage.name.replace(/\s+/g, '_')}`;
-        const { data: uploadResult, error: uploadError } = await supabase.storage
-          .from('comment-images')
-          .upload(fileName, commentImage);
-        
-        if (uploadError) throw uploadError;
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from('comment-images')
-          .getPublicUrl(fileName);
-        
-        mediaUrl = publicUrl;
-      }
-      
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Debes iniciar sesión para comentar");
       
@@ -152,8 +136,7 @@ export function usePost(post: Post, hideComments = false) {
           post_id: post.id,
           user_id: user.id,
           content: newComment,
-          parent_id: replyTo?.id || null,
-          media_url: mediaUrl
+          parent_id: replyTo?.id || null
         })
         .select()
         .single();
