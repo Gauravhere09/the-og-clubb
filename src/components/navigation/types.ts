@@ -8,5 +8,5 @@ export interface NavigationLink {
   hideLabel?: boolean; // Added this property to hide labels on mobile
   onClick?: () => void;
   badge?: number | null;
-  badgeVariant?: string;
+  badgeVariant?: "default" | "secondary" | "destructive" | "outline";
 }
