@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { Button } from '../ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Heart, ThumbsUp, Star, PartyPopper } from 'lucide-react';
+import { type ReactionType } from '@/types/database/social.types';
+import { reactionIcons } from '../post/reactions/ReactionIcons';
 
 interface StoryReactionProps {
   storyId: string;
@@ -12,20 +13,11 @@ interface StoryReactionProps {
   className?: string;
 }
 
-export type Reaction = 'heart' | 'like' | 'star' | 'party';
-
 export function StoryReaction({ storyId, userId, showReactions, className }: StoryReactionProps) {
-  const [selectedReaction, setSelectedReaction] = useState<Reaction | null>(null);
+  const [selectedReaction, setSelectedReaction] = useState<ReactionType | null>(null);
   const { toast } = useToast();
 
-  const reactionIcons = {
-    heart: <Heart className="h-6 w-6 text-rose-500" />,
-    like: <ThumbsUp className="h-6 w-6 text-blue-500" />,
-    star: <Star className="h-6 w-6 text-amber-400" />,
-    party: <PartyPopper className="h-6 w-6 text-purple-500" />
-  };
-
-  const handleReaction = async (reaction: Reaction) => {
+  const handleReaction = async (reaction: ReactionType) => {
     try {
       const { data: existingReaction } = await supabase
         .from('story_reactions')
@@ -68,17 +60,18 @@ export function StoryReaction({ storyId, userId, showReactions, className }: Sto
   if (!showReactions) return null;
 
   return (
-    <div className={className}>
-      <div className="flex justify-center space-x-4">
-        {(Object.entries(reactionIcons) as [Reaction, JSX.Element][]).map(([type, icon]) => (
+    <div className={`${className} bg-background/80 dark:bg-background/40 backdrop-blur-sm rounded-full p-2 shadow-md border border-border`}>
+      <div className="flex justify-center space-x-2">
+        {(Object.entries(reactionIcons) as [ReactionType, any][]).map(([type, { icon: Icon, color, label }]) => (
           <Button
             key={type}
             variant="ghost"
             size="sm"
-            className={`hover:bg-primary/20 ${selectedReaction === type ? 'text-primary' : ''}`}
+            className={`hover:bg-primary/10 rounded-full ${selectedReaction === type ? color : ''}`}
             onClick={() => handleReaction(type)}
+            title={label}
           >
-            {icon}
+            <Icon className="h-5 w-5" />
           </Button>
         ))}
       </div>
