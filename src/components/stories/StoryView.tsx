@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { StoryHeader } from "./StoryHeader";
@@ -14,8 +15,14 @@ import { StoryProgress } from "./StoryProgress";
 import { useStoryComments } from "@/hooks/use-story-comments";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Pause, Play } from "lucide-react";
+import { Pause, Play, MoreHorizontal, Link, Trash2, Bug } from "lucide-react";
 import { Button } from "../ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface StoryViewProps {
   storyId: string;
@@ -27,7 +34,7 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
   const [isPaused, setIsPaused] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [showReactions, setShowReactions] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { toast } = useToast();
@@ -35,10 +42,10 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
   const { storyData, timeDisplay } = useStory(storyId);
   const { progress } = StoryProgress({ 
     isPaused, 
-    currentImageIndex, 
-    totalImages: storyData.imageUrls.length,
+    currentImageIndex: currentMediaIndex, 
+    totalImages: storyData.mediaItems.length || 1,
     onComplete: handleClose,
-    onImageComplete: () => setCurrentImageIndex(prev => prev + 1)
+    onImageComplete: () => setCurrentMediaIndex(prev => prev + 1)
   });
   
   const { 
@@ -69,7 +76,7 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
     setIsLiked(!isLiked);
   };
 
-  const toggleReactions = (e: React.MouseEvent) => {
+  const toggleReactionsPanel = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowReactions(!showReactions);
     setIsPaused(true);
@@ -80,21 +87,27 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
     setIsPaused(!isPaused);
   };
 
+  const handleCommentsToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleComments(e);
+    setIsPaused(true);
+  };
+
   const handleContentClick = () => {
     if (!showComments && !showReactions) {
       setIsPaused(!isPaused);
     }
   };
   
-  const handleNextImage = () => {
-    if (currentImageIndex < storyData.imageUrls.length - 1) {
-      setCurrentImageIndex(prev => prev + 1);
+  const handleNextMedia = () => {
+    if (currentMediaIndex < storyData.mediaItems.length - 1) {
+      setCurrentMediaIndex(prev => prev + 1);
     }
   };
   
-  const handlePrevImage = () => {
-    if (currentImageIndex > 0) {
-      setCurrentImageIndex(prev => prev - 1);
+  const handlePrevMedia = () => {
+    if (currentMediaIndex > 0) {
+      setCurrentMediaIndex(prev => prev - 1);
     }
   };
 
@@ -157,17 +170,67 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
             avatarUrl={storyData.user.avatarUrl}
             timeDisplay={timeDisplay}
             progress={progress}
-            currentImageIndex={currentImageIndex}
-            totalImages={storyData.imageUrls.length}
+            currentImageIndex={currentMediaIndex}
+            totalImages={storyData.mediaItems.length || 1}
             onClose={handleClose}
           />
           
+          {/* Top right controls */}
+          <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="bg-black/50 text-white hover:bg-black/70"
+                >
+                  <MoreHorizontal className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-gray-900 text-white border-gray-800 dark:bg-gray-900 w-72 p-0">
+                <DropdownMenuItem className="py-3 px-4 hover:bg-gray-800 cursor-pointer flex items-center gap-3 text-white dark:text-white">
+                  <Link className="h-5 w-5" />
+                  <div className="flex flex-col">
+                    <span className="font-medium">Copiar enlace para compartir esta historia</span>
+                    <span className="text-xs text-gray-400">La audiencia podrá ver tu historia durante 24 horas.</span>
+                  </div>
+                </DropdownMenuItem>
+                
+                {canDeleteStory && (
+                  <DropdownMenuItem 
+                    className="py-3 px-4 hover:bg-gray-800 cursor-pointer flex items-center gap-3 text-red-400"
+                    onClick={() => setShowDeleteConfirm(true)}
+                  >
+                    <Trash2 className="h-5 w-5" />
+                    <span className="font-medium">Eliminar historia</span>
+                  </DropdownMenuItem>
+                )}
+                
+                <DropdownMenuItem className="py-3 px-4 hover:bg-gray-800 cursor-pointer flex items-center gap-3 text-white dark:text-white">
+                  <Bug className="h-5 w-5" />
+                  <span className="font-medium">Algo no funciona</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button
+              size="icon"
+              variant="ghost"
+              className="bg-black/50 text-white hover:bg-black/70"
+              onClick={togglePause}
+              title={isPaused ? "Reanudar" : "Pausar"}
+            >
+              {isPaused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
+            </Button>
+          </div>
+          
           <StoryContent 
-            imageUrls={storyData.imageUrls}
-            currentImageIndex={currentImageIndex}
+            mediaItems={storyData.mediaItems || []}
+            currentIndex={currentMediaIndex}
             onContentClick={handleContentClick}
-            onNextImage={handleNextImage}
-            onPrevImage={handlePrevImage}
+            onNextImage={handleNextMedia}
+            onPrevImage={handlePrevMedia}
+            isPaused={isPaused}
             className={cn(
               "animate-in fade-in-0 duration-300",
               isExiting && "animate-out fade-out-0 duration-300"
@@ -187,38 +250,27 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
             />
           )}
 
-          <div className="absolute right-4 top-16 z-20">
-            <Button
-              size="icon"
-              variant="ghost"
-              className="bg-black/50 text-white hover:bg-black/70"
-              onClick={togglePause}
-              title={isPaused ? "Reanudar" : "Pausar"}
-            >
-              {isPaused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
-            </Button>
-          </div>
-
           <div className="absolute left-0 right-0 bottom-0">
             <form className="flex items-center px-4 py-2 bg-black/80 backdrop-blur-sm">
               <input
                 type="text"
                 placeholder="Responder..."
                 className="w-full bg-transparent text-white border-none focus:outline-none placeholder:text-gray-400"
-                onClick={() => setIsPaused(true)}
+                onClick={() => {
+                  setIsPaused(true);
+                  setShowComments(true);
+                }}
               />
             </form>
           </div>
 
           <StoryActions 
-            isLiked={isLiked}
-            toggleLike={toggleLike}
-            toggleComments={toggleComments}
-            toggleReactions={toggleReactions}
+            toggleComments={handleCommentsToggle}
+            toggleReactions={toggleReactionsPanel}
             onDeleteStory={() => setShowDeleteConfirm(true)}
             canDelete={canDeleteStory}
             className={cn(
-              "absolute bottom-12 left-0 right-0 animate-in slide-in-from-bottom duration-300",
+              "animate-in slide-in-from-bottom duration-300",
               isExiting && "animate-out slide-out-to-bottom duration-300"
             )}
           />

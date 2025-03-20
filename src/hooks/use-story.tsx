@@ -2,6 +2,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+interface StoryMedia {
+  url: string;
+  type: 'image' | 'video';
+}
+
 interface StoryData {
   id: string;
   user: {
@@ -9,7 +14,7 @@ interface StoryData {
     username: string;
     avatarUrl: string | null;
   };
-  imageUrls: string[];
+  mediaItems: StoryMedia[];
   createdAt: string;
 }
 
@@ -22,7 +27,7 @@ export function useStory(storyId: string) {
       // First get the story
       const { data: story, error: storyError } = await supabase
         .from('stories')
-        .select('id, image_url, created_at, user_id')
+        .select('id, image_url, created_at, user_id, media_type')
         .eq('id', storyId)
         .single();
         
@@ -64,7 +69,7 @@ export function useStory(storyId: string) {
       // Get all stories from this user to enable navigation
       const { data: userStories, error: userStoriesError } = await supabase
         .from('stories')
-        .select('id, image_url')
+        .select('id, image_url, media_type')
         .eq('user_id', story.user_id)
         .order('created_at', { ascending: true });
         
@@ -72,8 +77,14 @@ export function useStory(storyId: string) {
         console.error("Error fetching user stories:", userStoriesError);
       }
       
-      // Map user stories to image URLs
-      const allImageUrls = userStories?.map(s => s.image_url) || [story.image_url];
+      // Map user stories to media items
+      const allMediaItems = userStories?.map(s => ({
+        url: s.image_url,
+        type: (s.media_type || 'image') as 'image' | 'video'
+      })) || [{
+        url: story.image_url,
+        type: (story.media_type || 'image') as 'image' | 'video'
+      }];
       
       return {
         id: story.id,
@@ -82,7 +93,7 @@ export function useStory(storyId: string) {
           username: profile?.username || "Usuario",
           avatarUrl: profile?.avatar_url
         },
-        imageUrls: allImageUrls,
+        mediaItems: allMediaItems,
         createdAt: story.created_at
       };
     }
@@ -96,7 +107,10 @@ export function useStory(storyId: string) {
       username: "Cargando...",
       avatarUrl: null
     },
-    imageUrls: ["https://via.placeholder.com/800x1200?text=Cargando..."],
+    mediaItems: [{
+      url: "https://via.placeholder.com/800x1200?text=Cargando...",
+      type: 'image' as 'image' | 'video'
+    }],
     createdAt: new Date().toISOString()
   };
 

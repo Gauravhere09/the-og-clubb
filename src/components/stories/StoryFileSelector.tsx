@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { X, Plus, Eye, Upload, Image } from "lucide-react";
+import { X, Plus, Eye, Upload, Image, Video } from "lucide-react";
 import { RefObject } from "react";
 
 interface StoryFileSelectorProps {
@@ -38,7 +38,7 @@ export function StoryFileSelector({
         >
           <input
             type="file"
-            accept="image/*"
+            accept="image/*,video/*"
             onChange={handleFileChange}
             ref={fileInputRef}
             multiple
@@ -49,15 +49,27 @@ export function StoryFileSelector({
               <Upload className="h-8 w-8 text-primary" />
             </div>
             <h3 className="text-lg font-medium">Sube tu historia</h3>
-            <Button 
-              variant="default"
-              className="mb-2 flex items-center gap-2"
-            >
-              <Image className="h-4 w-4" />
-              Seleccionar imágenes
-            </Button>
+            
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                className="mb-2 flex items-center gap-2"
+              >
+                <Image className="h-4 w-4" />
+                Seleccionar imágenes
+              </Button>
+              
+              <Button 
+                variant="default"
+                className="mb-2 flex items-center gap-2"
+              >
+                <Video className="h-4 w-4" />
+                O videos
+              </Button>
+            </div>
+            
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Formatos soportados: JPG, PNG, GIF
+              Formatos soportados: JPG, PNG, GIF, MP4, WEBM
             </p>
           </div>
         </div>
@@ -95,7 +107,7 @@ export function StoryFileSelector({
             
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,video/*"
               onChange={handleFileChange}
               ref={fileInputRef}
               multiple

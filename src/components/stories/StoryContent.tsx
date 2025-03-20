@@ -2,39 +2,76 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useRef, useEffect } from "react";
+
+interface StoryMedia {
+  url: string;
+  type: 'image' | 'video';
+}
 
 interface StoryContentProps {
-  imageUrls: string[];
-  currentImageIndex: number;
+  mediaItems: StoryMedia[];
+  currentIndex: number;
   onContentClick: () => void;
   onNextImage: () => void;
   onPrevImage: () => void;
+  isPaused: boolean;
   className?: string;
 }
 
 export function StoryContent({ 
-  imageUrls, 
-  currentImageIndex, 
+  mediaItems, 
+  currentIndex, 
   onContentClick, 
   onNextImage, 
   onPrevImage,
+  isPaused,
   className
 }: StoryContentProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  
+  const currentItem = mediaItems[currentIndex];
+  const isVideo = currentItem?.type === 'video';
+  
+  // Handle pause/play for videos
+  useEffect(() => {
+    if (videoRef.current && isVideo) {
+      if (isPaused) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play().catch(e => console.error("Error playing video:", e));
+      }
+    }
+  }, [isPaused, isVideo, currentIndex]);
+  
   return (
     <div 
       className={cn("flex-1 bg-black flex items-center justify-center relative", className)}
       onClick={onContentClick}
     >
-      <img 
-        src={imageUrls[currentImageIndex]} 
-        alt={`Story ${currentImageIndex + 1}`} 
-        className="max-h-full max-w-full object-contain animate-fade-in" 
-        key={imageUrls[currentImageIndex]} // Key for animation on image change
-      />
+      {isVideo ? (
+        <video
+          ref={videoRef}
+          src={currentItem.url}
+          className="max-h-full max-w-full object-contain animate-fade-in"
+          autoPlay
+          playsInline
+          muted
+          loop
+          key={currentItem.url} // Key for resetting the video when changed
+        />
+      ) : (
+        <img 
+          src={currentItem.url}
+          alt={`Story ${currentIndex + 1}`} 
+          className="max-h-full max-w-full object-contain animate-fade-in"
+          key={currentItem.url} // Key for animation on image change
+        />
+      )}
       
-      {imageUrls.length > 1 && (
+      {mediaItems.length > 1 && (
         <>
-          {currentImageIndex > 0 && (
+          {currentIndex > 0 && (
             <Button
               variant="ghost"
               size="icon"
@@ -49,7 +86,7 @@ export function StoryContent({
             </Button>
           )}
           
-          {currentImageIndex < imageUrls.length - 1 && (
+          {currentIndex < mediaItems.length - 1 && (
             <Button
               variant="ghost"
               size="icon"
@@ -66,13 +103,13 @@ export function StoryContent({
         </>
       )}
       
-      {imageUrls.length > 1 && (
+      {mediaItems.length > 1 && (
         <div className="absolute bottom-16 left-0 right-0 flex justify-center gap-1">
-          {imageUrls.map((_, index) => (
+          {mediaItems.map((_, index) => (
             <div 
               key={index} 
               className={`h-1 rounded-full ${
-                index === currentImageIndex 
+                index === currentIndex 
                   ? "bg-primary w-6" 
                   : "bg-background/30 w-4"
               } transition-all duration-300`}

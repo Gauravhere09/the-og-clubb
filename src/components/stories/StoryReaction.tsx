@@ -63,8 +63,8 @@ export function StoryReaction({ storyId, userId, showReactions, className }: Sto
   if (!showReactions) return null;
 
   return (
-    <div className={`${className} bg-black/80 dark:bg-background/40 backdrop-blur-sm rounded-full p-2 shadow-md border border-gray-700 dark:border-border`}>
-      <div className="flex justify-center space-x-2">
+    <div className={`${className} bg-black/80 dark:bg-black/80 backdrop-blur-sm rounded-full p-2 shadow-md border border-gray-700 dark:border-border flex justify-center`}>
+      <div className="flex justify-center items-center space-x-4">
         {orderedReactionTypes.map((type) => {
           const { icon: Icon, color, label } = reactionIcons[type];
           return (
@@ -72,11 +72,11 @@ export function StoryReaction({ storyId, userId, showReactions, className }: Sto
               key={type}
               variant="ghost"
               size="sm"
-              className={`hover:bg-primary/10 rounded-full text-white ${selectedReaction === type ? color : ''}`}
+              className={`w-14 h-14 hover:bg-primary/10 rounded-full text-white flex flex-col items-center justify-center ${selectedReaction === type ? color : ''}`}
               onClick={() => handleReaction(type)}
               title={label}
             >
-              <Icon className="h-5 w-5" />
+              <Icon className="h-8 w-8" />
             </Button>
           );
         })}

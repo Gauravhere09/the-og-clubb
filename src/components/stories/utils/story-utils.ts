@@ -13,7 +13,10 @@ export async function uploadStory(
   visibility: StoryVisibility
 ): Promise<string | null> {
   try {
-    // 1. Upload the image to storage
+    // Determine media type
+    const isVideo = file.type.startsWith('video/');
+    
+    // 1. Upload the file to storage
     const fileName = `stories/${userId}/${Date.now()}-${file.name}`;
     const { error: uploadError, data: uploadData } = await supabase.storage
       .from('media')
@@ -36,8 +39,8 @@ export async function uploadStory(
       .insert({
         user_id: userId,
         image_url: publicUrl,
-        expires_at: expiresAt.toISOString()
-        // Eliminamos el campo visibility ya que no existe en la tabla
+        expires_at: expiresAt.toISOString(),
+        media_type: isVideo ? 'video' : 'image'
       });
       
     if (storyError) throw storyError;
@@ -53,22 +56,39 @@ export async function uploadStory(
  * Validates a story file
  */
 export function validateStoryFile(file: File): boolean {
-  if (file.size > 10 * 1024 * 1024) { // 10MB limit
+  const fileSize = 15 * 1024 * 1024; // 15MB limit
+  
+  if (file.size > fileSize) {
     toast({
       variant: "destructive",
       title: "Error",
-      description: "Una imagen es demasiado grande. Máximo 10MB.",
+      description: "El archivo es demasiado grande. Máximo 15MB.",
     });
     return false;
   }
 
-  if (!file.type.startsWith("image/")) {
+  if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
     toast({
       variant: "destructive",
       title: "Error",
-      description: "Solo se permiten imágenes para las historias.",
+      description: "Solo se permiten imágenes y videos para las historias.",
     });
     return false;
+  }
+
+  // Additional video validation
+  if (file.type.startsWith("video/")) {
+    // Max video duration would require client-side check with video element
+    // For now, just check file type
+    const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+    if (!allowedVideoTypes.includes(file.type)) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Formato de video no soportado. Utiliza MP4, WebM u OGG.",
+      });
+      return false;
+    }
   }
 
   return true;
