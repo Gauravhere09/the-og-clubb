@@ -129,11 +129,11 @@ export async function cleanupExpiredStories(): Promise<number> {
  */
 export async function getUserStoryPrivacySetting(userId: string): Promise<StoryVisibility> {
   try {
-    // Fix the RPC call with empty type parameters
+    // Fix the RPC call with type assertion
     const { data, error } = await supabase
       .rpc('get_user_story_privacy', {
         user_id_input: userId 
-      });
+      } as any);
       
     if (error) {
       console.error("Error obteniendo configuración de privacidad:", error);
@@ -162,12 +162,12 @@ export async function saveUserStoryPrivacySetting(
   privacySetting: StoryVisibility
 ): Promise<boolean> {
   try {
-    // Fix the RPC call with empty type parameters
+    // Fix the RPC call with type assertion
     const { error } = await supabase
       .rpc('save_user_story_privacy', {
         user_id_input: userId,
         privacy_setting: privacySetting
-      });
+      } as any);
       
     if (error) {
       console.error("Error guardando configuración de privacidad:", error);
