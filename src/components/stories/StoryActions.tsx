@@ -26,25 +26,27 @@ export function StoryActions({
 }: StoryActionsProps) {
   return (
     <div className={cn("absolute bottom-16 left-0 right-0 px-4 flex flex-col gap-2", className)}>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="w-full bg-black/80 dark:bg-black/80 text-white hover:bg-black/90 dark:hover:bg-black/90 flex items-center gap-2 backdrop-blur-sm rounded-full"
-        onClick={toggleComments}
-      >
-        <MessageSquare className="h-5 w-5" />
-        <span>Comentar</span>
-      </Button>
-      
-      <Button
-        variant="ghost"
-        size="sm"
-        className="w-full bg-black/80 dark:bg-black/80 text-white hover:bg-black/90 dark:hover:bg-black/90 flex items-center gap-2 backdrop-blur-sm rounded-full"
-        onClick={toggleReactions}
-      >
-        <Heart className="h-5 w-5" />
-        <span>Reaccionar</span>
-      </Button>
+      <div className="w-full flex justify-between">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex-1 mr-2 bg-black/80 dark:bg-black/80 text-white hover:bg-black/90 dark:hover:bg-black/90 flex items-center justify-center gap-2 backdrop-blur-sm rounded-full"
+          onClick={toggleComments}
+        >
+          <MessageSquare className="h-5 w-5" />
+          <span>Comentar</span>
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex-1 bg-black/80 dark:bg-black/80 text-white hover:bg-black/90 dark:hover:bg-black/90 flex items-center justify-center gap-2 backdrop-blur-sm rounded-full"
+          onClick={toggleReactions}
+        >
+          <Heart className="h-5 w-5" />
+          <span>Reaccionar</span>
+        </Button>
+      </div>
     </div>
   );
 }
