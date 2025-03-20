@@ -1,3 +1,4 @@
+
 import { Navigation } from "@/components/Navigation";
 import { PostCreator } from "@/components/PostCreator";
 import { Feed } from "@/components/feed/Feed";
@@ -64,14 +65,16 @@ const Index = () => {
               <div className="flex items-center justify-between gap-2 mb-4">
                 <div className="flex items-center">
                   {isMobile ? (
-                    <Link to="/" className="relative w-8 h-8 bg-primary rounded-xl flex items-center justify-center transform transition-transform shadow-md mr-2">
+                    <Link to="/" className="relative w-8 h-8 bg-primary rounded-xl flex items-center justify-center transform transition-transform shadow-md mr-1">
                       <span className="text-xl font-bold text-primary-foreground">H</span>
                       <div className="absolute -inset-0.5 bg-primary/20 rounded-xl blur-sm -z-10" />
                     </Link>
                   ) : (
                     <h1 className="text-lg md:text-2xl font-semibold">Feed</h1>
                   )}
-                  
+                </div>
+                
+                <div className="flex-1 flex justify-center max-w-[200px] mx-auto">
                   <FriendSearch />
                 </div>
                 

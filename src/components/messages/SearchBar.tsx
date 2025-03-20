@@ -12,7 +12,7 @@ export const SearchBar = ({ searchQuery, onSearchChange }: SearchBarProps) => {
   
   return (
     <div className="p-4 border-b border-gray-200 dark:border-neutral-800">
-      <div className="relative">
+      <div className="relative max-w-[250px] mx-auto">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
         <input
           type="text"
