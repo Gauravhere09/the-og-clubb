@@ -9,10 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Check, Trash2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { useNavigate } from "react-router-dom";
 
 const Notifications = () => {
-  const { notifications, handleFriendRequest, markAsRead, clearAllNotifications } = useNotifications();
+  const { notifications, handleFriendRequest, markAsRead, clearAllNotifications, removeNotification } = useNotifications();
   const [selectedTab, setSelectedTab] = useState("all");
+  const navigate = useNavigate();
   
   // Agrupar notificaciones por fecha
   const today = new Date().toDateString();
@@ -41,6 +43,18 @@ const Notifications = () => {
   
   const filteredNotifications = getFilteredNotifications();
   const hasUnread = notifications.some(n => !n.read);
+
+  const handleNotificationClick = (notification) => {
+    if (notification.type === 'friend_request') {
+      navigate(`/profile/${notification.sender.id}`);
+    } else if (notification.post_id) {
+      navigate(`/post/${notification.post_id}`);
+    }
+    
+    if (!notification.read) {
+      markAsRead([notification.id]);
+    }
+  };
 
   return (
     <div className="min-h-screen flex bg-muted/30">
@@ -101,7 +115,9 @@ const Notifications = () => {
                           key={notification.id}
                           notification={notification}
                           onHandleFriendRequest={handleFriendRequest}
+                          onClick={() => handleNotificationClick(notification)}
                           onMarkAsRead={() => markAsRead([notification.id])}
+                          onRemove={() => removeNotification(notification.id)}
                         />
                       ))}
                   </>
@@ -119,7 +135,9 @@ const Notifications = () => {
                           key={notification.id}
                           notification={notification}
                           onHandleFriendRequest={handleFriendRequest}
+                          onClick={() => handleNotificationClick(notification)}
                           onMarkAsRead={() => markAsRead([notification.id])}
+                          onRemove={() => removeNotification(notification.id)}
                         />
                       ))}
                   </>
@@ -137,7 +155,9 @@ const Notifications = () => {
                           key={notification.id}
                           notification={notification}
                           onHandleFriendRequest={handleFriendRequest}
+                          onClick={() => handleNotificationClick(notification)}
                           onMarkAsRead={() => markAsRead([notification.id])}
+                          onRemove={() => removeNotification(notification.id)}
                         />
                       ))}
                   </>
@@ -149,7 +169,9 @@ const Notifications = () => {
                       key={notification.id}
                       notification={notification}
                       onHandleFriendRequest={handleFriendRequest}
+                      onClick={() => handleNotificationClick(notification)}
                       onMarkAsRead={() => markAsRead([notification.id])}
+                      onRemove={() => removeNotification(notification.id)}
                     />
                   ))
                 )}

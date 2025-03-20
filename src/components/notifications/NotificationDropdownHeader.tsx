@@ -1,37 +1,41 @@
 
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Check, X } from "lucide-react";
 
 interface NotificationDropdownHeaderProps {
   hasUnread: boolean;
   onMarkAllAsRead: () => void;
+  onClose: () => void;
 }
 
 export function NotificationDropdownHeader({ 
   hasUnread, 
-  onMarkAllAsRead 
+  onMarkAllAsRead,
+  onClose
 }: NotificationDropdownHeaderProps) {
   return (
-    <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card z-10">
-      <h4 className="font-semibold text-lg">Notificaciones</h4>
-      <div className="flex gap-2">
+    <div className="flex items-center justify-between border-b p-3">
+      <h3 className="font-semibold">Notificaciones</h3>
+      <div className="flex items-center gap-2">
         {hasUnread && (
           <Button 
-            variant="outline" 
-            size="sm"
-            className="h-8 gap-1 text-xs"
-            onClick={onMarkAllAsRead}
+            variant="ghost" 
+            size="sm" 
+            onClick={onMarkAllAsRead} 
+            className="h-8 text-xs"
           >
-            <Check className="h-3.5 w-3.5" />
+            <Check className="mr-1 h-3.5 w-3.5" />
             <span>Marcar como leídas</span>
           </Button>
         )}
-        <Link to="/notifications">
-          <Button variant="ghost" size="sm" className="h-8 text-xs">
-            Ver todas
-          </Button>
-        </Link>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          className="h-8 w-8 p-0"
+        >
+          <X className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );

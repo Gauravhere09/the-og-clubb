@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Popover,
   PopoverContent,
@@ -17,11 +17,12 @@ import { NotificationsSuggestions } from "./NotificationsSuggestions";
 
 export function NotificationDropdown() {
   const [open, setOpen] = useState(false);
-  const { notifications, handleFriendRequest, markAsRead, clearAllNotifications } = useNotifications();
+  const { notifications, handleFriendRequest, markAsRead, clearAllNotifications, removeNotification } = useNotifications();
   const [hasUnread, setHasUnread] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { suggestions } = useFriends(currentUserId);
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   // Group notifications by date
   const today = new Date().toDateString();
@@ -51,7 +52,22 @@ export function NotificationDropdown() {
     };
     
     getCurrentUser();
-  }, [notifications]);
+
+    // Handle click outside to close dropdown if stuck
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [notifications, open]);
 
   const handleMarkAllAsRead = () => {
     markAsRead();
@@ -62,6 +78,10 @@ export function NotificationDropdown() {
     // Esta función podría implementarse más adelante para persistir
     // las sugerencias descartadas en la base de datos
     console.log(`Dismissed suggestion for user ${userId}`);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
   };
 
   return (
@@ -80,10 +100,11 @@ export function NotificationDropdown() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-96 p-0 max-h-[80vh] overflow-hidden">
+      <PopoverContent ref={popoverRef} align="end" className="w-96 p-0 max-h-[80vh] overflow-hidden">
         <NotificationDropdownHeader 
           hasUnread={hasUnread} 
           onMarkAllAsRead={handleMarkAllAsRead} 
+          onClose={handleClose}
         />
         
         <ScrollArea className="max-h-[calc(80vh-60px)]">
@@ -97,6 +118,7 @@ export function NotificationDropdown() {
                 groupedNotifications={groupedNotifications}
                 handleFriendRequest={handleFriendRequest}
                 markAsRead={markAsRead}
+                removeNotification={removeNotification}
                 setOpen={setOpen}
               />
               

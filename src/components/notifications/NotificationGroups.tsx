@@ -12,27 +12,35 @@ interface NotificationGroupsProps {
   };
   handleFriendRequest: (notificationId: string, senderId: string, accept: boolean) => void;
   markAsRead: (notificationIds?: string[]) => void;
+  removeNotification: (notificationId: string) => void;
   setOpen: (open: boolean) => void;
 }
 
 export function NotificationGroups({ 
   groupedNotifications, 
   handleFriendRequest, 
-  markAsRead, 
+  markAsRead,
+  removeNotification,
   setOpen 
 }: NotificationGroupsProps) {
   const navigate = useNavigate();
 
   const handleNotificationClick = (notification: NotificationWithSender) => {
-    if (notification.type === 'friend_request') {
-      navigate(`/profile/${notification.sender.id}`);
-    } else if (notification.post_id) {
-      navigate(`/post/${notification.post_id}`);
-    }
+    // Close dropdown first to prevent stuck UI
     setOpen(false);
-    if (!notification.read) {
-      markAsRead([notification.id]);
-    }
+
+    // Slight delay to ensure dropdown is closed before navigation
+    setTimeout(() => {
+      if (notification.type === 'friend_request') {
+        navigate(`/profile/${notification.sender.id}`);
+      } else if (notification.post_id) {
+        navigate(`/post/${notification.post_id}`);
+      }
+      
+      if (!notification.read) {
+        markAsRead([notification.id]);
+      }
+    }, 100);
   };
 
   return (
@@ -47,6 +55,7 @@ export function NotificationGroups({
               onHandleFriendRequest={handleFriendRequest}
               onClick={() => handleNotificationClick(notification)}
               onMarkAsRead={() => markAsRead([notification.id])}
+              onRemove={() => removeNotification(notification.id)}
               compact={true}
             />
           ))}
@@ -63,6 +72,7 @@ export function NotificationGroups({
               onHandleFriendRequest={handleFriendRequest}
               onClick={() => handleNotificationClick(notification)}
               onMarkAsRead={() => markAsRead([notification.id])}
+              onRemove={() => removeNotification(notification.id)}
               compact={true}
             />
           ))}
@@ -79,6 +89,7 @@ export function NotificationGroups({
               onHandleFriendRequest={handleFriendRequest}
               onClick={() => handleNotificationClick(notification)}
               onMarkAsRead={() => markAsRead([notification.id])}
+              onRemove={() => removeNotification(notification.id)}
               compact={true}
             />
           ))}

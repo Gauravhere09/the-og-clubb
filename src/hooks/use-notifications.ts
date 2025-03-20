@@ -6,7 +6,8 @@ import { fetchNotifications } from "@/lib/notifications/fetch-notifications";
 import { 
   handleFriendRequest as handleFriendRequestAction,
   markNotificationsAsRead,
-  clearAllNotifications as clearAllNotificationsAction
+  clearAllNotifications as clearAllNotificationsAction,
+  removeNotification as removeNotificationAction
 } from "@/lib/notifications/notification-actions";
 import { subscribeToNotifications } from "@/lib/notifications/subscribe-notifications";
 import { formatNotificationMessage } from "@/lib/notifications/format-message";
@@ -92,6 +93,31 @@ export const useNotifications = () => {
     }
   };
 
+  const removeNotification = async (notificationId: string) => {
+    try {
+      const success = await removeNotificationAction(notificationId);
+      
+      if (success) {
+        // Remove from local state
+        setNotifications(prev => prev.filter(n => n.id !== notificationId));
+        
+        toast({
+          title: "Notificación eliminada",
+          description: "La notificación ha sido eliminada",
+        });
+      } else {
+        throw new Error("No se pudo eliminar la notificación");
+      }
+    } catch (error) {
+      console.error('Error removing notification:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo eliminar la notificación",
+      });
+    }
+  };
+
   const clearAllNotifications = async () => {
     try {
       const success = await clearAllNotificationsAction();
@@ -120,6 +146,7 @@ export const useNotifications = () => {
     notifications,
     handleFriendRequest,
     markAsRead,
+    removeNotification,
     clearAllNotifications
   };
 };

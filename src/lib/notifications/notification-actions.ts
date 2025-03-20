@@ -79,6 +79,24 @@ export async function markNotificationsAsRead(notificationIds?: string[]) {
   }
 }
 
+export async function removeNotification(notificationId: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  try {
+    await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', notificationId)
+      .eq('receiver_id', user.id);
+    
+    return true;
+  } catch (error) {
+    console.error('Error removing notification:', error);
+    return false;
+  }
+}
+
 export async function clearAllNotifications() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return false;
