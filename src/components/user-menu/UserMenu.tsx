@@ -9,7 +9,6 @@ import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { MenuHeader } from "./MenuHeader";
-import { UserProfile } from "./UserProfile";
 import { MenuOptions } from "./MenuOptions";
 import { useUserProfile } from "./hooks/useUserProfile";
 
@@ -54,15 +53,7 @@ export function UserMenu() {
           
           {/* Content */}
           <div className="flex-1 overflow-y-auto py-2">
-            {/* User Profile Section - Ya incluye la funcionalidad para ver el perfil */}
-            <UserProfile 
-              username={username} 
-              avatarUrl={avatarUrl} 
-              userId={userId} 
-              onClose={handleClose}
-            />
-
-            {/* Main Menu Options */}
+            {/* Main Menu Options - Now includes the AccountSwitcher */}
             <MenuOptions 
               userId={userId} 
               onClose={handleClose} 
