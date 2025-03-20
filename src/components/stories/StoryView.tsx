@@ -13,16 +13,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useStory } from "@/hooks/use-story";
 import { StoryProgress } from "./StoryProgress";
 import { useStoryComments } from "@/hooks/use-story-comments";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { useToast } from "@/hooks/use-toast";
-import { Pause, Play, MoreHorizontal, Link, Trash2, Bug } from "lucide-react";
-import { Button } from "../ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { StoryControls } from "./StoryControls";
+import { StoryReplyInput } from "./StoryReplyInput";
+import { StoryDeleteConfirmation } from "./StoryDeleteConfirmation";
+import { useStoryDeletion } from "@/hooks/use-story-deletion";
 
 interface StoryViewProps {
   storyId: string;
@@ -32,12 +26,9 @@ interface StoryViewProps {
 export function StoryView({ storyId, onClose }: StoryViewProps) {
   
   const [isPaused, setIsPaused] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
   const [showReactions, setShowReactions] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const { toast } = useToast();
   
   const { storyData, timeDisplay } = useStory(storyId);
   const { progress } = StoryProgress({ 
@@ -64,17 +55,24 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
     }
   });
 
+  const {
+    showDeleteConfirm,
+    setShowDeleteConfirm,
+    handleDeleteStory,
+    canDeleteStory
+  } = useStoryDeletion({
+    storyId,
+    userId: currentUser?.id,
+    ownerId: storyData.user.id,
+    onClose
+  });
+
   function handleClose() {
     setIsExiting(true);
     setTimeout(() => {
       onClose();
     }, 300);
   }
-
-  const toggleLike = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsLiked(!isLiked);
-  };
 
   const toggleReactionsPanel = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -110,44 +108,6 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
       setCurrentMediaIndex(prev => prev - 1);
     }
   };
-
-  const handleDeleteStory = async () => {
-    try {
-      // Only allow deletion if this is the user's own story
-      if (currentUser?.id !== storyData.user.id) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Solo puedes eliminar tus propias historias",
-        });
-        return;
-      }
-
-      const { error } = await supabase
-        .from('stories')
-        .delete()
-        .eq('id', storyId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Historia eliminada",
-        description: "Tu historia ha sido eliminada correctamente",
-      });
-      
-      handleClose();
-    } catch (error) {
-      console.error("Error deleting story:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se pudo eliminar la historia",
-      });
-    }
-    setShowDeleteConfirm(false);
-  };
-  
-  const canDeleteStory = currentUser?.id === storyData.user.id;
   
   return (
     <>
@@ -175,54 +135,12 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
             onClose={handleClose}
           />
           
-          {/* Top right controls */}
-          <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  className="bg-black/50 text-white hover:bg-black/70"
-                >
-                  <MoreHorizontal className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-gray-900 text-white border-gray-800 dark:bg-gray-900 w-72 p-0">
-                <DropdownMenuItem className="py-3 px-4 hover:bg-gray-800 cursor-pointer flex items-center gap-3 text-white dark:text-white">
-                  <Link className="h-5 w-5" />
-                  <div className="flex flex-col">
-                    <span className="font-medium">Copiar enlace para compartir esta historia</span>
-                    <span className="text-xs text-gray-400">La audiencia podrá ver tu historia durante 24 horas.</span>
-                  </div>
-                </DropdownMenuItem>
-                
-                {canDeleteStory && (
-                  <DropdownMenuItem 
-                    className="py-3 px-4 hover:bg-gray-800 cursor-pointer flex items-center gap-3 text-red-400"
-                    onClick={() => setShowDeleteConfirm(true)}
-                  >
-                    <Trash2 className="h-5 w-5" />
-                    <span className="font-medium">Eliminar historia</span>
-                  </DropdownMenuItem>
-                )}
-                
-                <DropdownMenuItem className="py-3 px-4 hover:bg-gray-800 cursor-pointer flex items-center gap-3 text-white dark:text-white">
-                  <Bug className="h-5 w-5" />
-                  <span className="font-medium">Algo no funciona</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Button
-              size="icon"
-              variant="ghost"
-              className="bg-black/50 text-white hover:bg-black/70"
-              onClick={togglePause}
-              title={isPaused ? "Reanudar" : "Pausar"}
-            >
-              {isPaused ? <Play className="h-5 w-5" /> : <Pause className="h-5 w-5" />}
-            </Button>
-          </div>
+          <StoryControls 
+            isPaused={isPaused}
+            canDelete={canDeleteStory}
+            onPauseToggle={togglePause}
+            onDeleteRequest={() => setShowDeleteConfirm(true)}
+          />
           
           <StoryContent 
             mediaItems={storyData.mediaItems || []}
@@ -250,19 +168,12 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
             />
           )}
 
-          <div className="absolute left-0 right-0 bottom-0">
-            <form className="flex items-center px-4 py-2 bg-black/80 backdrop-blur-sm">
-              <input
-                type="text"
-                placeholder="Responder..."
-                className="w-full bg-transparent text-white border-none focus:outline-none placeholder:text-gray-400"
-                onClick={() => {
-                  setIsPaused(true);
-                  setShowComments(true);
-                }}
-              />
-            </form>
-          </div>
+          <StoryReplyInput 
+            onFocus={() => {
+              setIsPaused(true);
+              setShowComments(true);
+            }}
+          />
 
           <StoryActions 
             toggleComments={handleCommentsToggle}
@@ -289,25 +200,11 @@ export function StoryView({ storyId, onClose }: StoryViewProps) {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar esta historia?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción no se puede deshacer. La historia será eliminada permanentemente.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDeleteStory} 
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Eliminar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <StoryDeleteConfirmation 
+        open={showDeleteConfirm}
+        onOpenChange={setShowDeleteConfirm}
+        onConfirm={handleDeleteStory}
+      />
     </>
   );
 }
