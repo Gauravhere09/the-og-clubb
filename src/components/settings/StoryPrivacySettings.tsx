@@ -44,13 +44,14 @@ export function StoryPrivacySettings({ open, onOpenChange }: StoryPrivacySetting
     setIsLoading(true);
     try {
       // Use RPC instead of direct table access
-      type StoryPrivacyRpcParams = {
+      interface StoryPrivacyRpcParams {
         user_id_input: string;
-      };
+      }
       
-      const { data, error } = await supabase.rpc<string>('get_user_story_privacy', {
-        user_id_input: userId 
-      } as StoryPrivacyRpcParams);
+      const { data, error } = await supabase
+        .rpc<string, StoryPrivacyRpcParams>('get_user_story_privacy', {
+          user_id_input: userId 
+        });
       
       if (error) throw error;
       

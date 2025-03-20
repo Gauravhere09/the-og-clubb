@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 // Define StoryVisibility type properly with string literal union
 export type StoryVisibility = 'public' | 'friends' | 'select' | 'except';
@@ -129,14 +129,14 @@ export async function cleanupExpiredStories(): Promise<number> {
 export async function getUserStoryPrivacySetting(userId: string): Promise<StoryVisibility> {
   try {
     // Create explicit RPC call to a stored procedure that handles this
-    type StoryPrivacyRpcParams = {
+    interface StoryPrivacyRpcParams {
       user_id_input: string;
-    };
+    }
     
     const { data, error } = await supabase
-      .rpc<string>('get_user_story_privacy', {
+      .rpc<string, StoryPrivacyRpcParams>('get_user_story_privacy', {
         user_id_input: userId 
-      } as StoryPrivacyRpcParams);
+      });
       
     if (error) {
       console.error("Error obteniendo configuración de privacidad:", error);
@@ -166,16 +166,16 @@ export async function saveUserStoryPrivacySetting(
 ): Promise<boolean> {
   try {
     // Call RPC to create or update user settings
-    type SavePrivacyRpcParams = {
+    interface SavePrivacyRpcParams {
       user_id_input: string;
       privacy_setting: string;
-    };
+    }
     
     const { error } = await supabase
-      .rpc('save_user_story_privacy', {
+      .rpc<null, SavePrivacyRpcParams>('save_user_story_privacy', {
         user_id_input: userId,
         privacy_setting: privacySetting
-      } as SavePrivacyRpcParams);
+      });
       
     if (error) {
       console.error("Error guardando configuración de privacidad:", error);
