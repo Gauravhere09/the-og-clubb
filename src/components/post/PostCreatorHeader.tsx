@@ -53,10 +53,11 @@ export function PostCreatorHeader({
         {mentionListVisible && (
           <MentionSuggestions
             users={mentionUsers}
+            isVisible={mentionListVisible}
             position={mentionPosition}
             selectedIndex={mentionIndex}
-            onSelect={handleSelectMention}
-            onHover={setMentionIndex}
+            onSelectUser={handleSelectMention}
+            onSetIndex={setMentionIndex}
           />
         )}
       </div>
