@@ -17,10 +17,14 @@ export function FriendSuggestionItem({
   isRequested, 
   onSendRequest 
 }: FriendSuggestionItemProps) {
+  // Added fallback for careerMatch and semesterMatch
+  const hasCareerMatch = suggestion.careerMatch === true;
+  const hasSemesterMatch = suggestion.semesterMatch === true;
+  
   return (
     <div
       className={`flex items-center justify-between p-4 rounded-lg border ${
-        suggestion.careerMatch || suggestion.semesterMatch 
+        hasCareerMatch || hasSemesterMatch 
           ? 'border-primary/50 bg-primary/5' 
           : 'hover:bg-accent'
       }`}
@@ -41,9 +45,9 @@ export function FriendSuggestionItem({
             {suggestion.career && (
               <div className="flex items-center text-xs text-muted-foreground">
                 <Briefcase className="inline-block h-3 w-3 mr-1" />
-                <span className={suggestion.careerMatch ? "font-medium text-primary" : ""}>
+                <span className={hasCareerMatch ? "font-medium text-primary" : ""}>
                   {suggestion.career}
-                  {suggestion.careerMatch && 
+                  {hasCareerMatch && 
                     <Badge variant="outline" className="ml-1 bg-primary/10 text-primary text-[10px] py-0 h-4">
                       Coincide
                     </Badge>
@@ -54,9 +58,9 @@ export function FriendSuggestionItem({
             {suggestion.semester && (
               <div className="flex items-center text-xs text-muted-foreground">
                 <GraduationCap className="inline-block h-3 w-3 mr-1" />
-                <span className={suggestion.semesterMatch ? "font-medium text-primary" : ""}>
+                <span className={hasSemesterMatch ? "font-medium text-primary" : ""}>
                   Semestre {suggestion.semester}
-                  {suggestion.semesterMatch && 
+                  {hasSemesterMatch && 
                     <Badge variant="outline" className="ml-1 bg-primary/10 text-primary text-[10px] py-0 h-4">
                       Coincide
                     </Badge>

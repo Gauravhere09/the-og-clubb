@@ -30,7 +30,30 @@ export function useFriendData(currentUserId: string | null) {
     if (!currentUserId) return;
     
     const { mutualFriends, onlyFollowing, onlyFollowers } = await fetchFriends();
-    updateFriendsState(mutualFriends, onlyFollowing, onlyFollowers);
+    
+    // Map the properties to ensure compatibility with both naming patterns
+    const mappedMutualFriends = mutualFriends.map(friend => ({
+      ...friend,
+      id: friend.friend_id,
+      username: friend.friend_username,
+      avatar_url: friend.friend_avatar_url
+    }));
+    
+    const mappedOnlyFollowing = onlyFollowing.map(friend => ({
+      ...friend,
+      id: friend.friend_id,
+      username: friend.friend_username,
+      avatar_url: friend.friend_avatar_url
+    }));
+    
+    const mappedOnlyFollowers = onlyFollowers.map(friend => ({
+      ...friend,
+      id: friend.friend_id,
+      username: friend.friend_username,
+      avatar_url: friend.friend_avatar_url
+    }));
+    
+    updateFriendsState(mappedMutualFriends, mappedOnlyFollowing, mappedOnlyFollowers);
   }, [currentUserId, fetchFriends, updateFriendsState]);
 
   const loadFriendRequests = useCallback(async () => {

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
@@ -8,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { FriendRequestItem } from "@/components/friends/FriendRequestItem";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronLeft, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Avatar, AvatarFallback, AvatarImage } from "lucide-react";
 
 interface FriendRequestData {
   id: string;
@@ -106,27 +105,17 @@ export default function FriendRequests() {
 
       if (receivedError) throw receivedError;
 
-      // Get mutual friends for each request
-      const processedRequests: FriendRequestData[] = [];
-      
-      for (const request of received || []) {
-        // Get mutual friends (this is a simplified version - in a real app you'd have a more efficient query)
-        const { data: mutualFriends } = await supabase.rpc('get_mutual_friends', {
-          user_id_1: user.id,
-          user_id_2: request.user.id
-        });
-
-        processedRequests.push({
-          id: request.id,
-          created_at: request.created_at,
-          sender: {
-            id: request.user.id,
-            username: request.user.username,
-            avatar_url: request.user.avatar_url
-          },
-          mutual_friends: mutualFriends || []
-        });
-      }
+      // Process the requests without mutual friends for now
+      const processedRequests: FriendRequestData[] = received?.map(request => ({
+        id: request.id,
+        created_at: request.created_at,
+        sender: {
+          id: request.user.id,
+          username: request.user.username,
+          avatar_url: request.user.avatar_url
+        },
+        mutual_friends: [] // We'll implement mutual friends later
+      })) || [];
 
       setReceivedRequests(processedRequests);
     } catch (error) {
@@ -146,17 +135,30 @@ export default function FriendRequests() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      // Simple query to get friends without using RPC for now
       const { data, error } = await supabase
-        .from('profiles')
+        .from('friendships')
         .select(`
-          id,
-          username,
-          avatar_url
+          friend:profiles!friendships_friend_id_fkey (
+            id,
+            username,
+            avatar_url
+          )
         `)
-        .in('id', supabase.rpc('get_friends', { user_id_param: user.id }));
+        .eq('user_id', user.id)
+        .eq('status', 'accepted');
 
       if (error) throw error;
-      setFriends(data || []);
+      
+      // Transform the data to match our Friend interface
+      const processedFriends = data?.map(item => ({
+        id: item.friend.id,
+        username: item.friend.username,
+        avatar_url: item.friend.avatar_url,
+        mutual_friends_count: 0 // We'll implement this later
+      })) || [];
+      
+      setFriends(processedFriends);
     } catch (error) {
       console.error('Error loading friends:', error);
     }
@@ -176,23 +178,13 @@ export default function FriendRequests() {
 
       if (error) throw error;
 
-      // Get mutual friends for each suggestion
-      const processedSuggestions: Suggestion[] = [];
-      
-      for (const suggestion of data || []) {
-        // Get mutual friends
-        const { data: mutualFriends } = await supabase.rpc('get_mutual_friends', {
-          user_id_1: user.id,
-          user_id_2: suggestion.id
-        });
-
-        processedSuggestions.push({
-          id: suggestion.id,
-          username: suggestion.username,
-          avatar_url: suggestion.avatar_url,
-          mutual_friends: mutualFriends || []
-        });
-      }
+      // Transform the data to match our Suggestion interface
+      const processedSuggestions = data?.map(suggestion => ({
+        id: suggestion.id,
+        username: suggestion.username,
+        avatar_url: suggestion.avatar_url,
+        mutual_friends: [] // We'll implement this later
+      })) || [];
 
       setSuggestions(processedSuggestions);
     } catch (error) {
@@ -430,3 +422,4 @@ export default function FriendRequests() {
     </div>
   );
 }
+

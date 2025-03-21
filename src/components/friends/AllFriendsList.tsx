@@ -20,18 +20,18 @@ export function AllFriendsList({ friends }: AllFriendsListProps) {
         <div className="space-y-4">
           {friends.map((friend) => (
             <Link
-              key={friend.friend_id}
-              to={`/profile/${friend.friend_id}`}
+              key={friend.id || friend.friend_id}
+              to={`/profile/${friend.id || friend.friend_id}`}
               className="flex items-center justify-between p-4 rounded-lg hover:bg-accent block"
             >
               <div className="flex items-center gap-3">
                 <Avatar>
-                  <AvatarImage src={friend.friend_avatar_url || undefined} />
+                  <AvatarImage src={friend.avatar_url || friend.friend_avatar_url || undefined} />
                   <AvatarFallback>
-                    {friend.friend_username[0]?.toUpperCase()}
+                    {(friend.username || friend.friend_username || '?')[0]?.toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="font-medium">{friend.friend_username}</div>
+                <div className="font-medium">{friend.username || friend.friend_username}</div>
               </div>
             </Link>
           ))}
