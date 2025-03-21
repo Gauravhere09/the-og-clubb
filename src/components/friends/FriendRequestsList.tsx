@@ -1,66 +1,69 @@
 
 import { FriendRequest } from "@/hooks/use-friends";
 import { Card } from "@/components/ui/card";
-import { FriendRequestItem } from "./FriendRequestItem";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { UserCheck, UserX } from "lucide-react";
 import { Link } from "react-router-dom";
-import { ChevronRight, UserCheck } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FriendRequestsListProps {
   requests: FriendRequest[];
   onRespond: (requestId: string, accept: boolean) => Promise<void>;
-  showViewAllLink?: boolean;
 }
 
-export function FriendRequestsList({ requests, onRespond, showViewAllLink = false }: FriendRequestsListProps) {
-  const handleAccept = async (requestId: string) => {
-    await onRespond(requestId, true);
-  };
+export function FriendRequestsList({ requests, onRespond }: FriendRequestsListProps) {
+  const isMobile = useIsMobile();
   
-  const handleReject = async (requestId: string) => {
-    await onRespond(requestId, false);
-  };
-  
-  if (requests.length === 0) {
-    return (
-      <div className="text-center p-8">
-        <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
-          <UserCheck className="h-6 w-6 text-muted-foreground" />
-        </div>
-        <h3 className="text-lg font-medium">No tienes solicitudes de amistad pendientes</h3>
-        <p className="text-muted-foreground mt-1">
-          Cuando alguien te envíe una solicitud, aparecerá aquí
-        </p>
-      </div>
-    );
-  }
-
   return (
-    <div>
-      {requests.map((request) => (
-        <FriendRequestItem
-          key={request.id}
-          id={request.id}
-          sender={{
-            id: request.user_id,
-            username: request.user.username,
-            avatar_url: request.user.avatar_url
-          }}
-          created_at={request.created_at}
-          mutualFriendsCount={request.mutual_friends_count}
-          onAccept={handleAccept}
-          onReject={handleReject}
-        />
-      ))}
-      
-      {showViewAllLink && (
-        <Link 
-          to="/friends/requests"
-          className="flex items-center justify-center gap-2 p-4 text-primary hover:bg-accent transition-colors"
-        >
-          Ver solicitudes enviadas
-          <ChevronRight className="h-4 w-4" />
-        </Link>
+    <Card className="p-4 md:p-6">
+      <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Solicitudes de amistad</h2>
+      {requests.length === 0 ? (
+        <p className="text-center text-muted-foreground">
+          No tienes solicitudes de amistad pendientes
+        </p>
+      ) : (
+        <div className="space-y-3 md:space-y-4">
+          {requests.map((request) => (
+            <div
+              key={request.id}
+              className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 md:p-4 rounded-lg hover:bg-accent gap-3"
+            >
+              <Link
+                to={`/profile/${request.user_id}`}
+                className="flex items-center gap-3"
+              >
+                <Avatar>
+                  <AvatarImage src={request.user.avatar_url || undefined} />
+                  <AvatarFallback>
+                    {request.user.username[0]?.toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="font-medium">{request.user.username}</div>
+              </Link>
+              <div className="flex gap-2 w-full sm:w-auto">
+                <Button
+                  size={isMobile ? "sm" : "default"}
+                  onClick={() => onRespond(request.id, true)}
+                  className="flex-1 sm:flex-none"
+                >
+                  <UserCheck className="mr-2 h-4 w-4" />
+                  Confirmar
+                </Button>
+                <Button
+                  size={isMobile ? "sm" : "default"}
+                  variant="secondary"
+                  onClick={() => onRespond(request.id, false)}
+                  className="flex-1 sm:flex-none"
+                >
+                  <UserX className="mr-2 h-4 w-4" />
+                  Eliminar
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
-    </div>
+    </Card>
   );
 }

@@ -1,9 +1,9 @@
 
 import { Link } from "react-router-dom";
+import { UserCheck, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { formatTimeAgo } from "@/lib/utils";
 
 interface FriendRequestItemProps {
   id: string;
@@ -12,68 +12,47 @@ interface FriendRequestItemProps {
     username: string;
     avatar_url: string | null;
   };
-  created_at: string;
-  mutualFriendsCount?: number;
   onAccept: (requestId: string) => Promise<void>;
   onReject: (requestId: string) => Promise<void>;
 }
 
-export function FriendRequestItem({ 
-  id, 
-  sender, 
-  created_at, 
-  mutualFriendsCount = 0,
-  onAccept, 
-  onReject 
-}: FriendRequestItemProps) {
+export function FriendRequestItem({ id, sender, onAccept, onReject }: FriendRequestItemProps) {
   const isMobile = useIsMobile();
-  const timeAgo = formatTimeAgo(created_at);
   
   return (
-    <div className="py-4 border-b border-border last:border-b-0">
-      <div className="flex items-start gap-3">
-        <Link to={`/profile/${sender.id}`} className="flex-shrink-0">
-          <Avatar className="h-16 w-16">
-            <AvatarImage src={sender.avatar_url || undefined} />
-            <AvatarFallback>{sender.username?.[0]?.toUpperCase()}</AvatarFallback>
-          </Avatar>
-        </Link>
-        
-        <div className="flex-1">
-          <div className="flex justify-between">
-            <div>
-              <Link to={`/profile/${sender.id}`} className="font-medium hover:underline text-lg">
-                {sender.username}
-              </Link>
-              
-              {mutualFriendsCount > 0 && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  {mutualFriendsCount} {mutualFriendsCount === 1 ? 'amigo' : 'amigos'} en común
-                </p>
-              )}
-            </div>
-            
-            <div className="text-sm text-muted-foreground mt-1">
-              {timeAgo}
-            </div>
-          </div>
-          
-          <div className="flex gap-2 mt-3">
-            <Button 
-              className="flex-1 bg-blue-500 hover:bg-blue-600"
-              onClick={() => onAccept(id)}
-            >
-              Confirmar
-            </Button>
-            <Button 
-              variant="secondary"
-              className="flex-1"
-              onClick={() => onReject(id)}
-            >
-              Eliminar
-            </Button>
-          </div>
-        </div>
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 md:p-4 rounded-lg hover:bg-accent gap-3">
+      <Link
+        to={`/profile/${sender.id}`}
+        className="flex items-center gap-3"
+      >
+        <Avatar>
+          <AvatarImage src={sender.avatar_url || undefined} />
+          <AvatarFallback>
+            {sender.username?.[0]?.toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <span className="font-medium">
+          {sender.username || "Usuario"}
+        </span>
+      </Link>
+      <div className="flex gap-2 w-full sm:w-auto">
+        <Button
+          size={isMobile ? "sm" : "default"}
+          onClick={() => onAccept(id)}
+          className="flex-1 sm:flex-none"
+        >
+          <UserCheck className="mr-2 h-4 w-4" />
+          Aceptar
+        </Button>
+        <Button
+          size={isMobile ? "sm" : "default"}
+          variant="secondary"
+          onClick={() => onReject(id)}
+          className="flex-1 sm:flex-none"
+        >
+          <UserX className="mr-2 h-4 w-4" />
+          Rechazar
+        </Button>
       </div>
     </div>
   );
