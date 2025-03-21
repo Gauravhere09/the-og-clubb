@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
@@ -9,6 +10,7 @@ import { FriendRequestItem } from "@/components/friends/FriendRequestItem";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { formatTimeAgo } from "@/lib/utils";
 
 interface FriendRequestData {
   id: string;
@@ -106,7 +108,7 @@ export default function FriendRequests() {
 
       if (receivedError) throw receivedError;
 
-      // Process the requests without mutual friends for now
+      // Process the requests and try to get mutual friends
       const processedRequests: FriendRequestData[] = received?.map(request => ({
         id: request.id,
         created_at: request.created_at,
@@ -115,7 +117,7 @@ export default function FriendRequests() {
           username: request.user.username,
           avatar_url: request.user.avatar_url
         },
-        mutual_friends: [] // We'll implement mutual friends later
+        mutual_friends: [] // Initialize with empty array
       })) || [];
 
       setReceivedRequests(processedRequests);
@@ -136,7 +138,7 @@ export default function FriendRequests() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Simple query to get friends without using RPC for now
+      // Simple query to get friends
       const { data, error } = await supabase
         .from('friendships')
         .select(`
@@ -292,12 +294,22 @@ export default function FriendRequests() {
       </header>
 
       <main className="p-3 pb-16 max-w-xl mx-auto">
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "suggestions" | "friends")} className="mb-4">
-          <TabsList className="grid grid-cols-2 w-full rounded-full h-10 p-1 bg-muted/80">
-            <TabsTrigger value="suggestions" className="rounded-full">Sugerencias</TabsTrigger>
-            <TabsTrigger value="friends" className="rounded-full">Tus amigos</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center justify-between mb-4 bg-gray-100 dark:bg-gray-800 rounded-full p-1">
+          <Button 
+            variant={activeTab === "suggestions" ? "default" : "ghost"} 
+            onClick={() => setActiveTab("suggestions")}
+            className="flex-1 rounded-full"
+          >
+            Sugerencias
+          </Button>
+          <Button 
+            variant={activeTab === "friends" ? "default" : "ghost"} 
+            onClick={() => setActiveTab("friends")}
+            className="flex-1 rounded-full"
+          >
+            Tus amigos
+          </Button>
+        </div>
 
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
@@ -310,113 +322,154 @@ export default function FriendRequests() {
             )}
           </div>
 
-          <Card className="p-3">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-2 shadow">
             {receivedRequests.length === 0 ? (
               <p className="text-center text-muted-foreground py-3">
                 No tienes solicitudes de amistad pendientes
               </p>
             ) : (
-              <div className="divide-y divide-border">
+              <div className="space-y-3">
                 {receivedRequests.map((request) => (
-                  <FriendRequestItem
-                    key={request.id}
-                    id={request.id}
-                    sender={request.sender}
-                    created_at={request.created_at}
-                    mutual_friends={request.mutual_friends}
-                    onAccept={(id) => handleRequest(id, true)}
-                    onReject={(id) => handleRequest(id, false)}
-                  />
-                ))}
-              </div>
-            )}
-          </Card>
-        </div>
-
-        <TabsContent value="suggestions" className="mt-0 p-0">
-          <h2 className="text-lg font-semibold mb-2">Personas que quizás conozcas</h2>
-          <Card className="p-3">
-            {suggestions.length === 0 ? (
-              <p className="text-center text-muted-foreground py-3">
-                No hay sugerencias disponibles en este momento
-              </p>
-            ) : (
-              <div className="divide-y divide-border">
-                {suggestions.map((suggestion) => (
-                  <div key={suggestion.id} className="flex items-center justify-between py-3">
-                    <div className="flex items-start gap-3">
-                      <Link to={`/profile/${suggestion.id}`} className="shrink-0">
-                        <Avatar className="h-12 w-12">
-                          <AvatarImage src={suggestion.avatar_url || undefined} />
-                          <AvatarFallback>{suggestion.username[0]?.toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                      </Link>
-                      <div className="flex flex-col">
-                        <Link to={`/profile/${suggestion.id}`} className="font-medium">
-                          {suggestion.username}
-                        </Link>
-                        {suggestion.mutual_friends && suggestion.mutual_friends.length > 0 && (
-                          <div className="flex items-center text-xs text-muted-foreground mt-1">
-                            <div className="flex -space-x-2 mr-1">
-                              {suggestion.mutual_friends.slice(0, 2).map((friend, index) => (
-                                <Avatar key={index} className="h-4 w-4 border border-background">
-                                  <AvatarImage src={friend.avatar_url || undefined} />
-                                  <AvatarFallback>{friend.username[0]?.toUpperCase()}</AvatarFallback>
-                                </Avatar>
-                              ))}
+                  <div key={request.id} className="flex items-start py-2">
+                    <Avatar className="h-14 w-14 mr-3">
+                      <AvatarImage src={request.sender.avatar_url || undefined} />
+                      <AvatarFallback>{request.sender.username[0]?.toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h3 className="font-medium truncate">{request.sender.username}</h3>
+                          {request.mutual_friends && request.mutual_friends.length > 0 && (
+                            <div className="flex items-center text-xs text-muted-foreground mt-1">
+                              <div className="flex -space-x-2 mr-1">
+                                {request.mutual_friends.slice(0, 2).map((friend, index) => (
+                                  <Avatar key={index} className="h-4 w-4 border border-background">
+                                    <AvatarImage src={friend.avatar_url || undefined} />
+                                    <AvatarFallback>{friend.username[0]?.toUpperCase()}</AvatarFallback>
+                                  </Avatar>
+                                ))}
+                              </div>
+                              {request.mutual_friends.length} {request.mutual_friends.length === 1 ? 'amigo' : 'amigos'} en común
                             </div>
-                            {suggestion.mutual_friends.length} {suggestion.mutual_friends.length === 1 ? 'amigo' : 'amigos'} en común
-                          </div>
-                        )}
+                          )}
+                        </div>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
+                          {formatTimeAgo(request.created_at)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex gap-2">
+                        <Button 
+                          className="flex-1 bg-primary hover:bg-primary/90"
+                          onClick={() => handleRequest(request.id, true)}
+                        >
+                          Confirmar
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={() => handleRequest(request.id, false)}
+                        >
+                          Eliminar
+                        </Button>
                       </div>
                     </div>
-                    <Button 
-                      size="sm" 
-                      onClick={() => handleFriendRequest(suggestion.id)}
-                      className="px-3 py-1 h-8"
-                    >
-                      Añadir
-                    </Button>
                   </div>
                 ))}
               </div>
             )}
-          </Card>
-        </TabsContent>
+          </div>
+        </div>
 
-        <TabsContent value="friends" className="mt-0 p-0">
-          <h2 className="text-lg font-semibold mb-2">Todos tus amigos</h2>
-          <Card className="p-3">
-            {friends.length === 0 ? (
-              <p className="text-center text-muted-foreground py-3">
-                Aún no tienes amigos
-              </p>
-            ) : (
-              <div className="divide-y divide-border">
-                {friends.map((friend) => (
-                  <Link 
-                    key={friend.id} 
-                    to={`/profile/${friend.id}`}
-                    className="flex items-center py-3 hover:bg-accent/50 rounded-md px-2"
-                  >
-                    <Avatar className="h-12 w-12 mr-3">
-                      <AvatarImage src={friend.avatar_url || undefined} />
-                      <AvatarFallback>{friend.username[0]?.toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                      <p className="font-medium">{friend.username}</p>
-                      {friend.mutual_friends_count && friend.mutual_friends_count > 0 && (
-                        <p className="text-xs text-muted-foreground">
-                          {friend.mutual_friends_count} {friend.mutual_friends_count === 1 ? 'amigo' : 'amigos'} en común
-                        </p>
-                      )}
+        {activeTab === "suggestions" && (
+          <div>
+            <h2 className="text-lg font-semibold mb-2">Personas que quizás conozcas</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+              {suggestions.length === 0 ? (
+                <p className="text-center text-muted-foreground py-3">
+                  No hay sugerencias disponibles en este momento
+                </p>
+              ) : (
+                <div className="divide-y divide-border">
+                  {suggestions.map((suggestion) => (
+                    <div key={suggestion.id} className="flex items-center justify-between p-3">
+                      <div className="flex items-start gap-3">
+                        <Link to={`/profile/${suggestion.id}`} className="shrink-0">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={suggestion.avatar_url || undefined} />
+                            <AvatarFallback>{suggestion.username[0]?.toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                        </Link>
+                        <div className="flex flex-col">
+                          <Link to={`/profile/${suggestion.id}`} className="font-medium">
+                            {suggestion.username}
+                          </Link>
+                          {suggestion.mutual_friends && suggestion.mutual_friends.length > 0 && (
+                            <div className="flex items-center text-xs text-muted-foreground mt-1">
+                              <div className="flex -space-x-2 mr-1">
+                                {suggestion.mutual_friends.slice(0, 2).map((friend, index) => (
+                                  <Avatar key={index} className="h-4 w-4 border border-background">
+                                    <AvatarImage src={friend.avatar_url || undefined} />
+                                    <AvatarFallback>{friend.username[0]?.toUpperCase()}</AvatarFallback>
+                                  </Avatar>
+                                ))}
+                              </div>
+                              {suggestion.mutual_friends.length} {suggestion.mutual_friends.length === 1 ? 'amigo' : 'amigos'} en común
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleFriendRequest(suggestion.id)}
+                        className="px-3 py-1 h-8"
+                      >
+                        Añadir
+                      </Button>
                     </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </Card>
-        </TabsContent>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === "friends" && (
+          <div>
+            <h2 className="text-lg font-semibold mb-2">Todos tus amigos</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+              {friends.length === 0 ? (
+                <p className="text-center text-muted-foreground py-3">
+                  Aún no tienes amigos
+                </p>
+              ) : (
+                <div className="divide-y divide-border">
+                  {friends.map((friend) => (
+                    <Link 
+                      key={friend.id} 
+                      to={`/profile/${friend.id}`}
+                      className="flex items-center py-3 hover:bg-accent/50 rounded-md px-2"
+                    >
+                      <Avatar className="h-12 w-12 mr-3">
+                        <AvatarImage src={friend.avatar_url || undefined} />
+                        <AvatarFallback>{friend.username[0]?.toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="font-medium">{friend.username}</p>
+                        {friend.mutual_friends_count && friend.mutual_friends_count > 0 && (
+                          <p className="text-xs text-muted-foreground">
+                            {friend.mutual_friends_count} {friend.mutual_friends_count === 1 ? 'amigo' : 'amigos'} en común
+                          </p>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         <Navigation />
       </main>
