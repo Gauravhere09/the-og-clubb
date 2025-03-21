@@ -1,134 +1,109 @@
 
-import { Link } from "react-router-dom";
+import { MoreHorizontal, Trash, Eye, Globe, Users, EyeOff } from "lucide-react";
+import { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
-import { Post } from "@/types/post";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { PostOptionsMenu } from "./actions/PostOptionsMenu";
-import { MentionSuggestions } from "@/components/mentions/MentionSuggestions";
-import { MentionUser, MentionPosition } from "@/hooks/mentions/types";
-import { Textarea } from "@/components/ui/textarea";
+import { Link } from "react-router-dom";
+import type { Post } from "@/types/post";
 
 interface PostHeaderProps {
-  post?: Post; // Make post optional
+  post: Post;
   onDelete?: () => void;
   isAuthor?: boolean;
   isHidden?: boolean;
-  content?: string;
-  // Props for post creator view
-  currentUser?: { id: string; avatar_url: string | null; username: string | null };
-  textareaRef?: React.RefObject<HTMLTextAreaElement>;
-  mentionUsers?: MentionUser[];
-  mentionListVisible?: boolean;
-  mentionPosition?: MentionPosition;
-  mentionIndex?: number;
-  handleTextAreaChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  handleKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
-  handleSelectMention?: (user: MentionUser) => void;
-  handleMentionClick?: () => void;
-  setMentionIndex?: React.Dispatch<React.SetStateAction<number>>;
+  content: string;
 }
 
-export function PostHeader({ 
-  post, 
-  onDelete, 
-  isAuthor = false,
-  isHidden = false,
-  content,
-  currentUser,
-  textareaRef,
-  mentionUsers,
-  mentionListVisible,
-  mentionPosition,
-  mentionIndex,
-  handleTextAreaChange,
-  handleKeyDown,
-  handleSelectMention,
-  handleMentionClick,
-  setMentionIndex
-}: PostHeaderProps) {
-  // Check if we're in post creation mode or display mode
-  const isPostCreator = !!currentUser && !post;
+export function PostHeader({ post, onDelete, isAuthor, isHidden, content }: PostHeaderProps) {
+  const [showFullContent, setShowFullContent] = useState(false);
+  const isLongContent = content?.length > 300;
+  const displayContent = showFullContent ? content : content?.slice(0, 300);
   
-  // For post display mode
-  const user_id = post?.user_id;
-  const username = post?.profiles?.username || "";
-  const avatarUrl = post?.profiles?.avatar_url;
-  const timeAgo = post?.created_at ? formatDistanceToNow(new Date(post.created_at), { 
-    addSuffix: true,
-    locale: es 
-  }) : '';
+  // Determinar si el post es anónimo basado en el valor de visibility
+  const isIncognito = post.visibility === 'incognito';
+  
+  // Obtener el icono de visibilidad correcto
+  const getVisibilityIcon = () => {
+    switch(post.visibility) {
+      case 'public': return <Globe className="h-4 w-4 mr-1" />;
+      case 'friends': return <Users className="h-4 w-4 mr-1" />;
+      case 'incognito': return <EyeOff className="h-4 w-4 mr-1" />;
+      default: return <Globe className="h-4 w-4 mr-1" />;
+    }
+  };
 
-  // For post creator mode
-  const creatorUsername = currentUser?.username || '';
-  const creatorAvatarUrl = currentUser?.avatar_url;
-  
   return (
-    <div className="flex flex-col w-full space-y-3">
-      <div className="flex items-start justify-between mb-3 relative">
-        <div className="flex items-center gap-2">
-          {isPostCreator ? (
-            <Avatar className="h-9 w-9 border">
-              <AvatarImage src={creatorAvatarUrl || ""} alt={creatorUsername} />
-              <AvatarFallback>{creatorUsername.charAt(0).toUpperCase()}</AvatarFallback>
-            </Avatar>
+    <div className="flex justify-between items-start mb-3">
+      <div className="flex items-center gap-2">
+        <Avatar className="h-10 w-10 border">
+          {/* Si es anónimo, no mostrar una imagen de avatar real */}
+          {isIncognito ? (
+            <AvatarFallback>A</AvatarFallback>
           ) : (
-            <Link to={`/profile/${user_id}`}>
-              <Avatar className="h-9 w-9 border">
-                <AvatarImage src={avatarUrl || ""} alt={username} />
-                <AvatarFallback>{username.charAt(0).toUpperCase()}</AvatarFallback>
-              </Avatar>
-            </Link>
+            <>
+              <AvatarImage src={post.profiles?.avatar_url || undefined} />
+              <AvatarFallback>{post.profiles?.username?.[0] || 'U'}</AvatarFallback>
+            </>
           )}
-          
-          <div>
-            {isPostCreator ? (
-              <span className="font-medium">{creatorUsername}</span>
+        </Avatar>
+        
+        <div className="flex flex-col">
+          <div className="flex items-center gap-1">
+            {/* Si es anónimo, mostrar "Anónimo", de lo contrario mostrar el nombre de usuario */}
+            {isIncognito ? (
+              <span className="font-medium">Anónimo</span>
             ) : (
-              <Link to={`/profile/${user_id}`} className="font-medium hover:underline">
-                {username}
+              <Link to={`/profile/${post.user_id}`} className="font-medium hover:underline">
+                {post.profiles?.username || 'Usuario'}
               </Link>
             )}
             
-            {!isPostCreator && (
-              <p className="text-xs text-muted-foreground">{timeAgo}</p>
-            )}
+            <span className="text-xs text-muted-foreground px-1">•</span>
+            
+            <span className="text-xs text-muted-foreground flex items-center">
+              {getVisibilityIcon()}
+              {post.visibility === 'public' ? 'Público' : 
+                post.visibility === 'friends' ? 'Seguidores' : 'Incógnito'}
+            </span>
           </div>
+          
+          <span className="text-xs text-muted-foreground">
+            {formatDistanceToNow(new Date(post.created_at), { addSuffix: true, locale: es })}
+          </span>
         </div>
-
-        {post && (
-          <PostOptionsMenu 
-            postId={post.id} 
-            postUserId={user_id} 
-            isHidden={isHidden} 
-          />
-        )}
       </div>
       
-      {/* Textarea for post creation */}
-      {isPostCreator && (
-        <div className="relative w-full">
-          <Textarea
-            ref={textareaRef}
-            placeholder="¿Qué estás pensando?"
-            className="w-full min-h-20 resize-none bg-background border-none focus-visible:ring-0 p-0"
-            value={content}
-            onChange={handleTextAreaChange}
-            onKeyDown={handleKeyDown}
-          />
-          
-          {mentionListVisible && mentionUsers && mentionPosition && (
-            <MentionSuggestions
-              users={mentionUsers}
-              isVisible={mentionListVisible}
-              position={mentionPosition}
-              selectedIndex={mentionIndex || 0}
-              onSelectUser={handleSelectMention!}
-              onSetIndex={setMentionIndex!}
-            />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {isAuthor && (
+            <>
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={onDelete}
+              >
+                <Trash className="mr-2 h-4 w-4" />
+                <span>Eliminar</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+            </>
           )}
-        </div>
-      )}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

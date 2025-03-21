@@ -107,7 +107,7 @@ export async function createPost({
       const post: Post = {
         id: rawPost.id,
         content: rawPost.content || '',
-        user_id: rawPost.user_id,
+        user_id: isIncognito ? 'anonymous' : rawPost.user_id, // Para incógnito, usar un ID genérico
         media_url: rawPost.media_url,
         media_type: rawPost.media_type as 'image' | 'video' | 'audio' | null,
         visibility: uiVisibility as 'public' | 'friends' | 'incognito',
