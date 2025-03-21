@@ -1,12 +1,14 @@
 
-import { PostHeader } from "@/components/post/PostHeader";
-import { PostActions } from "@/components/post/PostActions";
+import { Card } from "@/components/ui/card";
 import { Comments } from "@/components/post/Comments";
-import { PostWrapper } from "./post/PostWrapper";
-import { StandardPostView } from "./post/StandardPostView";
-import { SharedPostView } from "./post/SharedPostView";
+import { PostActions } from "@/components/post/PostActions";
+import { PostContent } from "@/components/post/PostContent";
+import { PostHeader } from "@/components/post/PostHeader";
+import { type Post as PostType } from "@/types/post";
+import { SharedPostContent } from "./post/SharedPostContent";
 import { usePost } from "@/hooks/use-post";
-import type { Post as PostType } from "@/types/post";
+import { PostWrapper } from "./post/PostWrapper";
+import { PostOptionsMenu } from "./post/actions/PostOptionsMenu";
 
 interface PostProps {
   post: PostType;
@@ -47,6 +49,7 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
         content={post.content || ""}
       />
       
+      {/* El resto del componente se mantiene igual */}
       {isSharedPost ? (
         <SharedPostView post={post} />
       ) : (
@@ -79,5 +82,44 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
         />
       )}
     </PostWrapper>
+  );
+}
+
+// Helper component for shared post view
+function SharedPostView({ post }: { post: PostType }) {
+  return (
+    <div>
+      {post.content && (
+        <p className="text-sm whitespace-pre-wrap break-words mb-4">{post.content}</p>
+      )}
+      <div className="border border-border rounded-lg p-4">
+        <div className="flex items-center mb-2">
+          <span className="text-sm text-muted-foreground">
+            Publicación original
+          </span>
+        </div>
+        {post.shared_post && (
+          <SharedPostContent post={post.shared_post} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Helper component for standard post view
+function StandardPostView({ post }: { post: PostType }) {
+  return (
+    <>
+      <PostContent 
+        post={post} 
+        postId={post.id}
+      />
+      
+      {post.shared_post && (
+        <div className="mt-2">
+          <SharedPostContent post={post.shared_post} />
+        </div>
+      )}
+    </>
   );
 }
