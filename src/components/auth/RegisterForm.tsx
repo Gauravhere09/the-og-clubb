@@ -22,6 +22,8 @@ export function RegisterForm({ loading, setLoading, sendVerificationEmail }: Reg
     setCareer,
     semester,
     setSemester,
+    birthDate,
+    setBirthDate,
     handleRegister
   } = useRegister(setLoading, sendVerificationEmail);
 
@@ -34,6 +36,8 @@ export function RegisterForm({ loading, setLoading, sendVerificationEmail }: Reg
         setEmail={setEmail}
         password={password}
         setPassword={setPassword}
+        birthDate={birthDate}
+        setBirthDate={setBirthDate}
         loading={loading}
       />
       

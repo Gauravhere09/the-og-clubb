@@ -9,6 +9,7 @@ export function useRegister(setLoading: (loading: boolean) => void, sendVerifica
   const [username, setUsername] = useState("");
   const [career, setCareer] = useState("");
   const [semester, setSemester] = useState("");
+  const [birthDate, setBirthDate] = useState<Date | undefined>(undefined);
   const { toast } = useToast();
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -24,6 +25,9 @@ export function useRegister(setLoading: (loading: boolean) => void, sendVerifica
         throw new Error("Por favor selecciona un semestre");
       }
 
+      // Prepare birth_date in ISO format for database storage
+      const formattedBirthDate = birthDate ? birthDate.toISOString().split('T')[0] : null;
+
       // Primero registramos al usuario
       const { error, data } = await supabase.auth.signUp({
         email,
@@ -33,6 +37,7 @@ export function useRegister(setLoading: (loading: boolean) => void, sendVerifica
             username,
             career,
             semester,
+            birth_date: formattedBirthDate,
           },
           emailRedirectTo: window.location.origin,
         },
@@ -47,6 +52,7 @@ export function useRegister(setLoading: (loading: boolean) => void, sendVerifica
           username,
           career,
           semester,
+          birth_date: formattedBirthDate,
         });
         
         if (profileError) {
@@ -89,6 +95,8 @@ export function useRegister(setLoading: (loading: boolean) => void, sendVerifica
     setCareer,
     semester,
     setSemester,
+    birthDate,
+    setBirthDate,
     handleRegister
   };
 }

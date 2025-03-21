@@ -1,5 +1,6 @@
+
 import { ChevronRight, Heading, Mail, Calendar, UserX } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,23 +10,78 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function PersonalDataSettings() {
   const [dateDialogOpen, setDateDialogOpen] = useState(false);
-  const [date, setDate] = useState<Date | undefined>(new Date(2002, 2, 21)); // March 21, 2002
+  const [date, setDate] = useState<Date | undefined>(undefined);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [userEmail, setUserEmail] = useState("heidergonzalez16@gmail.com");
+  const [userEmail, setUserEmail] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Fetch current user
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+        
+        if (userError) throw userError;
+        
+        if (user) {
+          // Set email from auth user
+          setUserEmail(user.email || "");
+          
+          // Fetch profile data
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('birth_date')
+            .eq('id', user.id)
+            .maybeSingle();
+          
+          if (profileError) throw profileError;
+          
+          // Set birth date if available
+          if (profileData?.birth_date) {
+            setDate(new Date(profileData.birth_date));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "No se pudieron cargar los datos del usuario."
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchUserData();
+  }, [toast]);
+  
   const formatDate = (date: Date | undefined) => {
-    if (!date) return "";
+    if (!date) return "No especificado";
     return format(date, "d 'de' MMMM 'de' yyyy", { locale: es });
   };
   
   const handleDateSave = async () => {
     try {
-      // Here you would update the date in your database
-      // const { error } = await supabase.from('profiles').update({ birth_date: date }).eq('id', userId);
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) throw new Error("Usuario no autenticado");
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update({ 
+          birth_date: date ? date.toISOString().split('T')[0] : null 
+        })
+        .eq('id', user.id);
+      
+      if (error) throw error;
       
       toast({
         title: "Fecha actualizada",
@@ -34,6 +90,7 @@ export function PersonalDataSettings() {
       
       setDateDialogOpen(false);
     } catch (error) {
+      console.error("Error updating birth date:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -45,7 +102,14 @@ export function PersonalDataSettings() {
   const handleAccountDeactivation = async () => {
     try {
       // Here you would implement account deactivation logic
-      // const { error } = await supabase.from('profiles').update({ status: 'inactive' }).eq('id', userId);
+      // For now, we'll just update the user status to inactive in profiles
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) throw new Error("Usuario no autenticado");
+      
+      // In a real implementation, you would update the user's status in profiles
+      // const { error } = await supabase.from('profiles').update({ status: 'inactive' }).eq('id', user.id);
+      // if (error) throw error;
       
       toast({
         title: "Cuenta desactivada",
@@ -54,6 +118,7 @@ export function PersonalDataSettings() {
       
       setDeleteDialogOpen(false);
     } catch (error) {
+      console.error("Error deactivating account:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -76,7 +141,11 @@ export function PersonalDataSettings() {
               <Mail className="h-5 w-5 text-muted-foreground" />
               <div>
                 <h3 className="font-medium text-left">Información de contacto</h3>
-                <p className="text-sm text-muted-foreground text-left">{userEmail}</p>
+                {isLoading ? (
+                  <Skeleton className="h-4 w-40 mt-1" />
+                ) : (
+                  <p className="text-sm text-muted-foreground text-left">{userEmail || "No especificado"}</p>
+                )}
               </div>
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
@@ -90,7 +159,11 @@ export function PersonalDataSettings() {
               <Calendar className="h-5 w-5 text-muted-foreground" />
               <div>
                 <h3 className="font-medium text-left">Fecha de nacimiento</h3>
-                <p className="text-sm text-muted-foreground text-left">{formatDate(date)}</p>
+                {isLoading ? (
+                  <Skeleton className="h-4 w-32 mt-1" />
+                ) : (
+                  <p className="text-sm text-muted-foreground text-left">{formatDate(date)}</p>
+                )}
               </div>
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />
