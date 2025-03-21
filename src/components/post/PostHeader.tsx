@@ -85,11 +85,11 @@ export function PostHeader({ post, onDelete, isAuthor, isHidden, content }: Post
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
+          <Button variant="ghost" className="h-8 w-8 p-0 z-10">
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+        <DropdownMenuContent align="end" className="z-50">
           {isAuthor && (
             <>
               <DropdownMenuItem

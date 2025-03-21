@@ -179,14 +179,14 @@ export function PostOptionsMenu({
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-8 w-8 rounded-full absolute top-2 right-2"
+          className="h-8 w-8 rounded-full z-10"
           aria-label="Opciones de publicación"
           disabled={isLoading}
         >
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52">
+      <DropdownMenuContent align="end" className="w-52 z-50">
         <DropdownMenuLabel>Opciones</DropdownMenuLabel>
         
         <DropdownMenuSeparator />
