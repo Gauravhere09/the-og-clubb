@@ -7,7 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { FriendRequestItem } from "@/components/friends/FriendRequestItem";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Avatar, AvatarFallback, AvatarImage } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface FriendRequestData {
   id: string;
@@ -422,4 +423,3 @@ export default function FriendRequests() {
     </div>
   );
 }
-

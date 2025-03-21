@@ -36,21 +36,33 @@ export function useFriendData(currentUserId: string | null) {
       ...friend,
       id: friend.friend_id,
       username: friend.friend_username,
-      avatar_url: friend.friend_avatar_url
+      avatar_url: friend.friend_avatar_url,
+      // Ensure both naming patterns are included
+      friend_id: friend.friend_id,
+      friend_username: friend.friend_username,
+      friend_avatar_url: friend.friend_avatar_url
     }));
     
     const mappedOnlyFollowing = onlyFollowing.map(friend => ({
       ...friend,
       id: friend.friend_id,
       username: friend.friend_username,
-      avatar_url: friend.friend_avatar_url
+      avatar_url: friend.friend_avatar_url,
+      // Ensure both naming patterns are included
+      friend_id: friend.friend_id,
+      friend_username: friend.friend_username,
+      friend_avatar_url: friend.friend_avatar_url
     }));
     
     const mappedOnlyFollowers = onlyFollowers.map(friend => ({
       ...friend,
       id: friend.friend_id,
       username: friend.friend_username,
-      avatar_url: friend.friend_avatar_url
+      avatar_url: friend.friend_avatar_url,
+      // Ensure both naming patterns are included
+      friend_id: friend.friend_id,
+      friend_username: friend.friend_username,
+      friend_avatar_url: friend.friend_avatar_url
     }));
     
     updateFriendsState(mappedMutualFriends, mappedOnlyFollowing, mappedOnlyFollowers);

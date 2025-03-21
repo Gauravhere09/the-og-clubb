@@ -30,6 +30,9 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
   useEffect(() => {
     if (isOpen && currentUserId && targetUser) {
       const friend: Friend = {
+        id: targetUser.id,
+        username: targetUser.username,
+        avatar_url: targetUser.avatar_url,
         friend_id: targetUser.id,
         friend_username: targetUser.username,
         friend_avatar_url: targetUser.avatar_url,
@@ -61,6 +64,9 @@ export const ChatDialog = ({ isOpen, onClose, targetUser, currentUserId }: ChatD
     if (!newMessage.trim()) return;
 
     const friend: Friend = {
+      id: targetUser.id,
+      username: targetUser.username,
+      avatar_url: targetUser.avatar_url,
       friend_id: targetUser.id,
       friend_username: targetUser.username,
       friend_avatar_url: targetUser.avatar_url,
