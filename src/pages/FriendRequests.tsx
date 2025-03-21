@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
@@ -18,6 +17,7 @@ interface FriendRequestData {
     username: string;
     avatar_url: string | null;
   };
+  created_at: string;
 }
 
 interface SentRequestData {
@@ -28,6 +28,7 @@ interface SentRequestData {
     avatar_url: string | null;
   };
   status: string;
+  created_at: string;
 }
 
 export default function FriendRequests() {
@@ -60,11 +61,11 @@ export default function FriendRequests() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Cargar solicitudes recibidas
       const { data: received, error: receivedError } = await supabase
         .from('friendships')
         .select(`
           id,
+          created_at,
           user:profiles!friendships_user_id_fkey (
             id,
             username,
@@ -76,11 +77,11 @@ export default function FriendRequests() {
 
       if (receivedError) throw receivedError;
 
-      // Cargar solicitudes enviadas
       const { data: sent, error: sentError } = await supabase
         .from('friendships')
         .select(`
           id,
+          created_at,
           friend:profiles!friendships_friend_id_fkey (
             id,
             username,
@@ -96,6 +97,7 @@ export default function FriendRequests() {
       if (received) {
         const processedReceived: FriendRequestData[] = received.map(request => ({
           id: request.id,
+          created_at: request.created_at,
           sender: {
             id: request.user?.id || '',
             username: request.user?.username || '',
@@ -220,6 +222,7 @@ export default function FriendRequests() {
                       key={request.id}
                       id={request.id}
                       sender={request.sender}
+                      created_at={request.created_at}
                       onAccept={(id) => handleRequest(id, true)}
                       onReject={(id) => handleRequest(id, false)}
                     />
