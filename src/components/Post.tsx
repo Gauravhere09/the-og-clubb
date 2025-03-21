@@ -8,6 +8,7 @@ import { type Post as PostType } from "@/types/post";
 import { SharedPostContent } from "./post/SharedPostContent";
 import { usePost } from "@/hooks/use-post";
 import { PostWrapper } from "./post/PostWrapper";
+import { PostOptionsMenu } from "./post/actions/PostOptionsMenu";
 
 interface PostProps {
   post: PostType;
@@ -48,6 +49,7 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
         content={post.content || ""}
       />
       
+      {/* El resto del componente se mantiene igual */}
       {isSharedPost ? (
         <SharedPostView post={post} />
       ) : (

@@ -184,7 +184,7 @@ export function PostOptionsMenu({
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-8 w-8 rounded-full relative"
+          className="h-8 w-8 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
           aria-label="Opciones de publicación"
           disabled={isLoading}
           onClick={(e) => {

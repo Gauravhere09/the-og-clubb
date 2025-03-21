@@ -14,6 +14,7 @@ import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import { Link } from "react-router-dom";
 import type { Post } from "@/types/post";
+import { PostOptionsMenu } from "./actions/PostOptionsMenu";
 
 interface PostHeaderProps {
   post: Post;
@@ -83,12 +84,13 @@ export function PostHeader({ post, onDelete, isAuthor, isHidden, content }: Post
         </div>
       </div>
       
-      {isAuthor && (
+      {/* Mostrar el menú de opciones de PostOptionsMenu si no es autor, y el menú de eliminación si es autor */}
+      {isAuthor ? (
         <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger asChild>
             <Button 
               variant="ghost" 
-              className="h-8 w-8 p-0 relative" 
+              className="h-8 w-8 p-0 relative hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full" 
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
@@ -115,6 +117,12 @@ export function PostHeader({ post, onDelete, isAuthor, isHidden, content }: Post
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+      ) : (
+        <PostOptionsMenu 
+          postId={post.id} 
+          postUserId={post.user_id} 
+          isHidden={isHidden}
+        />
       )}
     </div>
   );
