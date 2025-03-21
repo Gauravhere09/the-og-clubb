@@ -7,6 +7,7 @@ export interface MessageTable {
     receiver_id: string;
     created_at: string;
     read_at: string | null;
+    is_deleted: boolean;
   };
   Insert: {
     id?: string;
@@ -15,6 +16,7 @@ export interface MessageTable {
     receiver_id: string;
     created_at?: string;
     read_at?: string | null;
+    is_deleted?: boolean;
   };
   Update: {
     id?: string;
@@ -23,6 +25,7 @@ export interface MessageTable {
     receiver_id?: string;
     created_at?: string;
     read_at?: string | null;
+    is_deleted?: boolean;
   };
 }
 

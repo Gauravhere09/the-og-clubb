@@ -25,11 +25,11 @@ export const GroupMessageItem = ({ message, currentUserId }: GroupMessageItemPro
       }
       
       // Update the message content to indicate it was deleted
-      // Don't try to update is_deleted since it may not exist in the database
       const { error } = await supabase
         .from('group_messages')
         .update({
-          content: "Este mensaje ha sido eliminado"
+          content: "Este mensaje ha sido eliminado",
+          is_deleted: true
         })
         .eq('id', message.id);
         
@@ -49,8 +49,10 @@ export const GroupMessageItem = ({ message, currentUserId }: GroupMessageItemPro
     }
   };
 
-  // Consider a message deleted if content indicates it was deleted
-  const isDeleted = message.is_deleted || message.content === "Este mensaje ha sido eliminado";
+  // Consider a message deleted if content indicates it was deleted or is_deleted flag is true
+  const isDeleted = message.is_deleted || 
+                    message.content === "Este mensaje ha sido eliminado" ||
+                    message.content === "Este mensaje ha sido eliminado automáticamente";
 
   return (
     <div className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}>

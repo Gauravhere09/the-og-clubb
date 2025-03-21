@@ -11,7 +11,7 @@ export interface Message {
   receiver_id: string;
   created_at: string;
   read_at: string | null;
-  is_deleted?: boolean; // Make this optional
+  is_deleted?: boolean;
 }
 
 export function usePrivateMessages() {
@@ -34,7 +34,37 @@ export function usePrivateMessages() {
       if (error) throw error;
       
       console.log("Messages loaded:", data ? data.length : 0);
-      setMessages(data as Message[] || []);
+      
+      // Verificar y marcar mensajes antiguos como eliminados
+      const processedMessages = (data || []).map((msg: Message) => {
+        const messageDate = new Date(msg.created_at);
+        const now = new Date();
+        const hoursSinceCreation = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
+        
+        // Si el mensaje tiene más de 24 horas y no está marcado como eliminado
+        if (hoursSinceCreation > 24 && !msg.is_deleted) {
+          // Actualizar en la base de datos
+          supabase
+            .from('messages')
+            .update({ 
+              is_deleted: true,
+              content: "Este mensaje ha sido eliminado automáticamente" 
+            })
+            .eq('id', msg.id)
+            .then(() => console.log(`Mensaje ${msg.id} marcado como eliminado automáticamente`));
+          
+          // Devolver el mensaje actualizado para la UI
+          return {
+            ...msg,
+            is_deleted: true,
+            content: "Este mensaje ha sido eliminado automáticamente"
+          };
+        }
+        
+        return msg;
+      });
+      
+      setMessages(processedMessages);
       
       // Mark messages as read
       const unreadMessages = data?.filter(msg => 
@@ -66,13 +96,13 @@ export function usePrivateMessages() {
     try {
       console.log("Sending message to", selectedFriend.friend_username);
       
-      // Removed the is_deleted field from the insert object
       const { data, error } = await supabase
         .from('messages')
         .insert({
           content,
           sender_id: currentUserId,
-          receiver_id: selectedFriend.friend_id
+          receiver_id: selectedFriend.friend_id,
+          is_deleted: false
         })
         .select()
         .single();
@@ -175,11 +205,12 @@ export function usePrivateMessages() {
         throw new Error("No tienes permiso para eliminar este mensaje");
       }
       
-      // Update message content instead of using is_deleted field
+      // Update message content and mark as deleted
       const { error } = await supabase
         .from('messages')
         .update({
-          content: "Este mensaje ha sido eliminado"
+          content: "Este mensaje ha sido eliminado",
+          is_deleted: true
         })
         .eq('id', messageId);
         
@@ -188,7 +219,7 @@ export function usePrivateMessages() {
       // Update local state
       setMessages(prev => prev.map(msg => 
         msg.id === messageId 
-          ? { ...msg, content: "Este mensaje ha sido eliminado" } 
+          ? { ...msg, content: "Este mensaje ha sido eliminado", is_deleted: true } 
           : msg
       ));
       

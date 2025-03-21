@@ -93,7 +93,10 @@ function MessageItem({
 
   const handleLongPressStart = () => {
     // Check if message contains "Este mensaje ha sido eliminado"
-    const isDeleted = message.content === "Este mensaje ha sido eliminado" || message.is_deleted;
+    const isDeleted = message.content === "Este mensaje ha sido eliminado" || 
+                      message.content === "Este mensaje ha sido eliminado automáticamente" ||
+                      message.is_deleted;
+                      
     if (isDeleted) return;
     
     // Start a timer for long press
@@ -113,7 +116,10 @@ function MessageItem({
   };
 
   const copyMessageText = () => {
-    const isDeleted = message.content === "Este mensaje ha sido eliminado" || message.is_deleted;
+    const isDeleted = message.content === "Este mensaje ha sido eliminado" || 
+                      message.content === "Este mensaje ha sido eliminado automáticamente" ||
+                      message.is_deleted;
+                      
     if (isDeleted) return;
     
     // Create a temporary indicator
@@ -140,7 +146,9 @@ function MessageItem({
     }
   };
 
-  const isDeleted = message.content === "Este mensaje ha sido eliminado" || message.is_deleted;
+  const isDeleted = message.content === "Este mensaje ha sido eliminado" || 
+                    message.content === "Este mensaje ha sido eliminado automáticamente" ||
+                    message.is_deleted;
 
   return (
     <div className={cn(

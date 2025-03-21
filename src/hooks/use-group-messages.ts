@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -9,7 +10,7 @@ export interface GroupMessage {
   type: 'text' | 'audio' | 'image';
   media_url: string | null;
   created_at: string;
-  is_deleted?: boolean;
+  is_deleted: boolean;
   sender?: {
     username: string;
     avatar_url: string | null;
@@ -38,18 +39,50 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
 
         if (error) throw error;
         
-        const transformedData = (data || []).map((message: any) => ({
-          id: message.id,
-          content: message.content,
-          sender_id: message.sender_id,
-          type: message.type as 'text' | 'audio' | 'image',
-          media_url: message.media_url,
-          created_at: message.created_at,
-          is_deleted: typeof message.is_deleted !== 'undefined' ? Boolean(message.is_deleted) : false,
-          sender: message.sender
-        }));
+        // Verificar y marcar mensajes antiguos como eliminados
+        const processedMessages = (data || []).map((message: any) => {
+          const messageDate = new Date(message.created_at);
+          const now = new Date();
+          const hoursSinceCreation = (now.getTime() - messageDate.getTime()) / (1000 * 60 * 60);
+          
+          // Si el mensaje tiene más de 24 horas y no está marcado como eliminado
+          if (hoursSinceCreation > 24 && !message.is_deleted) {
+            // Actualizar en la base de datos
+            supabase
+              .from('group_messages')
+              .update({ 
+                is_deleted: true,
+                content: "Este mensaje ha sido eliminado automáticamente" 
+              })
+              .eq('id', message.id)
+              .then(() => console.log(`Mensaje grupal ${message.id} marcado como eliminado automáticamente`));
+            
+            // Devolver el mensaje actualizado para la UI
+            return {
+              id: message.id,
+              content: "Este mensaje ha sido eliminado automáticamente",
+              sender_id: message.sender_id,
+              type: message.type as 'text' | 'audio' | 'image',
+              media_url: message.media_url,
+              created_at: message.created_at,
+              is_deleted: true,
+              sender: message.sender
+            };
+          }
+          
+          return {
+            id: message.id,
+            content: message.content,
+            sender_id: message.sender_id,
+            type: message.type as 'text' | 'audio' | 'image',
+            media_url: message.media_url,
+            created_at: message.created_at,
+            is_deleted: typeof message.is_deleted !== 'undefined' ? Boolean(message.is_deleted) : false,
+            sender: message.sender
+          };
+        });
         
-        setGroupMessages(transformedData);
+        setGroupMessages(processedMessages);
       } catch (error) {
         console.error('Error loading group messages:', error);
         toast({
@@ -96,6 +129,33 @@ export function useGroupMessages(currentUserId: string | null, enabled: boolean)
       }, (payload: any) => {
         console.log('Mensaje grupal eliminado:', payload.old.id);
         setGroupMessages(prev => prev.filter(msg => msg.id !== payload.old.id));
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'group_messages'
+      }, async (payload: any) => {
+        console.log('Mensaje grupal actualizado:', payload.new);
+        const { data: senderData } = await supabase
+          .from('profiles')
+          .select('username, avatar_url')
+          .eq('id', payload.new.sender_id)
+          .single();
+        
+        const updatedMessage: GroupMessage = {
+          id: payload.new.id,
+          content: payload.new.content,
+          sender_id: payload.new.sender_id,
+          type: payload.new.type as 'text' | 'audio' | 'image',
+          media_url: payload.new.media_url,
+          created_at: payload.new.created_at,
+          is_deleted: Boolean(payload.new.is_deleted),
+          sender: senderData || undefined
+        };
+        
+        setGroupMessages(prev => prev.map(msg => 
+          msg.id === updatedMessage.id ? updatedMessage : msg
+        ));
       })
       .subscribe();
 
@@ -159,7 +219,8 @@ export async function sendGroupMessage(
         content,
         sender_id: senderId,
         type,
-        media_url
+        media_url,
+        is_deleted: false
       })
       .select()
       .single();
