@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
@@ -10,11 +11,13 @@ import { UserPlus, User, Users, ChevronRight, UserCheck, Clock } from "lucide-re
 import { useFriends } from "@/hooks/use-friends";
 import { supabase } from "@/integrations/supabase/client";
 import { FriendSuggestion } from "@/types/friends";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const FriendRequestsPage = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("requests");
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const loadCurrentUser = async () => {
@@ -81,10 +84,10 @@ const FriendRequestsPage = () => {
     return (
       <div className="divide-y">
         {pendingRequests.map(request => (
-          <div key={request.id} className="p-4 flex items-center justify-between">
+          <div key={request.id} className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-3">
               <Link to={`/profile/${request.user_id}`}>
-                <Avatar className="h-14 w-14">
+                <Avatar className="h-12 w-12">
                   <AvatarImage src={request.user.avatar_url || undefined} />
                   <AvatarFallback>{request.user.username[0].toUpperCase()}</AvatarFallback>
                 </Avatar>
@@ -98,11 +101,12 @@ const FriendRequestsPage = () => {
                 </p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 ml-auto">
               <Button
                 onClick={() => handleAccept(request.id, request.user_id)}
                 disabled={loadingStates[request.id]}
-                size="sm"
+                size={isMobile ? "sm" : "default"}
+                className="w-full sm:w-auto"
               >
                 Confirmar
               </Button>
@@ -110,7 +114,8 @@ const FriendRequestsPage = () => {
                 onClick={() => handleReject(request.id, request.user_id)}
                 disabled={loadingStates[request.id]}
                 variant="outline"
-                size="sm"
+                size={isMobile ? "sm" : "default"}
+                className="w-full sm:w-auto"
               >
                 Eliminar
               </Button>
@@ -147,10 +152,10 @@ const FriendRequestsPage = () => {
     return (
       <div className="divide-y">
         {sentRequests.map(request => (
-          <div key={request.id} className="p-4 flex items-center justify-between">
+          <div key={request.id} className="p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center space-x-3">
               <Link to={`/profile/${request.friend_id}`}>
-                <Avatar className="h-14 w-14">
+                <Avatar className="h-12 w-12">
                   <AvatarImage src={request.user.avatar_url || undefined} />
                   <AvatarFallback>{request.user.username[0].toUpperCase()}</AvatarFallback>
                 </Avatar>
@@ -168,7 +173,8 @@ const FriendRequestsPage = () => {
               onClick={() => handleCancelRequest(request.id)}
               disabled={loadingStates[request.id]}
               variant="outline"
-              size="sm"
+              size={isMobile ? "sm" : "default"}
+              className="sm:ml-auto"
             >
               Cancelar
             </Button>
@@ -207,7 +213,7 @@ const FriendRequestsPage = () => {
           <div key={friend.friend_id} className="p-4 flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Link to={`/profile/${friend.friend_id}`}>
-                <Avatar className="h-14 w-14">
+                <Avatar className="h-12 w-12">
                   <AvatarImage src={friend.friend_avatar_url || undefined} />
                   <AvatarFallback>{friend.friend_username[0].toUpperCase()}</AvatarFallback>
                 </Avatar>
@@ -265,7 +271,7 @@ const FriendRequestsPage = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <Link to={`/profile/${suggestion.id}`}>
-                    <Avatar className="h-14 w-14">
+                    <Avatar className="h-12 w-12">
                       <AvatarImage src={suggestion.avatar_url || undefined} />
                       <AvatarFallback>{suggestion.username[0].toUpperCase()}</AvatarFallback>
                     </Avatar>
@@ -298,15 +304,15 @@ const FriendRequestsPage = () => {
                   }}
                   disabled={loadingStates[suggestion.id]}
                   className="w-full"
-                  size="sm"
+                  size={isMobile ? "sm" : "default"}
                 >
                   <UserPlus className="mr-2 h-4 w-4" />
-                  Añadir amigo
+                  Añadir
                 </Button>
                 <Button
                   onClick={() => dismissSuggestion(suggestion.id)}
                   variant="outline"
-                  size="sm"
+                  size={isMobile ? "sm" : "default"}
                 >
                   Eliminar
                 </Button>
@@ -319,37 +325,37 @@ const FriendRequestsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16 md:pb-0">
       <Navigation />
-      <main className="md:ml-[70px] pt-4 pb-16 md:pt-8 md:pb-8">
-        <div className="container max-w-4xl">
-          <div className="flex items-center mb-6">
-            <h1 className="text-2xl font-bold">Solicitudes de amistad</h1>
+      <main className="md:ml-[70px] pt-4 md:pt-8">
+        <div className="container px-2 sm:px-4 max-w-4xl">
+          <div className="flex items-center mb-4 md:mb-6">
+            <h1 className="text-xl md:text-2xl font-bold">Solicitudes de amistad</h1>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="mb-4">
+            <TabsList className="mb-4 w-full overflow-x-auto scrollbar-hide flex whitespace-nowrap">
               <TabsTrigger value="requests" className="flex items-center">
                 <UserCheck className="mr-2 h-4 w-4" />
-                Solicitudes
+                <span>Solicitudes</span>
                 {pendingRequests.length > 0 && (
                   <Badge className="ml-2" variant="secondary">{pendingRequests.length}</Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger value="sent" className="flex items-center">
                 <Clock className="mr-2 h-4 w-4" />
-                Enviadas
+                <span>Enviadas</span>
                 {sentRequests.length > 0 && (
                   <Badge className="ml-2" variant="secondary">{sentRequests.length}</Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger value="friends" className="flex items-center">
                 <Users className="mr-2 h-4 w-4" />
-                Mis amigos
+                <span>Mis amigos</span>
               </TabsTrigger>
               <TabsTrigger value="suggestions" className="flex items-center">
                 <UserPlus className="mr-2 h-4 w-4" />
-                Sugerencias
+                <span>Sugerencias</span>
               </TabsTrigger>
             </TabsList>
             

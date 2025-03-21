@@ -1,5 +1,6 @@
 
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CompactFriendActionsProps {
   notificationId: string;
@@ -12,6 +13,8 @@ export const CompactFriendActions = ({
   senderId,
   onHandleFriendRequest
 }: CompactFriendActionsProps) => {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="flex gap-2 mt-2">
       <Button
@@ -21,7 +24,7 @@ export const CompactFriendActions = ({
           e.stopPropagation();
           onHandleFriendRequest(notificationId, senderId, true);
         }}
-        className="h-7 px-3 text-xs w-full"
+        className={`${isMobile ? 'h-8' : 'h-7'} px-3 text-xs w-full`}
       >
         Confirmar
       </Button>
@@ -32,7 +35,7 @@ export const CompactFriendActions = ({
           e.stopPropagation();
           onHandleFriendRequest(notificationId, senderId, false);
         }}
-        className="h-7 px-3 text-xs w-full"
+        className={`${isMobile ? 'h-8' : 'h-7'} px-3 text-xs w-full`}
       >
         Eliminar
       </Button>

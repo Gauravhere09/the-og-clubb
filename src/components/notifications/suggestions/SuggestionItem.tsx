@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { X, UserPlus, UserCheck, Briefcase, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { FriendSuggestion } from "@/types/friends";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SuggestionItemProps {
   suggestion: FriendSuggestion;
@@ -23,9 +24,11 @@ export function SuggestionItem({
   onDismiss,
   setOpen
 }: SuggestionItemProps) {
+  const isMobile = useIsMobile();
+  
   return (
     <div 
-      className={`p-3 border-b flex items-center justify-between ${
+      className={`p-3 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
         suggestion.careerMatch || suggestion.semesterMatch ? 'bg-primary/5' : ''
       }`}
     >
@@ -79,7 +82,7 @@ export function SuggestionItem({
           )}
         </div>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 ml-auto mt-2 sm:mt-0">
         {isPending ? (
           <Button 
             size="sm" 

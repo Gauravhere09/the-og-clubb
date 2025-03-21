@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { UserCheck, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FriendRequestItemProps {
   id: string;
@@ -16,8 +17,10 @@ interface FriendRequestItemProps {
 }
 
 export function FriendRequestItem({ id, sender, onAccept, onReject }: FriendRequestItemProps) {
+  const isMobile = useIsMobile();
+  
   return (
-    <div className="flex items-center justify-between p-4 rounded-lg hover:bg-accent">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 md:p-4 rounded-lg hover:bg-accent gap-3">
       <Link
         to={`/profile/${sender.id}`}
         className="flex items-center gap-3"
@@ -32,18 +35,20 @@ export function FriendRequestItem({ id, sender, onAccept, onReject }: FriendRequ
           {sender.username || "Usuario"}
         </span>
       </Link>
-      <div className="flex gap-2">
+      <div className="flex gap-2 w-full sm:w-auto">
         <Button
-          size="sm"
+          size={isMobile ? "sm" : "default"}
           onClick={() => onAccept(id)}
+          className="flex-1 sm:flex-none"
         >
           <UserCheck className="mr-2 h-4 w-4" />
           Aceptar
         </Button>
         <Button
-          size="sm"
+          size={isMobile ? "sm" : "default"}
           variant="secondary"
           onClick={() => onReject(id)}
+          className="flex-1 sm:flex-none"
         >
           <UserX className="mr-2 h-4 w-4" />
           Rechazar
