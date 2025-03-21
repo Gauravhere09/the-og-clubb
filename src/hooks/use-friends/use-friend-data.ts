@@ -5,6 +5,26 @@ import { useFriendState } from "./api/use-friend-state";
 import { useFriendSubscription } from "./api/use-friend-subscription";
 import { Friend, FriendRequest, FriendSuggestion } from "./types";
 
+/**
+ * Ensures both naming conventions are present in a Friend object
+ * for backward compatibility with components using either format
+ */
+const normalizeUserData = (user: Friend | any): Friend => {
+  return {
+    // Primary properties (new standard)
+    id: user.id || user.friend_id,
+    username: user.username || user.friend_username,
+    avatar_url: user.avatar_url || user.friend_avatar_url,
+    mutual_friends_count: user.mutual_friends_count,
+    status: user.status,
+    
+    // Legacy properties (for compatibility)
+    friend_id: user.friend_id || user.id,
+    friend_username: user.friend_username || user.username,
+    friend_avatar_url: user.friend_avatar_url || user.avatar_url
+  };
+};
+
 export function useFriendData(currentUserId: string | null) {
   const {
     fetchFriends,
@@ -31,47 +51,20 @@ export function useFriendData(currentUserId: string | null) {
     
     const { mutualFriends, onlyFollowing, onlyFollowers } = await fetchFriends();
     
-    // Map the properties to ensure compatibility with both naming patterns
-    const mappedMutualFriends = mutualFriends.map(friend => ({
-      ...friend,
-      id: friend.friend_id,
-      username: friend.friend_username,
-      avatar_url: friend.friend_avatar_url,
-      // Ensure both naming patterns are included
-      friend_id: friend.friend_id,
-      friend_username: friend.friend_username,
-      friend_avatar_url: friend.friend_avatar_url
-    }));
+    // Normalize all data to ensure both naming patterns are included
+    const normalizedMutualFriends = mutualFriends.map(normalizeUserData);
+    const normalizedOnlyFollowing = onlyFollowing.map(normalizeUserData);
+    const normalizedOnlyFollowers = onlyFollowers.map(normalizeUserData);
     
-    const mappedOnlyFollowing = onlyFollowing.map(friend => ({
-      ...friend,
-      id: friend.friend_id,
-      username: friend.friend_username,
-      avatar_url: friend.friend_avatar_url,
-      // Ensure both naming patterns are included
-      friend_id: friend.friend_id,
-      friend_username: friend.friend_username,
-      friend_avatar_url: friend.friend_avatar_url
-    }));
-    
-    const mappedOnlyFollowers = onlyFollowers.map(friend => ({
-      ...friend,
-      id: friend.friend_id,
-      username: friend.friend_username,
-      avatar_url: friend.friend_avatar_url,
-      // Ensure both naming patterns are included
-      friend_id: friend.friend_id,
-      friend_username: friend.friend_username,
-      friend_avatar_url: friend.friend_avatar_url
-    }));
-    
-    updateFriendsState(mappedMutualFriends, mappedOnlyFollowing, mappedOnlyFollowers);
+    updateFriendsState(normalizedMutualFriends, normalizedOnlyFollowing, normalizedOnlyFollowers);
   }, [currentUserId, fetchFriends, updateFriendsState]);
 
   const loadFriendRequests = useCallback(async () => {
     if (!currentUserId) return;
     
     const { pendingRequests, sentRequests } = await fetchFriendRequests();
+    
+    // No need to normalize requests as they don't use the dual naming pattern
     updateRequestsState(pendingRequests, sentRequests);
   }, [currentUserId, fetchFriendRequests, updateRequestsState]);
 
@@ -79,6 +72,8 @@ export function useFriendData(currentUserId: string | null) {
     if (!currentUserId) return;
     
     const suggestionsData = await fetchSuggestions();
+    
+    // No need to normalize suggestions as they don't use the dual naming pattern
     updateSuggestionsState(suggestionsData);
   }, [currentUserId, fetchSuggestions, updateSuggestionsState]);
 
