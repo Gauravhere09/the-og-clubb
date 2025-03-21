@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   MoreHorizontal, 
@@ -37,14 +36,34 @@ export function PostOptionsMenu({
 }: PostOptionsMenuProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [username, setUsername] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    async function fetchUsername() {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('id', postUserId)
+          .single();
+        
+        if (error) throw error;
+        setUsername(data?.username || "Usuario");
+      } catch (error) {
+        console.error("Error fetching username:", error);
+        setUsername("Usuario");
+      }
+    }
+    
+    fetchUsername();
+  }, [postUserId]);
 
   const handleSetInterest = async (level: 'interested' | 'not_interested') => {
     try {
       setIsLoading(true);
       
-      // Get current user
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) {
         toast({
@@ -55,7 +74,6 @@ export function PostOptionsMenu({
         return;
       }
       
-      // Check if interest already exists
       const { data: existingInterest } = await supabase
         .from('post_interests')
         .select('id, interest_level')
@@ -64,13 +82,11 @@ export function PostOptionsMenu({
         .single();
       
       if (existingInterest) {
-        // Update existing interest
         await supabase
           .from('post_interests')
           .update({ interest_level: level })
           .eq('id', existingInterest.id);
       } else {
-        // Create new interest
         await supabase
           .from('post_interests')
           .insert({
@@ -137,7 +153,6 @@ export function PostOptionsMenu({
     try {
       setIsLoading(true);
       
-      // Get current user
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) {
         toast({
@@ -148,7 +163,6 @@ export function PostOptionsMenu({
         return;
       }
       
-      // Add to hidden users
       await supabase
         .from('hidden_users')
         .insert({
@@ -158,7 +172,7 @@ export function PostOptionsMenu({
       
       toast({
         title: "Usuario oculto",
-        description: "Ya no verás publicaciones de este usuario",
+        description: `Ya no verás publicaciones de ${username || 'este usuario'}`,
       });
       setOpen(false);
     } catch (error) {
@@ -235,7 +249,7 @@ export function PostOptionsMenu({
           className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
         >
           <UserX className="mr-2 h-4 w-4" />
-          Ocultar de {postUserId}
+          Ocultar de {username || 'este usuario'}
         </DropdownMenuItem>
         
         <DropdownMenuSeparator />
