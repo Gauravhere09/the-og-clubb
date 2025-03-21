@@ -30,8 +30,8 @@ export function FriendRequestItem({
   const timeAgo = formatTimeAgo(created_at);
   
   return (
-    <div className="p-4 border-b border-border last:border-0">
-      <div className="flex items-start space-y-4 md:space-y-0">
+    <div className="py-4 border-b border-border last:border-b-0">
+      <div className="flex items-start gap-3">
         <Link to={`/profile/${sender.id}`} className="flex-shrink-0">
           <Avatar className="h-16 w-16">
             <AvatarImage src={sender.avatar_url || undefined} />
@@ -39,8 +39,8 @@ export function FriendRequestItem({
           </Avatar>
         </Link>
         
-        <div className="ml-3 flex-1">
-          <div className="flex flex-col md:flex-row md:items-center justify-between">
+        <div className="flex-1">
+          <div className="flex justify-between">
             <div>
               <Link to={`/profile/${sender.id}`} className="font-medium hover:underline text-lg">
                 {sender.username}
@@ -53,21 +53,19 @@ export function FriendRequestItem({
               )}
             </div>
             
-            <div className="text-sm text-muted-foreground mt-1 md:mt-0">
+            <div className="text-sm text-muted-foreground mt-1">
               {timeAgo}
             </div>
           </div>
           
           <div className="flex gap-2 mt-3">
             <Button 
-              size={isMobile ? "sm" : "default"}
-              className="flex-1 bg-primary text-white"
+              className="flex-1 bg-blue-500 hover:bg-blue-600"
               onClick={() => onAccept(id)}
             >
               Confirmar
             </Button>
             <Button 
-              size={isMobile ? "sm" : "default"}
               variant="secondary"
               className="flex-1"
               onClick={() => onReject(id)}

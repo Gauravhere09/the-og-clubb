@@ -22,57 +22,45 @@ export function FriendRequestsList({ requests, onRespond, showViewAllLink = fals
   
   if (requests.length === 0) {
     return (
-      <Card className="p-6">
-        <div className="text-center">
-          <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
-            <UserCheck className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-medium">No tienes solicitudes de amistad pendientes</h3>
-          <p className="text-muted-foreground mt-1">
-            Cuando alguien te envíe una solicitud, aparecerá aquí
-          </p>
+      <div className="text-center p-8">
+        <div className="mx-auto w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+          <UserCheck className="h-6 w-6 text-muted-foreground" />
         </div>
-      </Card>
+        <h3 className="text-lg font-medium">No tienes solicitudes de amistad pendientes</h3>
+        <p className="text-muted-foreground mt-1">
+          Cuando alguien te envíe una solicitud, aparecerá aquí
+        </p>
+      </div>
     );
   }
 
   return (
-    <Card className="overflow-hidden">
-      <div className="px-4 py-3 flex items-center justify-between border-b">
-        <h2 className="text-lg font-semibold">Solicitudes de amistad</h2>
-        {showViewAllLink && requests.length > 3 && (
-          <Link to="/friends/requests" className="text-primary hover:underline text-sm">
-            Ver todo
-          </Link>
-        )}
-      </div>
-      
-      <div>
-        {requests.map((request) => (
-          <FriendRequestItem
-            key={request.id}
-            id={request.id}
-            sender={{
-              id: request.user_id,
-              username: request.user.username,
-              avatar_url: request.user.avatar_url
-            }}
-            created_at={request.created_at}
-            onAccept={handleAccept}
-            onReject={handleReject}
-          />
-        ))}
-      </div>
+    <div>
+      {requests.map((request) => (
+        <FriendRequestItem
+          key={request.id}
+          id={request.id}
+          sender={{
+            id: request.user_id,
+            username: request.user.username,
+            avatar_url: request.user.avatar_url
+          }}
+          created_at={request.created_at}
+          mutualFriendsCount={request.mutual_friends_count}
+          onAccept={handleAccept}
+          onReject={handleReject}
+        />
+      ))}
       
       {showViewAllLink && (
         <Link 
           to="/friends/requests"
-          className="flex items-center justify-center gap-2 p-4 text-primary border-t hover:bg-accent transition-colors"
+          className="flex items-center justify-center gap-2 p-4 text-primary hover:bg-accent transition-colors"
         >
           Ver solicitudes enviadas
           <ChevronRight className="h-4 w-4" />
         </Link>
       )}
-    </Card>
+    </div>
   );
 }
