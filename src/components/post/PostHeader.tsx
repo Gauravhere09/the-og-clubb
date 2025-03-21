@@ -26,6 +26,7 @@ interface PostHeaderProps {
 
 export function PostHeader({ post, onDelete, isAuthor, isHidden, content }: PostHeaderProps) {
   const [showFullContent, setShowFullContent] = useState(false);
+  const [open, setOpen] = useState(false);
   const isLongContent = content?.length > 300;
   const displayContent = showFullContent ? content : content?.slice(0, 300);
   
@@ -83,31 +84,39 @@ export function PostHeader({ post, onDelete, isAuthor, isHidden, content }: Post
         </div>
       </div>
       
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button 
-            variant="ghost" 
-            className="h-8 w-8 p-0 z-10 relative" 
+      {isAuthor && (
+        <DropdownMenu open={open} onOpenChange={setOpen}>
+          <DropdownMenuTrigger asChild>
+            <Button 
+              variant="ghost" 
+              className="h-8 w-8 p-0 relative" 
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent 
+            align="end" 
+            className="z-[9999] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="z-[100]">
-          {isAuthor && (
-            <>
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive cursor-pointer"
-                onClick={onDelete}
-              >
-                <Trash className="mr-2 h-4 w-4" />
-                <span>Eliminar</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete && onDelete();
+                setOpen(false);
+              }}
+            >
+              <Trash className="mr-2 h-4 w-4" />
+              <span>Eliminar</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
   );
 }

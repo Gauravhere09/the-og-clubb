@@ -36,6 +36,7 @@ export function PostOptionsMenu({
   onHideToggle
 }: PostOptionsMenuProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -85,6 +86,7 @@ export function PostOptionsMenu({
           ? "Verás más contenido como este" 
           : "Verás menos contenido como este",
       });
+      setOpen(false);
     } catch (error) {
       console.error('Error setting interest:', error);
       toast({
@@ -118,6 +120,7 @@ export function PostOptionsMenu({
       if (onHideToggle) {
         onHideToggle();
       }
+      setOpen(false);
     } catch (error) {
       console.error('Error hiding post:', error);
       toast({
@@ -157,6 +160,7 @@ export function PostOptionsMenu({
         title: "Usuario oculto",
         description: "Ya no verás publicaciones de este usuario",
       });
+      setOpen(false);
     } catch (error) {
       console.error('Error hiding user:', error);
       toast({
@@ -171,52 +175,75 @@ export function PostOptionsMenu({
 
   const handleReportPost = () => {
     navigate(`/report?type=post&id=${postId}`);
+    setOpen(false);
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-8 w-8 rounded-full z-10 relative"
+          className="h-8 w-8 rounded-full relative"
           aria-label="Opciones de publicación"
           disabled={isLoading}
-          onClick={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
         >
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52 z-[100]">
+      <DropdownMenuContent 
+        align="end" 
+        className="w-52 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-md z-[9999]"
+        onClick={(e) => e.stopPropagation()}
+      >
         <DropdownMenuLabel>Opciones</DropdownMenuLabel>
         
         <DropdownMenuSeparator />
         
-        <DropdownMenuItem onClick={() => handleSetInterest('interested')} className="cursor-pointer">
+        <DropdownMenuItem 
+          onClick={() => handleSetInterest('interested')} 
+          className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+        >
           <ThumbsUp className="mr-2 h-4 w-4" />
           Me interesa
         </DropdownMenuItem>
         
-        <DropdownMenuItem onClick={() => handleSetInterest('not_interested')} className="cursor-pointer">
+        <DropdownMenuItem 
+          onClick={() => handleSetInterest('not_interested')} 
+          className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+        >
           <ThumbsDown className="mr-2 h-4 w-4" />
           No me interesa
         </DropdownMenuItem>
         
         <DropdownMenuSeparator />
         
-        <DropdownMenuItem onClick={handleHidePost} className="cursor-pointer">
+        <DropdownMenuItem 
+          onClick={handleHidePost} 
+          className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+        >
           <EyeOff className="mr-2 h-4 w-4" />
           {isHidden ? "Mostrar publicación" : "Ocultar publicación"}
         </DropdownMenuItem>
         
-        <DropdownMenuItem onClick={handleHideUser} className="cursor-pointer">
+        <DropdownMenuItem 
+          onClick={handleHideUser} 
+          className="cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+        >
           <UserX className="mr-2 h-4 w-4" />
           Ocultar de {postUserId}
         </DropdownMenuItem>
         
         <DropdownMenuSeparator />
         
-        <DropdownMenuItem onClick={handleReportPost} className="text-red-500 cursor-pointer">
+        <DropdownMenuItem 
+          onClick={handleReportPost} 
+          className="text-red-500 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800"
+        >
           <Flag className="mr-2 h-4 w-4" />
           Reportar
         </DropdownMenuItem>
