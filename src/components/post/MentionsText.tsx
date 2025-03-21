@@ -1,12 +1,15 @@
 
 import { Link } from "react-router-dom";
-import { Fragment, useMemo } from "react";
+import { Fragment, useMemo, useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MentionsTextProps {
   content: string;
 }
 
 export function MentionsText({ content }: MentionsTextProps) {
+  const [userIds, setUserIds] = useState<Record<string, string>>({});
+  
   if (!content) return null;
   
   // Usamos useMemo para evitar reprocesar el texto en cada renderizado
@@ -50,6 +53,42 @@ export function MentionsText({ content }: MentionsTextProps) {
     return contentParts;
   }, [content]);
   
+  // Efecto para buscar los IDs de usuario para todas las menciones
+  useEffect(() => {
+    const fetchUserIds = async () => {
+      const usernames = parts
+        .filter(part => part.type === 'mention')
+        .map(part => (part as { username: string }).username);
+      
+      if (usernames.length === 0) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, username')
+          .in('username', usernames);
+        
+        if (error) {
+          console.error("Error fetching user IDs:", error);
+          return;
+        }
+        
+        const userMap: Record<string, string> = {};
+        data?.forEach(user => {
+          if (user.username) {
+            userMap[user.username] = user.id;
+          }
+        });
+        
+        setUserIds(userMap);
+      } catch (error) {
+        console.error("Error fetching user IDs:", error);
+      }
+    };
+    
+    fetchUserIds();
+  }, [parts]);
+  
   return (
     <>
       {parts.map((part, index) => (
@@ -58,7 +97,7 @@ export function MentionsText({ content }: MentionsTextProps) {
             part.content
           ) : (
             <Link 
-              to={`/profile/${part.username}`} 
+              to={`/profile/${userIds[(part as { username: string }).username] || (part as { username: string }).username}`} 
               className="text-primary font-semibold hover:underline inline-flex items-center"
             >
               {part.content}
