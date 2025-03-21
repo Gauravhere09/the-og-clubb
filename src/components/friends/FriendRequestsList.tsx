@@ -1,69 +1,73 @@
 
 import { FriendRequest } from "@/hooks/use-friends";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { UserCheck, UserX } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { FriendRequestItem } from "./FriendRequestItem";
 import { Link } from "react-router-dom";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { ChevronRight } from "lucide-react";
 
 interface FriendRequestsListProps {
   requests: FriendRequest[];
+  showHeader?: boolean;
+  showViewAll?: boolean;
   onRespond: (requestId: string, accept: boolean) => Promise<void>;
 }
 
-export function FriendRequestsList({ requests, onRespond }: FriendRequestsListProps) {
-  const isMobile = useIsMobile();
+export function FriendRequestsList({ 
+  requests, 
+  showHeader = true,
+  showViewAll = false,
+  onRespond 
+}: FriendRequestsListProps) {
+  const handleAccept = async (requestId: string) => {
+    await onRespond(requestId, true);
+  };
   
-  return (
-    <Card className="p-4 md:p-6">
-      <h2 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Solicitudes de amistad</h2>
-      {requests.length === 0 ? (
-        <p className="text-center text-muted-foreground">
+  const handleReject = async (requestId: string) => {
+    await onRespond(requestId, false);
+  };
+  
+  if (requests.length === 0) {
+    return showHeader ? (
+      <Card className="p-4">
+        <h2 className="text-lg font-semibold mb-2">Solicitudes de amistad</h2>
+        <p className="text-center text-muted-foreground py-4">
           No tienes solicitudes de amistad pendientes
         </p>
-      ) : (
-        <div className="space-y-3 md:space-y-4">
-          {requests.map((request) => (
-            <div
-              key={request.id}
-              className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 md:p-4 rounded-lg hover:bg-accent gap-3"
-            >
-              <Link
-                to={`/profile/${request.user_id}`}
-                className="flex items-center gap-3"
-              >
-                <Avatar>
-                  <AvatarImage src={request.user.avatar_url || undefined} />
-                  <AvatarFallback>
-                    {request.user.username[0]?.toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="font-medium">{request.user.username}</div>
-              </Link>
-              <div className="flex gap-2 w-full sm:w-auto">
-                <Button
-                  size={isMobile ? "sm" : "default"}
-                  onClick={() => onRespond(request.id, true)}
-                  className="flex-1 sm:flex-none"
-                >
-                  <UserCheck className="mr-2 h-4 w-4" />
-                  Confirmar
-                </Button>
-                <Button
-                  size={isMobile ? "sm" : "default"}
-                  variant="secondary"
-                  onClick={() => onRespond(request.id, false)}
-                  className="flex-1 sm:flex-none"
-                >
-                  <UserX className="mr-2 h-4 w-4" />
-                  Eliminar
-                </Button>
-              </div>
-            </div>
-          ))}
+      </Card>
+    ) : null;
+  }
+
+  return (
+    <div className="space-y-1">
+      {showHeader && (
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-lg font-semibold">Solicitudes de amistad</h2>
+          {showViewAll && requests.length > 3 && (
+            <Link to="/friends/requests" className="text-sm text-primary flex items-center">
+              Ver todo
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          )}
         </div>
       )}
-    </Card>
+      <div className="space-y-1">
+        {requests.map((request) => (
+          <FriendRequestItem
+            key={request.id}
+            id={request.id}
+            sender={{
+              id: request.user_id,
+              username: request.user.username,
+              avatar_url: request.user.avatar_url
+            }}
+            created_at={request.created_at}
+            mutual_friends={request.mutual_friends || []}
+            onAccept={handleAccept}
+            onReject={handleReject}
+          />
+        ))}
+      </div>
+    </div>
   );
 }

@@ -2,26 +2,31 @@
 import { useEffect, useState } from "react";
 import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { FriendRequestsLoader } from "@/components/friends/FriendRequestsLoader";
-import { NoRequests } from "@/components/friends/NoRequests";
 import { FriendRequestItem } from "@/components/friends/FriendRequestItem";
+import { Link, useNavigate } from "react-router-dom";
+import { ChevronLeft, Search } from "lucide-react";
 
 interface FriendRequestData {
   id: string;
+  created_at: string;
   sender: {
     id: string;
     username: string;
     avatar_url: string | null;
   };
+  mutual_friends?: {
+    username: string;
+    avatar_url: string | null;
+  }[];
 }
 
 interface SentRequestData {
   id: string;
+  created_at: string;
   friend: {
     id: string;
     username: string;
@@ -30,14 +35,36 @@ interface SentRequestData {
   status: string;
 }
 
+interface Friend {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+  mutual_friends_count?: number;
+}
+
+interface Suggestion {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+  mutual_friends?: {
+    username: string;
+    avatar_url: string | null;
+  }[];
+}
+
 export default function FriendRequests() {
   const [receivedRequests, setReceivedRequests] = useState<FriendRequestData[]>([]);
-  const [sentRequests, setSentRequests] = useState<SentRequestData[]>([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"suggestions" | "friends">("suggestions");
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadRequests();
+    loadFriends();
+    loadSuggestions();
 
     const subscription = supabase
       .channel('friendships')
@@ -47,6 +74,8 @@ export default function FriendRequests() {
         table: 'friendships'
       }, () => {
         loadRequests();
+        loadFriends();
+        loadSuggestions();
       })
       .subscribe();
 
@@ -60,11 +89,12 @@ export default function FriendRequests() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Cargar solicitudes recibidas
+      // Load received requests with mutual friends
       const { data: received, error: receivedError } = await supabase
         .from('friendships')
         .select(`
           id,
+          created_at,
           user:profiles!friendships_user_id_fkey (
             id,
             username,
@@ -76,38 +106,29 @@ export default function FriendRequests() {
 
       if (receivedError) throw receivedError;
 
-      // Cargar solicitudes enviadas
-      const { data: sent, error: sentError } = await supabase
-        .from('friendships')
-        .select(`
-          id,
-          friend:profiles!friendships_friend_id_fkey (
-            id,
-            username,
-            avatar_url
-          ),
-          status
-        `)
-        .eq('user_id', user.id)
-        .eq('status', 'pending');
+      // Get mutual friends for each request
+      const processedRequests: FriendRequestData[] = [];
+      
+      for (const request of received || []) {
+        // Get mutual friends (this is a simplified version - in a real app you'd have a more efficient query)
+        const { data: mutualFriends } = await supabase.rpc('get_mutual_friends', {
+          user_id_1: user.id,
+          user_id_2: request.user.id
+        });
 
-      if (sentError) throw sentError;
-
-      if (received) {
-        const processedReceived: FriendRequestData[] = received.map(request => ({
+        processedRequests.push({
           id: request.id,
+          created_at: request.created_at,
           sender: {
-            id: request.user?.id || '',
-            username: request.user?.username || '',
-            avatar_url: request.user?.avatar_url
-          }
-        }));
-        setReceivedRequests(processedReceived);
+            id: request.user.id,
+            username: request.user.username,
+            avatar_url: request.user.avatar_url
+          },
+          mutual_friends: mutualFriends || []
+        });
       }
 
-      if (sent) {
-        setSentRequests(sent);
-      }
+      setReceivedRequests(processedRequests);
     } catch (error) {
       console.error('Error loading friend requests:', error);
       toast({
@@ -117,6 +138,65 @@ export default function FriendRequests() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadFriends = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          username,
+          avatar_url
+        `)
+        .in('id', supabase.rpc('get_friends', { user_id_param: user.id }));
+
+      if (error) throw error;
+      setFriends(data || []);
+    } catch (error) {
+      console.error('Error loading friends:', error);
+    }
+  };
+
+  const loadSuggestions = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // In a real app, you'd have a more sophisticated suggestion algorithm
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .neq('id', user.id)
+        .limit(5);
+
+      if (error) throw error;
+
+      // Get mutual friends for each suggestion
+      const processedSuggestions: Suggestion[] = [];
+      
+      for (const suggestion of data || []) {
+        // Get mutual friends
+        const { data: mutualFriends } = await supabase.rpc('get_mutual_friends', {
+          user_id_1: user.id,
+          user_id_2: suggestion.id
+        });
+
+        processedSuggestions.push({
+          id: suggestion.id,
+          username: suggestion.username,
+          avatar_url: suggestion.avatar_url,
+          mutual_friends: mutualFriends || []
+        });
+      }
+
+      setSuggestions(processedSuggestions);
+    } catch (error) {
+      console.error('Error loading suggestions:', error);
     }
   };
 
@@ -154,6 +234,7 @@ export default function FriendRequests() {
       });
 
       await loadRequests();
+      await loadFriends();
     } catch (error) {
       console.error('Error handling request:', error);
       toast({
@@ -164,106 +245,187 @@ export default function FriendRequests() {
     }
   };
 
-  const cancelRequest = async (requestId: string) => {
+  const handleFriendRequest = async (userId: string) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       const { error } = await supabase
         .from('friendships')
-        .delete()
-        .eq('id', requestId);
+        .insert({
+          user_id: user.id,
+          friend_id: userId,
+          status: 'pending'
+        });
 
       if (error) throw error;
 
       toast({
-        title: "Solicitud cancelada",
-        description: "La solicitud de amistad ha sido cancelada",
+        title: "Solicitud enviada",
+        description: "Se ha enviado la solicitud de amistad",
       });
 
-      await loadRequests();
+      // Remove from suggestions
+      setSuggestions(prev => prev.filter(s => s.id !== userId));
     } catch (error) {
-      console.error('Error canceling request:', error);
+      console.error('Error sending friend request:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "No se pudo cancelar la solicitud",
+        description: "No se pudo enviar la solicitud",
       });
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex bg-muted/30">
-        <Navigation />
-        <FriendRequestsLoader />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex bg-muted/30">
-      <Navigation />
-      <main className="flex-1 max-w-4xl mx-auto p-6">
-        <Card className="p-6">
-          <Tabs defaultValue="received" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="received">Recibidas</TabsTrigger>
-              <TabsTrigger value="sent">Enviadas</TabsTrigger>
-            </TabsList>
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 bg-background border-b p-2">
+        <div className="flex items-center justify-between max-w-xl mx-auto">
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate(-1)}
+              className="rounded-full"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-xl font-bold">Amigos</h1>
+          </div>
+          <Button variant="ghost" size="icon" className="rounded-full">
+            <Search className="h-5 w-5" />
+          </Button>
+        </div>
+      </header>
 
-            <TabsContent value="received">
-              <h2 className="text-2xl font-bold mb-6">Solicitudes recibidas</h2>
-              {receivedRequests.length === 0 ? (
-                <NoRequests />
-              ) : (
-                <div className="space-y-4">
-                  {receivedRequests.map((request) => (
-                    <FriendRequestItem
-                      key={request.id}
-                      id={request.id}
-                      sender={request.sender}
-                      onAccept={(id) => handleRequest(id, true)}
-                      onReject={(id) => handleRequest(id, false)}
-                    />
-                  ))}
-                </div>
-              )}
-            </TabsContent>
+      <main className="p-3 pb-16 max-w-xl mx-auto">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "suggestions" | "friends")} className="mb-4">
+          <TabsList className="grid grid-cols-2 w-full rounded-full h-10 p-1 bg-muted/80">
+            <TabsTrigger value="suggestions" className="rounded-full">Sugerencias</TabsTrigger>
+            <TabsTrigger value="friends" className="rounded-full">Tus amigos</TabsTrigger>
+          </TabsList>
+        </Tabs>
 
-            <TabsContent value="sent">
-              <h2 className="text-2xl font-bold mb-6">Solicitudes enviadas</h2>
-              {sentRequests.length === 0 ? (
-                <div className="text-center text-muted-foreground">
-                  No has enviado ninguna solicitud de amistad
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {sentRequests.map((request) => (
-                    <div
-                      key={request.id}
-                      className="flex items-center justify-between p-4 rounded-lg border"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarImage src={request.friend.avatar_url || undefined} />
-                          <AvatarFallback>{request.friend.username[0]?.toUpperCase()}</AvatarFallback>
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-semibold">Solicitudes de amistad</h2>
+            {receivedRequests.length > 5 && (
+              <Link to="/friends/requests" className="text-sm text-primary flex items-center">
+                Ver todo
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            )}
+          </div>
+
+          <Card className="p-3">
+            {receivedRequests.length === 0 ? (
+              <p className="text-center text-muted-foreground py-3">
+                No tienes solicitudes de amistad pendientes
+              </p>
+            ) : (
+              <div className="divide-y divide-border">
+                {receivedRequests.map((request) => (
+                  <FriendRequestItem
+                    key={request.id}
+                    id={request.id}
+                    sender={request.sender}
+                    created_at={request.created_at}
+                    mutual_friends={request.mutual_friends}
+                    onAccept={(id) => handleRequest(id, true)}
+                    onReject={(id) => handleRequest(id, false)}
+                  />
+                ))}
+              </div>
+            )}
+          </Card>
+        </div>
+
+        <TabsContent value="suggestions" className="mt-0 p-0">
+          <h2 className="text-lg font-semibold mb-2">Personas que quizás conozcas</h2>
+          <Card className="p-3">
+            {suggestions.length === 0 ? (
+              <p className="text-center text-muted-foreground py-3">
+                No hay sugerencias disponibles en este momento
+              </p>
+            ) : (
+              <div className="divide-y divide-border">
+                {suggestions.map((suggestion) => (
+                  <div key={suggestion.id} className="flex items-center justify-between py-3">
+                    <div className="flex items-start gap-3">
+                      <Link to={`/profile/${suggestion.id}`} className="shrink-0">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={suggestion.avatar_url || undefined} />
+                          <AvatarFallback>{suggestion.username[0]?.toUpperCase()}</AvatarFallback>
                         </Avatar>
-                        <div>
-                          <div className="font-medium">{request.friend.username}</div>
-                          <div className="text-sm text-muted-foreground">Pendiente</div>
-                        </div>
+                      </Link>
+                      <div className="flex flex-col">
+                        <Link to={`/profile/${suggestion.id}`} className="font-medium">
+                          {suggestion.username}
+                        </Link>
+                        {suggestion.mutual_friends && suggestion.mutual_friends.length > 0 && (
+                          <div className="flex items-center text-xs text-muted-foreground mt-1">
+                            <div className="flex -space-x-2 mr-1">
+                              {suggestion.mutual_friends.slice(0, 2).map((friend, index) => (
+                                <Avatar key={index} className="h-4 w-4 border border-background">
+                                  <AvatarImage src={friend.avatar_url || undefined} />
+                                  <AvatarFallback>{friend.username[0]?.toUpperCase()}</AvatarFallback>
+                                </Avatar>
+                              ))}
+                            </div>
+                            {suggestion.mutual_friends.length} {suggestion.mutual_friends.length === 1 ? 'amigo' : 'amigos'} en común
+                          </div>
+                        )}
                       </div>
-                      <Button
-                        variant="outline"
-                        onClick={() => cancelRequest(request.id)}
-                      >
-                        Cancelar solicitud
-                      </Button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </Card>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handleFriendRequest(suggestion.id)}
+                      className="px-3 py-1 h-8"
+                    >
+                      Añadir
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="friends" className="mt-0 p-0">
+          <h2 className="text-lg font-semibold mb-2">Todos tus amigos</h2>
+          <Card className="p-3">
+            {friends.length === 0 ? (
+              <p className="text-center text-muted-foreground py-3">
+                Aún no tienes amigos
+              </p>
+            ) : (
+              <div className="divide-y divide-border">
+                {friends.map((friend) => (
+                  <Link 
+                    key={friend.id} 
+                    to={`/profile/${friend.id}`}
+                    className="flex items-center py-3 hover:bg-accent/50 rounded-md px-2"
+                  >
+                    <Avatar className="h-12 w-12 mr-3">
+                      <AvatarImage src={friend.avatar_url || undefined} />
+                      <AvatarFallback>{friend.username[0]?.toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <p className="font-medium">{friend.username}</p>
+                      {friend.mutual_friends_count && friend.mutual_friends_count > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          {friend.mutual_friends_count} {friend.mutual_friends_count === 1 ? 'amigo' : 'amigos'} en común
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        <Navigation />
       </main>
     </div>
   );
