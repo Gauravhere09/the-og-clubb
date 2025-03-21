@@ -7,7 +7,7 @@ import { createPost } from "@/lib/api";
 import { PollCreator } from "./post/PollCreator";
 import { FilePreview } from "./post/FilePreview";
 import { usePostCreator } from "@/hooks/use-post-creator";
-import { PostHeader } from "./post/PostHeader";
+import { PostCreatorHeader } from "./post/PostCreatorHeader";
 import { PostFooter } from "./post/PostFooter";
 
 export function PostCreator() {
@@ -75,7 +75,7 @@ export function PostCreator() {
 
   return (
     <Card className="p-4 space-y-4">
-      <PostHeader 
+      <PostCreatorHeader 
         currentUser={currentUser}
         content={content}
         textareaRef={textareaRef}
