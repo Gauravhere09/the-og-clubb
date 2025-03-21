@@ -18,7 +18,7 @@ export function useUserProfile() {
         // Fetch profile data
         const { data: profileData } = await supabase
           .from('profiles')
-          .select('username, avatar_url')
+          .select('username, avatar_url, birth_date')
           .eq('id', user.id)
           .single();
           

@@ -8,6 +8,7 @@ export interface ProfileTable {
     cover_url: string | null;
     career: string | null;
     semester: string | null;
+    birth_date: string | null;
     created_at: string;
     updated_at: string;
     // Nuevos campos que podrían ser útiles
@@ -22,6 +23,7 @@ export interface ProfileTable {
     cover_url?: string | null;
     career?: string | null;
     semester?: string | null;
+    birth_date?: string | null;
     created_at?: string;
     updated_at?: string;
     last_seen?: string | null;
@@ -35,6 +37,7 @@ export interface ProfileTable {
     cover_url?: string | null;
     career?: string | null;
     semester?: string | null;
+    birth_date?: string | null;
     created_at?: string;
     updated_at?: string;
     last_seen?: string | null;

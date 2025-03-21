@@ -65,14 +65,16 @@ export function ProfileEditDialog({
       if (error) throw error;
 
       if (data) {
-        const profileData = data as ProfileTable['Row'];
+        // Convert the returned data to our Profile type
+        const profileData = data as unknown as ProfileTable['Row'];
         const updatedProfile: Profile = {
           ...profile,
           username: profileData.username,
           bio: profileData.bio,
           updated_at: profileData.updated_at,
           career: profileData.career,
-          semester: profileData.semester
+          semester: profileData.semester,
+          birth_date: profileData.birth_date
         };
         
         console.log("Perfil actualizado:", updatedProfile);

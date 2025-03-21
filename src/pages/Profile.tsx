@@ -21,11 +21,14 @@ export type Profile = {
   education: string | null;
   career: string | null;
   semester: string | null;
+  birth_date: string | null;
   relationship_status: string | null;
   followers_count: number;
   hearts_count: number;
   created_at: string;
   updated_at: string;
+  last_seen?: string | null;
+  status?: 'online' | 'offline' | 'away' | null;
 };
 
 export default function Profile() {
@@ -74,7 +77,7 @@ export default function Profile() {
           return;
         }
 
-        const typedProfileData = profileData as ProfileTable['Row'];
+        const typedProfileData = profileData as unknown as ProfileTable['Row'];
 
         // Get followers count
         const { count: followersCount, error: followersError } = await supabase
@@ -108,6 +111,7 @@ export default function Profile() {
           education: null,
           career: typedProfileData.career,
           semester: typedProfileData.semester,
+          birth_date: typedProfileData.birth_date,
           relationship_status: null,
           followers_count: followersCount || 0,
           hearts_count: heartsCount || 0,
