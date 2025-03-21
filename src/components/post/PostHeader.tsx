@@ -85,15 +85,19 @@ export function PostHeader({ post, onDelete, isAuthor, isHidden, content }: Post
       
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0 z-10">
+          <Button 
+            variant="ghost" 
+            className="h-8 w-8 p-0 z-10 relative" 
+            onClick={(e) => e.stopPropagation()}
+          >
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="z-50">
+        <DropdownMenuContent align="end" className="z-[100]">
           {isAuthor && (
             <>
               <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
+                className="text-destructive focus:text-destructive cursor-pointer"
                 onClick={onDelete}
               >
                 <Trash className="mr-2 h-4 w-4" />

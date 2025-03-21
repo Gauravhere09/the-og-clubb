@@ -179,43 +179,44 @@ export function PostOptionsMenu({
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-8 w-8 rounded-full z-10"
+          className="h-8 w-8 rounded-full z-10 relative"
           aria-label="Opciones de publicación"
           disabled={isLoading}
+          onClick={(e) => e.stopPropagation()}
         >
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-52 z-50">
+      <DropdownMenuContent align="end" className="w-52 z-[100]">
         <DropdownMenuLabel>Opciones</DropdownMenuLabel>
         
         <DropdownMenuSeparator />
         
-        <DropdownMenuItem onClick={() => handleSetInterest('interested')}>
+        <DropdownMenuItem onClick={() => handleSetInterest('interested')} className="cursor-pointer">
           <ThumbsUp className="mr-2 h-4 w-4" />
           Me interesa
         </DropdownMenuItem>
         
-        <DropdownMenuItem onClick={() => handleSetInterest('not_interested')}>
+        <DropdownMenuItem onClick={() => handleSetInterest('not_interested')} className="cursor-pointer">
           <ThumbsDown className="mr-2 h-4 w-4" />
           No me interesa
         </DropdownMenuItem>
         
         <DropdownMenuSeparator />
         
-        <DropdownMenuItem onClick={handleHidePost}>
+        <DropdownMenuItem onClick={handleHidePost} className="cursor-pointer">
           <EyeOff className="mr-2 h-4 w-4" />
           {isHidden ? "Mostrar publicación" : "Ocultar publicación"}
         </DropdownMenuItem>
         
-        <DropdownMenuItem onClick={handleHideUser}>
+        <DropdownMenuItem onClick={handleHideUser} className="cursor-pointer">
           <UserX className="mr-2 h-4 w-4" />
           Ocultar de {postUserId}
         </DropdownMenuItem>
         
         <DropdownMenuSeparator />
         
-        <DropdownMenuItem onClick={handleReportPost} className="text-red-500">
+        <DropdownMenuItem onClick={handleReportPost} className="text-red-500 cursor-pointer">
           <Flag className="mr-2 h-4 w-4" />
           Reportar
         </DropdownMenuItem>
