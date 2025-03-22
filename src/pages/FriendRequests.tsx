@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigation } from "@/components/Navigation";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,15 +12,20 @@ import { useFriends } from "@/hooks/use-friends";
 
 export default function FriendRequests() {
   const [activeTab, setActiveTab] = useState<"suggestions" | "friends">("suggestions");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const { toast } = useToast();
   
-  // Obtener el ID del usuario actual
-  const getUserId = async () => {
-    const { data } = await supabase.auth.getSession();
-    return data.session?.user.id || null;
-  };
+  // Fetch the user ID on component mount
+  useEffect(() => {
+    const fetchUserId = async () => {
+      const { data } = await supabase.auth.getSession();
+      setCurrentUserId(data.session?.user.id || null);
+    };
+    
+    fetchUserId();
+  }, []);
   
-  // Usar el hook useFriends con el ID del usuario obtenido de la sesión actual
+  // Use the hook with the current user ID state
   const { 
     pendingRequests, 
     suggestions, 
@@ -28,7 +33,7 @@ export default function FriendRequests() {
     loading,
     handleFriendRequest, 
     dismissSuggestion 
-  } = useFriends(getUserId());
+  } = useFriends(currentUserId);
 
   // Manejar la respuesta a solicitudes de amistad (aceptar/rechazar)
   const handleRequest = async (requestId: string, accept: boolean) => {
@@ -84,6 +89,7 @@ export default function FriendRequests() {
         <RequestsSection 
           receivedRequests={pendingRequests} 
           handleRequest={handleRequest} 
+          loading={loading && !currentUserId}
         />
 
         {activeTab === "suggestions" && (
