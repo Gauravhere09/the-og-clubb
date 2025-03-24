@@ -16,6 +16,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { TransformedIdea } from "@/lib/api/posts/types";
+import { Json } from "@/integrations/supabase/types";
 
 interface IdeaDisplayProps {
   idea: Idea;
@@ -85,10 +86,10 @@ export function IdeaDisplay({ idea, postId, isParticipant = false }: IdeaDisplay
         participants_count: (currentIdea.participants_count || 0) + 1,
       };
 
-      // Update post with new idea data
+      // Update post with new idea data - converting to Json type for database compatibility
       const { error: updateError } = await supabase
         .from('posts')
-        .update({ idea: updatedIdea })
+        .update({ idea: updatedIdea as unknown as Json })
         .eq('id', postId);
 
       if (updateError) throw updateError;

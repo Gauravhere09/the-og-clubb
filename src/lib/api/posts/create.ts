@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "@/types/post";
 import { Tables } from "@/types/database";
@@ -63,7 +62,8 @@ export async function createPost({
         is_participant: true
       };
       
-      idea = transformedIdea;
+      // Cast to Json type for database compatibility
+      idea = transformedIdea as unknown as Json;
     }
 
     // Map the visibility value to match what's expected in the database
