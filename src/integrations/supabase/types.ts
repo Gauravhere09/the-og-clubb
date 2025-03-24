@@ -475,11 +475,9 @@ export type Database = {
           content: string | null
           created_at: string
           id: string
-          idea: Json | null
           media_type: string | null
           media_url: string | null
           poll: Json | null
-          post_type: string | null
           updated_at: string
           user_id: string
           visibility: Database["public"]["Enums"]["post_visibility"]
@@ -488,11 +486,9 @@ export type Database = {
           content?: string | null
           created_at?: string
           id?: string
-          idea?: Json | null
           media_type?: string | null
           media_url?: string | null
           poll?: Json | null
-          post_type?: string | null
           updated_at?: string
           user_id: string
           visibility?: Database["public"]["Enums"]["post_visibility"]
@@ -501,11 +497,9 @@ export type Database = {
           content?: string | null
           created_at?: string
           id?: string
-          idea?: Json | null
           media_type?: string | null
           media_url?: string | null
           poll?: Json | null
-          post_type?: string | null
           updated_at?: string
           user_id?: string
           visibility?: Database["public"]["Enums"]["post_visibility"]

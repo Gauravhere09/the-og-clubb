@@ -2,7 +2,7 @@
 import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AudioRecorder } from "../AudioRecorder";
-import { MousePointerClick, PlusCircle, Lightbulb } from "lucide-react";
+import { MousePointerClick, PlusCircle } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -15,17 +15,11 @@ import { AttachmentInput } from "@/components/AttachmentInput";
 
 interface PostActionButtonsProps {
   onFileSelect: (file: File) => void;
-  onPollToggle: () => void;
-  onIdeaToggle: () => void;
+  onPollCreate: () => void;
   isPending: boolean;
 }
 
-export function PostActionButtons({ 
-  onFileSelect, 
-  onPollToggle, 
-  onIdeaToggle,
-  isPending 
-}: PostActionButtonsProps) {
+export function PostActionButtons({ onFileSelect, onPollCreate, isPending }: PostActionButtonsProps) {
   const [showStoryCreator, setShowStoryCreator] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -84,15 +78,9 @@ export function PostActionButtons({
                 buttonClassName="w-full flex justify-start"
               />
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onPollToggle}>
+            <DropdownMenuItem onClick={onPollCreate}>
               <Button variant="ghost" className="w-full flex justify-start">
                 Encuesta
-              </Button>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onIdeaToggle}>
-              <Button variant="ghost" className="w-full flex justify-start">
-                <Lightbulb className="h-4 w-4 mr-2" />
-                Idea
               </Button>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleStoryClick}>
@@ -127,19 +115,10 @@ export function PostActionButtons({
         <Button
           variant="ghost"
           size="icon"
-          onClick={onPollToggle}
+          onClick={onPollCreate}
           disabled={isPending}
         >
           Encuesta
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onIdeaToggle}
-          disabled={isPending}
-          title="Publicar una idea"
-        >
-          <Lightbulb className="h-4 w-4" />
         </Button>
       </div>
 

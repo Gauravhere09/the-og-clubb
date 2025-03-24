@@ -12,23 +12,6 @@ export interface Poll {
   user_vote?: string | null;
 }
 
-// New interface for Idea participants
-export interface IdeaParticipant {
-  user_id: string;
-  username: string;
-  avatar_url: string | null;
-  career: string | null;
-  joined_at: string;
-}
-
-// New interface for Ideas
-export interface Idea {
-  description: string;
-  participants: IdeaParticipant[];
-  participants_count: number;
-  is_participant?: boolean;
-}
-
 export interface Post {
   id: string;
   content: string;
@@ -39,8 +22,6 @@ export interface Post {
   created_at: string;
   updated_at: string;
   poll?: Poll | null;
-  idea?: Idea | null;
-  post_type?: 'regular' | 'poll' | 'idea';
   shared_from?: string | null;
   shared_post?: Post | null; // Original post if this is a shared post
   profiles?: {

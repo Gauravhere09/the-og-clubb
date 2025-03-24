@@ -9,7 +9,6 @@ import { SharedPostContent } from "./post/SharedPostContent";
 import { usePost } from "@/hooks/use-post";
 import { PostWrapper } from "./post/PostWrapper";
 import { PostOptionsMenu } from "./post/actions/PostOptionsMenu";
-import { useState } from "react";
 
 interface PostProps {
   post: PostType;
@@ -18,8 +17,6 @@ interface PostProps {
 }
 
 export function Post({ post, hideComments = false, isHidden = false }: PostProps) {
-  const [isParticipant, setIsParticipant] = useState(post.idea?.is_participant || false);
-  
   const {
     showComments,
     comments,
@@ -39,11 +36,6 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
     setNewComment
   } = usePost(post, hideComments);
 
-  // Handler for when a user joins an idea
-  const handleJoinIdea = () => {
-    setIsParticipant(true);
-  };
-
   // Determine if this is a shared post by checking shared_post
   const isSharedPost = !!post.shared_post;
 
@@ -57,18 +49,15 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
         content={post.content || ""}
       />
       
-      {/* The rest of the component se mantiene igual */}
+      {/* El resto del componente se mantiene igual */}
       {isSharedPost ? (
-        <SharedPostView post={post} onJoinIdea={handleJoinIdea} />
+        <SharedPostView post={post} />
       ) : (
-        <StandardPostView post={post} onJoinIdea={handleJoinIdea} />
+        <StandardPostView post={post} />
       )}
       
       <PostActions 
-        post={isParticipant && post.post_type === 'idea' && post.idea ? {
-          ...post,
-          idea: { ...post.idea, is_participant: true }
-        } : post} 
+        post={post} 
         onReaction={(type) => onReaction(post.id, type)} 
         onToggleComments={toggleComments}
         onCommentsClick={toggleComments}
@@ -97,7 +86,7 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
 }
 
 // Helper component for shared post view
-function SharedPostView({ post, onJoinIdea }: { post: PostType, onJoinIdea: () => void }) {
+function SharedPostView({ post }: { post: PostType }) {
   return (
     <div>
       {post.content && (
@@ -118,13 +107,12 @@ function SharedPostView({ post, onJoinIdea }: { post: PostType, onJoinIdea: () =
 }
 
 // Helper component for standard post view
-function StandardPostView({ post, onJoinIdea }: { post: PostType, onJoinIdea: () => void }) {
+function StandardPostView({ post }: { post: PostType }) {
   return (
     <>
       <PostContent 
         post={post} 
         postId={post.id}
-        onJoinIdea={onJoinIdea}
       />
       
       {post.shared_post && (
