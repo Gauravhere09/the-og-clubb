@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Post } from "@/types/post";
 import { Tables } from "@/types/database";
@@ -5,6 +6,7 @@ import { transformPoll } from "./utils";
 import { uploadMediaFile, getMediaType } from "./storage";
 import { sendNewPostNotifications, sendMentionNotifications } from "./notifications";
 import { CreatePostParams, TransformedIdea } from "./types";
+import { Json } from "@/integrations/supabase/types";
 
 export async function createPost({
   content, 
