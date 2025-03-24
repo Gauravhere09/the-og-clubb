@@ -15,6 +15,7 @@ import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { TransformedIdea } from "@/lib/api/posts/types";
 
 interface IdeaDisplayProps {
   idea: Idea;
@@ -51,7 +52,10 @@ export function IdeaDisplay({ idea, postId, isParticipant = false }: IdeaDisplay
 
       if (postError || !postData) throw new Error("No se pudo obtener la publicación");
 
-      const currentIdea = postData.idea || {
+      // Parse and validate the idea data
+      const ideaData = postData.idea as unknown as TransformedIdea | null;
+      
+      const currentIdea = ideaData || {
         description: idea.description,
         participants: [],
         participants_count: 0,
@@ -59,7 +63,7 @@ export function IdeaDisplay({ idea, postId, isParticipant = false }: IdeaDisplay
 
       // Check if user is already a participant
       const alreadyParticipant = currentIdea.participants?.some(
-        (p: any) => p.user_id === user.id
+        (p) => p.user_id === user.id
       );
 
       if (alreadyParticipant) {
@@ -75,7 +79,7 @@ export function IdeaDisplay({ idea, postId, isParticipant = false }: IdeaDisplay
         joined_at: new Date().toISOString()
       };
 
-      const updatedIdea = {
+      const updatedIdea: TransformedIdea = {
         ...currentIdea,
         participants: [...(currentIdea.participants || []), newParticipant],
         participants_count: (currentIdea.participants_count || 0) + 1,

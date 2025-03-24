@@ -5,7 +5,7 @@ import { Tables } from "@/types/database";
 import { transformPoll } from "./utils";
 import { uploadMediaFile, getMediaType } from "./storage";
 import { sendNewPostNotifications, sendMentionNotifications } from "./notifications";
-import { CreatePostParams } from "./types";
+import { CreatePostParams, TransformedIdea } from "./types";
 
 export async function createPost({
   content, 
@@ -43,31 +43,27 @@ export async function createPost({
 
     let idea = null;
     if (ideaData) {
-      idea = {
-        description: ideaData.description,
-        participants: [{
-          user_id: user.id,
-          username: "",
-          avatar_url: null,
-          career: null,
-          joined_at: new Date().toISOString()
-        }],
-        participants_count: 1,
-        is_participant: true
-      };
-      
-      // Intentar obtener información del perfil del usuario
+      // Get profile data for current user
       const { data: profileData } = await supabase
         .from('profiles')
         .select('username, avatar_url, career')
         .eq('id', user.id)
         .single();
         
-      if (profileData) {
-        idea.participants[0].username = profileData.username || "";
-        idea.participants[0].avatar_url = profileData.avatar_url;
-        idea.participants[0].career = profileData.career;
-      }
+      const transformedIdea: TransformedIdea = {
+        description: ideaData.description,
+        participants: [{
+          user_id: user.id,
+          username: profileData?.username || "",
+          avatar_url: profileData?.avatar_url,
+          career: profileData?.career,
+          joined_at: new Date().toISOString()
+        }],
+        participants_count: 1,
+        is_participant: true
+      };
+      
+      idea = transformedIdea;
     }
 
     // Map the visibility value to match what's expected in the database
@@ -146,7 +142,7 @@ export async function createPost({
         media_url: rawPost.media_url,
         media_type: rawPost.media_type as 'image' | 'video' | 'audio' | null,
         visibility: uiVisibility as 'public' | 'friends' | 'incognito',
-        post_type: rawPost.post_type || 'regular',
+        post_type: rawPost.post_type as 'regular' | 'poll' | 'idea',
         created_at: rawPost.created_at,
         updated_at: rawPost.updated_at,
         shared_from: null,
@@ -156,7 +152,7 @@ export async function createPost({
           avatar_url: null
         } : profileData,
         poll: transformPoll(rawPost.poll),
-        idea: rawPost.idea,
+        idea: rawPost.idea as unknown as Post['idea'],
         reactions: { count: 0, by_type: {} },
         reactions_count: 0,
         comments_count: 0

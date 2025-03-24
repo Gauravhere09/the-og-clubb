@@ -29,3 +29,16 @@ export interface TransformedPoll {
   total_votes: number;
   user_vote: string | null;
 }
+
+export interface TransformedIdea {
+  description: string;
+  participants: Array<{
+    user_id: string;
+    username: string;
+    avatar_url: string | null;
+    career: string | null;
+    joined_at: string;
+  }>;
+  participants_count: number;
+  is_participant?: boolean;
+}
