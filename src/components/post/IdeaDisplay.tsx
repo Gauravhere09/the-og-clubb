@@ -22,9 +22,10 @@ interface IdeaDisplayProps {
   idea: Idea;
   postId: string;
   isParticipant: boolean;
+  onJoinIdea?: () => void;
 }
 
-export function IdeaDisplay({ idea, postId, isParticipant = false }: IdeaDisplayProps) {
+export function IdeaDisplay({ idea, postId, isParticipant = false, onJoinIdea }: IdeaDisplayProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -112,6 +113,11 @@ export function IdeaDisplay({ idea, postId, isParticipant = false }: IdeaDisplay
           description: "Ahora formas parte de esta idea",
         });
         queryClient.invalidateQueries({ queryKey: ['posts'] });
+        
+        // Call the callback if provided
+        if (onJoinIdea) {
+          onJoinIdea();
+        }
       }
     },
     onError: (error) => {
@@ -129,63 +135,48 @@ export function IdeaDisplay({ idea, postId, isParticipant = false }: IdeaDisplay
         <strong>Idea: </strong>{idea.description}
       </div>
 
-      <div className="flex items-center justify-between">
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
-            >
-              <Users className="h-4 w-4" />
-              <span>{idea.participants_count || 0} profesionales unidos</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Profesionales unidos a esta idea</DialogTitle>
-              <DialogDescription>
-                Estos son los profesionales que se han unido a esta idea
-              </DialogDescription>
-            </DialogHeader>
-            <div className="max-h-[60vh] overflow-y-auto mt-4">
-              {idea.participants && idea.participants.length > 0 ? (
-                <div className="space-y-4">
-                  {idea.participants.map((participant) => (
-                    <div key={participant.user_id} className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={participant.avatar_url || undefined} />
-                        <AvatarFallback>{participant.username?.[0] || 'U'}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">{participant.username}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {participant.career || "Profesional"}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center py-6 text-muted-foreground">Aún no hay participantes</p>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {!isParticipant && (
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogTrigger asChild>
           <Button 
-            onClick={() => joinIdea()} 
-            disabled={isPending}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-1"
+            variant="ghost" 
+            size="sm" 
+            className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
           >
             <Users className="h-4 w-4" />
-            Unirse a la idea
+            <span>{idea.participants_count || 0} profesionales unidos</span>
           </Button>
-        )}
-      </div>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Profesionales unidos a esta idea</DialogTitle>
+            <DialogDescription>
+              Estos son los profesionales que se han unido a esta idea
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-y-auto mt-4">
+            {idea.participants && idea.participants.length > 0 ? (
+              <div className="space-y-4">
+                {idea.participants.map((participant) => (
+                  <div key={participant.user_id} className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarImage src={participant.avatar_url || undefined} />
+                      <AvatarFallback>{participant.username?.[0] || 'U'}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-medium">{participant.username}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {participant.career || "Profesional"}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center py-6 text-muted-foreground">Aún no hay participantes</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
