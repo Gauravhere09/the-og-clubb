@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { FilePreview } from "./FilePreview";
 import { PollDisplay } from "./PollDisplay";
+import { IdeaDisplay } from "./IdeaDisplay";
 import { MentionsText } from "./MentionsText";
 import { ImageModal } from "./ImageModal";
 
@@ -13,6 +14,7 @@ interface PostContentProps {
 export function PostContent({ post, postId }: PostContentProps) {
   const hasMedia = post.media_url && post.media_type;
   const hasPoll = post.poll !== null;
+  const hasIdea = post.idea !== null;
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   const handleImageClick = () => {
@@ -56,6 +58,15 @@ export function PostContent({ post, postId }: PostContentProps) {
           poll={post.poll} 
           postId={postId}
           userVote={post.user_vote}
+        />
+      )}
+
+      {/* Idea content */}
+      {hasIdea && post.idea && (
+        <IdeaDisplay
+          idea={post.idea}
+          postId={postId}
+          isParticipant={post.idea.is_participant}
         />
       )}
     </div>

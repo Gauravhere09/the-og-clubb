@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPost } from "@/lib/api";
 import { PollCreator } from "./post/PollCreator";
+import { IdeaCreator } from "./post/IdeaCreator";
 import { FilePreview } from "./post/FilePreview";
 import { usePostCreator } from "@/hooks/use-post-creator";
 import { PostCreatorHeader } from "./post/PostCreatorHeader";
@@ -35,25 +36,35 @@ export function PostCreator() {
     setMentionListVisible
   } = usePostCreator();
 
+  const [showIdeaCreator, setShowIdeaCreator] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const { mutate: submitPost, isPending } = useMutation({
-    mutationFn: async (pollData?: { question: string; options: string[] }) => {
-      if (!content && !file && !pollData) {
-        throw new Error("Debes agregar texto, un archivo multimedia o una encuesta");
+    mutationFn: async (data?: { 
+      pollData?: { question: string; options: string[] },
+      ideaData?: { description: string }
+    }) => {
+      if (!content && !file && !data?.pollData && !data?.ideaData) {
+        throw new Error("Debes agregar texto, un archivo multimedia, una encuesta o una idea");
       }
+      
+      const post_type = data?.pollData ? 'poll' : data?.ideaData ? 'idea' : 'regular';
+      
       return createPost({
         content,
         file,
-        pollData,
-        visibility
+        pollData: data?.pollData,
+        ideaData: data?.ideaData,
+        visibility,
+        post_type
       });
     },
     onSuccess: () => {
       setContent("");
       setFile(null);
       setShowPollCreator(false);
+      setShowIdeaCreator(false);
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       toast({
         title: "¡Publicación creada!",
@@ -70,7 +81,11 @@ export function PostCreator() {
   });
 
   const handlePollCreate = (pollData: { question: string; options: string[] }) => {
-    submitPost(pollData);
+    submitPost({ pollData });
+  };
+
+  const handleIdeaCreate = (ideaData: { description: string }) => {
+    submitPost({ ideaData });
   };
 
   return (
@@ -97,6 +112,13 @@ export function PostCreator() {
         />
       )}
       
+      {showIdeaCreator && (
+        <IdeaCreator
+          onIdeaCreate={handleIdeaCreate}
+          onCancel={() => setShowIdeaCreator(false)}
+        />
+      )}
+      
       {file && (
         <FilePreview 
           file={file} 
@@ -107,6 +129,7 @@ export function PostCreator() {
       <PostFooter 
         onFileSelect={handleFileChange}
         onPollToggle={() => setShowPollCreator(true)}
+        onIdeaToggle={() => setShowIdeaCreator(true)}
         onPublish={() => submitPost(undefined)}
         isPending={isPending}
         hasContent={!!content || !!file}

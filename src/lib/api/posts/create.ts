@@ -11,7 +11,9 @@ export async function createPost({
   content, 
   file = null,
   pollData,
-  visibility = 'public'
+  ideaData,
+  visibility = 'public',
+  post_type = 'regular'
 }: CreatePostParams) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -39,6 +41,35 @@ export async function createPost({
       };
     }
 
+    let idea = null;
+    if (ideaData) {
+      idea = {
+        description: ideaData.description,
+        participants: [{
+          user_id: user.id,
+          username: "",
+          avatar_url: null,
+          career: null,
+          joined_at: new Date().toISOString()
+        }],
+        participants_count: 1,
+        is_participant: true
+      };
+      
+      // Intentar obtener información del perfil del usuario
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('username, avatar_url, career')
+        .eq('id', user.id)
+        .single();
+        
+      if (profileData) {
+        idea.participants[0].username = profileData.username || "";
+        idea.participants[0].avatar_url = profileData.avatar_url;
+        idea.participants[0].career = profileData.career;
+      }
+    }
+
     // Map the visibility value to match what's expected in the database
     // UI uses "incognito" but database expects "private"
     const dbVisibility: 'public' | 'friends' | 'private' = 
@@ -51,6 +82,8 @@ export async function createPost({
       media_url,
       media_type,
       poll,
+      idea,
+      post_type,
       user_id: user.id,
       visibility: dbVisibility
     };
@@ -68,6 +101,8 @@ export async function createPost({
           media_type,
           visibility,
           poll,
+          idea,
+          post_type,
           created_at,
           updated_at,
           profiles (
@@ -111,6 +146,7 @@ export async function createPost({
         media_url: rawPost.media_url,
         media_type: rawPost.media_type as 'image' | 'video' | 'audio' | null,
         visibility: uiVisibility as 'public' | 'friends' | 'incognito',
+        post_type: rawPost.post_type || 'regular',
         created_at: rawPost.created_at,
         updated_at: rawPost.updated_at,
         shared_from: null,
@@ -120,6 +156,7 @@ export async function createPost({
           avatar_url: null
         } : profileData,
         poll: transformPoll(rawPost.poll),
+        idea: rawPost.idea,
         reactions: { count: 0, by_type: {} },
         reactions_count: 0,
         comments_count: 0

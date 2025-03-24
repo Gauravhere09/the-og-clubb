@@ -8,7 +8,7 @@ import { ReactionSummaryDialog } from "./actions/ReactionSummaryDialog";
 import { CommentsCount } from "./actions/CommentsCount";
 import { CommentButton } from "./actions/CommentButton";
 import { LongPressReactionButton } from "./reactions/LongPressReactionButton";
-import { Share } from "lucide-react";
+import { Share, Users } from "lucide-react";
 import { useLongPress } from "./reactions/hooks/use-long-press";
 
 interface PostActionsProps {
@@ -36,6 +36,8 @@ export function PostActions({
     onReaction(type);
   };
 
+  const isIdeaPost = post.post_type === 'idea';
+
   return (
     <div className="space-y-2">
       {/* Interactions Summary */}
@@ -51,6 +53,13 @@ export function PostActions({
             isExpanded={commentsExpanded}
           />
         )}
+
+        {isIdeaPost && post.idea && (
+          <div className="flex items-center gap-1">
+            <Users className="h-3 w-3" />
+            <span>{post.idea.participants_count || 0} profesionales</span>
+          </div>
+        )}
       </div>
 
       {/* Action Buttons */}
@@ -65,6 +74,21 @@ export function PostActions({
           onToggleComments={onToggleComments} 
           isExpanded={commentsExpanded}
         />
+
+        {post.post_type === 'idea' && post.idea && !post.idea.is_participant && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex-1 post-action-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              // La funcionalidad real está en el componente IdeaDisplay
+            }}
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Unirse a la idea
+          </Button>
+        )}
 
         <ShareOptions post={post}>
           <Button variant="ghost" size="sm" className="flex-1 post-action-button">
