@@ -17,6 +17,19 @@ export interface PostTable {
       total_votes: number;
       user_vote: string | null;
     } | null;
+    idea: {
+      description: string;
+      participants: Array<{
+        user_id: string;
+        username: string;
+        avatar_url: string | null;
+        career: string | null;
+        joined_at: string;
+      }>;
+      participants_count: number;
+      is_participant?: boolean;
+    } | null;
+    post_type?: 'regular' | 'poll' | 'idea';
     created_at: string;
     updated_at: string;
     shared_from: string | null;
@@ -39,6 +52,19 @@ export interface PostTable {
       total_votes: number;
       user_vote: string | null;
     } | null;
+    idea?: {
+      description: string;
+      participants: Array<{
+        user_id: string;
+        username: string;
+        avatar_url: string | null;
+        career: string | null;
+        joined_at: string;
+      }>;
+      participants_count: number;
+      is_participant?: boolean;
+    } | null;
+    post_type?: 'regular' | 'poll' | 'idea';
     visibility?: 'public' | 'friends' | 'incognito';
     created_at?: string;
     updated_at?: string;
@@ -62,6 +88,19 @@ export interface PostTable {
       total_votes: number;
       user_vote: string | null;
     } | null;
+    idea?: {
+      description: string;
+      participants: Array<{
+        user_id: string;
+        username: string;
+        avatar_url: string | null;
+        career: string | null;
+        joined_at: string;
+      }>;
+      participants_count: number;
+      is_participant?: boolean;
+    } | null;
+    post_type?: 'regular' | 'poll' | 'idea';
     visibility?: 'public' | 'friends' | 'incognito';
     created_at?: string;
     updated_at?: string;
