@@ -17,6 +17,17 @@ export interface PostTable {
       total_votes: number;
       user_vote: string | null;
     } | null;
+    idea: {
+      title: string;
+      description: string;
+      participants: Array<{
+        user_id: string;
+        profession: string;
+        joined_at: string;
+        username?: string;
+        avatar_url?: string;
+      }>;
+    } | null;
     created_at: string;
     updated_at: string;
     shared_from: string | null;
@@ -38,6 +49,17 @@ export interface PostTable {
       }>;
       total_votes: number;
       user_vote: string | null;
+    } | null;
+    idea?: {
+      title: string;
+      description: string;
+      participants: Array<{
+        user_id: string;
+        profession: string;
+        joined_at: string;
+        username?: string;
+        avatar_url?: string;
+      }>;
     } | null;
     visibility?: 'public' | 'friends' | 'incognito';
     created_at?: string;
@@ -61,6 +83,17 @@ export interface PostTable {
       }>;
       total_votes: number;
       user_vote: string | null;
+    } | null;
+    idea?: {
+      title: string;
+      description: string;
+      participants: Array<{
+        user_id: string;
+        profession: string;
+        joined_at: string;
+        username?: string;
+        avatar_url?: string;
+      }>;
     } | null;
     visibility?: 'public' | 'friends' | 'incognito';
     created_at?: string;

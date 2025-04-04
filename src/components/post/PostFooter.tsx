@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface PostFooterProps {
   onFileSelect: (file: File) => void;
   onPollToggle: () => void;
+  onIdeaToggle: () => void;
   onPublish: () => void;
   isPending: boolean;
   hasContent: boolean;
@@ -18,6 +19,7 @@ interface PostFooterProps {
 export function PostFooter({
   onFileSelect,
   onPollToggle,
+  onIdeaToggle,
   onPublish,
   isPending,
   hasContent,
@@ -30,6 +32,7 @@ export function PostFooter({
         <PostActionButtons 
           onFileSelect={onFileSelect}
           onPollCreate={onPollToggle}
+          onIdeaCreate={onIdeaToggle}
           isPending={isPending}
         />
         

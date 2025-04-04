@@ -2,7 +2,7 @@
 import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AudioRecorder } from "../AudioRecorder";
-import { MousePointerClick, PlusCircle } from "lucide-react";
+import { MousePointerClick, PlusCircle, Lightbulb } from "lucide-react";
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -16,10 +16,16 @@ import { AttachmentInput } from "@/components/AttachmentInput";
 interface PostActionButtonsProps {
   onFileSelect: (file: File) => void;
   onPollCreate: () => void;
+  onIdeaCreate?: () => void;
   isPending: boolean;
 }
 
-export function PostActionButtons({ onFileSelect, onPollCreate, isPending }: PostActionButtonsProps) {
+export function PostActionButtons({ 
+  onFileSelect, 
+  onPollCreate, 
+  onIdeaCreate, 
+  isPending 
+}: PostActionButtonsProps) {
   const [showStoryCreator, setShowStoryCreator] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
@@ -83,6 +89,14 @@ export function PostActionButtons({ onFileSelect, onPollCreate, isPending }: Pos
                 Encuesta
               </Button>
             </DropdownMenuItem>
+            {onIdeaCreate && (
+              <DropdownMenuItem onClick={onIdeaCreate}>
+                <Button variant="ghost" className="w-full flex justify-start">
+                  <Lightbulb className="h-4 w-4 mr-2" />
+                  Idea
+                </Button>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={handleStoryClick}>
               <Button variant="ghost" className="w-full flex justify-start">
                 <PlusCircle className="h-4 w-4 mr-2" />
@@ -117,9 +131,21 @@ export function PostActionButtons({ onFileSelect, onPollCreate, isPending }: Pos
           size="icon"
           onClick={onPollCreate}
           disabled={isPending}
+          title="Crear encuesta"
         >
           Encuesta
         </Button>
+        {onIdeaCreate && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onIdeaCreate}
+            disabled={isPending}
+            title="Crear idea"
+          >
+            <Lightbulb className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {showStoryCreator && currentUserId && (

@@ -12,6 +12,20 @@ export interface Poll {
   user_vote?: string | null;
 }
 
+export interface Idea {
+  title: string;
+  description: string;
+  participants: IdeaParticipant[];
+}
+
+export interface IdeaParticipant {
+  user_id: string;
+  profession: string;
+  joined_at: string;
+  username?: string;
+  avatar_url?: string;
+}
+
 export interface Post {
   id: string;
   content: string;
@@ -22,6 +36,7 @@ export interface Post {
   created_at: string;
   updated_at: string;
   poll?: Poll | null;
+  idea?: Idea | null;
   shared_from?: string | null;
   shared_post?: Post | null; // Original post if this is a shared post
   profiles?: {

@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPost } from "@/lib/api";
 import { PollCreator } from "./post/PollCreator";
+import { IdeaCreator } from "./post/IdeaCreator";
 import { FilePreview } from "./post/FilePreview";
 import { usePostCreator } from "@/hooks/use-post-creator";
 import { PostCreatorHeader } from "./post/PostCreatorHeader";
@@ -35,18 +36,26 @@ export function PostCreator() {
     setMentionListVisible
   } = usePostCreator();
 
+  const [showIdeaCreator, setShowIdeaCreator] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const { mutate: submitPost, isPending } = useMutation({
-    mutationFn: async (pollData?: { question: string; options: string[] }) => {
-      if (!content && !file && !pollData) {
-        throw new Error("Debes agregar texto, un archivo multimedia o una encuesta");
+    mutationFn: async (params: { 
+      pollData?: { question: string; options: string[] },
+      ideaData?: { title: string; description: string }
+    }) => {
+      const { pollData, ideaData } = params;
+      
+      if (!content && !file && !pollData && !ideaData) {
+        throw new Error("Debes agregar texto, un archivo multimedia, una encuesta o una idea");
       }
+      
       return createPost({
         content,
         file,
         pollData,
+        ideaData,
         visibility
       });
     },
@@ -54,6 +63,7 @@ export function PostCreator() {
       setContent("");
       setFile(null);
       setShowPollCreator(false);
+      setShowIdeaCreator(false);
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       toast({
         title: "¡Publicación creada!",
@@ -70,7 +80,11 @@ export function PostCreator() {
   });
 
   const handlePollCreate = (pollData: { question: string; options: string[] }) => {
-    submitPost(pollData);
+    submitPost({ pollData });
+  };
+
+  const handleIdeaCreate = (ideaData: { title: string; description: string }) => {
+    submitPost({ ideaData });
   };
 
   return (
@@ -96,6 +110,13 @@ export function PostCreator() {
           onCancel={() => setShowPollCreator(false)}
         />
       )}
+
+      {showIdeaCreator && (
+        <IdeaCreator
+          onIdeaCreate={handleIdeaCreate}
+          onCancel={() => setShowIdeaCreator(false)}
+        />
+      )}
       
       {file && (
         <FilePreview 
@@ -107,7 +128,8 @@ export function PostCreator() {
       <PostFooter 
         onFileSelect={handleFileChange}
         onPollToggle={() => setShowPollCreator(true)}
-        onPublish={() => submitPost(undefined)}
+        onIdeaToggle={() => setShowIdeaCreator(true)}
+        onPublish={() => submitPost({})}
         isPending={isPending}
         hasContent={!!content || !!file}
         visibility={visibility}

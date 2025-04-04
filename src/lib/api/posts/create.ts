@@ -5,12 +5,13 @@ import { Tables } from "@/types/database";
 import { transformPoll } from "./utils";
 import { uploadMediaFile, getMediaType } from "./storage";
 import { sendNewPostNotifications, sendMentionNotifications } from "./notifications";
-import { CreatePostParams } from "./types";
+import { CreatePostParams, TransformedIdea } from "./types";
 
 export async function createPost({
   content, 
   file = null,
   pollData,
+  ideaData,
   visibility = 'public'
 }: CreatePostParams) {
   try {
@@ -39,6 +40,27 @@ export async function createPost({
       };
     }
 
+    let idea = null;
+    if (ideaData) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', user.id)
+        .single();
+        
+      idea = {
+        title: ideaData.title,
+        description: ideaData.description,
+        participants: [{
+          user_id: user.id,
+          profession: "Creador",
+          joined_at: new Date().toISOString(),
+          username: profileData?.username || undefined,
+          avatar_url: profileData?.avatar_url || undefined
+        }]
+      } as unknown as any; // Usamos un type assertion para evitar problemas de tipo
+    }
+
     // Map the visibility value to match what's expected in the database
     // UI uses "incognito" but database expects "private"
     const dbVisibility: 'public' | 'friends' | 'private' = 
@@ -51,6 +73,7 @@ export async function createPost({
       media_url,
       media_type,
       poll,
+      idea,
       user_id: user.id,
       visibility: dbVisibility
     };
@@ -68,6 +91,7 @@ export async function createPost({
           media_type,
           visibility,
           poll,
+          idea,
           created_at,
           updated_at,
           profiles (
@@ -120,6 +144,7 @@ export async function createPost({
           avatar_url: null
         } : profileData,
         poll: transformPoll(rawPost.poll),
+        idea: rawPost.idea,
         reactions: { count: 0, by_type: {} },
         reactions_count: 0,
         comments_count: 0
