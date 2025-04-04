@@ -82,7 +82,8 @@ export async function createPost({
 
     // First insert the post
     try {
-      const { data: rawPost, error: insertError } = await supabase
+      // Use type assertion for the query result to handle the 'idea' property
+      const { data: rawPostData, error: insertError } = await supabase
         .from('posts')
         .insert(insertData)
         .select(`
@@ -104,7 +105,10 @@ export async function createPost({
         .single();
 
       if (insertError) throw insertError;
-      if (!rawPost) throw new Error('Failed to create post');
+      if (!rawPostData) throw new Error('Failed to create post');
+      
+      // Type assertion to treat rawPostData as any to access properties without type errors
+      const rawPost = rawPostData as any;
       
       // Then get the profile data
       const { data: profileData, error: profileError } = await supabase
@@ -129,27 +133,24 @@ export async function createPost({
       // Determinar si esta es una publicación incógnito
       const isIncognito = uiVisibility === 'incognito';
       
-      // Handle properties safely using type assertion
-      const post = rawPost as any; // Use type assertion to access properties
-      
       // Transform the raw post to match Post type
       const transformedPost: Post = {
-        id: post.id,
-        content: post.content || '',
-        user_id: isIncognito ? 'anonymous' : post.user_id,
-        media_url: post.media_url,
-        media_type: post.media_type as 'image' | 'video' | 'audio' | null,
+        id: rawPost.id,
+        content: rawPost.content || '',
+        user_id: isIncognito ? 'anonymous' : rawPost.user_id,
+        media_url: rawPost.media_url,
+        media_type: rawPost.media_type as 'image' | 'video' | 'audio' | null,
         visibility: uiVisibility as 'public' | 'friends' | 'incognito',
-        created_at: post.created_at,
-        updated_at: post.updated_at,
+        created_at: rawPost.created_at,
+        updated_at: rawPost.updated_at,
         shared_from: null,
         // Para publicaciones incógnito, siempre aseguramos que el perfil sea anónimo
         profiles: isIncognito ? {
           username: 'Anónimo',
           avatar_url: null
         } : profileData,
-        poll: transformPoll(post.poll),
-        idea: post.idea,
+        poll: transformPoll(rawPost.poll),
+        idea: rawPost.idea,
         reactions: { count: 0, by_type: {} },
         reactions_count: 0,
         comments_count: 0
