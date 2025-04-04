@@ -69,6 +69,7 @@ export async function createPost({
       visibility === 'public' ? 'public' : 
       'friends';
 
+    // We need to use type assertion to handle the additional 'idea' property
     const insertData = {
       content,
       media_url,
@@ -77,7 +78,7 @@ export async function createPost({
       idea,
       user_id: user.id,
       visibility: dbVisibility
-    };
+    } as any; // Using type assertion to bypass TypeScript check
 
     // First insert the post
     try {
@@ -104,7 +105,7 @@ export async function createPost({
 
       if (insertError) throw insertError;
       if (!rawPost) throw new Error('Failed to create post');
-
+      
       // Then get the profile data
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -127,25 +128,36 @@ export async function createPost({
       
       // Determinar si esta es una publicación incógnito
       const isIncognito = uiVisibility === 'incognito';
+      
+      // Get properties from rawPost with optional chaining to avoid errors
+      const id = rawPost?.id;
+      const postContent = rawPost?.content || '';
+      const userId = isIncognito ? 'anonymous' : rawPost?.user_id;
+      const mediaUrl = rawPost?.media_url;
+      const mediaType = rawPost?.media_type as 'image' | 'video' | 'audio' | null;
+      const createdAt = rawPost?.created_at;
+      const updatedAt = rawPost?.updated_at;
+      const postPoll = transformPoll(rawPost?.poll);
+      const postIdea = rawPost?.idea;
 
       // Transform the raw post to match Post type
       const post: Post = {
-        id: rawPost.id,
-        content: rawPost.content || '',
-        user_id: isIncognito ? 'anonymous' : rawPost.user_id, // Para incógnito, usar un ID genérico
-        media_url: rawPost.media_url,
-        media_type: rawPost.media_type as 'image' | 'video' | 'audio' | null,
+        id,
+        content: postContent,
+        user_id: userId,
+        media_url: mediaUrl,
+        media_type: mediaType,
         visibility: uiVisibility as 'public' | 'friends' | 'incognito',
-        created_at: rawPost.created_at,
-        updated_at: rawPost.updated_at,
+        created_at: createdAt,
+        updated_at: updatedAt,
         shared_from: null,
         // Para publicaciones incógnito, siempre aseguramos que el perfil sea anónimo
         profiles: isIncognito ? {
           username: 'Anónimo',
           avatar_url: null
         } : profileData,
-        poll: transformPoll(rawPost.poll),
-        idea: rawPost.idea,
+        poll: postPoll,
+        idea: postIdea,
         reactions: { count: 0, by_type: {} },
         reactions_count: 0,
         comments_count: 0

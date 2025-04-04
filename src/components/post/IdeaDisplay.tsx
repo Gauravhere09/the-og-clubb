@@ -76,39 +76,45 @@ export function IdeaDisplay({ idea, postId }: IdeaDisplayProps) {
       // Actualizar la idea en la base de datos
       const updatedParticipants = [...participants, newParticipant];
       
-      // Obtener la idea actual para actualizarla
-      const { data: postData, error: postError } = await supabase
-        .from('posts')
-        .select('idea')
-        .eq('id', postId)
-        .single();
-      
-      if (postError) {
-        throw new Error("No se pudo obtener la publicación");
-      }
-      
-      if (postData && postData.idea) {
-        const updatedIdea = {
-          ...postData.idea,
-          participants: updatedParticipants
-        };
-        
-        const { error } = await supabase
+      try {
+        // Obtener la idea actual para actualizarla
+        const { data, error } = await supabase
           .from('posts')
-          .update({ idea: updatedIdea })
-          .eq('id', postId);
+          .select('*')
+          .eq('id', postId)
+          .single();
         
-        if (error) throw error;
+        if (error) {
+          throw new Error("No se pudo obtener la publicación");
+        }
         
-        // Actualizar el estado local
-        setParticipants(updatedParticipants);
-        setIsCurrentUserJoined(true);
-        setIsJoinDialogOpen(false);
-        
-        toast({
-          title: "¡Te has unido!",
-          description: "Ahora eres parte de esta idea",
-        });
+        if (data) {
+          // Crear el objeto actualizado con type assertion
+          const updatedIdea = {
+            ...idea,
+            participants: updatedParticipants
+          };
+          
+          const { error: updateError } = await supabase
+            .from('posts')
+            .update({ idea: updatedIdea })
+            .eq('id', postId);
+          
+          if (updateError) throw updateError;
+          
+          // Actualizar el estado local
+          setParticipants(updatedParticipants);
+          setIsCurrentUserJoined(true);
+          setIsJoinDialogOpen(false);
+          
+          toast({
+            title: "¡Te has unido!",
+            description: "Ahora eres parte de esta idea",
+          });
+        }
+      } catch (error) {
+        console.error("Error al actualizar la idea:", error);
+        throw error;
       }
     } catch (error) {
       console.error("Error al unirse a la idea:", error);

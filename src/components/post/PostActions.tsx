@@ -102,29 +102,39 @@ export function PostActions({
         throw new Error("Esta publicación no contiene una idea");
       }
 
-      // Actualizar la idea en la base de datos
-      const updatedParticipants = [...(post.idea.participants || []), newParticipant];
-      
-      const updatedIdea = {
-        ...post.idea,
-        participants: updatedParticipants
-      };
-      
-      const { error } = await supabase
-        .from('posts')
-        .update({ idea: updatedIdea })
-        .eq('id', post.id);
-      
-      if (error) throw error;
-      
-      // Actualizar el estado local
-      setIsCurrentUserJoined(true);
-      setIsJoinDialogOpen(false);
-      
-      toast({
-        title: "¡Te has unido!",
-        description: "Ahora eres parte de esta idea",
-      });
+      try {
+        // Actualizar la idea en la base de datos
+        const updatedParticipants = [...(post.idea.participants || []), newParticipant];
+        
+        const updatedIdea = {
+          ...post.idea,
+          participants: updatedParticipants
+        };
+        
+        // Type assertion para añadir la propiedad idea
+        const updateData = {
+          idea: updatedIdea
+        };
+        
+        const { error } = await supabase
+          .from('posts')
+          .update(updateData as any)
+          .eq('id', post.id);
+        
+        if (error) throw error;
+        
+        // Actualizar el estado local
+        setIsCurrentUserJoined(true);
+        setIsJoinDialogOpen(false);
+        
+        toast({
+          title: "¡Te has unido!",
+          description: "Ahora eres parte de esta idea",
+        });
+      } catch (error) {
+        console.error("Error al actualizar la idea:", error);
+        throw error;
+      }
     } catch (error) {
       console.error("Error al unirse a la idea:", error);
       toast({
