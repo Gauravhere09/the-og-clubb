@@ -114,11 +114,11 @@ export function PostActions({
         // Type assertion para añadir la propiedad idea
         const updateData = {
           idea: updatedIdea
-        };
+        } as any;
         
         const { error } = await supabase
           .from('posts')
-          .update(updateData as any)
+          .update(updateData)
           .eq('id', post.id);
         
         if (error) throw error;

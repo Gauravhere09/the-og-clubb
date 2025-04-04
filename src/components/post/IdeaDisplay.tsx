@@ -95,9 +95,14 @@ export function IdeaDisplay({ idea, postId }: IdeaDisplayProps) {
             participants: updatedParticipants
           };
           
+          // Use type assertion for the update operation
+          const updateData = {
+            idea: updatedIdea
+          } as any;
+          
           const { error: updateError } = await supabase
             .from('posts')
-            .update({ idea: updatedIdea })
+            .update(updateData)
             .eq('id', postId);
           
           if (updateError) throw updateError;

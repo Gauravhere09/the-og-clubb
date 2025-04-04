@@ -129,41 +129,33 @@ export async function createPost({
       // Determinar si esta es una publicación incógnito
       const isIncognito = uiVisibility === 'incognito';
       
-      // Get properties from rawPost with optional chaining to avoid errors
-      const id = rawPost?.id;
-      const postContent = rawPost?.content || '';
-      const userId = isIncognito ? 'anonymous' : rawPost?.user_id;
-      const mediaUrl = rawPost?.media_url;
-      const mediaType = rawPost?.media_type as 'image' | 'video' | 'audio' | null;
-      const createdAt = rawPost?.created_at;
-      const updatedAt = rawPost?.updated_at;
-      const postPoll = transformPoll(rawPost?.poll);
-      const postIdea = rawPost?.idea;
-
+      // Handle properties safely using type assertion
+      const post = rawPost as any; // Use type assertion to access properties
+      
       // Transform the raw post to match Post type
-      const post: Post = {
-        id,
-        content: postContent,
-        user_id: userId,
-        media_url: mediaUrl,
-        media_type: mediaType,
+      const transformedPost: Post = {
+        id: post.id,
+        content: post.content || '',
+        user_id: isIncognito ? 'anonymous' : post.user_id,
+        media_url: post.media_url,
+        media_type: post.media_type as 'image' | 'video' | 'audio' | null,
         visibility: uiVisibility as 'public' | 'friends' | 'incognito',
-        created_at: createdAt,
-        updated_at: updatedAt,
+        created_at: post.created_at,
+        updated_at: post.updated_at,
         shared_from: null,
         // Para publicaciones incógnito, siempre aseguramos que el perfil sea anónimo
         profiles: isIncognito ? {
           username: 'Anónimo',
           avatar_url: null
         } : profileData,
-        poll: postPoll,
-        idea: postIdea,
+        poll: transformPoll(post.poll),
+        idea: post.idea,
         reactions: { count: 0, by_type: {} },
         reactions_count: 0,
         comments_count: 0
       };
 
-      return post;
+      return transformedPost;
     } catch (err) {
       console.error("Error in post creation:", err);
       throw err;
