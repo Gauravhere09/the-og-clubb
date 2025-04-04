@@ -77,11 +77,15 @@ export function IdeaDisplay({ idea, postId }: IdeaDisplayProps) {
       const updatedParticipants = [...participants, newParticipant];
       
       // Obtener la idea actual para actualizarla
-      const { data: postData } = await supabase
+      const { data: postData, error: postError } = await supabase
         .from('posts')
         .select('idea')
         .eq('id', postId)
         .single();
+      
+      if (postError) {
+        throw new Error("No se pudo obtener la publicación");
+      }
       
       if (postData && postData.idea) {
         const updatedIdea = {

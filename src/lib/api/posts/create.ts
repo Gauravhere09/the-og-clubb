@@ -6,6 +6,7 @@ import { transformPoll } from "./utils";
 import { uploadMediaFile, getMediaType } from "./storage";
 import { sendNewPostNotifications, sendMentionNotifications } from "./notifications";
 import { CreatePostParams, TransformedIdea } from "./types";
+import { Json } from "@/integrations/supabase/types";
 
 export async function createPost({
   content, 
@@ -58,7 +59,7 @@ export async function createPost({
           username: profileData?.username || undefined,
           avatar_url: profileData?.avatar_url || undefined
         }]
-      } as unknown as any; // Usamos un type assertion para evitar problemas de tipo
+      };
     }
 
     // Map the visibility value to match what's expected in the database
