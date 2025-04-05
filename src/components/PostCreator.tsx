@@ -96,7 +96,7 @@ export function PostCreator() {
   };
 
   return (
-    <Card className="p-4 space-y-4">
+    <Card className="p-4 space-y-4 shadow-sm border-gray-200">
       <PostCreatorHeader 
         currentUser={currentUser}
         content={content}

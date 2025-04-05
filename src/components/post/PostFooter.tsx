@@ -28,28 +28,29 @@ export function PostFooter({
 }: PostFooterProps) {
   return (
     <div className="flex items-center justify-between mt-2">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center">
         <PostActionButtons 
           onFileSelect={onFileSelect}
           onPollCreate={onPollToggle}
           onIdeaCreate={onIdeaToggle}
           isPending={isPending}
         />
-        
-        <div className="mx-2">
-          <VisibilitySelector 
-            visibility={visibility} 
-            onVisibilityChange={onVisibilityChange} 
-          />
-        </div>
       </div>
       
-      <Button 
-        onClick={onPublish}
-        disabled={isPending || !hasContent}
-      >
-        Publicar
-      </Button>
+      <div className="flex items-center gap-2">
+        <VisibilitySelector 
+          visibility={visibility} 
+          onVisibilityChange={onVisibilityChange} 
+        />
+        
+        <Button 
+          onClick={onPublish}
+          disabled={isPending || !hasContent}
+          className="bg-gray-500 hover:bg-gray-600 text-white px-6"
+        >
+          Publicar
+        </Button>
+      </div>
     </div>
   );
 }

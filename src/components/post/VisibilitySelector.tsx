@@ -26,38 +26,36 @@ export function VisibilitySelector({ visibility, onVisibilityChange }: Visibilit
   };
 
   return (
-    <div className="flex items-center">
-      <Select
-        value={visibility}
-        onValueChange={(val) => onVisibilityChange(val as Visibility)}
-      >
-        <SelectTrigger className="w-40">
+    <Select
+      value={visibility}
+      onValueChange={(val) => onVisibilityChange(val as Visibility)}
+    >
+      <SelectTrigger className="w-[120px] h-10 bg-transparent border-none focus:ring-0">
+        <div className="flex items-center">
+          {getVisibilityIcon()}
+          <SelectValue />
+        </div>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="public">
           <div className="flex items-center">
-            {getVisibilityIcon()}
-            <SelectValue />
+            <Globe className="h-4 w-4 mr-2" />
+            <span>Público</span>
           </div>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="public">
-            <div className="flex items-center">
-              <Globe className="h-4 w-4 mr-2" />
-              <span>Público</span>
-            </div>
-          </SelectItem>
-          <SelectItem value="friends">
-            <div className="flex items-center">
-              <Users className="h-4 w-4 mr-2" />
-              <span>Seguidores</span>
-            </div>
-          </SelectItem>
-          <SelectItem value="incognito">
-            <div className="flex items-center">
-              <EyeOff className="h-4 w-4 mr-2" />
-              <span>Incógnito</span>
-            </div>
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+        </SelectItem>
+        <SelectItem value="friends">
+          <div className="flex items-center">
+            <Users className="h-4 w-4 mr-2" />
+            <span>Seguidores</span>
+          </div>
+        </SelectItem>
+        <SelectItem value="incognito">
+          <div className="flex items-center">
+            <EyeOff className="h-4 w-4 mr-2" />
+            <span>Incógnito</span>
+          </div>
+        </SelectItem>
+      </SelectContent>
+    </Select>
   );
 }

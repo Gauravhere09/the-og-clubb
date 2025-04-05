@@ -51,7 +51,7 @@ export function PostActionButtons({
   };
 
   return (
-    <div className="flex gap-4">
+    <div className="flex">
       {/* Mobile dropdown menu with click icon */}
       <div className="md:hidden">
         <DropdownMenu>
@@ -107,8 +107,8 @@ export function PostActionButtons({
         </DropdownMenu>
       </div>
 
-      {/* Desktop buttons - Aumentamos el espaciado con gap-4 */}
-      <div className="hidden md:flex gap-4">
+      {/* Desktop buttons */}
+      <div className="hidden md:flex items-center space-x-1">
         <AttachmentInput
           type="image"
           onAttachmentChange={handleFileSelect}
@@ -116,7 +116,7 @@ export function PostActionButtons({
           buttonSize="icon"
           buttonVariant="ghost"
           disabled={isPending}
-          className="px-1"
+          buttonClassName="h-10 w-10 p-0 text-gray-500"
         />
         <AttachmentInput
           type="video"
@@ -125,27 +125,25 @@ export function PostActionButtons({
           buttonSize="icon"
           buttonVariant="ghost"
           disabled={isPending}
-          className="px-1"
+          buttonClassName="h-10 w-10 p-0 text-gray-500"
         />
         <AudioRecorder onRecordingComplete={(blob) => onFileSelect(new File([blob], "audio.webm", { type: "audio/webm" }))} />
         <Button
           variant="ghost"
-          size="icon"
-          onClick={onPollCreate}
           disabled={isPending}
           title="Crear encuesta"
-          className="px-2"
+          onClick={onPollCreate}
+          className="h-10 text-sm font-normal px-2 text-gray-500"
         >
           Encuesta
         </Button>
         {onIdeaCreate && (
           <Button
             variant="ghost"
-            size="icon"
-            onClick={onIdeaCreate}
             disabled={isPending}
             title="Crear idea"
-            className="px-2"
+            onClick={onIdeaCreate}
+            className="h-10 text-gray-500"
           >
             <Lightbulb className="h-4 w-4" />
           </Button>

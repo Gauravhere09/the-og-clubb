@@ -47,7 +47,7 @@ export function PostCreatorHeader({
           onChange={handleTextAreaChange}
           onKeyDown={handleKeyDown}
           placeholder="¿Qué estás pensando?"
-          className="w-full min-h-[80px] resize-none border-0 bg-transparent p-0 focus-visible:ring-0 text-sm sm:text-base"
+          className="w-full min-h-[40px] resize-none border-0 bg-transparent p-0 focus-visible:ring-0 text-sm sm:text-base"
         />
         
         {mentionListVisible && (
