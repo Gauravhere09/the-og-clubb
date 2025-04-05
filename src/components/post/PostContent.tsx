@@ -23,6 +23,11 @@ export function PostContent({ post, postId }: PostContentProps) {
     }
   };
 
+  if (!post) {
+    console.error("Post is undefined in PostContent");
+    return null;
+  }
+
   return (
     <div className="space-y-4">
       {/* Idea content - Si es una idea, mostrarla primero */}

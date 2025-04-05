@@ -25,11 +25,21 @@ export function useIdeaJoin(idea: Idea, postId: string) {
         setCurrentUserId(user.id);
         const userJoined = participants.some(p => p.user_id === user.id) || false;
         setIsCurrentUserJoined(userJoined);
+        
+        // Add to window for debugging
+        (window as any).currentUserId = user.id;
+        
+        console.log("useIdeaJoin - User join status:", {
+          userId: user.id,
+          postId,
+          isJoined: userJoined,
+          participants
+        });
       }
     };
     
     checkCurrentUser();
-  }, [participants]);
+  }, [participants, postId]);
 
   const handleJoinIdea = async (profession: string) => {
     if (!profession.trim()) {
@@ -87,6 +97,8 @@ export function useIdeaJoin(idea: Idea, postId: string) {
         .eq('id', postId);
       
       if (error) throw error;
+      
+      console.log("Updated idea participants in IdeaDisplay:", updatedParticipants);
       
       // Actualizar el estado local
       setParticipants(updatedParticipants);

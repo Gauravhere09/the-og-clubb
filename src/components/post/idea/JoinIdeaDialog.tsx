@@ -27,7 +27,7 @@ export function JoinIdeaDialog({
     setIsLoading(true);
     try {
       await onJoin(profession);
-      setProfession("");
+      setProfession(""); // Reset the input after successful join
     } catch (error) {
       console.error("Error al unirse a la idea:", error);
     } finally {

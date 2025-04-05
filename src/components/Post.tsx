@@ -9,6 +9,7 @@ import { SharedPostContent } from "./post/SharedPostContent";
 import { usePost } from "@/hooks/use-post";
 import { PostWrapper } from "./post/PostWrapper";
 import { PostOptionsMenu } from "./post/actions/PostOptionsMenu";
+import { useEffect } from "react";
 
 interface PostProps {
   post: PostType;
@@ -41,6 +42,13 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
   // Determine if this is an idea post by checking idea property
   const isIdeaPost = !!post.idea;
 
+  // For debugging
+  useEffect(() => {
+    if (isIdeaPost) {
+      console.log("This is an idea post:", post.id, post.idea);
+    }
+  }, [isIdeaPost, post.id, post.idea]);
+
   return (
     <PostWrapper isHidden={isHidden} isIdeaPost={isIdeaPost}>
       <PostHeader 
@@ -49,6 +57,7 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
         isAuthor={isCurrentUserAuthor}
         isHidden={isHidden}
         content={post.content || ""}
+        isIdeaPost={isIdeaPost}
       />
       
       {isSharedPost ? (

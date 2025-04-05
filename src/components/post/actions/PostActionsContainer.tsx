@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { Post } from "@/types/post";
 import { ReactionType } from "@/components/post/reactions/ReactionIcons";
 import { ActionsSummary } from "./ActionsSummary";
@@ -39,6 +39,18 @@ export function PostActionsContainer({
     handleJoinIdea,
     showJoinButton
   } = useJoinIdeaDialog(post);
+
+  // Log state for debugging
+  useEffect(() => {
+    if (post.idea) {
+      console.log("PostActionsContainer for idea post:", post.id, {
+        isJoinDialogOpen,
+        isCurrentUserJoined,
+        showJoinButton,
+        idea: post.idea
+      });
+    }
+  }, [post.id, post.idea, isJoinDialogOpen, isCurrentUserJoined, showJoinButton]);
 
   // Manejador local para evitar duplicación de actualizaciones de UI
   const handleReaction = (type: ReactionType) => {

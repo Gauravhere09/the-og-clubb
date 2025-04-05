@@ -18,8 +18,18 @@ export function useJoinIdeaDialog(post: Post) {
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           setCurrentUserId(user.id);
-          const userJoined = post.idea?.participants.some(p => p.user_id === user.id) || false;
+          // Check if the user is already in the participants array
+          const userJoined = post.idea?.participants?.some(p => p.user_id === user.id) || false;
           setIsCurrentUserJoined(userJoined);
+          
+          // Add to window for debugging
+          (window as any).currentUserId = user.id;
+          
+          console.log("User join status:", {
+            userId: user.id,
+            isJoined: userJoined,
+            participants: post.idea?.participants
+          });
         }
       };
       
@@ -70,7 +80,10 @@ export function useJoinIdeaDialog(post: Post) {
 
       try {
         // Actualizar la idea en la base de datos
-        const updatedParticipants = [...(post.idea.participants || []), newParticipant];
+        const updatedParticipants = [
+          ...(post.idea.participants || []), 
+          newParticipant
+        ];
         
         const updatedIdea = {
           ...post.idea,
@@ -88,6 +101,8 @@ export function useJoinIdeaDialog(post: Post) {
           .eq('id', post.id);
         
         if (error) throw error;
+        
+        console.log("Updated idea participants:", updatedParticipants);
         
         // Actualizar el estado local
         setIsCurrentUserJoined(true);

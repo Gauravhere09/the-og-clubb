@@ -23,9 +23,10 @@ interface PostHeaderProps {
   isAuthor?: boolean;
   isHidden?: boolean;
   content: string;
+  isIdeaPost?: boolean;
 }
 
-export function PostHeader({ post, onDelete, isAuthor, isHidden, content }: PostHeaderProps) {
+export function PostHeader({ post, onDelete, isAuthor, isHidden, content, isIdeaPost = false }: PostHeaderProps) {
   const [showFullContent, setShowFullContent] = useState(false);
   const [open, setOpen] = useState(false);
   const isLongContent = content?.length > 300;
@@ -33,9 +34,6 @@ export function PostHeader({ post, onDelete, isAuthor, isHidden, content }: Post
   
   // Determinar si el post es anónimo basado en el valor de visibility
   const isIncognito = post.visibility === 'incognito';
-  
-  // Determinar si es una idea
-  const isIdea = post.idea !== null && post.idea !== undefined;
   
   // Obtener el icono de visibilidad correcto
   const getVisibilityIcon = () => {
@@ -63,7 +61,7 @@ export function PostHeader({ post, onDelete, isAuthor, isHidden, content }: Post
         </Avatar>
         
         <div className="flex flex-col">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-wrap">
             {/* Si es anónimo, mostrar "Anónimo", de lo contrario mostrar el nombre de usuario */}
             {isIncognito ? (
               <span className="font-medium">Anónimo</span>
@@ -74,13 +72,13 @@ export function PostHeader({ post, onDelete, isAuthor, isHidden, content }: Post
             )}
             
             {/* Mostrar el icono de idea si es una idea */}
-            {isIdea && (
+            {isIdeaPost && (
               <>
                 <span className="text-xs text-muted-foreground px-1">•</span>
-                <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                  <Lightbulb className="h-4 w-4" />
-                  <span className="text-xs">Idea</span>
-                </span>
+                <Badge variant="idea" className="flex items-center gap-1 py-1">
+                  <Lightbulb className="h-3.5 w-3.5" />
+                  <span>Idea</span>
+                </Badge>
               </>
             )}
             
