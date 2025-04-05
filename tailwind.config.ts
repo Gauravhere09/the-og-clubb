@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -24,7 +23,7 @@ export default {
         background: "240 100% 99%", // Almost pure white
         foreground: "240 10% 10%", // Nearly black text
         primary: {
-          DEFAULT: "#0D7AFF", // Vibrant blue like in the image
+          DEFAULT: "#1A73E8", // Nuevo color azul solicitado
           foreground: "240 100% 99%", // White text on blue
         },
         secondary: {
@@ -37,7 +36,7 @@ export default {
           background: "240 10% 3.9%", // Nearly black background
           foreground: "0 0% 98%", // Nearly white text
           primary: {
-            DEFAULT: "#2C5EFF", // Dark, deep blue
+            DEFAULT: "#1A73E8", // Mantenemos el mismo azul en dark mode
             foreground: "0 0% 98%", // White text
           },
           secondary: {
@@ -94,4 +93,3 @@ export default {
   },
   plugins: [require("tailwindcss-animate")],
 } satisfies Config;
-
