@@ -6,6 +6,7 @@ import { ParticipantsList } from "./idea/ParticipantsList";
 import { JoinIdeaDialog } from "./idea/JoinIdeaDialog";
 import { useIdeaJoin } from "./idea/useIdeaJoin";
 import { Separator } from "@/components/ui/separator";
+import { Users } from "lucide-react";
 
 interface IdeaDisplayProps {
   idea: Idea;
@@ -24,32 +25,22 @@ export function IdeaDisplay({ idea, postId }: IdeaDisplayProps) {
   return (
     <div className="border border-border rounded-md bg-blue-50/30 dark:bg-blue-900/10 space-y-3">
       <div className="p-4">
-        <IdeaHeader title={idea.title} description={idea.description} />
+        <p className="text-sm md:text-base whitespace-pre-wrap break-words">
+          {idea.description}
+        </p>
       </div>
       
       {participants.length > 0 && (
         <>
           <Separator />
-          <div className="px-4 py-3">
-            <ParticipantsList participants={participants} />
+          <div className="px-4 py-2">
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Users className="h-4 w-4 mr-2" />
+              <span>{participants.length} {participants.length === 1 ? 'persona se ha unido' : 'personas se han unido'}</span>
+            </div>
           </div>
         </>
       )}
-      
-      <div className="p-4 pt-0 flex justify-end">
-        {isCurrentUserJoined ? (
-          <Button variant="outline" className="text-primary border-primary hover:bg-primary/10" disabled>
-            Unido
-          </Button>
-        ) : (
-          <Button 
-            onClick={() => setIsJoinDialogOpen(true)}
-            className="bg-primary hover:bg-primary/90 text-white"
-          >
-            Unirme
-          </Button>
-        )}
-      </div>
       
       <JoinIdeaDialog 
         isOpen={isJoinDialogOpen}
