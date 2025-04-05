@@ -112,3 +112,37 @@
 .creator-toolbar-icon {
   @apply mx-2 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800;
 }
+
+/* Estilo específico para las publicaciones en el feed */
+.feed-container {
+  @apply mx-auto;
+}
+
+/* Responsive y centrado para móviles */
+@media (max-width: 768px) {
+  /* Ajustar márgenes y ancho en móvil */
+  .feed-container {
+    @apply px-2;
+    max-width: 100%;
+  }
+  
+  /* Mejor espaciado de publicaciones en móvil */
+  .post-wrapper {
+    @apply mb-3;
+  }
+  
+  /* Ajustes específicos para asemejarse al diseño de las referencias */
+  .post-actions {
+    @apply justify-between py-1;
+  }
+  
+  .post-action-button {
+    @apply flex justify-center items-center;
+  }
+  
+  /* Centrar contenido de las publicaciones */
+  .post-content img,
+  .post-content video {
+    @apply mx-auto;
+  }
+}

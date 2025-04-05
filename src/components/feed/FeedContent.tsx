@@ -20,7 +20,7 @@ export function FeedContent({
     if (!showHidden || hiddenPosts.length === 0) return null;
     
     return hiddenPosts.map(post => (
-      <div key={post.id} className="relative mb-3">
+      <div key={post.id} className="relative mb-4">
         <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 opacity-10 z-0 pointer-events-none"></div>
         <Post key={post.id} post={post} isHidden={true} />
       </div>
@@ -36,7 +36,7 @@ export function FeedContent({
     for (let i = 0; i < allPosts.length; i++) {
       // Add a post
       feedContent.push(
-        <div key={allPosts[i].id} className="mb-3">
+        <div key={allPosts[i].id} className="mb-4">
           <Post post={allPosts[i]} />
         </div>
       );
@@ -44,7 +44,9 @@ export function FeedContent({
       // Add People You May Know after 5 posts on desktop, after 6 on mobile
       if ((isMobile ? i === 6 : i === 4) && !feedContent.some(item => item.key === "people-you-may-know")) {
         feedContent.push(
-          <PeopleYouMayKnow key="people-you-may-know" />
+          <div key="people-you-may-know" className="mb-4">
+            <PeopleYouMayKnow />
+          </div>
         );
       }
     }

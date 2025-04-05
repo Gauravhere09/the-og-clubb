@@ -49,7 +49,6 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
         content={post.content || ""}
       />
       
-      {/* El resto del componente se mantiene igual */}
       {isSharedPost ? (
         <SharedPostView post={post} />
       ) : (
