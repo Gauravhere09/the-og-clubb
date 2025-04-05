@@ -77,6 +77,7 @@ export function ActionsButtons({
             variant="ghost" 
             size="sm" 
             className="flex-1 post-action-button text-blue-600 dark:text-blue-400"
+            disabled
           >
             <Users className="h-4 w-4 mr-2" />
             Unido

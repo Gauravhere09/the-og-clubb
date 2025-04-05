@@ -33,7 +33,7 @@ export function PostContent({ post, postId }: PostContentProps) {
         />
       )}
       
-      {/* Post text content - Sólo mostrar si no es una idea */}
+      {/* Post text content - Solo mostrar si no es una idea */}
       {post.content && !hasIdea && (
         <div className="text-sm whitespace-pre-wrap break-words">
           <MentionsText content={post.content} />

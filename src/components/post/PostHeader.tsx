@@ -15,6 +15,7 @@ import { es } from "date-fns/locale";
 import { Link } from "react-router-dom";
 import type { Post } from "@/types/post";
 import { PostOptionsMenu } from "./actions/PostOptionsMenu";
+import { Badge } from "@/components/ui/badge";
 
 interface PostHeaderProps {
   post: Post;

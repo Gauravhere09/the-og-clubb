@@ -1,16 +1,19 @@
 
-import { Idea } from "@/types/post";
+import { Badge } from "@/components/ui/badge";
+import { Lightbulb } from "lucide-react";
 
 interface IdeaHeaderProps {
   title: string;
-  description: string;
 }
 
-export function IdeaHeader({ title, description }: IdeaHeaderProps) {
+export function IdeaHeader({ title }: IdeaHeaderProps) {
   return (
-    <div className="space-y-2">
-      <h3 className="text-lg font-medium">{title}</h3>
-      <p className="text-sm whitespace-pre-wrap">{description}</p>
+    <div className="flex items-center gap-2 mb-3">
+      <Badge variant="idea" className="flex items-center gap-1 py-1">
+        <Lightbulb className="h-3.5 w-3.5" />
+        <span>Idea</span>
+      </Badge>
+      <h3 className="text-lg font-medium text-blue-700 dark:text-blue-300">{title}</h3>
     </div>
   );
 }

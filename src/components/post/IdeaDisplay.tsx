@@ -43,6 +43,32 @@ export function IdeaDisplay({ idea, postId }: IdeaDisplayProps) {
         <ParticipantsList participants={participants} />
       </div>
       
+      {!isCurrentUserJoined && (
+        <div className="px-4 pb-3">
+          <Button 
+            onClick={() => setIsJoinDialogOpen(true)}
+            variant="outline" 
+            className="w-full bg-blue-100 hover:bg-blue-200 text-blue-700 border-blue-300 dark:bg-blue-900/40 dark:hover:bg-blue-800/60 dark:text-blue-300 dark:border-blue-700"
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Unirme a esta idea
+          </Button>
+        </div>
+      )}
+      
+      {isCurrentUserJoined && (
+        <div className="px-4 pb-3">
+          <Button 
+            variant="outline" 
+            className="w-full bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:border-blue-800"
+            disabled
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Ya te has unido
+          </Button>
+        </div>
+      )}
+      
       <JoinIdeaDialog 
         isOpen={isJoinDialogOpen}
         onOpenChange={setIsJoinDialogOpen}
