@@ -1,35 +1,40 @@
 
 import React from "react";
-import type { Post } from "@/types/post";
-import { type ReactionType } from "./reactions/ReactionIcons";
+import { Post } from "@/types/post";
 import { PostActionsContainer } from "./actions/PostActionsContainer";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ReactionType } from "@/components/post/reactions/ReactionIcons";
 
 interface PostActionsProps {
   post: Post;
   onReaction: (type: ReactionType) => void;
   onToggleComments: () => void;
-  onCommentsClick: () => void;
+  onCommentsClick?: () => void;
   commentsExpanded?: boolean;
 }
 
 export function PostActions({ 
   post, 
   onReaction, 
-  onToggleComments,
+  onToggleComments, 
   onCommentsClick,
   commentsExpanded = false
 }: PostActionsProps) {
-  // Determine if this is an idea post
-  const isIdeaPost = !!post.idea;
+  const isMobile = useIsMobile();
+  
+  // Verificar si es un post de idea
+  const isIdeaPost = post.idea !== null && post.idea !== undefined;
   
   return (
-    <PostActionsContainer
-      post={post}
-      onReaction={onReaction}
-      onToggleComments={onToggleComments}
-      onCommentsClick={onCommentsClick}
-      commentsExpanded={commentsExpanded}
-      isIdeaPost={isIdeaPost}
-    />
+    <div className="py-2">
+      <PostActionsContainer 
+        post={post}
+        onReaction={onReaction}
+        onToggleComments={onToggleComments}
+        onCommentsClick={onCommentsClick || onToggleComments}
+        commentsExpanded={commentsExpanded}
+        isIdeaPost={isIdeaPost}
+      />
+    </div>
   );
 }

@@ -1,14 +1,12 @@
 
 import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { JoinIdeaDialog } from "@/components/post/idea/JoinIdeaDialog";
 
 interface JoinIdeaDialogWrapperProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   profession: string;
-  setProfession: (value: string) => void;
+  setProfession: (profession: string) => void;
   onJoin: () => Promise<void>;
   ideaTitle?: string;
 }
@@ -21,34 +19,20 @@ export function JoinIdeaDialogWrapper({
   onJoin,
   ideaTitle
 }: JoinIdeaDialogWrapperProps) {
+  const handleSubmit = async () => {
+    try {
+      await onJoin();
+    } catch (error) {
+      console.error("Error al unirse a la idea:", error);
+    }
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Unirse a la idea: {ideaTitle}</DialogTitle>
-          <DialogDescription>
-            Comparte tu profesión para que el creador de la idea sepa cómo puedes contribuir.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="py-4">
-          <Input
-            placeholder="Tu profesión o habilidad"
-            value={profession}
-            onChange={(e) => setProfession(e.target.value)}
-          />
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancelar
-          </Button>
-          <Button 
-            onClick={onJoin}
-            disabled={!profession.trim()}
-          >
-            Unirme a la idea
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <JoinIdeaDialog 
+      isOpen={isOpen}
+      onOpenChange={onOpenChange}
+      onJoin={handleSubmit}
+      ideaTitle={ideaTitle}
+    />
   );
 }

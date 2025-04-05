@@ -42,10 +42,7 @@ export function IdeaDisplay({ idea, postId }: IdeaDisplayProps) {
         <>
           <Separator />
           <div className="px-4 py-2">
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Users className="h-4 w-4 mr-2" />
-              <span>{participants.length} {participants.length === 1 ? 'persona se ha unido' : 'personas se han unido'}</span>
-            </div>
+            <ParticipantsList participants={participants} />
           </div>
         </>
       )}
