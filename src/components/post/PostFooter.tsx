@@ -27,8 +27,8 @@ export function PostFooter({
   onVisibilityChange
 }: PostFooterProps) {
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2">
+    <div className="flex items-center justify-between mt-2">
+      <div className="flex items-center gap-4">
         <PostActionButtons 
           onFileSelect={onFileSelect}
           onPollCreate={onPollToggle}
@@ -36,10 +36,12 @@ export function PostFooter({
           isPending={isPending}
         />
         
-        <VisibilitySelector 
-          visibility={visibility} 
-          onVisibilityChange={onVisibilityChange} 
-        />
+        <div className="mx-2">
+          <VisibilitySelector 
+            visibility={visibility} 
+            onVisibilityChange={onVisibilityChange} 
+          />
+        </div>
       </div>
       
       <Button 

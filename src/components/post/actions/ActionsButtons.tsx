@@ -30,7 +30,7 @@ export function ActionsButtons({
   onJoinClick
 }: ActionsButtonsProps) {
   return (
-    <div className="flex gap-1 border-t border-b py-1 post-actions">
+    <div className="flex gap-2 border-t border-b py-1 post-actions">
       <LongPressReactionButton 
         userReaction={userReaction} 
         onReactionClick={handleReaction}
@@ -40,10 +40,11 @@ export function ActionsButtons({
       <CommentButton 
         onToggleComments={onToggleComments} 
         isExpanded={commentsExpanded}
+        className="mx-1"
       />
 
       <ShareOptions post={post}>
-        <Button variant="ghost" size="sm" className="flex-1 post-action-button">
+        <Button variant="ghost" size="sm" className="flex-1 post-action-button mx-1">
           <Share className="h-4 w-4 mr-2" />
           Compartir
         </Button>
@@ -54,7 +55,7 @@ export function ActionsButtons({
         <Button 
           variant="ghost" 
           size="sm" 
-          className="flex-1 post-action-button text-primary" 
+          className="flex-1 post-action-button text-primary mx-1" 
           onClick={onJoinClick}
         >
           <Briefcase className="h-4 w-4 mr-2" />

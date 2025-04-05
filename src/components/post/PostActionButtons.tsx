@@ -51,7 +51,7 @@ export function PostActionButtons({
   };
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-4">
       {/* Mobile dropdown menu with click icon */}
       <div className="md:hidden">
         <DropdownMenu>
@@ -107,8 +107,8 @@ export function PostActionButtons({
         </DropdownMenu>
       </div>
 
-      {/* Desktop buttons */}
-      <div className="hidden md:flex gap-2">
+      {/* Desktop buttons - Aumentamos el espaciado con gap-4 */}
+      <div className="hidden md:flex gap-4">
         <AttachmentInput
           type="image"
           onAttachmentChange={handleFileSelect}
@@ -116,6 +116,7 @@ export function PostActionButtons({
           buttonSize="icon"
           buttonVariant="ghost"
           disabled={isPending}
+          className="px-1"
         />
         <AttachmentInput
           type="video"
@@ -124,6 +125,7 @@ export function PostActionButtons({
           buttonSize="icon"
           buttonVariant="ghost"
           disabled={isPending}
+          className="px-1"
         />
         <AudioRecorder onRecordingComplete={(blob) => onFileSelect(new File([blob], "audio.webm", { type: "audio/webm" }))} />
         <Button
@@ -132,6 +134,7 @@ export function PostActionButtons({
           onClick={onPollCreate}
           disabled={isPending}
           title="Crear encuesta"
+          className="px-2"
         >
           Encuesta
         </Button>
@@ -142,6 +145,7 @@ export function PostActionButtons({
             onClick={onIdeaCreate}
             disabled={isPending}
             title="Crear idea"
+            className="px-2"
           >
             <Lightbulb className="h-4 w-4" />
           </Button>

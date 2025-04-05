@@ -93,7 +93,22 @@
   @apply flex-1 justify-center py-2 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium;
 }
 
+/* Añadir espacio adicional a los iconos de acción de publicación */
+.post-creator-icon {
+  @apply px-2 mx-1;
+}
+
 /* Add some additional styling for reaction menus */
 .reaction-menu {
   @apply absolute top-0 left-0 transform -translate-y-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-md z-50;
+}
+
+/* Mejorar el espaciado en los botones de acción de publicación */
+.post-actions-container .button-icon {
+  @apply mx-2;
+}
+
+/* Crear estilos para los iconos de la barra de herramientas del creador de publicaciones */
+.creator-toolbar-icon {
+  @apply mx-2 p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800;
 }
