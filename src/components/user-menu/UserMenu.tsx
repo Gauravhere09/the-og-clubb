@@ -47,7 +47,7 @@ export function UserMenu() {
           <Menu className="h-4 w-4" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="p-0 w-full sm:max-w-lg">
+      <SheetContent side="left" className="p-0 w-full sm:max-w-lg bg-white dark:bg-gray-900">
         <div className="flex flex-col h-full bg-white dark:bg-gray-900">
           {/* Header */}
           <MenuHeader onClose={handleClose} />

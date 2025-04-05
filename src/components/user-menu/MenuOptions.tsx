@@ -57,7 +57,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
   };
 
   return (
-    <div className="grid gap-2 px-4">
+    <div className="grid gap-2 px-4 bg-white dark:bg-gray-900">
       {/* Create New Account */}
       <Button
         variant="outline"
