@@ -38,6 +38,8 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
 
   // Determine if this is a shared post by checking shared_post
   const isSharedPost = !!post.shared_post;
+  // Determine if this is an idea post by checking idea property
+  const isIdeaPost = !!post.idea;
 
   return (
     <PostWrapper isHidden={isHidden}>

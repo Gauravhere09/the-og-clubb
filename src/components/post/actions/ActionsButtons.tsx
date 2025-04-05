@@ -66,10 +66,10 @@ export function ActionsButtons({
           <Button 
             variant="ghost" 
             size="sm" 
-            className="flex-1 post-action-button text-primary" 
+            className="flex-1 post-action-button text-blue-600 dark:text-blue-400" 
             onClick={onJoinClick}
           >
-            <Briefcase className="h-4 w-4 mr-2" />
+            <Users className="h-4 w-4 mr-2" />
             Unirme
           </Button>
         ) : (

@@ -20,27 +20,30 @@ export function ParticipantsList({ participants }: ParticipantsListProps) {
   return (
     <>
       <div className="flex items-center space-x-2">
-        <Users className="h-4 w-4 text-muted-foreground" />
+        <Users className="h-4 w-4 text-blue-500" />
         
         <div className="flex -space-x-2 overflow-hidden">
           {participants.slice(0, 3).map((participant, index) => (
-            <Avatar key={index} className="border-2 border-background w-6 h-6">
+            <Avatar key={index} className="border-2 border-white dark:border-gray-800 w-6 h-6">
               <AvatarImage src={participant.avatar_url} />
               <AvatarFallback>{participant.username?.[0] || "U"}</AvatarFallback>
             </Avatar>
           ))}
           {participants.length > 3 && (
-            <div className="relative flex items-center justify-center w-6 h-6 rounded-full bg-muted border-2 border-background text-xs">
+            <div className="relative flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-800 border-2 border-white dark:border-gray-800 text-xs text-blue-500 dark:text-blue-300">
               +{participants.length - 3}
             </div>
           )}
         </div>
         
-        <span className="text-sm text-muted-foreground">
+        <button 
+          onClick={() => setShowParticipants(true)} 
+          className="text-sm text-blue-500 dark:text-blue-400 hover:underline"
+        >
           {participants.length === 1
             ? "1 persona se ha unido"
             : `${participants.length} personas se han unido`}
-        </span>
+        </button>
       </div>
 
       {/* Diálogo para mostrar participantes */}

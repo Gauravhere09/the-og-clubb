@@ -25,7 +25,15 @@ export function PostContent({ post, postId }: PostContentProps) {
 
   return (
     <div className="space-y-4">
-      {/* Post text content - If it's an idea post, we don't show the content here */}
+      {/* Idea content - Si es una idea, mostrarla primero */}
+      {hasIdea && post.idea && (
+        <IdeaDisplay 
+          idea={post.idea} 
+          postId={postId}
+        />
+      )}
+      
+      {/* Post text content - Sólo mostrar si no es una idea */}
       {post.content && !hasIdea && (
         <div className="text-sm whitespace-pre-wrap break-words">
           <MentionsText content={post.content} />
@@ -58,14 +66,6 @@ export function PostContent({ post, postId }: PostContentProps) {
           poll={post.poll} 
           postId={postId}
           userVote={post.user_vote}
-        />
-      )}
-
-      {/* Idea content */}
-      {hasIdea && post.idea && (
-        <IdeaDisplay 
-          idea={post.idea} 
-          postId={postId}
         />
       )}
     </div>

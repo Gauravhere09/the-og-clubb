@@ -26,7 +26,7 @@ export function IdeaDisplay({ idea, postId }: IdeaDisplayProps) {
   const isMobile = useIsMobile();
   
   return (
-    <div className="border border-border rounded-md bg-blue-50/70 dark:bg-blue-950/50 space-y-3">
+    <div className="bg-blue-50 dark:bg-blue-950/30 space-y-3 rounded-md">
       <div className="p-4">
         <p className="text-sm md:text-base whitespace-pre-wrap break-words">
           {idea.description}
