@@ -13,6 +13,7 @@ interface AttachmentInputProps extends UseAttachmentOptions {
   label?: string;
   disabled?: boolean;
   fileInputRef?: RefObject<HTMLInputElement>;
+  className?: string; // Add this line to accept className prop
 }
 
 export function AttachmentInput({
@@ -26,7 +27,8 @@ export function AttachmentInput({
   showLabel = true,
   label,
   disabled = false,
-  fileInputRef: externalFileInputRef
+  fileInputRef: externalFileInputRef,
+  className = "" // Add the className prop with a default empty string
 }: AttachmentInputProps) {
   const {
     fileInputRef: internalFileInputRef,
@@ -96,7 +98,7 @@ export function AttachmentInput({
         variant={buttonVariant} 
         size={buttonSize} 
         onClick={handleClick}
-        className={`flex items-center gap-1 ${buttonClassName}`}
+        className={`flex items-center gap-1 ${buttonClassName} ${className}`}
         disabled={disabled}
       >
         {getIcon()}
