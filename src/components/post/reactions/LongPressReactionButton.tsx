@@ -8,17 +8,20 @@ import { useReactionPointerEvents } from "./hooks/use-reaction-pointer-events";
 import { ReactionMenu } from "./ReactionMenu";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 interface LongPressReactionButtonProps {
   userReaction?: ReactionType;
   onReactionClick: (type: ReactionType) => void;
   postId: string;
+  className?: string;
 }
 
 export function LongPressReactionButton({ 
   userReaction, 
   onReactionClick, 
-  postId 
+  postId,
+  className
 }: LongPressReactionButtonProps) {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const { toast } = useToast();
@@ -154,7 +157,10 @@ export function LongPressReactionButton({
         ref={buttonRef}
         variant="ghost"
         size="sm"
-        className={`flex-1 ${userReaction ? reactionIcons[userReaction].color : ''} group post-action-button`}
+        className={cn(
+          `flex-1 ${userReaction ? reactionIcons[userReaction].color : ''} group post-action-button`,
+          className
+        )}
         onClick={userReaction ? handleAuthClick : handleToggleMenu}
         disabled={isSubmitting || isAuthChecking}
         id="reaction-button"
