@@ -76,7 +76,7 @@ export function PostHeader({ post, onDelete, isAuthor, isHidden, content }: Post
             {isIdea && (
               <>
                 <span className="text-xs text-muted-foreground px-1">•</span>
-                <span className="text-primary flex items-center gap-1">
+                <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1">
                   <Lightbulb className="h-4 w-4" />
                   <span className="text-xs">Idea</span>
                 </span>

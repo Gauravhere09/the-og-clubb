@@ -13,6 +13,10 @@ interface ParticipantsListProps {
 export function ParticipantsList({ participants }: ParticipantsListProps) {
   const [showParticipants, setShowParticipants] = useState(false);
 
+  if (participants.length === 0) {
+    return null;
+  }
+
   return (
     <>
       <div className="flex items-center space-x-2">
@@ -37,16 +41,6 @@ export function ParticipantsList({ participants }: ParticipantsListProps) {
             ? "1 persona se ha unido"
             : `${participants.length} personas se han unido`}
         </span>
-        
-        {participants.length > 0 && (
-          <Button 
-            variant="link" 
-            onClick={() => setShowParticipants(true)}
-            className="text-sm p-0 h-auto ml-auto"
-          >
-            Ver participantes
-          </Button>
-        )}
       </div>
 
       {/* Diálogo para mostrar participantes */}

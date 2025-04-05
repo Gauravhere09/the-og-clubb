@@ -47,7 +47,7 @@ export function PostFooter({
         <Button 
           onClick={onPublish}
           disabled={isPending || !hasContent}
-          className={`${isIdeaMode ? 'bg-blue-600' : 'bg-primary'} hover:bg-primary/90 text-white px-6 rounded-full`}
+          className={`${isIdeaMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-primary hover:bg-primary/90'} text-white px-6 rounded-full`}
         >
           {isIdeaMode ? "Publicar idea" : "Publicar"}
         </Button>

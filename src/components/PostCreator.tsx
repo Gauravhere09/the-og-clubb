@@ -56,7 +56,7 @@ export function PostCreator() {
       } : undefined;
       
       return createPost({
-        content: isIdeaMode ? content : content, // Enviamos el contenido incluso si es idea
+        content,
         file,
         pollData,
         ideaData,
