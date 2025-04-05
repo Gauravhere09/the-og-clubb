@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ShareOptions } from "./ShareOptions";
 import { CommentButton } from "./CommentButton";
 import { LongPressReactionButton } from "../reactions/LongPressReactionButton";
-import { Share, Briefcase, Users } from "lucide-react";
+import { Share, Briefcase, Users, Lightbulb } from "lucide-react";
 import { Post } from "@/types/post";
 import { ReactionType } from "../reactions/ReactionIcons";
 

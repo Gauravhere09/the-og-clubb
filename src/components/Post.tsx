@@ -42,7 +42,7 @@ export function Post({ post, hideComments = false, isHidden = false }: PostProps
   const isIdeaPost = !!post.idea;
 
   return (
-    <PostWrapper isHidden={isHidden}>
+    <PostWrapper isHidden={isHidden} isIdeaPost={isIdeaPost}>
       <PostHeader 
         post={post} 
         onDelete={onDeletePost}
