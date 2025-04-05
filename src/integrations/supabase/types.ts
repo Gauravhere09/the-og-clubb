@@ -243,6 +243,35 @@ export type Database = {
         }
         Relationships: []
       }
+      idea_participants: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "idea_participants_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       likes: {
         Row: {
           comment_id: string | null
@@ -475,9 +504,11 @@ export type Database = {
           content: string | null
           created_at: string
           id: string
+          idea: Json | null
           media_type: string | null
           media_url: string | null
           poll: Json | null
+          post_type: string | null
           updated_at: string
           user_id: string
           visibility: Database["public"]["Enums"]["post_visibility"]
@@ -486,9 +517,11 @@ export type Database = {
           content?: string | null
           created_at?: string
           id?: string
+          idea?: Json | null
           media_type?: string | null
           media_url?: string | null
           poll?: Json | null
+          post_type?: string | null
           updated_at?: string
           user_id: string
           visibility?: Database["public"]["Enums"]["post_visibility"]
@@ -497,9 +530,11 @@ export type Database = {
           content?: string | null
           created_at?: string
           id?: string
+          idea?: Json | null
           media_type?: string | null
           media_url?: string | null
           poll?: Json | null
+          post_type?: string | null
           updated_at?: string
           user_id?: string
           visibility?: Database["public"]["Enums"]["post_visibility"]
