@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -20,45 +19,56 @@ export default {
     },
     extend: {
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
+        // Light mode colors (White and Blue)
+        background: "240 100% 99%", // Almost pure white
+        foreground: "240 10% 10%", // Nearly black text
         primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
+          DEFAULT: "#1EAEDB", // Bright Blue
+          foreground: "240 100% 99%", // White text on blue
         },
         secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
+          DEFAULT: "#F0F4F8", // Light blue-gray
+          foreground: "240 10% 10%",
         },
+        
+        // Dark mode colors (Black and Blue)
+        dark: {
+          background: "240 10% 3.9%", // Nearly black background
+          foreground: "0 0% 98%", // Nearly white text
+          primary: {
+            DEFAULT: "#2C3E50", // Dark blue
+            foreground: "0 0% 98%", // White text
+          },
+          secondary: {
+            DEFAULT: "#34495E", // Slightly lighter dark blue
+            foreground: "0 0% 98%",
+          }
+        },
+        
+        // Keeping other color definitions for consistency
         destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
+          DEFAULT: "hsl(0 62.8% 30.6%)",
+          foreground: "0 0% 98%",
         },
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
+          DEFAULT: "240 4.8% 95.9%",
+          foreground: "240 3.8% 46.1%",
         },
         accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: "240 4.8% 95.9%",
+          foreground: "240 5.9% 10%",
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: "0 0% 100%",
+          foreground: "240 10% 3.9%",
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: "0 0% 100%",
+          foreground: "240 10% 3.9%",
         },
-        // Add custom colors
-        purple: {
-          light: "#9b87f5",
-          DEFAULT: "#7E69AB",
-          dark: "#6E59A5",
-        },
+        border: "240 5.9% 90%",
+        input: "240 5.9% 90%",
+        ring: "240 5.9% 10%",
       },
       borderRadius: {
         lg: "var(--radius)",
