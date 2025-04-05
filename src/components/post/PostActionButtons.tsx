@@ -18,13 +18,15 @@ interface PostActionButtonsProps {
   onPollCreate: () => void;
   onIdeaCreate?: () => void;
   isPending: boolean;
+  isIdeaMode?: boolean;
 }
 
 export function PostActionButtons({ 
   onFileSelect, 
   onPollCreate, 
   onIdeaCreate, 
-  isPending 
+  isPending,
+  isIdeaMode = false
 }: PostActionButtonsProps) {
   const [showStoryCreator, setShowStoryCreator] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -91,9 +93,12 @@ export function PostActionButtons({
             </DropdownMenuItem>
             {onIdeaCreate && (
               <DropdownMenuItem onClick={onIdeaCreate}>
-                <Button variant="ghost" className="w-full flex justify-start">
+                <Button 
+                  variant="ghost" 
+                  className={`w-full flex justify-start ${isIdeaMode ? 'text-primary' : ''}`}
+                >
                   <Lightbulb className="h-4 w-4 mr-2" />
-                  Idea
+                  {isIdeaMode ? "Cancelar idea" : "Idea"}
                 </Button>
               </DropdownMenuItem>
             )}
@@ -139,11 +144,11 @@ export function PostActionButtons({
         </Button>
         {onIdeaCreate && (
           <Button
-            variant="ghost"
+            variant={isIdeaMode ? "default" : "ghost"}
             disabled={isPending}
-            title="Crear idea"
+            title={isIdeaMode ? "Cancelar idea" : "Crear idea"}
             onClick={onIdeaCreate}
-            className="h-10 text-gray-500"
+            className={`h-10 ${isIdeaMode ? 'bg-primary/10 hover:bg-primary/20 text-primary border-primary' : 'text-gray-500'}`}
           >
             <Lightbulb className="h-4 w-4" />
           </Button>

@@ -5,7 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createPost } from "@/lib/api";
 import { PollCreator } from "./post/PollCreator";
-import { IdeaCreator } from "./post/IdeaCreator";
 import { FilePreview } from "./post/FilePreview";
 import { usePostCreator } from "@/hooks/use-post-creator";
 import { PostCreatorHeader } from "./post/PostCreatorHeader";
@@ -36,23 +35,28 @@ export function PostCreator() {
     setMentionListVisible
   } = usePostCreator();
 
-  const [showIdeaCreator, setShowIdeaCreator] = useState(false);
+  const [isIdeaMode, setIsIdeaMode] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const { mutate: submitPost, isPending } = useMutation({
     mutationFn: async (params: { 
-      pollData?: { question: string; options: string[] },
-      ideaData?: { title: string; description: string }
+      pollData?: { question: string; options: string[] }
     }) => {
-      const { pollData, ideaData } = params;
+      const { pollData } = params;
       
-      if (!content && !file && !pollData && !ideaData) {
+      if (!content && !file && !pollData && !isIdeaMode) {
         throw new Error("Debes agregar texto, un archivo multimedia, una encuesta o una idea");
       }
       
+      // Si estamos en modo idea, creamos una idea con el contenido como título
+      const ideaData = isIdeaMode ? {
+        title: content,
+        description: content
+      } : undefined;
+      
       return createPost({
-        content,
+        content: isIdeaMode ? "" : content, // Si es idea, el contenido va en la idea
         file,
         pollData,
         ideaData,
@@ -63,7 +67,7 @@ export function PostCreator() {
       setContent("");
       setFile(null);
       setShowPollCreator(false);
-      setShowIdeaCreator(false);
+      setIsIdeaMode(false);
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       toast({
         title: "¡Publicación creada!",
@@ -83,15 +87,19 @@ export function PostCreator() {
     submitPost({ pollData });
   };
 
-  const handleIdeaCreate = (ideaData: { title: string; description: string }) => {
-    submitPost({ ideaData });
-    setShowIdeaCreator(false); // Hide idea creator after submitting
+  const handlePublish = () => {
+    // Solo publicar si no estamos creando una encuesta
+    if (!showPollCreator) {
+      submitPost({});
+    }
   };
 
-  const handlePublish = () => {
-    // Only publish regular post when no special content is being created
-    if (!showPollCreator && !showIdeaCreator) {
-      submitPost({});
+  // Manejar el toggle de modo idea
+  const handleIdeaToggle = () => {
+    setIsIdeaMode(prevState => !prevState);
+    // Si estamos desactivando el modo idea, limpiamos el contenido
+    if (isIdeaMode) {
+      setContent("");
     }
   };
 
@@ -110,19 +118,14 @@ export function PostCreator() {
         handleSelectMention={handleSelectMention}
         handleMentionClick={handleMentionClick}
         setMentionIndex={setMentionIndex}
+        placeholder={isIdeaMode ? "Describe tu idea..." : "¿Qué estás pensando?"}
+        isIdeaMode={isIdeaMode}
       />
       
       {showPollCreator && (
         <PollCreator
           onPollCreate={handlePollCreate}
           onCancel={() => setShowPollCreator(false)}
-        />
-      )}
-
-      {showIdeaCreator && (
-        <IdeaCreator
-          onIdeaCreate={handleIdeaCreate}
-          onCancel={() => setShowIdeaCreator(false)}
         />
       )}
       
@@ -136,12 +139,13 @@ export function PostCreator() {
       <PostFooter 
         onFileSelect={handleFileChange}
         onPollToggle={() => setShowPollCreator(true)}
-        onIdeaToggle={() => setShowIdeaCreator(true)}
+        onIdeaToggle={handleIdeaToggle}
         onPublish={handlePublish}
         isPending={isPending}
         hasContent={!!content || !!file}
         visibility={visibility}
         onVisibilityChange={setVisibility}
+        isIdeaMode={isIdeaMode}
       />
     </Card>
   );

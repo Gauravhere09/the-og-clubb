@@ -14,6 +14,7 @@ interface PostFooterProps {
   hasContent: boolean;
   visibility: 'public' | 'friends' | 'incognito';
   onVisibilityChange: (visibility: 'public' | 'friends' | 'incognito') => void;
+  isIdeaMode?: boolean;
 }
 
 export function PostFooter({
@@ -24,7 +25,8 @@ export function PostFooter({
   isPending,
   hasContent,
   visibility,
-  onVisibilityChange
+  onVisibilityChange,
+  isIdeaMode = false
 }: PostFooterProps) {
   return (
     <div className="flex items-center justify-between mt-2 border-t pt-2">
@@ -34,6 +36,7 @@ export function PostFooter({
           onPollCreate={onPollToggle}
           onIdeaCreate={onIdeaToggle}
           isPending={isPending}
+          isIdeaMode={isIdeaMode}
         />
       </div>
       
@@ -48,7 +51,7 @@ export function PostFooter({
           disabled={isPending || !hasContent}
           className="bg-primary hover:bg-primary/90 text-white px-6 rounded-full"
         >
-          Publicar
+          {isIdeaMode ? "Publicar idea" : "Publicar"}
         </Button>
       </div>
     </div>
