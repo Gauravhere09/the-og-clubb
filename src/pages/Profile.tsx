@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Navbar } from "@/components/navbar";
 import { Card } from "@/components/ui/card";
@@ -61,6 +60,12 @@ const userTracks = [
     coverArt: 'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0'
   }
 ];
+
+// Add the Profile type export
+import { Profile as ProfileType } from "@/types/Profile";
+
+// Export the type for other components to use
+export type Profile = ProfileType;
 
 export default function Profile() {
   const [currentPlayingId, setCurrentPlayingId] = useState<string | null>(null);

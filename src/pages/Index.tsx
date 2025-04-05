@@ -1,11 +1,18 @@
-
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Headphones, Music2, Waveform, Users, Laptop2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Music, Headphones, ListMusic, User, Settings, Search } from "lucide-react";
+import { Navbar } from "@/components/navbar";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Index() {
+  const [isMobile, setIsMobile] = useState(useIsMobile());
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setIsMobile(useIsMobile());
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">

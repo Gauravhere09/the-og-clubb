@@ -1,135 +1,95 @@
-
+import { Button } from "@/components/ui/button";
+import { Edit, Mail } from "lucide-react";
 import { useState } from "react";
-import { ProfileCover } from "./ProfileCover";
-import { ProfileAvatar } from "./ProfileAvatar";
-import { ProfileStats } from "./ProfileStats";
-import { ProfileActions } from "./ProfileActions";
 import { ProfileEditDialog } from "@/components/profile/ProfileEditDialog";
-import { ChatDialog } from "@/components/messages/ChatDialog";
+import { FriendRequestButton } from "@/components/FriendRequestButton";
+import { Link } from "react-router-dom";
 import { FullScreenImage } from "@/components/profile/FullScreenImage";
-import { useProfileHeart } from "@/hooks/use-profile-heart";
-import { useIsMobile } from "@/hooks/use-mobile";
-import type { Profile } from "@/pages/Profile";
+import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
+import { Profile } from "@/types/Profile";
 
 interface ProfileHeaderProps {
   profile: Profile;
-  currentUserId: string | null;
-  onImageUpload: (type: 'avatar' | 'cover', e: React.ChangeEvent<HTMLInputElement>) => Promise<string>;
-  onProfileUpdate?: (profile: Profile) => void;
+  isCurrentUser: boolean;
+  onProfileUpdate: (updatedProfile: Profile) => void;
 }
 
-export function ProfileHeader({ profile, currentUserId, onImageUpload, onProfileUpdate }: ProfileHeaderProps) {
+export function ProfileHeader({
+  profile,
+  isCurrentUser,
+  onProfileUpdate,
+}: ProfileHeaderProps) {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [fullscreenImage, setFullscreenImage] = useState<{url: string, type: 'avatar' | 'cover'} | null>(null);
-  const { hasGivenHeart, heartsCount, isLoading: heartLoading, toggleHeart } = useProfileHeart(profile.id);
-  const isMobile = useIsMobile();
+  const [isImageOpen, setIsImageOpen] = useState(false);
 
-  const isOwner = currentUserId === profile.id;
+  const handleEditProfile = () => {
+    setIsEditDialogOpen(true);
+  };
+
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
+  };
 
   const handleProfileUpdate = (updatedProfile: Profile) => {
-    onProfileUpdate?.(updatedProfile);
-  };
-
-  const handleMessageClick = () => {
-    setIsChatOpen(true);
-  };
-
-  const handleAvatarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    return onImageUpload('avatar', e);
-  };
-
-  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    return onImageUpload('cover', e);
-  };
-
-  const openFullScreenAvatar = () => {
-    if (profile.avatar_url) {
-      setFullscreenImage({ url: profile.avatar_url, type: 'avatar' });
-    }
-  };
-
-  const openFullScreenCover = () => {
-    if (profile.cover_url) {
-      setFullscreenImage({ url: profile.cover_url, type: 'cover' });
-    }
+    onProfileUpdate(updatedProfile);
   };
 
   return (
-    <>
-      <ProfileCover 
-        coverUrl={profile.cover_url}
-        isOwner={isOwner}
-        onUpload={handleCoverUpload}
-        onOpenFullscreen={openFullScreenCover}
-      />
+    <div className="relative">
+      {/* Cover Image */}
+      <div className="h-48 bg-muted rounded-md overflow-hidden relative">
+        <img
+          src={profile.cover_url || "/placeholder-image.jpg"}
+          alt="Cover"
+          className="w-full h-full object-cover cursor-pointer"
+          onClick={() => setIsImageOpen(true)}
+        />
+      </div>
 
-      <div className={`relative px-2 md:px-6 -mt-[64px] profile-header`}>
-        <div className={`flex ${isMobile ? 'flex-col' : 'items-end'} gap-4`}>
-          <ProfileAvatar
-            avatarUrl={profile.avatar_url}
-            username={profile.username}
-            isOwner={isOwner}
-            onUpload={handleAvatarUpload}
-            onOpenFullscreen={openFullScreenAvatar}
-          />
-          
-          <div className="flex-1 mt-2 md:mt-0">
-            <div className={`${isMobile ? 'flex flex-col gap-2' : 'flex items-center justify-between'}`}>
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold">
-                  {profile.username || "Usuario sin nombre"}
-                </h1>
-                <ProfileStats 
-                  followersCount={profile.followers_count}
-                  heartsCount={heartsCount}
-                  hasGivenHeart={hasGivenHeart}
-                />
-              </div>
-              
-              <ProfileActions
-                isOwner={isOwner}
-                profileId={profile.id}
-                hasGivenHeart={hasGivenHeart}
-                heartLoading={heartLoading}
-                currentUserId={currentUserId}
-                onEditClick={() => setIsEditDialogOpen(true)}
-                onMessageClick={handleMessageClick}
-                onToggleHeart={toggleHeart}
-              />
-            </div>
-          </div>
+      {/* Profile Picture and Details */}
+      <div className="absolute left-4 -bottom-16 flex items-end gap-4">
+        <ProfileAvatar profile={profile} size="lg" onClick={() => setIsImageOpen(true)} />
+
+        <div>
+          <h1 className="text-2xl font-bold">{profile.username || "User"}</h1>
+          <p className="text-muted-foreground">
+            {profile.status || "No status yet"}
+          </p>
         </div>
       </div>
 
+      {/* Actions */}
+      <div className="absolute right-4 top-4 flex gap-2">
+        {isCurrentUser ? (
+          <Button variant="outline" size="icon" onClick={handleEditProfile}>
+            <Edit className="h-4 w-4" />
+          </Button>
+        ) : (
+          <>
+            <FriendRequestButton targetUserId={profile.id} />
+            <Link to={`/messages?user=${profile.id}`}>
+              <Button variant="secondary" size="icon">
+                <Mail className="h-4 w-4" />
+              </Button>
+            </Link>
+          </>
+        )}
+      </div>
+
+      {/* Edit Profile Dialog */}
       <ProfileEditDialog
-        profile={profile}
         isOpen={isEditDialogOpen}
-        onClose={() => setIsEditDialogOpen(false)}
+        onClose={handleCloseEditDialog}
+        profile={profile}
         onUpdate={handleProfileUpdate}
       />
 
-      {currentUserId && (
-        <ChatDialog
-          isOpen={isChatOpen}
-          onClose={() => setIsChatOpen(false)}
-          targetUser={{
-            id: profile.id,
-            username: profile.username || "Usuario",
-            avatar_url: profile.avatar_url
-          }}
-          currentUserId={currentUserId}
-        />
-      )}
-
-      {fullscreenImage && (
-        <FullScreenImage
-          isOpen={!!fullscreenImage}
-          onClose={() => setFullscreenImage(null)}
-          imageUrl={fullscreenImage.url}
-          altText={fullscreenImage.type === 'avatar' ? `Foto de perfil de ${profile.username}` : 'Foto de portada'}
-        />
-      )}
-    </>
+      {/* Full Screen Image Dialog */}
+      <FullScreenImage
+        isOpen={isImageOpen}
+        onClose={() => setIsImageOpen(false)}
+        imageUrl={profile.cover_url || "/placeholder-image.jpg"}
+      />
+    </div>
   );
 }

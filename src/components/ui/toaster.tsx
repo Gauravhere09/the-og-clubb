@@ -1,21 +1,28 @@
-import { useToast } from "@/hooks/use-toast"
+
+import { useToast } from "@/hooks/use-toast";
 import {
-  Toast,
-  ToastClose,
-  ToastDescription,
   ToastProvider,
-  ToastTitle,
   ToastViewport,
-} from "@/components/ui/toast"
+  Toast,
+  ToastTitle,
+  ToastDescription,
+  ToastClose,
+} from "@/components/ui/toast";
+import { useState, useEffect } from "react";
 
 export function Toaster() {
-  const { toasts } = useToast()
+  const { toast, dismiss } = useToast();
+  const [toasts, setToasts] = useState<typeof toast.toasts>([]);
+
+  useEffect(() => {
+    setToasts(toast.toasts || []);
+  }, [toast.toasts]);
 
   return (
     <ToastProvider>
       {toasts.map(function ({ id, title, description, action, ...props }) {
         return (
-          <Toast key={id} {...props}>
+          <Toast key={id} {...props} onClose={() => dismiss(id)}>
             <div className="grid gap-1">
               {title && <ToastTitle>{title}</ToastTitle>}
               {description && (
@@ -25,9 +32,9 @@ export function Toaster() {
             {action}
             <ToastClose />
           </Toast>
-        )
+        );
       })}
       <ToastViewport />
     </ToastProvider>
-  )
+  );
 }

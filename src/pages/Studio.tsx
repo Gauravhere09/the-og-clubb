@@ -1,295 +1,230 @@
-
-import { useState, useRef } from "react";
-import { Navbar } from "@/components/navbar";
-import { Card } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AudioRecorder } from "@/components/audio-recorder";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { AudioPlayer } from "@/components/ui/audio-player";
+import { useEffect, useState } from "react";
+import { Music, Upload, Mic, Save, PlayCircle, PauseCircle, Trash2, Headphones } from "lucide-react";
+import { Navbar } from "@/components/navbar";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  Mic, 
-  Upload, 
-  Save, 
-  Waveform,
-  Trash,
-  Share
-} from "lucide-react";
 
 export default function Studio() {
-  const [tab, setTab] = useState("record");
-  const [recordedAudio, setRecordedAudio] = useState<{
-    blob: Blob;
-    url: string;
-    duration: number;
-  } | null>(null);
-  const [uploadedAudio, setUploadedAudio] = useState<{
-    file: File;
-    url: string;
-  } | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [isPublic, setIsPublic] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
-  const handleRecordingComplete = (blob: Blob, duration: number) => {
-    const url = URL.createObjectURL(blob);
-    setRecordedAudio({ blob, url, duration });
-    // Set a default title based on date/time
-    setTitle(`Recording - ${new Date().toLocaleString()}`);
+  useEffect(() => {
+    let recorder: MediaRecorder | null = null;
+
+    const initializeRecorder = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recorder = new MediaRecorder(stream);
+
+        recorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            setRecordedChunks((prev) => [...prev, event.data]);
+          }
+        };
+
+        recorder.onstop = () => {
+          stream.getTracks().forEach(track => track.stop());
+        };
+
+        setMediaRecorder(recorder);
+      } catch (error) {
+        console.error("Error initializing media recorder:", error);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to initialize audio recording. Please check your microphone permissions."
+        });
+      }
+    };
+
+    initializeRecorder();
+
+    return () => {
+      if (recorder && recorder.state === 'recording') {
+        recorder.stop();
+      }
+    };
+  }, [toast]);
+
+  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setTitle(e.target.value);
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDescription(e.target.value);
+  };
+
+  const handleAudioFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    
-    if (!file.type.startsWith('audio/')) {
-      toast({
-        variant: "destructive",
-        title: "Invalid File",
-        description: "Please upload an audio file"
-      });
-      return;
-    }
-    
-    const url = URL.createObjectURL(file);
-    setUploadedAudio({ file, url });
-    // Set a default title based on filename
-    setTitle(file.name.replace(/\.[^/.]+$/, ""));
-  };
-
-  const handleSave = async () => {
-    if (!title) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Please provide a title for your audio"
-      });
-      return;
-    }
-    
-    const audioData = tab === "record" ? recordedAudio : uploadedAudio;
-    if (!audioData) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No audio content to save"
-      });
-      return;
-    }
-    
-    setIsSaving(true);
-    
-    try {
-      // Here you would implement the actual saving logic
-      // For now, just simulate a delay and success
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      toast({
-        title: "Audio Saved",
-        description: "Your audio has been saved successfully"
-      });
-      
-      // Reset form after successful save
-      setRecordedAudio(null);
-      setUploadedAudio(null);
-      setTitle("");
-      setDescription("");
-      
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to save audio"
-      });
-    } finally {
-      setIsSaving(false);
+    if (file) {
+      setAudioFile(file);
+      setAudioUrl(URL.createObjectURL(file));
     }
   };
 
-  const handleDiscard = () => {
-    if (tab === "record") {
-      if (recordedAudio?.url) {
-        URL.revokeObjectURL(recordedAudio.url);
+  const handleStartRecording = () => {
+    if (mediaRecorder && mediaRecorder.state === "inactive") {
+      setRecordedChunks([]);
+      mediaRecorder.start();
+      setIsRecording(true);
+    }
+  };
+
+  const handleStopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      mediaRecorder.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const handlePlayRecording = () => {
+    if (recordedChunks.length > 0) {
+      const audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      if (audioElement) {
+        audioElement.pause();
       }
-      setRecordedAudio(null);
-    } else {
-      if (uploadedAudio?.url) {
-        URL.revokeObjectURL(uploadedAudio.url);
-      }
-      setUploadedAudio(null);
+
+      const newAudioElement = new Audio(audioUrl);
+      newAudioElement.onended = () => setIsPlaying(false);
+      newAudioElement.play();
+
+      setAudioElement(newAudioElement);
+      setIsPlaying(true);
     }
-    setTitle("");
-    setDescription("");
   };
 
-  const formatDuration = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  const handlePauseRecording = () => {
+    if (audioElement) {
+      audioElement.pause();
+      setIsPlaying(false);
+    }
+  };
+
+  const handleDiscardRecording = () => {
+    setRecordedChunks([]);
+    if (audioElement) {
+      audioElement.pause();
+      URL.revokeObjectURL(audioElement.src);
+      setAudioElement(null);
+      setIsPlaying(false);
+    }
+  };
+
+  const handleSave = () => {
+    // Implement save logic here
+    console.log("Saving:", { title, description, audioFile, recordedChunks });
+    toast({
+      title: "Saved",
+      description: "Your audio has been saved successfully!",
+    });
   };
 
   return (
-    <div className="min-h-screen pb-16 md:pb-0 md:pl-16">
+    <div className="min-h-screen bg-background flex md:flex-row">
       <Navbar />
-      
-      <div className="container max-w-4xl mx-auto p-4">
-        <header className="py-6">
-          <h1 className="text-3xl font-bold">Studio</h1>
-          <p className="text-muted-foreground">Create and manage your audio content</p>
-        </header>
-        
-        <Tabs value={tab} onValueChange={setTab} className="space-y-6">
-          <TabsList className="grid grid-cols-2">
-            <TabsTrigger value="record" className="flex items-center gap-2">
-              <Mic className="h-4 w-4" />
-              Record
-            </TabsTrigger>
-            <TabsTrigger value="upload" className="flex items-center gap-2">
-              <Upload className="h-4 w-4" />
-              Upload
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="record" className="space-y-6">
-            {!recordedAudio ? (
-              <AudioRecorder 
-                onRecordingComplete={handleRecordingComplete}
-                maxDuration={300} // 5 minutes
-              />
-            ) : (
-              <Card className="p-4">
-                <div className="mb-4">
-                  <h3 className="font-medium mb-2">Preview Recording</h3>
-                  <AudioPlayer 
-                    src={recordedAudio.url}
-                    title={title || "New Recording"}
-                  />
-                  <div className="text-sm text-muted-foreground mt-2">
-                    Duration: {formatDuration(recordedAudio.duration)}
-                  </div>
-                </div>
-              </Card>
-            )}
-          </TabsContent>
-          
-          <TabsContent value="upload" className="space-y-6">
-            {!uploadedAudio ? (
-              <Card className="p-6 flex flex-col items-center justify-center text-center">
-                <Waveform className="h-10 w-10 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-medium mb-2">Upload Audio File</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Supported formats: MP3, WAV, AAC, M4A
-                </p>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileUpload}
-                  accept="audio/*"
-                  className="hidden"
-                />
-                <Button onClick={() => fileInputRef.current?.click()}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Choose File
-                </Button>
-              </Card>
-            ) : (
-              <Card className="p-4">
-                <div className="mb-4">
-                  <h3 className="font-medium mb-2">Preview Audio</h3>
-                  <AudioPlayer 
-                    src={uploadedAudio.url}
-                    title={title || uploadedAudio.file.name}
-                  />
-                  <div className="text-sm text-muted-foreground mt-2">
-                    File: {uploadedAudio.file.name}
-                  </div>
-                </div>
-              </Card>
-            )}
-          </TabsContent>
-        </Tabs>
-        
-        {(recordedAudio || uploadedAudio) && (
-          <div className="mt-6 space-y-6">
-            <Card className="p-6">
-              <h3 className="text-lg font-medium mb-4">Audio Details</h3>
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="title" className="block text-sm font-medium mb-1">
-                    Title
-                  </label>
-                  <Input
-                    id="title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Give your audio a title"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium mb-1">
-                    Description
-                  </label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Add a description (optional)"
-                    rows={3}
-                  />
-                </div>
-                
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="isPublic"
-                    checked={isPublic}
-                    onChange={(e) => setIsPublic(e.target.checked)}
-                    className="rounded border-gray-300"
-                  />
-                  <label htmlFor="isPublic" className="text-sm font-medium">
-                    Make this audio public
-                  </label>
-                </div>
-              </div>
-            </Card>
-            
-            <div className="flex justify-between">
-              <Button
-                variant="outline"
-                onClick={handleDiscard}
-                className="gap-2"
-              >
-                <Trash className="h-4 w-4" />
-                Discard
-              </Button>
-              
-              <div className="space-x-2">
-                <Button
-                  variant="secondary"
-                  className="gap-2"
-                >
-                  <Share className="h-4 w-4" />
-                  Share
-                </Button>
-                <Button
-                  onClick={handleSave}
-                  disabled={isSaving || !title}
-                  className="gap-2"
-                >
-                  <Save className="h-4 w-4" />
-                  {isSaving ? "Saving..." : "Save"}
-                </Button>
-              </div>
+      <div className="flex-1 p-4 md:pl-16">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Audio Studio</CardTitle>
+            <CardDescription>Create your next audio masterpiece.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="title">Title</Label>
+              <Input id="title" value={title} onChange={handleTitleChange} placeholder="Song Title" />
             </div>
-          </div>
-        )}
+            <div className="grid gap-2">
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={handleDescriptionChange}
+                placeholder="About this song"
+                className="resize-none"
+              />
+            </div>
+            <Tabs defaultValue="upload" className="w-full">
+              <TabsList>
+                <TabsTrigger value="upload"><Upload className="mr-2 h-4 w-4" /> Upload</TabsTrigger>
+                <TabsTrigger value="record"><Mic className="mr-2 h-4 w-4" /> Record</TabsTrigger>
+              </TabsList>
+              <TabsContent value="upload" className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="audio">Upload Audio File</Label>
+                  <Input type="file" id="audio" accept="audio/*" onChange={handleAudioFileChange} />
+                  {audioUrl && (
+                    <audio controls src={audioUrl} className="mt-4 w-full">
+                      Your browser does not support the audio element.
+                    </audio>
+                  )}
+                </div>
+              </TabsContent>
+              <TabsContent value="record" className="space-y-4">
+                <div className="flex items-center space-x-4">
+                  <Button
+                    variant="outline"
+                    onClick={isRecording ? handleStopRecording : handleStartRecording}
+                    disabled={!mediaRecorder}
+                  >
+                    {isRecording ? (
+                      <>
+                        <PauseCircle className="mr-2 h-4 w-4" />
+                        Stop Recording
+                      </>
+                    ) : (
+                      <>
+                        <Mic className="mr-2 h-4 w-4" />
+                        Start Recording
+                      </>
+                    )}
+                  </Button>
+                  {recordedChunks.length > 0 && (
+                    <>
+                      <Button variant="outline" onClick={isPlaying ? handlePauseRecording : handlePlayRecording}>
+                        {isPlaying ? (
+                          <>
+                            <PauseCircle className="mr-2 h-4 w-4" />
+                            Pause
+                          </>
+                        ) : (
+                          <>
+                            <PlayCircle className="mr-2 h-4 w-4" />
+                            Play
+                          </>
+                        )}
+                      </Button>
+                      <Button variant="destructive" onClick={handleDiscardRecording}>
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Discard
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+          <CardFooter>
+            <Button className="bg-green-500 hover:bg-green-700 text-white" onClick={handleSave}>
+              <Save className="mr-2 h-4 w-4" />
+              Save
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );

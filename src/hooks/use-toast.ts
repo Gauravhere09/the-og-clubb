@@ -1,26 +1,30 @@
 
-import { useContext } from "react"
-import { ToasterToast, ToastActionElement } from "@/components/ui/toaster"
-
-import {
-  Toast,
-  ToastClose,
-  ToastDescription,
-  ToastProvider,
-  ToastTitle,
-  ToastViewport,
-} from "@/components/ui/toast"
-
-import { ToastContext } from "@/components/ui/toast"
+import { useContext } from "react";
+import { ToastContext } from "@/components/ui/toast";
 
 export function useToast() {
-  const { toast } = useContext(ToastContext)
+  const context = useContext(ToastContext);
+
+  if (context === undefined) {
+    throw new Error("useToast must be used within a ToastProvider");
+  }
 
   return {
-    toast,
-    dismiss: (toastId?: string) => toast.dismiss(toastId)
-  }
+    toast: context.toast,
+    dismiss: (toastId?: string) => context.toast.dismiss(toastId)
+  };
 }
 
-export { ToastProvider, ToastViewport, Toast, ToastTitle, ToastDescription, ToastClose, ToastActionElement }
-export type { ToasterToast }
+export { 
+  ToastProvider, 
+  ToastViewport, 
+  Toast, 
+  ToastTitle, 
+  ToastDescription, 
+  ToastClose, 
+} from "@/components/ui/toast";
+
+export type { 
+  Toast as ToasterToast,
+  ToastActionElement 
+} from "@/components/ui/toast";
