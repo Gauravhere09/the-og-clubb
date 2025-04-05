@@ -30,7 +30,7 @@ export function VisibilitySelector({ visibility, onVisibilityChange }: Visibilit
       value={visibility}
       onValueChange={(val) => onVisibilityChange(val as Visibility)}
     >
-      <SelectTrigger className="w-[120px] h-10 bg-transparent border-none focus:ring-0">
+      <SelectTrigger className="w-[120px] h-10 border border-border rounded-full bg-muted/30 focus:ring-0">
         <div className="flex items-center">
           {getVisibilityIcon()}
           <SelectValue />

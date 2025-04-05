@@ -27,7 +27,7 @@ export function PostFooter({
   onVisibilityChange
 }: PostFooterProps) {
   return (
-    <div className="flex items-center justify-between mt-2">
+    <div className="flex items-center justify-between mt-2 border-t pt-2">
       <div className="flex items-center">
         <PostActionButtons 
           onFileSelect={onFileSelect}
@@ -46,7 +46,7 @@ export function PostFooter({
         <Button 
           onClick={onPublish}
           disabled={isPending || !hasContent}
-          className="bg-gray-500 hover:bg-gray-600 text-white px-6"
+          className="bg-primary hover:bg-primary/90 text-white px-6 rounded-full"
         >
           Publicar
         </Button>

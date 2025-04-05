@@ -13,6 +13,7 @@ import { useTheme } from "next-themes";
 import { FriendSearch } from "@/components/FriendSearch";
 import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
 import { Card } from "@/components/ui/card";
+import { FriendsListSection } from "@/components/friends/FriendsListSection";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +23,7 @@ import {
 import { useEffect, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useStoryCleanup } from "@/hooks/use-story-cleanup";
+import { useFriends } from "@/hooks/use-friends";
 
 const Index = () => {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
@@ -41,6 +43,9 @@ const Index = () => {
     };
     loadCurrentUser();
   }, []);
+
+  // Get friends list using the useFriends hook
+  const { friends } = useFriends(currentUserId);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -62,15 +67,15 @@ const Index = () => {
       </div>
       
       <div className="flex-1 w-full md:ml-[70px] pb-16 md:pb-0 content-with-bottom-nav">
-        <div className="max-w-screen-xl mx-auto">
+        <div className="max-w-[1200px] mx-auto">
           <main className="w-full flex flex-col md:flex-row">
             {/* Sidebar izquierdo - solo visible en desktop */}
-            <div className="hidden md:block md:w-1/4 xl:w-1/5 p-4">
+            <div className="hidden md:block md:w-1/4 lg:w-1/5 p-4">
               {/* Contenido del sidebar izquierdo */}
             </div>
             
             {/* Contenido central */}
-            <div className="w-full md:w-2/4 xl:w-3/5 px-2 py-2 md:px-4 md:py-4">
+            <div className="w-full md:w-2/4 lg:w-3/5 px-2 py-2 md:px-4 md:py-4">
               <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2 -mx-2 md:mx-0 px-2 md:px-0 pt-2">
                 <div className="flex items-center justify-between gap-2 mb-4">
                   <div className="flex items-center">
@@ -125,11 +130,11 @@ const Index = () => {
                 </div>
               </div>
 
-              <div className="space-y-3 md:space-y-4 max-w-[500px] mx-auto">
+              <div className="space-y-3 md:space-y-4 mx-auto">
                 <PostCreator />
                 
                 {currentUserId && (
-                  <Card className="overflow-hidden">
+                  <Card className="overflow-hidden mb-4">
                     <StoryViewer currentUserId={currentUserId} />
                   </Card>
                 )}
@@ -138,9 +143,31 @@ const Index = () => {
               </div>
             </div>
             
-            {/* Sidebar derecho - solo visible en desktop */}
-            <div className="hidden md:block md:w-1/4 xl:w-1/5 p-4">
-              {/* Contenido del sidebar derecho */}
+            {/* Sidebar derecho - amigos list */}
+            <div className="hidden md:block md:w-1/4 lg:w-1/5 p-4">
+              <Card className="sticky top-20 p-4">
+                <h3 className="text-lg font-semibold mb-4">Amigos</h3>
+                <div className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
+                  {friends && friends.length > 0 ? (
+                    friends.map(friend => (
+                      <Link 
+                        key={friend.id} 
+                        to={`/profile/${friend.id}`}
+                        className="flex items-center gap-2 p-2 hover:bg-muted rounded-md transition-colors"
+                      >
+                        <img 
+                          src={friend.avatar_url || "/placeholder.svg"} 
+                          alt={friend.username} 
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                        <span className="font-medium truncate">{friend.username}</span>
+                      </Link>
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground text-sm">No tienes amigos aún</p>
+                  )}
+                </div>
+              </Card>
             </div>
           </main>
         </div>

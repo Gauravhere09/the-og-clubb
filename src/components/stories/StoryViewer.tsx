@@ -1,8 +1,7 @@
 
 import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Camera } from "lucide-react";
+import { Plus, Camera, ChevronRight } from "lucide-react";
 import { StoryCreator } from "./StoryCreator";
 import { supabase } from "@/integrations/supabase/client";
 import { UserStoryButton } from "./UserStoryButton";
@@ -179,11 +178,11 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
   
   if (isLoading) {
     return (
-      <div className="p-4 overflow-x-auto">
+      <div className="p-3 overflow-x-auto">
         <div className="flex space-x-3">
-          <div className="w-16 h-16 rounded-full bg-muted animate-pulse"></div>
-          <div className="w-16 h-16 rounded-full bg-muted animate-pulse"></div>
-          <div className="w-16 h-16 rounded-full bg-muted animate-pulse"></div>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="min-w-[110px] h-[190px] rounded-lg bg-muted animate-pulse"></div>
+          ))}
         </div>
       </div>
     );
@@ -191,34 +190,72 @@ export function StoryViewer({ currentUserId }: StoryViewerProps) {
   
   return (
     <>
-      <div className="p-4 overflow-x-auto">
+      <div className="p-3 overflow-x-auto">
         <div className="flex space-x-3">
-          <Button 
-            variant="outline" 
+          {/* Create story button */}
+          <div 
+            className="min-w-[110px] h-[190px] rounded-lg border border-border overflow-hidden cursor-pointer relative group"
             onClick={handleCreateStory}
-            className="w-16 h-16 rounded-full p-0 bg-muted/50 hover:bg-muted border border-border flex-shrink-0"
           >
-            <div className="flex flex-col items-center justify-center">
-              <Plus className="h-5 w-5 mb-1" />
-              <span className="text-xs">Historia</span>
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/80 z-10"></div>
+            <div className="h-2/3 bg-muted flex items-center justify-center">
+              <Plus className="h-10 w-10 text-muted-foreground" />
             </div>
-          </Button>
+            <div className="absolute bottom-0 left-0 right-0 p-3 z-20">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center mx-auto mb-1">
+                <Plus className="h-5 w-5 text-white" />
+              </div>
+              <p className="text-xs text-center font-medium">Crear historia</p>
+            </div>
+          </div>
           
+          {/* User stories */}
           {stories.map((user) => (
-            <UserStoryButton
+            <div 
               key={user.userId}
-              username={user.username}
-              avatarUrl={user.avatarUrl}
+              className="min-w-[110px] h-[190px] rounded-lg overflow-hidden cursor-pointer relative group"
               onClick={() => handleStoryClick(user.storyIds[0])}
-              hasUnviewed={user.hasUnviewed}
-            />
+            >
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/80 z-10"></div>
+              
+              {/* Story preview (could be an image or color) */}
+              <div className="h-full bg-gradient-to-br from-blue-500 to-purple-600">
+                {/* This could be replaced with an actual story preview image if available */}
+              </div>
+              
+              {/* User info at the bottom */}
+              <div className="absolute top-3 left-3 z-20">
+                <div className={`w-10 h-10 rounded-full ${user.hasUnviewed ? 'border-2 border-primary p-[2px]' : ''} bg-background flex items-center justify-center`}>
+                  <img 
+                    src={user.avatarUrl || "/placeholder.svg"}
+                    alt={user.username}
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                </div>
+              </div>
+              
+              <div className="absolute bottom-0 left-0 right-0 p-3 z-20">
+                <p className="text-xs text-white text-center font-medium">{user.username}</p>
+              </div>
+            </div>
           ))}
           
           {stories.length === 0 && !isLoading && (
-            <div className="flex items-center justify-center p-3 text-sm text-muted-foreground">
-              <Camera className="h-4 w-4 mr-2" />
-              <span>No hay historias disponibles</span>
+            <div className="min-w-[110px] h-[190px] rounded-lg border border-border flex flex-col items-center justify-center p-3">
+              <Camera className="h-8 w-8 text-muted-foreground mb-2" />
+              <p className="text-xs text-center text-muted-foreground">No hay historias disponibles</p>
             </div>
+          )}
+          
+          {/* Show more button when there are many stories */}
+          {stories.length > 3 && (
+            <Button 
+              variant="secondary" 
+              size="icon" 
+              className="self-center h-10 w-10 rounded-full absolute right-3 top-1/2 transform -translate-y-1/2 z-30 shadow-md"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
           )}
         </div>
       </div>
