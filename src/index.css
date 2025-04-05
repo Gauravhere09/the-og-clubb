@@ -6,286 +6,94 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 224 71.4% 4.1%;
+    --foreground: 222.2 84% 4.9%;
+
     --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
+    --card-foreground: 222.2 84% 4.9%;
+ 
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 262.1 83.3% 57.8%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 220 14.3% 95.9%;
-    --accent-foreground: 220.9 39.3% 11%;
+    --popover-foreground: 222.2 84% 4.9%;
+ 
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+ 
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+ 
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+ 
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+ 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 262.1 83.3% 57.8%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+ 
     --radius: 0.5rem;
-    --gold: 45 100% 50%;
-    --silver: 210 10% 70%;
-    --bronze: 30 60% 50%;
   }
  
   .dark {
-    --background: 224 71.4% 4.1%;
-    --foreground: 210 20% 98%;
-    --card: 224 71.4% 4.1%;
-    --card-foreground: 210 20% 98%;
-    --popover: 224 71.4% 4.1%;
-    --popover-foreground: 210 20% 98%;
-    --primary: 263.4 70% 50.4%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 215 27.9% 16.9%;
-    --secondary-foreground: 210 20% 98%;
-    --muted: 215 27.9% 16.9%;
-    --muted-foreground: 217.9 10.6% 64.9%;
-    --accent: 215 27.9% 16.9%;
-    --accent-foreground: 210 20% 98%;
-    --destructive: 0 62.8% 50.6%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 215 27.9% 16.9%;
-    --input: 215 27.9% 16.9%;
-    --ring: 263.4 70% 50.4%;
-    --gold: 45 100% 50%;
-    --silver: 210 10% 70%;
-    --bronze: 30 60% 50%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+ 
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+ 
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+ 
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+ 
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+ 
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+ 
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+ 
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
   }
 }
  
 @layer base {
   * {
     @apply border-border;
-    user-select: none; /* Disable text selection globally */
   }
   body {
     @apply bg-background text-foreground;
   }
 }
 
-.comment-text-selectable {
-  user-select: text;
+.fixed-bottom-nav {
+  @apply bg-background border-t border-border z-50 md:border-none md:bg-transparent;
 }
 
-.copying-indicator {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 4px;
-  z-index: 1000;
-  display: none;
+.content-with-bottom-nav {
+  @apply pb-14 md:pb-0;
 }
 
-.copying-indicator.active {
-  display: block;
-  animation: fadeIn 0.2s ease-in-out;
+/* Add styles for post action buttons to match the image */
+.post-actions {
+  @apply flex justify-between items-center border-gray-200 dark:border-gray-800;
 }
 
-/* Custom scrollbar for stories */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+.post-action-button {
+  @apply flex-1 justify-center py-2 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium;
 }
 
-.scrollbar-hide {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-
-/* Stories styling */
-.story-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 8px;
-}
-
-.story-item {
-  transition: transform 0.2s ease;
-}
-
-.story-item:hover {
-  transform: translateY(-4px);
-}
-
-.story-border {
-  background: linear-gradient(45deg, #833AB4, #FD1D1D, #FCB045);
-  padding: 2px;
-  border-radius: 9999px;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.text-gold {
-  color: gold;
-}
-
-.bg-gold {
-  background-color: gold;
-}
-
-.border-gold {
-  border-color: gold;
-}
-
-.text-silver {
-  color: silver;
-}
-
-.bg-silver {
-  background-color: silver;
-}
-
-.border-silver {
-  border-color: silver;
-}
-
-.text-bronze {
-  color: #cd7f32;
-}
-
-.bg-bronze {
-  background-color: #cd7f32;
-}
-
-.border-bronze {
-  border-color: #cd7f32;
-}
-
-/* Reaction animations */
-@keyframes reaction-pop {
-  0% { transform: scale(0); opacity: 0; }
-  50% { transform: scale(1.2); }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-.reaction-appear {
-  animation: reaction-pop 0.3s ease-out forwards;
-}
-
-.reaction-hover {
-  transition: transform 0.2s ease;
-}
-
-.reaction-hover:hover {
-  transform: scale(1.2);
-}
-
-/* Story reaction styles for better visibility */
-.story-reaction-button {
-  @apply transition-transform duration-200 hover:scale-125;
-}
-
-.story-reaction-container {
-  @apply rounded-full backdrop-blur-md border;
-}
-
-.story-reaction-container.light-mode {
-  @apply bg-black/70 border-gray-700 shadow-md;
-}
-
-.story-reaction-container.dark-mode {
-  @apply bg-black/40 border-gray-700;
-}
-
-.story-reaction-summary {
-  @apply text-white font-medium text-xs rounded-full px-2 py-1 backdrop-blur-sm;
-}
-
-.story-reaction-summary.light-mode {
-  @apply bg-black/70 border border-gray-600;
-}
-
-.story-reaction-summary.dark-mode {
-  @apply bg-black/60 border border-white/10;
-}
-
-/* Enhanced visibility for reaction icons in all modes */
-.reaction-icon {
-  @apply text-white;
-}
-
-.light .reaction-icon,
-.dark .reaction-icon {
-  @apply text-white;
-}
-
-.story-content-container {
-  background-color: #000;
-}
-
-/* Story actions and buttons */
-.story-action-button {
-  @apply text-white bg-black/50 hover:bg-black/70;
-}
-
-/* Story dialog background */
-.story-dialog {
-  @apply bg-black;
-}
-
-/* Story comments container */
-.story-comments {
-  @apply bg-gray-900 text-white;
-}
-
-/* Improved reaction colors for visibility */
-.text-blue-reaction {
-  color: #3b82f6 !important;
-}
-
-.text-red-reaction {
-  color: #ef4444 !important;
-}
-
-.text-yellow-reaction {
-  color: #eab308 !important;
-}
-
-.text-orange-reaction {
-  color: #f97316 !important;
-}
-
-.text-purple-reaction {
-  color: #a855f7 !important;
-}
-
-.text-rose-reaction {
-  color: #f43f5e !important;
-}
-
-.text-amber-reaction {
-  color: #fbbf24 !important;
-}
-
-/* Long press indicator */
-@keyframes pulse {
-  0% { opacity: 0.6; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
-  100% { opacity: 0.6; transform: scale(1); }
-}
-
-.pulse-on-hold {
-  animation: pulse 1s infinite;
-}
-
-/* Story reaction buttons */
-.story-reactions-bar {
-  @apply bg-black/70 backdrop-blur-sm py-3 px-2 border-t border-gray-800;
-}
-
-.story-reaction-emoji-button {
-  @apply w-12 h-12 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors;
-}
-
-.story-reaction-emoji {
-  @apply text-3xl;
+/* Add some additional styling for reaction menus */
+.reaction-menu {
+  @apply absolute top-0 left-0 transform -translate-y-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg shadow-md z-50;
 }

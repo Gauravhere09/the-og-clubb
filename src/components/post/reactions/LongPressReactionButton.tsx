@@ -154,7 +154,7 @@ export function LongPressReactionButton({
         ref={buttonRef}
         variant="ghost"
         size="sm"
-        className={`${userReaction ? reactionIcons[userReaction].color : ''} group`}
+        className={`flex-1 ${userReaction ? reactionIcons[userReaction].color : ''} group post-action-button`}
         onClick={userReaction ? handleAuthClick : handleToggleMenu}
         disabled={isSubmitting || isAuthChecking}
         id="reaction-button"
@@ -162,8 +162,8 @@ export function LongPressReactionButton({
       >
         {userReaction ? (
           <div className="flex items-center">
-            {React.createElement(reactionIcons[userReaction].icon, { className: "h-4 w-4" })}
-            <span className="ml-2">{reactionIcons[userReaction].label}</span>
+            {React.createElement(reactionIcons[userReaction].icon, { className: "h-4 w-4 mr-2" })}
+            <span>{userReaction === "like" ? "Me gusta" : reactionIcons[userReaction].label}</span>
           </div>
         ) : (
           <div className="flex items-center">

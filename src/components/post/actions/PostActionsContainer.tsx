@@ -44,18 +44,8 @@ export function PostActionsContainer({
   };
 
   return (
-    <div className="space-y-2">
-      {/* Interactions Summary */}
-      <ActionsSummary 
-        totalReactions={totalReactions} 
-        reactionsByType={reactionsByType} 
-        post={post} 
-        commentCount={commentCount}
-        onCommentsClick={onCommentsClick}
-        commentsExpanded={commentsExpanded}
-      />
-      
-      {/* Action Buttons */}
+    <div className="space-y-0">
+      {/* Action Buttons - Simplified layout similar to image */}
       <ActionsButtons 
         userReaction={userReaction}
         handleReaction={handleReaction}
@@ -66,6 +56,18 @@ export function PostActionsContainer({
         showJoinButton={showJoinButton}
         onJoinClick={() => setIsJoinDialogOpen(true)}
       />
+      
+      {/* Interactions Summary - Only show if there are interactions */}
+      {(totalReactions > 0 || commentCount > 0) && (
+        <ActionsSummary 
+          totalReactions={totalReactions} 
+          reactionsByType={reactionsByType} 
+          post={post} 
+          commentCount={commentCount}
+          onCommentsClick={onCommentsClick}
+          commentsExpanded={commentsExpanded}
+        />
+      )}
       
       {/* Join Idea Dialog */}
       <JoinIdeaDialogWrapper
