@@ -23,7 +23,7 @@ export function IdeaDisplay({ idea, postId }: IdeaDisplayProps) {
   } = useIdeaJoin(idea, postId);
 
   return (
-    <div className="border border-border rounded-md bg-blue-50/30 dark:bg-blue-900/10 space-y-3">
+    <div className="border border-border rounded-md bg-blue-50 dark:bg-blue-900 space-y-3">
       <div className="p-4">
         <p className="text-sm md:text-base whitespace-pre-wrap break-words">
           {idea.description}
