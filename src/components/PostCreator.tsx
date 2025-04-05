@@ -85,6 +85,14 @@ export function PostCreator() {
 
   const handleIdeaCreate = (ideaData: { title: string; description: string }) => {
     submitPost({ ideaData });
+    setShowIdeaCreator(false); // Hide idea creator after submitting
+  };
+
+  const handlePublish = () => {
+    // Only publish regular post when no special content is being created
+    if (!showPollCreator && !showIdeaCreator) {
+      submitPost({});
+    }
   };
 
   return (
@@ -129,7 +137,7 @@ export function PostCreator() {
         onFileSelect={handleFileChange}
         onPollToggle={() => setShowPollCreator(true)}
         onIdeaToggle={() => setShowIdeaCreator(true)}
-        onPublish={() => submitPost({})}
+        onPublish={handlePublish}
         isPending={isPending}
         hasContent={!!content || !!file}
         visibility={visibility}

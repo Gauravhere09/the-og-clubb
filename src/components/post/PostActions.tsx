@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import type { Post } from "@/types/post";
 import { type ReactionType } from "./reactions/ReactionIcons";
@@ -41,7 +41,7 @@ export function PostActions({
   const { toast } = useToast();
 
   // Verificar si el usuario actual está unido a la idea
-  React.useEffect(() => {
+  useEffect(() => {
     if (post.idea) {
       const checkCurrentUser = async () => {
         const { data: { user } } = await supabase.auth.getUser();
@@ -145,6 +145,9 @@ export function PostActions({
     }
   };
 
+  // Solo mostrar el botón "Unirme" si existe una idea y el usuario no está unido
+  const showJoinButton = post.idea && !isCurrentUserJoined;
+
   return (
     <div className="space-y-2">
       {/* Interactions Summary */}
@@ -182,8 +185,8 @@ export function PostActions({
           </Button>
         </ShareOptions>
 
-        {/* Botón de unirse a la idea, visible solo si hay una idea en el post */}
-        {post.idea && !isCurrentUserJoined && (
+        {/* Botón de unirse a la idea, visible solo si hay una idea en el post y el usuario no se ha unido */}
+        {showJoinButton && (
           <Button 
             variant="ghost" 
             size="sm" 

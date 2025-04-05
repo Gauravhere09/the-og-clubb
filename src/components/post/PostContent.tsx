@@ -14,7 +14,7 @@ interface PostContentProps {
 export function PostContent({ post, postId }: PostContentProps) {
   const hasMedia = post.media_url && post.media_type;
   const hasPoll = post.poll !== null;
-  const hasIdea = post.idea !== null;
+  const hasIdea = post.idea !== null && post.idea !== undefined;
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   const handleImageClick = () => {
