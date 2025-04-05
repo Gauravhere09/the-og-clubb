@@ -48,7 +48,7 @@ export function UserMenu() {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="p-0 w-full sm:max-w-lg">
-        <div className="flex flex-col h-full bg-background">
+        <div className="flex flex-col h-full bg-white dark:bg-gray-900">
           {/* Header */}
           <MenuHeader onClose={handleClose} />
           
@@ -61,7 +61,7 @@ export function UserMenu() {
           />
           
           {/* Content */}
-          <div className="flex-1 overflow-y-auto py-2 bg-white dark:bg-gray-950">
+          <div className="flex-1 overflow-y-auto py-2 bg-white dark:bg-gray-900">
             {/* Main Menu Options */}
             <MenuOptions 
               userId={userId} 
