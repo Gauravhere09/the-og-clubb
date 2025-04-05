@@ -19,6 +19,9 @@ export function PostActions({
   onCommentsClick,
   commentsExpanded = false
 }: PostActionsProps) {
+  // Determine if this is an idea post
+  const isIdeaPost = !!post.idea;
+  
   return (
     <PostActionsContainer
       post={post}
@@ -26,6 +29,7 @@ export function PostActions({
       onToggleComments={onToggleComments}
       onCommentsClick={onCommentsClick}
       commentsExpanded={commentsExpanded}
+      isIdeaPost={isIdeaPost}
     />
   );
 }

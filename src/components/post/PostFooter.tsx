@@ -2,8 +2,6 @@
 import { Button } from "@/components/ui/button";
 import { PostActionButtons } from "./PostActionButtons";
 import { VisibilitySelector } from "./VisibilitySelector";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 interface PostFooterProps {
   onFileSelect: (file: File) => void;

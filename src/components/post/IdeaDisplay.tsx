@@ -36,6 +36,21 @@ export function IdeaDisplay({ idea, postId }: IdeaDisplayProps) {
         </>
       )}
       
+      <div className="p-4 pt-0 flex justify-end">
+        {isCurrentUserJoined ? (
+          <Button variant="outline" className="text-primary border-primary hover:bg-primary/10" disabled>
+            Unido
+          </Button>
+        ) : (
+          <Button 
+            onClick={() => setIsJoinDialogOpen(true)}
+            className="bg-primary hover:bg-primary/90 text-white"
+          >
+            Unirme
+          </Button>
+        )}
+      </div>
+      
       <JoinIdeaDialog 
         isOpen={isJoinDialogOpen}
         onOpenChange={setIsJoinDialogOpen}

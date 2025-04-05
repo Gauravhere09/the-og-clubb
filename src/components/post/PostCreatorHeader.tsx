@@ -70,7 +70,7 @@ export function PostCreatorHeader({
             position={mentionPosition}
             selectedIndex={mentionIndex}
             onSelectUser={handleSelectMention}
-            setSelectedIndex={setMentionIndex}
+            onSetIndex={setMentionIndex}
           />
         )}
       </div>
