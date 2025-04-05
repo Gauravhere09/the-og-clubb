@@ -1,36 +1,34 @@
 
-import { useState } from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
 
 interface JoinIdeaDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onJoin: (profession: string) => Promise<void>;
-  ideaTitle: string;
+  ideaTitle?: string;
 }
 
-export function JoinIdeaDialog({ isOpen, onOpenChange, onJoin, ideaTitle }: JoinIdeaDialogProps) {
+export function JoinIdeaDialog({
+  isOpen,
+  onOpenChange,
+  onJoin,
+  ideaTitle
+}: JoinIdeaDialogProps) {
   const [profession, setProfession] = useState("");
-  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleJoin = async () => {
-    if (!profession.trim()) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Debes ingresar tu profesión",
-      });
-      return;
-    }
-
+  const handleSubmit = async () => {
+    if (!profession.trim()) return;
+    
+    setIsSubmitting(true);
     try {
-      await onJoin(profession.trim());
-      setProfession(""); // Reset the input after successful join
-    } catch (error) {
-      // Error will be handled by the parent component
+      await onJoin(profession);
+      setProfession("");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -54,8 +52,11 @@ export function JoinIdeaDialog({ isOpen, onOpenChange, onJoin, ideaTitle }: Join
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={handleJoin}>
-            Unirme a la idea
+          <Button 
+            onClick={handleSubmit}
+            disabled={!profession.trim() || isSubmitting}
+          >
+            {isSubmitting ? "Uniéndose..." : "Unirme a la idea"}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -24,7 +24,7 @@ export function PostContent({ post, postId }: PostContentProps) {
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Post text content */}
       {post.content && (
         <div className="text-sm whitespace-pre-wrap break-words">

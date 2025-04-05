@@ -19,6 +19,9 @@ export function useIdeaJoin(idea: any, postId: string) {
         setCurrentUserId(user.id);
         const userJoined = participants.some(p => p.user_id === user.id);
         setIsCurrentUserJoined(userJoined);
+        
+        // For demonstration in the UI, set a global variable
+        (window as any).currentUserId = user.id;
       }
     };
     

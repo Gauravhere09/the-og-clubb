@@ -1,5 +1,5 @@
 
-import { MoreHorizontal, Trash, Eye, Globe, Users, EyeOff } from "lucide-react";
+import { MoreHorizontal, Trash, Eye, Globe, Users, EyeOff, Lightbulb } from "lucide-react";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,9 @@ export function PostHeader({ post, onDelete, isAuthor, isHidden, content }: Post
   
   // Determinar si el post es anónimo basado en el valor de visibility
   const isIncognito = post.visibility === 'incognito';
+  
+  // Determinar si es una idea
+  const isIdea = post.idea !== null && post.idea !== undefined;
   
   // Obtener el icono de visibilidad correcto
   const getVisibilityIcon = () => {
@@ -67,6 +70,17 @@ export function PostHeader({ post, onDelete, isAuthor, isHidden, content }: Post
               <Link to={`/profile/${post.user_id}`} className="font-medium hover:underline">
                 {post.profiles?.username || 'Usuario'}
               </Link>
+            )}
+            
+            {/* Mostrar el icono de idea si es una idea */}
+            {isIdea && (
+              <>
+                <span className="text-xs text-muted-foreground px-1">•</span>
+                <span className="text-primary flex items-center gap-1">
+                  <Lightbulb className="h-4 w-4" />
+                  <span className="text-xs">Idea</span>
+                </span>
+              </>
             )}
             
             <span className="text-xs text-muted-foreground px-1">•</span>

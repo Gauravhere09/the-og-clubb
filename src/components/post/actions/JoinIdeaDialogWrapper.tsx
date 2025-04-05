@@ -41,7 +41,10 @@ export function JoinIdeaDialogWrapper({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={onJoin}>
+          <Button 
+            onClick={onJoin}
+            disabled={!profession.trim()}
+          >
             Unirme a la idea
           </Button>
         </DialogFooter>

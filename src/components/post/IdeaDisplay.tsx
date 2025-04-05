@@ -5,6 +5,7 @@ import { IdeaHeader } from "./idea/IdeaHeader";
 import { ParticipantsList } from "./idea/ParticipantsList";
 import { JoinIdeaDialog } from "./idea/JoinIdeaDialog";
 import { useIdeaJoin } from "./idea/useIdeaJoin";
+import { Separator } from "@/components/ui/separator";
 
 interface IdeaDisplayProps {
   idea: Idea;
@@ -21,20 +22,18 @@ export function IdeaDisplay({ idea, postId }: IdeaDisplayProps) {
   } = useIdeaJoin(idea, postId);
 
   return (
-    <div className="border border-border rounded-md p-4 bg-card/50 space-y-3">
-      <IdeaHeader title={idea.title} description={idea.description} />
+    <div className="border border-border rounded-md bg-blue-50/30 dark:bg-blue-900/10 space-y-3">
+      <div className="p-4">
+        <IdeaHeader title={idea.title} description={idea.description} />
+      </div>
       
-      <ParticipantsList participants={participants} />
-      
-      {!isCurrentUserJoined && (
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => setIsJoinDialogOpen(true)}
-          className="hidden" // Hidden since it's shown in the actions bar
-        >
-          Unirme
-        </Button>
+      {participants.length > 0 && (
+        <>
+          <Separator />
+          <div className="px-4 py-3">
+            <ParticipantsList participants={participants} />
+          </div>
+        </>
       )}
       
       <JoinIdeaDialog 
