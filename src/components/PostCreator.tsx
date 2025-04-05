@@ -49,14 +49,14 @@ export function PostCreator() {
         throw new Error("Debes agregar texto, un archivo multimedia, una encuesta o una idea");
       }
       
-      // Si estamos en modo idea, creamos una idea con el contenido como título
+      // Si estamos en modo idea, creamos una idea con el contenido como título y descripción
       const ideaData = isIdeaMode ? {
         title: content,
         description: content
       } : undefined;
       
       return createPost({
-        content: isIdeaMode ? "" : content, // Si es idea, el contenido va en la idea
+        content: "", // Si es idea, no enviamos contenido en el post
         file,
         pollData,
         ideaData,
@@ -70,8 +70,10 @@ export function PostCreator() {
       setIsIdeaMode(false);
       queryClient.invalidateQueries({ queryKey: ['posts'] });
       toast({
-        title: "¡Publicación creada!",
-        description: "Tu publicación se ha compartido exitosamente",
+        title: isIdeaMode ? "¡Idea creada!" : "¡Publicación creada!",
+        description: isIdeaMode 
+          ? "Tu idea se ha compartido exitosamente" 
+          : "Tu publicación se ha compartido exitosamente",
       });
     },
     onError: (error) => {

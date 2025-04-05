@@ -71,7 +71,7 @@ export async function createPost({
 
     // We need to use type assertion to handle the additional 'idea' property
     const insertData = {
-      content,
+      content, // Si es una idea, el contenido quedará vacío
       media_url,
       media_type,
       poll,

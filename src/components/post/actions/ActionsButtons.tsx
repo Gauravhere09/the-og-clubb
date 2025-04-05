@@ -29,6 +29,9 @@ export function ActionsButtons({
   showJoinButton,
   onJoinClick
 }: ActionsButtonsProps) {
+  // Check if this is an idea post
+  const isIdeaPost = !!post.idea;
+
   // Check if current user is joined to the idea
   const isJoined = post.idea?.participants.some(p => {
     // This is a simplification, in a real scenario you'd check against the current user ID
@@ -57,27 +60,29 @@ export function ActionsButtons({
         </Button>
       </ShareOptions>
 
-      {/* Botón de unirse a la idea */}
-      {showJoinButton ? (
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="flex-1 post-action-button text-primary" 
-          onClick={onJoinClick}
-        >
-          <Briefcase className="h-4 w-4 mr-2" />
-          Unirme
-        </Button>
-      ) : post.idea && (
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="flex-1 post-action-button text-primary opacity-50 cursor-default"
-          disabled
-        >
-          <Users className="h-4 w-4 mr-2" />
-          Unido
-        </Button>
+      {/* Solo mostrar el botón de unirse si es un post de idea */}
+      {isIdeaPost && (
+        showJoinButton ? (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex-1 post-action-button text-primary" 
+            onClick={onJoinClick}
+          >
+            <Briefcase className="h-4 w-4 mr-2" />
+            Unirme
+          </Button>
+        ) : (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="flex-1 post-action-button text-primary opacity-50 cursor-default"
+            disabled
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Unido
+          </Button>
+        )
       )}
     </div>
   );

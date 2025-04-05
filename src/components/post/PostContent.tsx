@@ -25,8 +25,8 @@ export function PostContent({ post, postId }: PostContentProps) {
 
   return (
     <div className="space-y-4">
-      {/* Post text content */}
-      {post.content && (
+      {/* Post text content - If it's an idea post, we don't show the content here */}
+      {post.content && !hasIdea && (
         <div className="text-sm whitespace-pre-wrap break-words">
           <MentionsText content={post.content} />
         </div>
@@ -63,10 +63,11 @@ export function PostContent({ post, postId }: PostContentProps) {
 
       {/* Idea content */}
       {hasIdea && post.idea && (
-        <IdeaDisplay 
-          idea={post.idea} 
-          postId={postId}
-        />
+        <div className="bg-blue-50/30 dark:bg-blue-900/10 rounded-md p-4 my-2 border border-blue-100 dark:border-blue-800">
+          <p className="text-sm md:text-base whitespace-pre-wrap break-words">
+            {post.idea.description}
+          </p>
+        </div>
       )}
     </div>
   );
