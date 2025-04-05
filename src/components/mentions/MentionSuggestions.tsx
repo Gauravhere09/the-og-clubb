@@ -5,7 +5,7 @@ import type { MentionUser, MentionPosition } from "@/hooks/mentions/types";
 
 interface MentionSuggestionsProps {
   users: MentionUser[];
-  isVisible: boolean;
+  isVisible?: boolean;
   position: MentionPosition;
   selectedIndex: number;
   onSelectUser: (user: MentionUser) => void;
@@ -14,7 +14,7 @@ interface MentionSuggestionsProps {
 
 export function MentionSuggestions({
   users,
-  isVisible,
+  isVisible = true,
   position,
   selectedIndex,
   onSelectUser,

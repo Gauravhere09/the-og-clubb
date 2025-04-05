@@ -13,6 +13,7 @@ interface PostActionsProps {
   onToggleComments: () => void;
   onCommentsClick: () => void;
   commentsExpanded?: boolean;
+  isIdeaPost?: boolean;
 }
 
 export function PostActionsContainer({ 
@@ -20,7 +21,8 @@ export function PostActionsContainer({
   onReaction, 
   onToggleComments,
   onCommentsClick,
-  commentsExpanded = false
+  commentsExpanded = false,
+  isIdeaPost = false
 }: PostActionsProps) {
   const reactionsByType = post.reactions?.by_type || {};
   const userReaction = post.user_reaction as ReactionType | undefined;

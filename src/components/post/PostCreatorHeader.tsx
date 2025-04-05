@@ -67,6 +67,7 @@ export function PostCreatorHeader({
         {mentionListVisible && mentionUsers.length > 0 && (
           <MentionSuggestions
             users={mentionUsers}
+            isVisible={mentionListVisible}
             position={mentionPosition}
             selectedIndex={mentionIndex}
             onSelectUser={handleSelectMention}
