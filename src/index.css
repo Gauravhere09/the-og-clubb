@@ -5,73 +5,169 @@
 
 @layer base {
   :root {
-    --background: 240 100% 99%;
-    --foreground: 240 10% 10%;
-    --primary: 217 89% 50%; /* #1A73E8 color */
-    --primary-foreground: 240 100% 99%;
-    
-    --secondary: 210 20% 95%;
-    --secondary-foreground: 240 10% 10%;
-    
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 252 87% 67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 252 87% 62%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 252 87% 67%;
     --radius: 0.75rem;
   }
 
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    
-    --primary: 217 89% 50%; /* #1A73E8 para mantener consistencia en dark mode */
-    --primary-foreground: 0 0% 98%;
-    
-    --secondary: 210 20% 15%;
-    --secondary-foreground: 0 0% 98%;
-    
-    --destructive: 0 62.8% 30.6%;
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 252 87% 67%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 252 87% 67%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 252 87% 67%;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
   
   body {
     @apply bg-background text-foreground antialiased;
+  }
+  
+  html {
+    @apply scroll-smooth;
+  }
+}
+
+/* Audio Wave Animation */
+.audio-wave {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  gap: 3px;
+}
+
+.audio-wave span {
+  display: block;
+  width: 3px;
+  background-color: hsl(var(--primary));
+  animation: wave 1s infinite ease-in-out;
+  transform: scaleY(0.2);
+  border-radius: 3px;
+}
+
+@keyframes wave {
+  0%, 100% {
+    transform: scaleY(0.2);
+  }
+  50% {
+    transform: scaleY(0.8);
+  }
+}
+
+/* Waveform display */
+.waveform-container {
+  position: relative;
+  width: 100%;
+  height: 80px;
+  background-color: hsl(var(--secondary));
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.waveform-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* Audio player styles */
+.audio-player {
+  @apply rounded-lg border bg-card p-4 shadow-sm;
+}
+
+.progress-bar {
+  @apply relative h-1.5 w-full cursor-pointer rounded-full bg-secondary overflow-hidden;
+}
+
+.progress-indicator {
+  @apply absolute top-0 left-0 h-full bg-primary rounded-full transition-all;
+}
+
+/* Media queries for responsive design */
+@media (max-width: 640px) {
+  .audio-controls {
+    @apply flex-col space-y-2;
+  }
+  
+  .audio-player {
+    @apply p-3;
+  }
+  
+  .waveform-container {
+    height: 60px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .waveform-container {
+    height: 70px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .audio-grid {
+    @apply grid-cols-3;
+  }
+}
+
+/* Animation utilities */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.scale-in {
+  animation: scaleIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }

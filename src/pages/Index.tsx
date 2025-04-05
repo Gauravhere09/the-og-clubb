@@ -1,179 +1,128 @@
 
-import { Navigation } from "@/components/Navigation";
-import { PostCreator } from "@/components/PostCreator";
-import { Feed } from "@/components/feed/Feed";
-import { StoryViewer } from "@/components/stories/StoryViewer";
-import { UserMenu } from "@/components/user-menu/UserMenu";
-import { LogOut, Moon, Sun } from "lucide-react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { useTheme } from "next-themes";
-import { FriendSearch } from "@/components/FriendSearch";
-import { NotificationDropdown } from "@/components/notifications/NotificationDropdown";
-import { Card } from "@/components/ui/card";
-import { FriendsListSection } from "@/components/friends/FriendsListSection";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useEffect, useState } from "react";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useStoryCleanup } from "@/hooks/use-story-cleanup";
-import { useFriends } from "@/hooks/use-friends";
+import { Headphones, Music2, Waveform, Users, Laptop2 } from "lucide-react";
 
-const Index = () => {
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const { setTheme, theme } = useTheme();
+export default function Index() {
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const isMobile = useIsMobile();
-  
-  useStoryCleanup();
-
-  useEffect(() => {
-    const loadCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUserId(user.id);
-      }
-    };
-    loadCurrentUser();
-  }, []);
-
-  // Get friends list using the useFriends hook
-  const { friends } = useFriends(currentUserId);
-
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se pudo cerrar sesión",
-      });
-    } else {
-      navigate("/auth");
-    }
-  };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-background">
-      <div className="fixed bottom-0 left-0 right-0 md:static md:left-0 z-10 fixed-bottom-nav">
-        <Navigation />
-      </div>
-      
-      <div className="flex-1 w-full md:ml-[70px] pb-16 md:pb-0 content-with-bottom-nav">
-        <div className="max-w-[1200px] mx-auto">
-          <main className="w-full flex flex-col md:flex-row">
-            {/* Sidebar izquierdo - solo visible en desktop */}
-            <div className="hidden md:block md:w-1/4 lg:w-1/5 p-4">
-              {/* Contenido del sidebar izquierdo */}
-            </div>
-            
-            {/* Contenido central */}
-            <div className="w-full md:w-2/4 lg:w-3/5 px-2 py-2 md:px-4 md:py-4">
-              <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 pb-2 -mx-2 md:mx-0 px-2 md:px-0 pt-2">
-                <div className="flex items-center justify-between gap-2 mb-4">
-                  <div className="flex items-center">
-                    {isMobile ? (
-                      <Link to="/" className="relative w-8 h-8 bg-primary rounded-xl flex items-center justify-center transform transition-transform shadow-md mr-2">
-                        <span className="text-xl font-bold text-primary-foreground">H</span>
-                        <div className="absolute -inset-0.5 bg-primary/20 rounded-xl blur-sm -z-10" />
-                      </Link>
-                    ) : (
-                      <h1 className="text-lg md:text-2xl font-semibold">Feed</h1>
-                    )}
-                  </div>
-                  
-                  <div className="flex-1 flex justify-center">
-                    <FriendSearch />
-                  </div>
-                  
-                  <div className="flex items-center">
-                    <NotificationDropdown />
-                    <UserMenu />
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 rounded-full md:flex hidden"
-                        >
-                          {theme === "dark" ? (
-                            <Moon className="h-4 w-4" />
-                          ) : (
-                            <Sun className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-                          {theme === "dark" ? (
-                            <>
-                              <Sun className="mr-2 h-4 w-4" />
-                              <span>Modo claro</span>
-                            </>
-                          ) : (
-                            <>
-                              <Moon className="mr-2 h-4 w-4" />
-                              <span>Modo oscuro</span>
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3 md:space-y-4 mx-auto">
-                <PostCreator />
-                
-                {currentUserId && (
-                  <Card className="overflow-hidden mb-4">
-                    <StoryViewer currentUserId={currentUserId} />
-                  </Card>
-                )}
-                
-                <Feed />
-              </div>
-            </div>
-            
-            {/* Sidebar derecho - amigos list */}
-            <div className="hidden md:block md:w-1/4 lg:w-1/5 p-4">
-              <Card className="sticky top-20 p-4">
-                <h3 className="text-lg font-semibold mb-4">Amigos</h3>
-                <div className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
-                  {friends && friends.length > 0 ? (
-                    friends.map(friend => (
-                      <Link 
-                        key={friend.id} 
-                        to={`/profile/${friend.id}`}
-                        className="flex items-center gap-2 p-2 hover:bg-muted rounded-md transition-colors"
-                      >
-                        <img 
-                          src={friend.avatar_url || "/placeholder.svg"} 
-                          alt={friend.username} 
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                        <span className="font-medium truncate">{friend.username}</span>
-                      </Link>
-                    ))
-                  ) : (
-                    <p className="text-muted-foreground text-sm">No tienes amigos aún</p>
-                  )}
-                </div>
-              </Card>
-            </div>
-          </main>
+    <div className="min-h-screen flex flex-col">
+      <header className="container mx-auto py-6 px-4 flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center">
+            <Headphones className="h-4 w-4 text-white" />
+          </div>
+          <h1 className="text-xl font-bold">AudioConnect</h1>
         </div>
-      </div>
+        <div className="flex space-x-4">
+          <Button variant="ghost" onClick={() => navigate('/auth')}>Login</Button>
+          <Button onClick={() => navigate('/auth?register=true')}>Sign Up</Button>
+        </div>
+      </header>
+
+      <main className="flex-1">
+        <section className="py-16 md:py-24 px-4">
+          <div className="container mx-auto max-w-5xl">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl md:text-6xl font-bold mb-4">
+                Connect Through Sound
+              </h2>
+              <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
+                Record, share, and discover audio content with our innovative platform designed for creators and listeners alike.
+              </p>
+              <Button 
+                size="lg" 
+                className="mt-8"
+                onClick={() => navigate('/auth?register=true')}
+              >
+                Get Started For Free
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+              <FeatureCard 
+                icon={<Waveform />} 
+                title="High Quality Audio"
+                description="Record and listen to crystal clear audio with our professional-grade audio processing."
+              />
+              <FeatureCard 
+                icon={<Users />} 
+                title="Growing Community"
+                description="Connect with other audio creators and build your audience in our thriving community."
+              />
+              <FeatureCard 
+                icon={<Laptop2 />} 
+                title="Easy to Use"
+                description="Our intuitive interface makes recording and sharing audio content simpler than ever."
+              />
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-muted py-16 px-4">
+          <div className="container mx-auto">
+            <div className="max-w-3xl mx-auto text-center">
+              <Music2 className="h-12 w-12 mx-auto mb-6 text-primary" />
+              <h2 className="text-3xl font-bold mb-4">Ready to amplify your voice?</h2>
+              <p className="text-lg text-muted-foreground mb-8">
+                Join thousands of creators who are already using AudioConnect to share their stories, music, and ideas.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button 
+                  size="lg" 
+                  variant="default"
+                  onClick={() => navigate('/auth?register=true')}
+                >
+                  Sign Up Now
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  onClick={() => navigate('/explore')}
+                >
+                  Explore Content
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer className="bg-background py-8 px-4 border-t">
+        <div className="container mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <div className="flex items-center space-x-2 mb-4 md:mb-0">
+              <div className="h-8 w-8 bg-primary rounded-full flex items-center justify-center">
+                <Headphones className="h-4 w-4 text-white" />
+              </div>
+              <span className="font-bold">AudioConnect</span>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              © 2025 AudioConnect. All rights reserved.
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
 
-export default Index;
+interface FeatureCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+function FeatureCard({ icon, title, description }: FeatureCardProps) {
+  return (
+    <div className="bg-card p-6 rounded-lg shadow-sm border">
+      <div className="h-12 w-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+        {React.cloneElement(icon as React.ReactElement, { className: "h-6 w-6 text-primary" })}
+      </div>
+      <h3 className="text-xl font-semibold mb-2">{title}</h3>
+      <p className="text-muted-foreground">{description}</p>
+    </div>
+  );
+}
