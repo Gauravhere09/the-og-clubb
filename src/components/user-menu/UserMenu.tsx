@@ -61,7 +61,7 @@ export function UserMenu() {
           />
           
           {/* Content */}
-          <div className="flex-1 overflow-y-auto py-2">
+          <div className="flex-1 overflow-y-auto py-2 bg-white dark:bg-gray-950">
             {/* Main Menu Options */}
             <MenuOptions 
               userId={userId} 

@@ -61,7 +61,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
       {/* Create New Account */}
       <Button
         variant="outline"
-        className="justify-start h-14 bg-white dark:bg-card shadow"
+        className="justify-start h-14 bg-white dark:bg-gray-800 shadow"
         onClick={() => handleNavigate("/auth?tab=register")}
       >
         <UserPlus className="mr-3 h-5 w-5 text-green-500" />
@@ -71,7 +71,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
       {/* Invite Friends */}
       <Button
         variant="outline"
-        className="justify-start h-14 bg-white dark:bg-card shadow"
+        className="justify-start h-14 bg-white dark:bg-gray-800 shadow"
         onClick={onCopyProfileLink}
       >
         <Heart className="mr-3 h-5 w-5 text-red-500" />
@@ -81,7 +81,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
       {/* Story Privacy Settings */}
       <Button
         variant="outline"
-        className="justify-start h-14 bg-white dark:bg-card shadow"
+        className="justify-start h-14 bg-white dark:bg-gray-800 shadow"
         onClick={() => handleNavigate("/settings/privacy")}
       >
         <Shield className="mr-3 h-5 w-5 text-primary" />
@@ -91,7 +91,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
       {/* Account Data */}
       <Button
         variant="outline"
-        className="justify-start h-14 bg-white dark:bg-card shadow"
+        className="justify-start h-14 bg-white dark:bg-gray-800 shadow"
         onClick={() => handleNavigate("/settings/account")}
       >
         <UserCog className="mr-3 h-5 w-5 text-primary" />
@@ -101,7 +101,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
       {/* Password and Security */}
       <Button
         variant="outline"
-        className="justify-start h-14 bg-white dark:bg-card shadow"
+        className="justify-start h-14 bg-white dark:bg-gray-800 shadow"
         onClick={() => handleNavigate("/settings/security")}
       >
         <Lock className="mr-3 h-5 w-5 text-purple-light" />
@@ -111,7 +111,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
       {/* Email */}
       <Button
         variant="outline"
-        className="justify-start h-14 bg-white dark:bg-card shadow"
+        className="justify-start h-14 bg-white dark:bg-gray-800 shadow"
         onClick={() => handleNavigate("/settings/email")}
       >
         <Mail className="mr-3 h-5 w-5 text-blue-500" />
@@ -121,7 +121,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
       {/* Phone */}
       <Button
         variant="outline"
-        className="justify-start h-14 bg-white dark:bg-card shadow"
+        className="justify-start h-14 bg-white dark:bg-gray-800 shadow"
         onClick={() => handleNavigate("/settings/phone")}
       >
         <Phone className="mr-3 h-5 w-5 text-green-500" />
@@ -129,7 +129,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
       </Button>
 
       {/* Dark Mode Toggle */}
-      <div className="flex items-center justify-between h-14 px-4 bg-white dark:bg-card shadow rounded-md mt-4">
+      <div className="flex items-center justify-between h-14 px-4 bg-white dark:bg-gray-800 shadow rounded-md mt-4">
         <div className="flex items-center">
           {theme === "dark" ? (
             <Moon className="mr-3 h-5 w-5 text-purple-light" />
@@ -147,7 +147,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
       {/* Logout Button */}
       <Button
         variant="outline"
-        className="justify-start h-14 mt-4 bg-white dark:bg-card shadow text-red-600"
+        className="justify-start h-14 mt-4 bg-white dark:bg-gray-800 shadow text-red-600"
         onClick={handleLogout}
       >
         <LogOut className="mr-3 h-5 w-5" />
