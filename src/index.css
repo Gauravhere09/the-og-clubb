@@ -7,7 +7,7 @@
   :root {
     --background: 240 100% 99%;
     --foreground: 240 10% 10%;
-    --primary: 198 69% 54%; /* Blue color in HSL */
+    --primary: 210 100% 50%; /* Blue color based on image */
     --primary-foreground: 240 100% 99%;
     
     --secondary: 210 20% 95%;
@@ -39,7 +39,7 @@
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     
-    --primary: 210 25% 25%; /* Dark blue in HSL */
+    --primary: 220 80% 50%; /* Deep blue for dark mode */
     --primary-foreground: 0 0% 98%;
     
     --secondary: 210 20% 15%;
@@ -75,3 +75,4 @@
     @apply bg-background text-foreground antialiased;
   }
 }
+
