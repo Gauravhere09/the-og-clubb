@@ -21,7 +21,7 @@ export function FriendsList() {
   useEffect(() => {
     loadFriends();
 
-    // Subscribe to changes in the friends table to automatically update the list
+    // Suscribirse a cambios en la tabla de friends para actualizar la lista automáticamente
     const friendsChannel = supabase
       .channel('friends-changes')
       .on('postgres_changes', { 
@@ -34,7 +34,7 @@ export function FriendsList() {
       })
       .subscribe();
 
-    // Subscribe to changes in the messages table to update the list when there are new messages
+    // Suscribirse a cambios en la tabla de messages para actualizar la lista cuando hay nuevos mensajes
     const messagesChannel = supabase
       .channel('messages-changes')
       .on('postgres_changes', { 
@@ -92,7 +92,7 @@ export function FriendsList() {
         if (profilesData) {
           allFriends = profilesData.map(profile => ({
             id: profile.id,
-            username: profile.username || 'User',
+            username: profile.username || 'Usuario',
             avatar_url: profile.avatar_url
           }));
         }
@@ -136,7 +136,7 @@ export function FriendsList() {
               if (!allFriends.some(f => f.id === profile.id)) {
                 allFriends.push({
                   id: profile.id,
-                  username: profile.username || 'User',
+                  username: profile.username || 'Usuario',
                   avatar_url: profile.avatar_url
                 });
               }
@@ -152,7 +152,7 @@ export function FriendsList() {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not load friends",
+        description: "No se pudieron cargar los amigos",
       });
     } finally {
       setLoading(false);
@@ -160,11 +160,11 @@ export function FriendsList() {
   };
 
   if (loading) {
-    return <div>Loading friends...</div>;
+    return <div>Cargando amigos...</div>;
   }
 
   if (friends.length === 0) {
-    return <div className="text-muted-foreground">You don't have any friends added yet.</div>;
+    return <div className="text-muted-foreground">No tienes amigos agregados aún.</div>;
   }
 
   return (

@@ -1,14 +1,3 @@
+import { useToast, toast } from "@/hooks/use-toast";
 
-// Re-export from our hooks directory
-export { useToast, toast, type Toast, type ToasterToast } from "@/hooks/use-toast";
-export { 
-  ToastProvider,
-  ToastViewport, 
-  Toast, 
-  ToastTitle, 
-  ToastDescription, 
-  ToastClose,
-  ToastAction,
-  type ToastActionElement,
-  type ToastProps
-} from "@/components/ui/toast";
+export { useToast, toast };

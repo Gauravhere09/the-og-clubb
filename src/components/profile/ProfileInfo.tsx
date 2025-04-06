@@ -1,60 +1,85 @@
-import { CalendarIcon, Briefcase, GraduationCap } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { Profile } from "@/types/Profile";
-import { Badge } from "@/components/ui/badge";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { GraduationCap, Building2, CalendarDays } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import type { Profile } from "@/pages/Profile";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface ProfileInfoProps {
   profile: Profile;
-  isCurrentUser: boolean;
 }
 
-export function ProfileInfo({ profile, isCurrentUser }: ProfileInfoProps) {
+export function ProfileInfo({ profile }: ProfileInfoProps) {
+  const isMobile = useIsMobile();
+  
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return format(date, "MMMM yyyy", { locale: es });
+    } catch (error) {
+      return "Fecha desconocida";
+    }
+  };
+
   return (
-    <div className="space-y-4">
-      {profile.bio && (
-        <div>
-          <h3 className="text-lg font-medium mb-1">About</h3>
-          <p className="text-muted-foreground">{profile.bio}</p>
+    <Card className="h-fit">
+      <CardHeader>
+        <CardTitle className="text-lg">Información</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className={`space-y-4 profile-info-grid ${isMobile ? 'grid-cols-1' : 'grid grid-cols-1'}`}>
+          {profile.bio && (
+            <div className="space-y-1">
+              <h3 className="text-sm font-medium">Sobre mí</h3>
+              <p className="text-sm text-muted-foreground">{profile.bio}</p>
+              <Separator className="my-2" />
+            </div>
+          )}
+          
+          {(profile.career || profile.semester) && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-medium">Educación</h3>
+              </div>
+              {profile.career && (
+                <p className="text-sm text-muted-foreground pl-6">
+                  Carrera: {profile.career}
+                </p>
+              )}
+              {profile.semester && (
+                <p className="text-sm text-muted-foreground pl-6">
+                  Semestre: {profile.semester}
+                </p>
+              )}
+              <Separator className="my-2" />
+            </div>
+          )}
+          
+          {profile.location && (
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+                <h3 className="text-sm font-medium">Ubicación</h3>
+              </div>
+              <p className="text-sm text-muted-foreground pl-6">{profile.location}</p>
+              <Separator className="my-2" />
+            </div>
+          )}
+          
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+              <h3 className="text-sm font-medium">Se unió</h3>
+            </div>
+            <p className="text-sm text-muted-foreground pl-6">
+              {formatDate(profile.created_at)}
+            </p>
+          </div>
         </div>
-      )}
-
-      <div className="space-y-2">
-        {profile.career && (
-          <div className="flex items-center gap-2">
-            <Briefcase className="h-4 w-4 text-muted-foreground" />
-            <span>{profile.career}</span>
-            {profile.semester && (
-              <Badge variant="outline" className="ml-2">
-                {profile.semester}
-              </Badge>
-            )}
-          </div>
-        )}
-
-        {!profile.career && profile.semester && (
-          <div className="flex items-center gap-2">
-            <GraduationCap className="h-4 w-4 text-muted-foreground" />
-            <span>Semester: {profile.semester}</span>
-          </div>
-        )}
-
-        {profile.created_at && (
-          <div className="flex items-center gap-2">
-            <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-            <span className="text-muted-foreground">
-              Joined {formatDistanceToNow(new Date(profile.created_at), { addSuffix: true })}
-            </span>
-          </div>
-        )}
-      </div>
-
-      {isCurrentUser && !profile.bio && !profile.career && !profile.semester && (
-        <div className="bg-muted/50 rounded-lg p-4 text-center">
-          <p className="text-muted-foreground">
-            Your profile is looking a bit empty. Add some information about yourself to help others get to know you better.
-          </p>
-        </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }

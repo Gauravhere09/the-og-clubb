@@ -15,7 +15,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useTheme } from "@/components/theme-provider";
+import { useTheme } from "next-themes";
 import { Switch } from "@/components/ui/switch";
 
 interface MenuOptionsProps {
@@ -35,14 +35,14 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not sign out",
+        description: "No se pudo cerrar sesión",
       });
     } else {
       onClose();
       navigate("/auth");
       toast({
-        title: "Signed out",
-        description: "You have successfully signed out",
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión exitosamente",
       });
     }
   };
@@ -65,7 +65,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
         onClick={() => handleNavigate("/auth?tab=register")}
       >
         <UserPlus className="mr-3 h-5 w-5 text-green-500" />
-        <span>Create new profile</span>
+        <span>Crear nuevo perfil</span>
       </Button>
       
       {/* Invite Friends */}
@@ -75,7 +75,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
         onClick={onCopyProfileLink}
       >
         <Heart className="mr-3 h-5 w-5 text-red-500" />
-        <span>Invite friends</span>
+        <span>Invitar a amigos</span>
       </Button>
       
       {/* Story Privacy Settings */}
@@ -85,7 +85,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
         onClick={() => handleNavigate("/settings/privacy")}
       >
         <Shield className="mr-3 h-5 w-5 text-primary" />
-        <span>Story privacy</span>
+        <span>Privacidad de historias</span>
       </Button>
 
       {/* Account Data */}
@@ -95,7 +95,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
         onClick={() => handleNavigate("/settings/account")}
       >
         <UserCog className="mr-3 h-5 w-5 text-primary" />
-        <span>Personal data</span>
+        <span>Datos personales</span>
       </Button>
 
       {/* Password and Security */}
@@ -105,7 +105,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
         onClick={() => handleNavigate("/settings/security")}
       >
         <Lock className="mr-3 h-5 w-5 text-purple-light" />
-        <span>Password and security</span>
+        <span>Contraseña y seguridad</span>
       </Button>
 
       {/* Email */}
@@ -115,7 +115,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
         onClick={() => handleNavigate("/settings/email")}
       >
         <Mail className="mr-3 h-5 w-5 text-blue-500" />
-        <span>Change linked email</span>
+        <span>Modificar correo vinculado</span>
       </Button>
 
       {/* Phone */}
@@ -125,7 +125,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
         onClick={() => handleNavigate("/settings/phone")}
       >
         <Phone className="mr-3 h-5 w-5 text-green-500" />
-        <span>Add phone number</span>
+        <span>Agregar número de teléfono</span>
       </Button>
 
       {/* Dark Mode Toggle */}
@@ -136,7 +136,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
           ) : (
             <Sun className="mr-3 h-5 w-5 text-amber-500" />
           )}
-          <span>{theme === "dark" ? "Dark mode" : "Light mode"}</span>
+          <span>{theme === "dark" ? "Modo oscuro" : "Modo claro"}</span>
         </div>
         <Switch 
           checked={theme === "dark"}
@@ -151,7 +151,7 @@ export function MenuOptions({ userId, onClose, onCopyProfileLink }: MenuOptionsP
         onClick={handleLogout}
       >
         <LogOut className="mr-3 h-5 w-5" />
-        <span>Sign out</span>
+        <span>Cerrar sesión</span>
       </Button>
     </div>
   );

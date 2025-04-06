@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { Profile } from "@/types/Profile";
+import type { Profile } from "@/pages/Profile";
 import type { ProfileTable } from "@/types/database/profile.types";
 import { useToast } from "@/hooks/use-toast";
 import { Form } from "@/components/ui/form";
@@ -47,13 +47,13 @@ export function ProfileEditDialog({
     try {
       const updateData: ProfileTable['Update'] = {
         username: values.username,
-        bio: values.bio || null,  // Make sure to save null if it's empty
-        career: values.career || null,  
-        semester: values.semester || null,
+        bio: values.bio || null,
+        career: values.career || null,  // Asegurarse de que se guarde null si está vacío
+        semester: values.semester || null,  // Asegurarse de que se guarde null si está vacío
         updated_at: new Date().toISOString(),
       };
 
-      console.log("Sending update data:", updateData);
+      console.log("Enviando datos de actualización:", updateData);
 
       const { data, error } = await supabase
         .from("profiles")
@@ -77,11 +77,11 @@ export function ProfileEditDialog({
           birth_date: profileData.birth_date
         };
         
-        console.log("Profile updated:", updatedProfile);
+        console.log("Perfil actualizado:", updatedProfile);
         onUpdate(updatedProfile);
         toast({
-          title: "Profile updated",
-          description: "Changes have been saved successfully",
+          title: "Perfil actualizado",
+          description: "Los cambios han sido guardados exitosamente",
         });
         onClose();
       }
@@ -90,7 +90,7 @@ export function ProfileEditDialog({
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Could not update profile",
+        description: "No se pudo actualizar el perfil",
       });
     } finally {
       setIsLoading(false);
@@ -101,7 +101,7 @@ export function ProfileEditDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit profile</DialogTitle>
+          <DialogTitle>Editar perfil</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -113,10 +113,10 @@ export function ProfileEditDialog({
             
             <div className="flex justify-end gap-4">
               <Button variant="outline" onClick={onClose} type="button">
-                Cancel
+                Cancelar
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Saving..." : "Save changes"}
+                {isLoading ? "Guardando..." : "Guardar cambios"}
               </Button>
             </div>
           </form>
