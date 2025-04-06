@@ -10,7 +10,7 @@ import {
   User, 
   Settings, 
   Search,
-  Waveform as WaveformIcon,
+  AudioWaveform,
   Users as UsersIcon,
   Laptop as LaptopIcon,
   Music as Music2Icon
@@ -62,7 +62,7 @@ export default function Index() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
               <FeatureCard 
-                icon={<WaveformIcon />} 
+                icon={<AudioWaveform />} 
                 title="High Quality Audio"
                 description="Record and listen to crystal clear audio with our professional-grade audio processing."
               />
