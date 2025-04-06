@@ -19,12 +19,8 @@ import { Navbar } from "@/components/navbar";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function Index() {
-  const [isMobile, setIsMobile] = useState(useIsMobile());
+  const isMobile = useIsMobile();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    setIsMobile(useIsMobile());
-  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
