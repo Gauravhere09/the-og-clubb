@@ -1,28 +1,22 @@
 
-import { useToast } from "@/hooks/use-toast";
 import {
-  ToastProvider,
-  ToastViewport,
   Toast,
-  ToastTitle,
-  ToastDescription,
   ToastClose,
+  ToastDescription,
+  ToastProvider,
+  ToastTitle,
+  ToastViewport,
 } from "@/components/ui/toast";
-import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export function Toaster() {
-  const { toast, dismiss } = useToast();
-  const [toasts, setToasts] = useState<typeof toast.toasts>([]);
-
-  useEffect(() => {
-    setToasts(toast.toasts || []);
-  }, [toast.toasts]);
+  const { toasts } = useToast();
 
   return (
     <ToastProvider>
       {toasts.map(function ({ id, title, description, action, ...props }) {
         return (
-          <Toast key={id} {...props} onClose={() => dismiss(id)}>
+          <Toast key={id} {...props}>
             <div className="grid gap-1">
               {title && <ToastTitle>{title}</ToastTitle>}
               {description && (

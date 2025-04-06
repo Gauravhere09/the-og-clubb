@@ -1,8 +1,20 @@
-import { useEffect, useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { Music, Headphones, ListMusic, User, Settings, Search } from "lucide-react";
+import { 
+  Music, 
+  Headphones, 
+  ListMusic, 
+  User, 
+  Settings, 
+  Search,
+  Waveform as WaveformIcon,
+  Users as UsersIcon,
+  Laptop as LaptopIcon,
+  Music as Music2Icon
+} from "lucide-react";
 import { Navbar } from "@/components/navbar";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -50,17 +62,17 @@ export default function Index() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
               <FeatureCard 
-                icon={<Waveform />} 
+                icon={<WaveformIcon />} 
                 title="High Quality Audio"
                 description="Record and listen to crystal clear audio with our professional-grade audio processing."
               />
               <FeatureCard 
-                icon={<Users />} 
+                icon={<UsersIcon />} 
                 title="Growing Community"
                 description="Connect with other audio creators and build your audience in our thriving community."
               />
               <FeatureCard 
-                icon={<Laptop2 />} 
+                icon={<LaptopIcon />} 
                 title="Easy to Use"
                 description="Our intuitive interface makes recording and sharing audio content simpler than ever."
               />
@@ -71,7 +83,7 @@ export default function Index() {
         <section className="bg-muted py-16 px-4">
           <div className="container mx-auto">
             <div className="max-w-3xl mx-auto text-center">
-              <Music2 className="h-12 w-12 mx-auto mb-6 text-primary" />
+              <Music2Icon className="h-12 w-12 mx-auto mb-6 text-primary" />
               <h2 className="text-3xl font-bold mb-4">Ready to amplify your voice?</h2>
               <p className="text-lg text-muted-foreground mb-8">
                 Join thousands of creators who are already using AudioConnect to share their stories, music, and ideas.

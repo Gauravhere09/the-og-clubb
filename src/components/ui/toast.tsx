@@ -39,26 +39,6 @@ const toastVariants = cva(
   }
 );
 
-export type ToastActionElement = React.ReactElement<typeof ToastAction>;
-
-export type Toast = {
-  id: string;
-  title?: React.ReactNode;
-  description?: React.ReactNode;
-  action?: ToastActionElement;
-  variant?: "default" | "destructive";
-};
-
-type ToastContextType = {
-  toast: (props: Omit<Toast, "id">) => void;
-  dismiss: (toastId?: string) => void;
-};
-
-export const ToastContext = React.createContext<ToastContextType>({
-  toast: () => {},
-  dismiss: () => {},
-});
-
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
@@ -131,7 +111,13 @@ const ToastDescription = React.forwardRef<
 ));
 ToastDescription.displayName = ToastPrimitives.Description.displayName;
 
+type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>;
+
+type ToastActionElement = React.ReactElement<typeof ToastAction>;
+
 export {
+  type ToastProps,
+  type ToastActionElement,
   ToastProvider,
   ToastViewport,
   Toast,

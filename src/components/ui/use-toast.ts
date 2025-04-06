@@ -1,16 +1,14 @@
 
-// This file re-exports from the hooks directory for compatibility
-export {
-  useToast,
+// Re-export from our hooks directory
+export { useToast, toast, type Toast, type ToasterToast } from "@/hooks/use-toast";
+export { 
   ToastProvider,
   ToastViewport, 
   Toast, 
   ToastTitle, 
   ToastDescription, 
   ToastClose,
-} from "@/hooks/use-toast";
-
-export type { 
-  ToasterToast,
-  ToastActionElement 
-} from "@/hooks/use-toast";
+  ToastAction,
+  type ToastActionElement,
+  type ToastProps
+} from "@/components/ui/toast";
